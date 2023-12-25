@@ -117,22 +117,11 @@ _____
 provides functions for handling documents and menus in the application.
 
 ### Function 
-`getAllDocuments()`: Returns an array of document metadata.
-  - Parameters: None
-  - Returns: Array of `DocumentMetaData` objects
+`getDocument(docname: string)`: Returns an array of document metadata.
+  - Parameters: 
+      - `docname` (string) - The name of the document.
+  - Returns: `DocumentMetaData` objects
 
-`getPublicResource(xorg: string)`: Returns a list of public resources as menu data.
-  - Parameters: `xorg` (string) - The organization identifier
-  - Returns: Array of `MenuData` objects
-
-`getMenus()`: Returns a list of menus that the current user has access to.
-  - Parameters: None
-  - Returns: Array of `MenuData` objects
-
-`getMenustFromPageMeta()`: Returns a sorted list of all menu paths from the router's routes.
-  - Parameters: None
-  - Returns: Array of strings (sorted menu paths)
-  
 _____
 # getMenus.generate
 This module provides several utility functions for handling documents and menus in the application.
@@ -354,3 +343,4 @@ provides function for getting the color of the avatar based on the current color
 `getAvatarColor()` : 
   - Parameters: None
   - Returns: String. The color of the avatar based on the current color mode.
+
