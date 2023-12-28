@@ -195,11 +195,23 @@ export class WorkflowService {
     data: any,
   ) {
     try {
+      
       const response = await this.bpmnServer.engine.invoke(
         { 'items.id': taskId, 'items.status': 'wait' },
         data,
+        appuser.getUid(),
+        {appuser:appuser}
       );
-      return Object.keys(response);
+      return {
+        parentKeys:Object.keys(response),
+        parentId:response.id,
+        data:response.instance.data,
+        // parentId:response,
+        input:response.item.input,
+        vars:response.item.vars,
+        id:response.item.id,
+        status: response.item.status,
+      };
     } catch (e) {
       throw new NotFoundException(e);
     }
@@ -305,7 +317,7 @@ export class WorkflowService {
   @OnEvent('workflow.start')
   async startWorkflow(appuser: UserContext, workflowName: string, data?: any) {
     try {
-      console.log('startWorkflow started: ', workflowName);
+      // console.log('startWorkflow started: ', workflowName);
       data.tenantId = appuser.getTenantId();
       data.orgId = appuser.getOrgId();
       data.branchId = appuser.getBranchId();
@@ -314,7 +326,9 @@ export class WorkflowService {
         data,
         undefined,
         appuser.getUid(),
-        // appuser.getBranchFilter(),
+        {
+          appuser: appuser,
+        },
       );
 
       // console.log("startWorkflowstartWorkflowstartWorkflow",result)
@@ -443,10 +457,15 @@ export class WorkflowService {
       const elementId: string = event.context.item.element.id;
       const elementName: string = event.context.item.element.name;
       const elementProps = event.context.item.element.def;
-      const usertaskinput = event.context.item.input ?? null;
+      // const usertaskinput = event.context.item.input ?? null;
       const data = event.context.instance.data;
+      const vars = {}
+      Object.assign(vars,event.context.item.input);
+      event.context.item.input={}
+      const options = event.context.options;
       switch (elementType) {
         case BPMN_TYPE.UserTask:
+          
           let usertaskeventtype: UserTaskEventType;
           if (eventType == EXECUTION_EVENT.node_start)
             usertaskeventtype = 'start';
@@ -455,9 +474,10 @@ export class WorkflowService {
           else if (eventType == EXECUTION_EVENT.node_end)
             usertaskeventtype = 'end';
           else if (eventType == EXECUTION_EVENT.transform_input)
-            usertaskeventtype = 'invoke';
+            usertaskeventtype = 'invoked';
           else if (eventType == EXECUTION_EVENT.node_wait)
             usertaskeventtype = 'wait';
+            // console.log("event-------=================================",eventType,usertaskeventtype)
           if (usertaskeventtype) {
             const props: UserTaskData = {
               workflowName: workflowName,
@@ -466,7 +486,7 @@ export class WorkflowService {
               elementId: elementId,
               elementName: elementName,
               elementProps: {
-                startedAt: event.context.item.startedAt,                
+                startedAt: event.context.item.startedAt,
                 assignee: event.context.item.assignee,
                 candidateGroups: event.context.item.candidateGroups,
                 candidateUsers: event.context.item.candidateUsers,
@@ -474,17 +494,17 @@ export class WorkflowService {
                 followUpDate: event.context.item.followUpDate,
                 priority: event.context.item.priority,
                 formKey: elementProps.formKey,
-              },
-              usertaskinput: usertaskinput,
+              },              
               data: data,
+              vars:vars,
+              options: options,
             };
             this.eventEmitter.emit(
-              `${workflowName}.${elementId}.${eventType}`,
+              `${workflowName}.${elementId}.${usertaskeventtype}`,
               props,
             );
           }
 
-          
           break;
         case BPMN_TYPE.ServiceTask:
           let servicetaskeventtype: ServiceTaskEventType;
@@ -498,11 +518,13 @@ export class WorkflowService {
               eventType: servicetaskeventtype,
               elementType: 'bpmn:ServiceTask',
               elementId: elementId,
-              elementName: elementName,              
+              elementName: elementName,
               data: data,
+              vars:vars,
+              options: options,
             };
             this.eventEmitter.emit(
-              `${workflowName}.${elementId}.${eventType}`,
+              `${workflowName}.${elementId}.${servicetaskeventtype}`,
               props,
             );
           }
