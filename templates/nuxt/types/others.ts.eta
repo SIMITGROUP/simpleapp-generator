@@ -9,8 +9,7 @@ import { Component } from 'vue'
     documentDate:string
     docNumber:boolean
     docClass: SimpleAppClient<any,any>
-    viewer: any
-    
+    viewer?: Function
   }
   export type MenuData =  {
     label: string

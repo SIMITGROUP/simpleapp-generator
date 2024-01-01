@@ -33,7 +33,8 @@ export default defineNuxtPlugin( async(nuxtApp) => {
           group:ref(''),
           branches:ref([]),
           invites : ref([]),
-          time:ref('')
+          time:ref(''),
+          moreProps:ref()
         }),
         
         actions:{    
@@ -74,7 +75,7 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               this.roles = res.data.roles
               this.time = res.data.time              
               this.invites = res.data.invites
-              
+              this.moreProps = res.data.morePros
               return Promise.resolve(true)
                 // return true
             }).catch((err:any)=>{
@@ -161,6 +162,7 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               roles:this.roles,
               group:this.group,
               time:this.time,
+              moreProps: this.moreProps
               
   
               
