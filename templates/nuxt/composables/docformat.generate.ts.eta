@@ -1,5 +1,5 @@
 export const getDocFormats = async (doctype:string)=>{    
     const docno = useNuxtApp().$DocnoformatDoc();
-    const docnoformats = await docno.listDocFormats(doctype)
+    const docnoformats = await docno.runListDocFormats(doctype)
     return docnoformats
 }
