@@ -83,7 +83,8 @@
             <SimpleAppValue :setting="o.getField('#/properties/<%= key %>')">
             <%Object.keys(obj.properties).forEach(function(skey) { %>
                 <% let sobj=obj.properties[skey] %>
-                <% let fieldpath=`o.getField('#/properties/${key}/properties/${skey}')` %>
+                <% let fieldpath=`#/properties/${key}/properties/${skey}` %>
+                <% let fieldpathgetter=`o.getField('${fieldpath}')` %>
                 <% let vmodel=`data.${key}.${skey}` %>
                 <% let instancePath=`#/${key}/${skey}` %>
 
@@ -97,17 +98,17 @@
                     <%~ getBasicElement('chip',fieldpath,vmodel) %>
                 <% } else if(sobj.type=='string'){ %>            
                          <% if(sobj.format=='date'){ %>
-                            <SimpleAppText type="<%=sobj.format%>" instancePath="<%=instancePath%>" autofocus :setting="<%~fieldpath%>" v-model="<%= vmodel %>"/>  
+                            <SimpleAppText type="<%=sobj.format%>" instancePath="<%=instancePath%>" autofocus :setting="<%~fieldpathgetter%>" v-model="<%= vmodel %>"/>  
                         <% } else if(sobj.format=='text'){ %>
-                            <SimpleAppTextarea :setting="<%~fieldpath%>'" instancePath="<%=instancePath%>" v-model="<%= vmodel %>"/>  
+                            <SimpleAppTextarea :setting="<%~fieldpathgetter%>'" instancePath="<%=instancePath%>" v-model="<%= vmodel %>"/>  
                         <% } else if(sobj.format=='html'){ %>
-                            <SimpleAppEditor editorStyle="height: 320px" instancePath="<%=instancePath%>" :setting="<%=fieldpath%>" v-model="<%= vmodel %>"/>  
+                            <SimpleAppEditor editorStyle="height: 320px" instancePath="<%=instancePath%>" :setting="<%=fieldpathgetter%>" v-model="<%= vmodel %>"/>  
                         <% } else if(sobj.format=='email'){ %>
-                            <SimpleAppText  autofocus type="<%=~obj.type%>" instancePath="<%=instancePath%>" :setting="<%=fieldpath%>" v-model="<%= vmodel %>"/>  
+                            <SimpleAppText  autofocus type="<%=~obj.type%>" instancePath="<%=instancePath%>" :setting="<%=fieldpathgetter%>" v-model="<%= vmodel %>"/>  
                         <% } else if(sobj.enum){ %>
-                            <SimpleAppSelect  autofocus :setting="<%~fieldpath%>" instancePath="<%=instancePath%>" v-model="<%= vmodel %>"/>
+                            <SimpleAppSelect  autofocus :setting="<%~fieldpathgetter%>" instancePath="<%=instancePath%>" v-model="<%= vmodel %>"/>
                         <% } else {%>
-                                <SimpleAppText   autofocus :setting="<%~fieldpath%>" instancePath="<%=instancePath%>" v-model="<%= vmodel %>"/>  
+                                <SimpleAppText   autofocus :setting="<%~fieldpathgetter%>" instancePath="<%=instancePath%>" v-model="<%= vmodel %>"/>  
                         <% }%> 
                 <% } %>
             <%})%>   
