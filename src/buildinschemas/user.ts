@@ -6,6 +6,7 @@ export const user:SchemaType ={
         documentType:'user',
         documentName:'user',
         pageType:'crud',
+        loseDataIsolation:true,
         isolationType:IsolationType.tenant,
         uniqueKey:'email',        
         documentTitle:'fullname',

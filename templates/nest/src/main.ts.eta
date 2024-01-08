@@ -34,7 +34,7 @@ async function bootstrap() {
         in: 'header',
         name: 'x-org',
         type: 'apiKey',
-        description: 'base 64 url encode. example: MS0xLTE',
+        description: 'base 64 url encode. example: MC0wLTA/MS0xLTE',
       },
       'x-org',
     )

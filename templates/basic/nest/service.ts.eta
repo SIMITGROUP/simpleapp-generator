@@ -15,6 +15,9 @@ export { <%= it.typename %>} from '../generate/types/<%= it.doctype %>.type';
 
 @Injectable()
 export class <%= it.typename %>Service extends <%= it.typename %>Processor {
+  <% const config = it.jsonschema['x-simpleapp-config']%>   
+  <%if(config['loseDataIsolation']){%>protected strictIsolation = false;<%}%> 
+      
 
     constructor(
         @InjectModel('<%= it.typename %>')  mydoc: Model<<%= it.typename %>>
@@ -60,7 +63,7 @@ export class <%= it.typename %>Service extends <%= it.typename %>Processor {
 //     return true;
 //   };
 
-/***************************** begin x-document-api definations *****************************************/
+/***************************** begin x-document-api definitions *****************************************/
 <% for(let i=0;i<it.apiSettings.length;i++){%>
 <% let api = it.apiSettings[i] %>
   async run<%= capitalizeFirstLetter(api.action) %>(

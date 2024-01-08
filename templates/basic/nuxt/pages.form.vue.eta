@@ -113,7 +113,7 @@
                 <% } %>
             <%})%>   
             </SimpleAppValue>            
-        <% } else if(obj.type=='array' && obj.items.type=='object'){%>
+        <% } else if(obj.type=='array' && obj.items && obj.items.type=='object'){%>
             <SimpleAppInputTable  :getField="o.getField" class="col-span-4"
                 :setting="o.getField('#/properties/<%=key%>')" v-model="data.<%=key%>">
                     <%let tablefields = Object.keys(obj.items.properties) %>
@@ -168,12 +168,11 @@
  import { useConfirm } from "primevue/useconfirm";
  const confirm = useConfirm(); 
  const isReadOnly =ref(true)
- const props = defineProps<{_id?:string}>()
+ const props = defineProps<{ _id?: string; skipRedirect?: boolean }>();
  const {$<%= it.typename %>Doc,$event } = useNuxtApp();
  const doc = $<%= it.typename %>Doc()
- const data = doc.getReactiveData();
- const emits = defineEmits(['afterCreate'])
-
+ const data = doc.getReactiveData(); 
+ const emits = defineEmits(["afterCreate","afterDelete","afterUpdate"]);
 
 const fetchRecord = async (recordid:string) =>{
   await doc.getById(recordid)
@@ -198,9 +197,10 @@ const createData = async () => {
  
 };
 const updateData = async () => {  
-  doc.update().then(()=>{
+  doc.update().then((res)=>{
       // visible.value=false
       refresh()
+      emits("afterUpdate", res.data);
     }).catch(err=>{
       console.error(err)
     })
@@ -217,7 +217,13 @@ const deleteData = (event:Event) => {
             // disabled.value=true 
             doc.delete(data.value._id ?? "").then((res) => {              
                 refresh();    
-                goTo(doc.getDocName())
+                if (!props.skipRedirect) {
+                    goTo(doc.getDocName());
+                    } else {
+                    doc.setNew();
+                    isReadOnly.value = false;
+                    }
+                emits("afterDelete", res.data);
             });
         },
         reject: () => {

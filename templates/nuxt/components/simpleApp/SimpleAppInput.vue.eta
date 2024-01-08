@@ -77,8 +77,18 @@
                 :disabled="isReadonly"                                 
                 :inputId="slotprops.uuid" :path="setting.instancepath"/>
         <!-- simple component -->        
-        <component v-else :is="inputComponent" :type="type" v-model="modelValue"
-                :readonly="isReadonly"                 
+        <InputNumber v-else-if="inputType == SimpleAppInputType.number" 
+                :type="type" v-model="modelValue"
+                :readonly="isReadonly"        
+                :pt="pt"
+                class="w-full flex flex-col"                
+                :inputId="slotprops.uuid" :path="setting.instancepath"/>
+
+        <component v-else
+            v-model="modelValue"
+            :is="inputComponent"
+                :readonly="isReadonly"        
+                :pt="pt"
                 class="w-full flex flex-col"
                 :inputId="slotprops.uuid" :path="setting.instancepath"/>
             
