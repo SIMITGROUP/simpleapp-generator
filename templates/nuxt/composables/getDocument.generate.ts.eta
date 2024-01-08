@@ -1,4 +1,4 @@
 import {getAllDocuments} from '~/simpleapp/generate/commons/documents'
-export const getDocument = (docname:string) =>{
+export const getDocument : (docname: string)=>DocumentMetaData | undefined = (docname:string) =>{
         return getAllDocuments().find((item)=>item.docName==docname)   //?.docClass
 }
