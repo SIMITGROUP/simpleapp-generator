@@ -1,6 +1,6 @@
 
 <template>
-    <span>{{ modelValue }}</span>
+    <span>{{ Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(modelValue) }}</span>
 </template>
 <script lang="ts" setup>
 const props = defineProps(['modelValue'])

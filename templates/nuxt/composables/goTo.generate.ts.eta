@@ -20,3 +20,13 @@ export const goBranch = (branchRecordId: string) => {
     const branchUrl = `${parenturl}/${branchRecordId}`;
     navigateTo(branchUrl);
   };
+
+export const getPathPara = (paraname:string,emptyvalue:string=''):string=>{
+   const paravalue = useRoute().params[paraname]
+   if(paravalue){
+    return paravalue.toString()
+   }else{
+    return emptyvalue
+   }
+}
+

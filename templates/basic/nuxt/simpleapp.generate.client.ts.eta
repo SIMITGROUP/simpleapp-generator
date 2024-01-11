@@ -90,7 +90,7 @@ export class <%= it.typename%>Client extends SimpleAppClient<<%= it.typename%>,<
 <%Object.keys(it.jsonschema.properties).forEach(function(key) { %>
     <% let obj=it.jsonschema.properties[key] %>
     
-    <% if(obj.type=='array' && obj.items.type=='object' && obj.items['properties']){ %>
+    <% if(obj.type=='array' &&  obj.items && obj.items.type=='object' && obj.items['properties']){ %>
         <%let tablefields = Object.keys(obj.items.properties) %>
        public add<%=key%> = () => {
         
@@ -171,7 +171,7 @@ export class <%= it.typename%>Client extends SimpleAppClient<<%= it.typename%>,<
           <%}%>
           )
       <%}%>
-      <%if(obj.type=='array' && obj.items.type=='object'){%> 
+      <%if(obj.type=='array' && obj.items && obj.items.type=='object'){%> 
         // process compute for 2nd level sub tables
         for(let index=0;index<data.<%=key%>.length;index++){ 
         <%Object.keys(obj.items.properties).forEach(function(subkey) { %>

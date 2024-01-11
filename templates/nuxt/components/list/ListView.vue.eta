@@ -10,10 +10,10 @@
         </div>
         <div class="max-h-screen overflow-auto">
             <ul >            
-                <li v-for="item in filterlist">                    
+                <li v-for="(item,index) in filterlist">                    
                     <div  :class="getSelectedCSS(item)">
-                        <NuxtLink :to="`${url}/${item[idField]}`">
-                            <slot>
+                        <NuxtLink :to="url ? `${url}/${item[idField]}`:undefined">
+                            <slot :item="item" :index="index">
                                 <div class="mr-2">{{item[titleField]  }}</div>
                                 <div class="font font-bold text-right">{{item[subTitleField]}}</div>
                             </slot>
@@ -30,7 +30,7 @@ import {ref} from 'vue'
 import {ListItem} from '~/types/listview'
 const props = withDefaults(defineProps<{
     list:any[],
-    url:string,
+    url?:string,
     titleField:string
     idField?:string
     subTitleField:string
@@ -38,7 +38,7 @@ const props = withDefaults(defineProps<{
 }>(),{
     idField:'_id'
 })
-const emit = defineEmits(['clickitem'])
+// const emit = defineEmits(['clickitem'])
 const searchvalue = ref('')
 const selecteditem =ref('')
 const clickRow=(item:ListItem)=>{

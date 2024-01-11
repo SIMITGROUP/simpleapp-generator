@@ -136,6 +136,7 @@ export type SchemaConfig = {
   uniqueKey?:string  
   uniqueKeys?:string[][]
   documentTitle?:string 
+  loseDataIsolation?:boolean
   generateDocumentNumber?:boolean
   documentDate?:string
   allStatus?:DocumentStatus[]

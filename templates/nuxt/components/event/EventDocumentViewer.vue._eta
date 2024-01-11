@@ -11,7 +11,7 @@
         </template>
         <template #default>
             <div v-for="(v,index) in allview">
-                <component v-if="index == allview.length-1" :is="defineAsyncComponent(v.viewer)" :_id="v._id" :readonly="v.readonly" @after-create="callback(v,$event)"></component>
+                <component v-if="index == allview.length-1" :is="defineAsyncComponent(v.viewer)" :_id="v._id" :readonly="v.readonly" @after-create="callback(v,$event)" :skipRedirect="true"></component>
             </div>
         </template>                
     </Dialog>

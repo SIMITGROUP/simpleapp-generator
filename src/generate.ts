@@ -49,8 +49,10 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
   // 
   frontendpagefolder = `${frontendFolder}/pages/[xorg]`  
   const buildinschemanames = Object.keys(buildinschemas)
-  for(let i=0; i<buildinschemanames.length;i++){
+  for(let i=0; i<buildinschemanames.length;i++){    
     const schemaname = buildinschemanames[i]
+    // const filenamearr=schemaname.split('.')
+    // if(_.last(filenamearr)!='json')return
   // .forEach(async(schemaname)=>{    
     const cloneschema:JSONSchema7  = {...buildinschemas[schemaname]}
     // console.log("=====>>>>>",schemaname,cloneschema)
@@ -59,6 +61,8 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
   const files = readdirSync(configs.jsonschemaFolder)
   for(let j = 0; j< files.length;j++){
     const file = files[j]
+    const filenamearr=file.split('.')
+    if(_.last(filenamearr)!='json')return
     // log.warn(file)
     const fullfilename = `${configs.jsonschemaFolder}/${file}`
     try{
