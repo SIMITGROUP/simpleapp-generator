@@ -13,19 +13,16 @@
         <%}else{%> 
             <title v-if="id">{{ t(doc.getDocName())}}</title>
         <%}%> 
-        
-        <div v-if="isReadOnly" class="w-full">
-            <Button
-                class="btn-primary" @click="isReadOnly=false"
-                type="button" >Edit</Button>
-            <Button class="" :disabled="disabled" @click="newData" type="button" v-if="canPerform(doc.getDocName(),'create')">New</Button>
-        </div>
-        <div v-else class="simpleapp-tool-bar   col-span-4 text-left gap-4"  >
+                
+        <div class="simpleapp-tool-bar   col-span-4 text-left gap-4"  >
               <Button class="" :disabled="disabled" @click="newData" type="button" v-if="canPerform(doc.getDocName(),'create')">New</Button>
               <Button class="btn-primary" :disabled="disabled" @click="createData" type="button" v-if="canPerform(doc.getDocName(),'create') && doc.isNew()">Create</Button>
               <Button class="btn-primary" :disabled="disabled" @click="updateData" type="button" v-if="canPerform(doc.getDocName(),'update') && !doc.isNew()">Update</Button>
               <Button class="btn-danger" :disabled="disabled" @click="deleteData($event)" type="button" v-if="canPerform(doc.getDocName(),'delete') && !doc.isNew()">Delete</Button>
-
+              <div class="p-2">          
+                <Checkbox  :binary="true"  v-model="ismodify" input-id="ismodify"/>
+                <label for="ismodify" class="ml-2">{{ t('modify') }}</label>
+            </div>
               <!-- special api start-->
               <%for(let i=0;i<it.apiSettings.length;i++){%>
                 <% let api = it.apiSettings[i] %>
@@ -54,7 +51,9 @@
                 <% if(obj.format=='documentno'){ %>
                     <%~ getBasicElement('documentno',`#/properties/${key}`,`data.${key}`) %>                                    
                 <% }else if(obj.format=='date'){ %>
-                    <%~ getBasicElement('date',`#/properties/${key}`,`data.${key}`) %>            
+                    <%~ getBasicElement('calendar',`#/properties/${key}`,`data.${key}`) %>            
+                <% }else if(obj.format=='time'){ %>
+                    <%~ getBasicElement('time',`#/properties/${key}`,`data.${key}`) %>      //time      
                 <% } else if(obj.format=='text'){ %>
                     <%~ getBasicElement('textarea',`#/properties/${key}`,`data.${key}`) %>            
                 <% } else if(obj.format=='html'){ %>
@@ -97,7 +96,9 @@
                 <% } else if(sobj.type=='object'  && typeof sobj['x-foreignkey']!='undefined'){ %>              
                     <%~ getBasicElement('chip',fieldpath,vmodel) %>
                 <% } else if(sobj.type=='string'){ %>            
-                         <% if(sobj.format=='date'){ %>
+                         <% if(sobj.format=='date'){ %>                         
+                            <SimpleAppInput :input-type="SimpleAppInputType.calendar" instancePath="<%=instancePath%>" autofocus :setting="<%~fieldpathgetter%>" v-model="<%= vmodel %>"/>  
+                        <% } else if(sobj.format=='time'){ %>
                             <SimpleAppText type="<%=sobj.format%>" instancePath="<%=instancePath%>" autofocus :setting="<%~fieldpathgetter%>" v-model="<%= vmodel %>"/>  
                         <% } else if(sobj.format=='text'){ %>
                             <SimpleAppTextarea :setting="<%~fieldpathgetter%>'" instancePath="<%=instancePath%>" v-model="<%= vmodel %>"/>  
@@ -129,7 +130,7 @@
                             <% } else if(subobj.type=='number' || subobj.type=='integer'){%>
                                 <%~ getBasicElement('number',`#/properties/${key}/items/properties/${col}`,`data.${key}[index].${col}`,undefined,true,`/${key}/\${index}/${col}`) %>                                
                             <%} else if(subobj.type=='string' && subobj.format){%>
-                                <%~ getBasicElement('number',`#/properties/${key}/items/properties/${col}`,`data.${key}[index].${col}`,subobj.format,true,`/${key}/\${index}/${col}`) %>                                
+                                <%~ getBasicElement(subobj.format,`#/properties/${key}/items/properties/${col}`,`data.${key}[index].${col}`,subobj.format,true,`/${key}/\${index}/${col}`) %>                                
                             <%} else if(subobj.type=='string' && subobj['enum']){%>  
                                 <%~ getBasicElement('select',`#/properties/${key}/items/properties/${col}`,`data.${key}[index].${col}`,undefined,true,`/${key}/\${index}/${col}`) %>                                      
                              <%} else if(subobj.type=='string' ){%>        
@@ -167,7 +168,8 @@
  import ConfirmPopup from 'primevue/confirmpopup';
  import { useConfirm } from "primevue/useconfirm";
  const confirm = useConfirm(); 
- const isReadOnly =ref(true)
+ const ismodify = ref(false)
+ const isReadOnly = computed(()=>!ismodify.value)
  const props = defineProps<{ _id?: string; skipRedirect?: boolean }>();
  const {$<%= it.typename %>Doc,$event } = useNuxtApp();
  const doc = $<%= it.typename %>Doc()

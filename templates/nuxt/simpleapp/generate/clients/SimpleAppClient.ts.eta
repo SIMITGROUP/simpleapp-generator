@@ -46,7 +46,7 @@ export class SimpleAppClient<
   getDocType = () => this.doctype;
   getDocName = () => this.docname;
   setNew = ()=>{}
-  isNew = () => this.data.value['created']==''
+  isNew = () => this.data.value?.created==''
   setSchema = (schema: SchemaType) => (this.schema = schema);
   getSchema = ():SchemaType=> this.schema;
   getErrors = () => this.errorlist;
@@ -135,8 +135,7 @@ export class SimpleAppClient<
             status:NotificationStatus.success,
             data:errors
           })        
-          this.data.value = res.data
-          console.log("save ok ", this.data.value)
+          this.data.value = res.data          
           return res.data;
         }).catch((errors:any)=>{
           $event('Notification',{

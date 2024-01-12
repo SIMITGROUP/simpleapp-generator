@@ -16,32 +16,26 @@ const getAxiosConfig = () => {
   };
   return config
 }
-export const getDocumentApi = (apiname: string): any => {
+export const getDocumentApi = (documentName: string): any => {
   //const { csrf } = useCsrf()    
   //axios.defaults.headers.common = {"CSRF-TOKEN": csrf};
   const route = useRoute();
 
   const config = getAxiosConfig()
   const docsOpenapi: any = {
-                            'tenant': new o.TENANTApi(config),                
-                              'organization': new o.ORGApi(config),                
-                              'branch': new o.BRANCHApi(config),                
-                              'permission': new o.PERMApi(config),                
-                              'user': new o.USERApi(config),                
-                              'autoincreament': new o.AUTOINCApi(config),                
-                              'docnoformat': new o.DOCNOApi(config),                
-                              'category': new o.CATApi(config),                
-                              'customer': new o.CUSTApi(config),                
-                              'invoice': new o.INVApi(config),                
-                              'product': new o.PRDApi(config),                
-                        };
-  if (!docsOpenapi[apiname]) {
+    <%for(let i=0; i<it.modules.length;i++){ %>
+    <% const d = it.modules[i] %>
+    '<%= d['docname'].toLowerCase() %>': new o.<%= d['doctype'].toUpperCase() %>Api(config),
+
+    <%}%>              
+    };
+  if (!docsOpenapi[documentName]) {
     console.error(
-      `api for '${apiname}' does not exists, most probably define wrong x-foreignkey`,
+      `api for '${documentName}' does not exists, most probably define wrong x-foreignkey`,
     );
     return undefined;
   } else {
-    return docsOpenapi[apiname];
+    return docsOpenapi[documentName];
   }
 };
 

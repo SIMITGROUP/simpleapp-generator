@@ -5,29 +5,55 @@
  * Author: Ks Tan
  */
 export type ForeignKey = {
-    _id: string
-    label: string
-}
+  _id: string;
+  label: string;
+};
 export type ModifiedCollection = {
-    [key:string]:string[]
-}
+  [key: string]: string[];
+};
 export type ModifiedRecords = {
-    createds: ModifiedCollection
-    updateds: ModifiedCollection
-    deleteds: ModifiedCollection
-}
+  createds: ModifiedCollection;
+  updateds: ModifiedCollection;
+  deleteds: ModifiedCollection;
+};
 export type DocNumberFormatResult = {
-    formatId: string
-    formatName: string 
-    result: string
-}
-
+  formatId: string;
+  formatName: string;
+  result: string;
+};
 
 export type SearchBody = {
-    
-    filter?:Object;
-    
-    fields?: any[];
-    
-    sorts?: any[];
+  filter?: Object;
+
+  fields?: any[];
+
+  sorts?: any[];
+};
+
+
+export enum IsolationType {
+  'none' = 'none',
+  'org' = 'org',
+  'tenant' = 'tenant',
+  'branch' = 'branch',
 }
+export enum HookType {
+  'init' = 'init',
+  'beforeSearch' = 'beforeSearch',
+  'afterSearch' = 'afterSearch',
+  'beforeValidation' = 'beforeValidation',
+  'afterValidation' = 'afterValidation',
+  'beforeCreate' = 'beforeCreate',
+  'afterCreate' = 'afterCreate',
+  'beforeUpdate' = 'beforeUpdate',
+  'afterUpdate' = 'afterUpdate',
+  'beforeDelete' = 'beforeDelete',
+  'afterDelete' = 'afterDelete',
+  'beforeFetchRecord' = 'beforeFetchRecord',
+  'afterFetchRecord' = 'afterFetchRecord',
+  'beforeSetStatus'='beforeSetStatus',
+  'afterSetStatus'='afterSetStatus'
+}
+export type MoreProjectionType = {
+  [key: string]: string;
+};

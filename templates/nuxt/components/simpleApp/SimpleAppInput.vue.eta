@@ -1,31 +1,41 @@
 <template>
     <SimpleAppFieldContainer :hidelabel="hidelabel" v-model="modelValue" 
-                :label="label" :description="description" 
+                :label="label" :description="description" :pt="pt"
                 :setting="setting" :instancepath="instancepath" :error="error" #default="slotprops">        
         <!-- binary input -->
         <component :is="inputComponent" :readonly="isReadonly" :pt="pt"
                 v-if="[SimpleAppInputType.checkbox,SimpleAppInputType.switch ].includes(inputType)" 
                 :inputId="slotprops.uuid" :path="setting.instancepath"
-                v-model="modelValue" :binary="true"/>
+                v-model="modelValue" :binary="true"
+                v-bind="componentProps"/>
 
         <!-- date component -->        
         <component :is="inputComponent" type="date" :pt="pt" 
             v-else-if="inputType == SimpleAppInputType.date"            
             :inputId="slotprops.uuid" :path="setting.instancepath"
-            v-model="datevalue" @update:modelValue="updateDate" :readonly="isReadonly"/>
+            v-model="datevalue" @update:modelValue="updateDate" :readonly="isReadonly"
+            v-bind="componentProps"/>
         <!-- calendar component -->        
-        <component :is="inputComponent" type="date" :pt="pt" class="flex flex-col"
+        <component :is="inputComponent" type="date" :pt="pt" :class="'flex flex-col yyy-'+modelValue+ ' xxx-'+datevalue"
             v-else-if="SimpleAppInputType.calendar==inputType"
             :inputId="slotprops.uuid" :path="setting.instancepath"
-            v-model="datevalue" @update:modelValue="updateDate" :readonly="isReadonly"/>
-        
+            v-model="datevalue" @update:modelValue="updateDate" :readonly="isReadonly"
+            v-bind="componentProps"/>
+        <!-- time component -->        
+        <component :is="inputComponent" :pt="pt" 
+            v-else-if="inputType == SimpleAppInputType.time"            
+            :inputId="slotprops.uuid" :path="setting.instancepath"
+            v-model="modelValue" :readonly="isReadonly"
+            v-bind="componentProps"/>
         <!-- select/list component -->                
         <component :is="inputComponent" v-model="modelValue"  :pt="pt"
             v-else-if="[SimpleAppInputType.select,SimpleAppInputType.list].includes(inputType)"
             :inputId="slotprops.uuid" :path="setting.instancepath"  
             :readonly="isReadonly"
+            class="w w-full lg:w-full"
             :disabled="isReadonly"
-            :options="getListOptions()" optionLabel="label" optionValue="value"/>
+            :options="getListOptions()" optionLabel="label" optionValue="value"
+            v-bind="componentProps"/>
         
         <!-- radio component -->                
         <div v-else-if="inputType == SimpleAppInputType.radio" >
@@ -46,15 +56,16 @@
                 :disabled="isReadonly"                                                             
                 :inputId="slotprops.uuid"
                 :path="setting.instancepath"
-                :readonly="isReadonly"
+                :readonly="isReadonly"                
                  />
-                 
+        <!-- v-bind:attributes="componentProps" -->
         <!--  document no input-->
         <SimpleAppDocumentNo v-else-if="inputType == SimpleAppInputType.documentno" 
             :setting="setting" v-model="modelValue" :inputId="slotprops.uuid"
             :readonly="isReadonly" @update:docNoFormat="triggerDocNoFormatChange"     
             :pt="pt"
-             :path="setting.instancepath"/>
+             :path="setting.instancepath"
+             v-bind:attributes="componentProps"/>
            
         
         <!-- password -->
@@ -62,35 +73,44 @@
                 v-else-if="inputType == SimpleAppInputType.password" 
                 :type="type" v-model="modelValue" :pt="pt" 
                 :readonly="isReadonly" class="flex flex-col"
-                :inputId="slotprops.uuid" :path="setting.instancepath"/>
+                :inputId="slotprops.uuid" :path="setting.instancepath"
+                v-bind="componentProps"/>
 
         <!-- rating -->
-        <Rating v-else-if="inputType == SimpleAppInputType.rating" 
-         :is="inputComponent" :type="type" v-model="modelValue" :pt="pt" 
+        <component v-else-if="inputType == SimpleAppInputType.rating" 
+          :type="type" v-model="modelValue" :pt="pt" 
                 :readonly="isReadonly"                 
-                :inputId="slotprops.uuid" :path="setting.instancepath"/>
+                :inputId="slotprops.uuid" :path="setting.instancepath"
+                v-bind="componentProps"/>
             
         <!-- chip -->
         <component  v-else-if="inputType == SimpleAppInputType.chip" 
          :is="inputComponent" :type="type" v-model="modelValue"
                  :pt="pt" 
                 :disabled="isReadonly"                                 
-                :inputId="slotprops.uuid" :path="setting.instancepath"/>
+                :inputId="slotprops.uuid" :path="setting.instancepath"
+                v-bind="componentProps"
+                />
         <!-- simple component -->        
         <InputNumber v-else-if="inputType == SimpleAppInputType.number" 
                 :type="type" v-model="modelValue"
                 :readonly="isReadonly"        
                 :pt="pt"
-                class="w-full flex flex-col"                
-                :inputId="slotprops.uuid" :path="setting.instancepath"/>
+                :class="!pt ? 'w-full flex flex-col' :''"
+                :inputId="slotprops.uuid" :path="setting.instancepath"
+                v-bind="componentProps"
+                />
 
         <component v-else
             v-model="modelValue"
-            :is="inputComponent"
+                :is="inputComponent"
                 :readonly="isReadonly"        
                 :pt="pt"
+                :type="type"
                 class="w-full flex flex-col"
-                :inputId="slotprops.uuid" :path="setting.instancepath"/>
+                :inputId="slotprops.uuid" :path="setting.instancepath"
+                v-bind="componentProps"
+                />
             
         
         <!-- component require special treatment -->
@@ -100,23 +120,23 @@
 
 <script lang="ts" setup>
 import moment from 'moment'
-import AutoComplete from 'primevue/autocomplete';
-import Calendar from 'primevue/calendar';
-import Checkbox from 'primevue/checkbox';
-import Chips from 'primevue/chips';
+import AutoComplete,{ AutoCompleteProps } from 'primevue/autocomplete';
+import Calendar,{ CalendarProps } from 'primevue/calendar';
+import Checkbox,{ CheckboxProps } from 'primevue/checkbox';
+import Chips,{ ChipsProps } from 'primevue/chips';
 import SimpleAppDocumentNo from './SimpleAppDocumentNo.vue';
 import SimpleAppAutocomplete from './SimpleAppAutocomplete.vue'
-import Dropdown from 'primevue/dropdown';
-import InputNumber from 'primevue/inputnumber';
-import InputSwitch from 'primevue/inputswitch';
-import InputText from 'primevue/inputtext';
-import Listbox from 'primevue/listbox';
-import MultiSelect from 'primevue/multiselect';
-import Password from 'primevue/password';
-import RadioButton from 'primevue/radiobutton';
-import Rating from 'primevue/rating';
-import Slider from 'primevue/slider';
-import Textarea from 'primevue/textarea';
+import Dropdown,{ DropdownProps } from 'primevue/dropdown';
+import InputNumber, { InputNumberProps } from 'primevue/inputnumber';
+import InputSwitch, { InputSwitchProps } from 'primevue/inputswitch';
+import InputText, { InputTextProps } from 'primevue/inputtext';
+import Listbox,{ ListboxProps } from 'primevue/listbox';
+import MultiSelect,{ MultiSelectProps } from 'primevue/multiselect';
+import Password,{ PasswordProps } from 'primevue/password';
+import RadioButton,{ RadioButtonProps } from 'primevue/radiobutton';
+import Rating,{ RatingProps } from 'primevue/rating';
+import Slider,{ SliderProps }  from 'primevue/slider';
+import Textarea, { TextareaProps } from 'primevue/textarea';
 import {SimpleAppInputType} from '~/types'
 
 
@@ -125,6 +145,12 @@ let inputComponent :Component
 
 const datevalue = ref('')
 const modelValue = defineModel()
+
+if(modelValue.value){
+    datevalue.value = moment(modelValue.value as string ).format('YYYY-MM-DD')
+}else{
+    datevalue.value = ''
+}
 const props = withDefaults( defineProps<{
     inputType:SimpleAppInputType,
     label?:string,
@@ -135,7 +161,9 @@ const props = withDefaults( defineProps<{
     instancepath?:string,
     hidelabel?: boolean
     readonly?: boolean
-    pt?:any
+    pt?:any,
+    componentProps?: InputNumberProps | InputSwitchProps | InputTextProps | TextareaProps | DropdownProps | CalendarProps | RatingProps
+
 }>(),{type:'text'})
 
 
@@ -150,6 +178,9 @@ switch(props.inputType){
         inputComponent = InputNumber
     break   
     case SimpleAppInputType.date:
+        inputComponent = InputText
+    break;
+    case SimpleAppInputType.time:
         inputComponent = InputText
     break;
     case SimpleAppInputType.calendar:
@@ -208,7 +239,13 @@ const isReadonly = computed(()=>{
 })
 
 const updateDate = (value:any)=>{
-    modelValue.value = moment(value).format('YYYY-MM-DD')
+    
+    if(value){
+        modelValue.value = moment(value).format('YYYY-MM-DD')
+    }else{
+        modelValue.value=''
+    }
+    
 }
 
 
@@ -232,7 +269,12 @@ const emits = defineEmits(['change','update:modelValue','update:docNoFormat'])
 watch(modelValue ,(newvalue:any)=>{
 
     if([SimpleAppInputType.date,SimpleAppInputType.calendar].includes(props.inputType)){
-        datevalue.value = moment(modelValue.value as string ).format('YYYY-MM-DD')
+        if(modelValue.value){
+            datevalue.value = moment(modelValue.value as string ).format('YYYY-MM-DD')
+        }else{
+            datevalue.value = ''
+        }
+        
     }
     // else if(props.inputType==SimpleAppInputType.autocomplete){            
     //         modelValue.value=autocompleteitem.value                

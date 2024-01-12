@@ -373,7 +373,7 @@ const generateSystemFiles=(modules:ModuleObject[],allbpmn)=>{
         const arrfilename:string[] = filename.split('.')
         // log.info("check longfilename:::",longfilename,"become====",arrfilename)
         //only process .eta
-        if(_.last(arrfilename)=='eta'|| _.last(arrfilename)=='_eta'){                    
+        if(['eta','_eta','-eta'].includes(_.last(arrfilename))){                    
           const relativepath = longfilename.includes('/') ? longfilename.replace(`/${filename}`,'') : ''
           const foldername = `${frameworkpath}/${relativepath}`
           const shortfilename = filename.replace('.eta','').replace('._eta','')

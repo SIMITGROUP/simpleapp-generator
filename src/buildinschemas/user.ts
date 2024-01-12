@@ -4,7 +4,7 @@ export const user:SchemaType ={
     type: "object",
     "x-simpleapp-config":{
         documentType:'user',
-        documentName:'user',
+        documentName:'user',        
         pageType:'crud',
         loseDataIsolation:true,
         isolationType:IsolationType.tenant,

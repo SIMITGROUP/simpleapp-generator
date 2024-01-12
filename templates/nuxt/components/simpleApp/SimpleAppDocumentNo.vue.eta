@@ -6,7 +6,8 @@
                 :readonly="readonly"
                 v-model="modelValue"    
                 :placeholder="placeholder"
-                :class="'flex-1 w-full rounded-lg  '+ ( props.readonly?'':'dark:!bg-gray-700 rounded-tr-none rounded-br-none')"
+                :pt="pt"
+                :class=" !pt ? 'flex-1 w-full rounded-lg  '+ ( props.readonly?'':'dark:!bg-gray-700 rounded-tr-none rounded-br-none') : ''"
             />
             <span class="" v-if="!readonly">
                 <button  type="button" @click="toggle"  tabindex="-1"
@@ -39,6 +40,7 @@ import {DocNoFormat} from "~/types"
 const props = defineProps<{
     setting:any    
     readonly?:boolean
+    pt?:any
 }>()
 const op = ref();
 const placeholder = ref('')

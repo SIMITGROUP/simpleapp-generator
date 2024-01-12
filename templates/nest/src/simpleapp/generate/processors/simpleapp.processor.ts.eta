@@ -31,37 +31,12 @@ import {
 } from '@nestjs/common/exceptions';
 import { UserContext } from '../commons/user.context';
 import { DocNumberFormatGenerator } from '../commons/docnogenerator.service';
-
-export enum IsolationType {
-  'none' = 'none',
-  'org' = 'org',
-  'tenant' = 'tenant',
-  'branch' = 'branch',
-}
-export enum HookType {
-  'init' = 'init',
-  'beforeSearch' = 'beforeSearch',
-  'afterSearch' = 'afterSearch',
-  'beforeValidation' = 'beforeValidation',
-  'afterValidation' = 'afterValidation',
-  'beforeCreate' = 'beforeCreate',
-  'afterCreate' = 'afterCreate',
-  'beforeUpdate' = 'beforeUpdate',
-  'afterUpdate' = 'afterUpdate',
-  'beforeDelete' = 'beforeDelete',
-  'afterDelete' = 'afterDelete',
-  'beforeFetchRecord' = 'beforeFetchRecord',
-  'afterFetchRecord' = 'afterFetchRecord',
-}
-export type MoreProjectionType = {
-  [key: string]: string;
-};
+import { IsolationType, HookType, MoreProjectionType } from '../types';
 @Injectable()
 export class SimpleAppService<T extends { _id?: string }> {
-  
   @Inject(EventEmitter2)
-  protected eventEmitter: EventEmitter2
-  
+  protected eventEmitter: EventEmitter2;
+
   protected logger = new Logger();
   protected strictIsolation = true;
   protected jsonschema = { type: 'object', properties: {}, required: [] };
@@ -268,7 +243,7 @@ export class SimpleAppService<T extends { _id?: string }> {
   async findById(appuser: UserContext, id: string) {
     await this.hook(appuser, HookType.beforeFetchRecord, id);
     const data = await this.search(appuser, { _id: id });
-    await this.hook(appuser, HookType.afterFetchRecord, data);
+    await this.hook(appuser, HookType.afterFetchRecord, data[0]);
     if (data.length == 1) {
       // console.log('data0', data[0]);
       return data[0];
@@ -530,8 +505,8 @@ export class SimpleAppService<T extends { _id?: string }> {
         .findOneAndUpdate(isolationFilter, data)
         .session(dbsession);
       appuser.addUpdatedRecordId(this.documentName, data._id);
-      await this.hook(appuser, HookType.afterUpdate, data);
-      return result;
+      await this.hook(appuser, HookType.afterUpdate, result);
+      return await this.findById(appuser,id);
     } catch (err) {
       throw new InternalServerErrorException(err.message);
     }
@@ -582,20 +557,55 @@ export class SimpleAppService<T extends { _id?: string }> {
   ping(...data) {
     return `hello ${JSON.stringify(data)}`;
   }
+
   /**
    * change property documentStatus for specific document, no workflow execution
    * @param id
+   * @param data optional document
    * @param docstatus
    * @returns Promise
    */
-  async setDocumentStatus(appuser: UserContext, id: string, docstatus: string) {
-    const partialdata: T = {} as T;
-    partialdata['documentStatus'] = docstatus;
-    return this.findIdThenUpdate(appuser, id, partialdata);
+  async setDocumentStatus(
+    appuser: UserContext,
+    id: string,
+    data: T,
+    docstatus: string,
+  ) {
+    id = id.trim();
+
+    if (!id) {
+      throw new BadRequestException(
+        'undefined path para "id"',
+        'undefined "id"',
+      );
+    }
+    if (data['_id'] && data['_id'] != id) {
+      throw new BadRequestException(
+        `_id in data(${data['_id']} different with path param ${id})`,
+        'set documentstatus id not match with submited data',
+      );
+    }
+
+    data['documentStatus'] = docstatus;
+    await this.hook(appuser, HookType.beforeSetStatus, data);
+    if (data && !data['created']) {
+      const createresult = await this.create(appuser, data);
+      await this.hook(appuser, HookType.afterSetStatus, createresult);
+      return createresult;
+    } else {
+      const updateresult = await this.findIdThenUpdate(appuser, id, data);
+      await this.hook(appuser, HookType.afterSetStatus, data);
+      return updateresult;
+    }
   }
 
-  startWorkflow(appuser:UserContext,processName:string,workflowData:any){
-    return this.eventEmitter.emit('workflow.start',appuser,processName,workflowData)
+  startWorkflow(appuser: UserContext, processName: string, workflowData: any) {
+    return this.eventEmitter.emit(
+      'workflow.start',
+      appuser,
+      processName,
+      workflowData,
+    );
   }
 
   async genNewDocNo(appuser: UserContext, data: T) {

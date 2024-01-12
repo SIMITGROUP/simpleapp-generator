@@ -23,5 +23,15 @@ const allroles:roletype[] = [
         
             <%}%>
         <%}%>
+
+        <% if(m.schema['x-simpleapp-config']['allStatus'] && m.schema['x-simpleapp-config']['allStatus'].length >0) {%>
+            <%let allstatus = m.schema['x-simpleapp-config']['allStatus']%>
+            <% for(let j=0;j<allstatus.length; j++){ %>
+                <%let setting = allstatus[j]%>
+        {resource: '<%=m.docname%>', action:'<%=setting.status%>'},
+        
+        
+            <%}%>
+        <%}%>
     <%}%>
 ]

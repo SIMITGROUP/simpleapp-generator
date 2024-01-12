@@ -12,7 +12,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import * as jsonpath from 'jsonpath'
 import { Model } from 'mongoose';
 import {<%= it.typename%>JsonSchema } from '../jsonschemas/<%= it.doctype %>.jsonschema'
-import { SimpleAppService,IsolationType,HookType } from './simpleapp.processor';
+import { SimpleAppService } from './simpleapp.processor';
+import { IsolationType } from '../types';
 import {DocNumberFormatGenerator} from '../commons/docnogenerator.service'
 import { <%Object.keys(it.models).forEach(function(key) { %> <%=key %>, <%})%> }  from '../types/<%= it.doctype %>.type';
 import { <%Object.keys(it.models).forEach(function(modelname) { %>  Default<%=modelname%>,  <%})%> } from '../defaults/<%= it.doctype %>.default'

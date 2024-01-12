@@ -6,7 +6,7 @@
  * Author: Ks Tan
  */
 import _ from 'lodash'
-import {SchemaType} from '~/types'
+import {SchemaType,NotificationStatus} from '~/types'
 import * as sharelibs from '../sharelibs'
 import * as jsonpath from 'jsonpath'
 import { SimpleAppClient } from "./SimpleAppClient";
@@ -60,8 +60,9 @@ export class <%= it.typename%>Client extends SimpleAppClient<<%= it.typename%>,<
       xorg='MC0wLTA' //0-0-0
     }
 
-    const apipath = `${useRuntimeConfig().public.API_URL}/${xorg}`    
-    const apiobj = new <%= it.doctype.toUpperCase()%>Api(undefined,apipath,$axios)
+    //const apipath = `${useRuntimeConfig().public.API_URL}/${xorg}`    
+    //const apiobj = new <%= it.doctype.toUpperCase()%>Api(undefined,apipath,$axios)
+    const apiobj = getDocumentApi('<%=it.name %>')
     super(apiobj,'<%= it.doctype %>','<%=it.name %>')
     this.event=$event
     this.listen=$listen
@@ -101,7 +102,7 @@ export class <%= it.typename%>Client extends SimpleAppClient<<%= it.typename%>,<
     <%}%>
   <%})%>
   
-  /*****************************x-document-api code*****************************************/
+  /*****************************begin x-document-api code*****************************************/
 
   <%for(let i=0;i<it.apiSettings.length;i++){%>
   <% let api = it.apiSettings[i] %>
@@ -229,4 +230,45 @@ export class <%= it.typename%>Client extends SimpleAppClient<<%= it.typename%>,<
       <%} /*process compute for 2nd level sub tables*/%>
     <%}) %> */
   }
+
+  /***************************** end x-document-api code*****************************************/
+
+  /***************************** begin document status code*****************************************/
+  <%for(let i=0;i<it.docStatusSettings.length;i++){%>
+    <% let setting = it.docStatusSettings[i] %> 
+    async setStatus<%=capitalizeFirstLetter(setting.status)%>(id:string,data:<%= it.typename%>,runValidate:boolean=false) {
+      const {$event} =useNuxtApp()
+      if(runValidate){
+        const errors = this.validateFailed();
+        if (errors) {
+          $event('Notification',{
+            documentName:this.getDocName(),
+            summary:'Record create failed',
+            status:NotificationStatus.error,
+            data:errors
+          })
+          // this.event('error:create',errors)
+          return await Promise.reject(errors);
+        } 
+      }
+      return await this.docapi.<%=it.name %>ControllerSetStatus<%=capitalizeFirstLetter(setting.status)%>(id,data).then((res:AxiosResponse)=>{
+        $event('Notification',{
+          documentName:this.getDocName(),
+          summary:t('setStatus<%=capitalizeFirstLetter(setting.status)%>Success'),
+          status:NotificationStatus.success
+        })
+        return res;
+      }).catch((errors:any)=>{
+        $event('Notification',{
+          documentName:this.getDocName(),
+          summary:t('setStatus<%=capitalizeFirstLetter(setting.status)%>Failed'),
+          status:NotificationStatus.error,
+          data:errors.response.data.data
+        })
+        console.error('error:<%=capitalizeFirstLetter(setting.status)%>',errors.response.data.data)
+      return Promise.reject(errors)
+      })
+    }
+  <%}%>
+  /***************************** end document status code*****************************************/
 }

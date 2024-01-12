@@ -3,6 +3,7 @@ export enum SimpleAppInputType  {
     'textarea'='textarea',
 
     'date'='date',
+    'time'='time',
     'calendar'='calendar',
 
 

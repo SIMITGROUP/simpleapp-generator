@@ -1,6 +1,6 @@
 import plugin from 'primevue/config';
 import {Md5} from 'ts-md5'
-
+import moment from "moment";
 export const camelCaseToWords = (s: string) =>{
     const result = s.replace(/([A-Z])/g, ' $1');
     return result.charAt(0).toUpperCase() + result.slice(1);
@@ -16,5 +16,5 @@ export const getAvatarLink = (email:string, size:number):string=>{
 
 export const toLocalDate = (dateiso8601:string)=> new Date(String(dateiso8601)).toLocaleDateString()
 export const t = (txt:string,options?:any):string => useNuxtApp().$i18n.t(txt,options)
-
+export const today = () => moment().format('YYYY-MM-DD')
  

@@ -124,7 +124,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   }
 
 
-/***************************** begin x-document-api definations *****************************************/
+/***************************** begin additionalAPI definations *****************************************/
 
 <% for(let i=0;i<it.apiSettings.length;i++){%>
 <% let api = it.apiSettings[i] %>
@@ -198,9 +198,22 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
    
   } 
 <%}%>
-/***************************** end x-document-api definitions *****************************************/
-  @Get(':id')
-  
+/***************************** end additionalAPI definitions *****************************************/
+
+/***************************** start status control api definitions *****************************************/
+<%for(let s=0; s<it.docStatusSettings.length; s++){ %>
+  <%let statusconf = it.docStatusSettings[s]%>
+  <%let statusname = statusconf['status']%>
+  @Post(':id/set-<%=statusname%>')
+  @ApiBody({ description: 'Document data', type: Object })
+  @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_${statusname}`%>)
+  async setStatus<%=capitalizeFirstLetter(statusname)%>(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data:any,){
+          return await this.service.setDocumentStatus(appuser,id,data,'<%=statusname%>',)
+  }
+<%}%>
+/***************************** end status control api definitions *****************************************/
+
+  @Get(':id')  
   <%if(superadmindoctype.includes(it.doctype)){%>
   @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_search`%>)
   <%}else{%>

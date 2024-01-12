@@ -30,7 +30,9 @@ input {
     @apply  bg-primary-100  dark:bg-gray-800  block
 }
 
-
+.invisible{
+    display: none;
+}
 .title-text{
     @apply text-xl font-bold text-gray-700
 }
@@ -53,4 +55,8 @@ input {
 }
 .btn-warn {
     @apply btn bg-warning-600 hover:bg-warning-400 
+}
+
+.simpleapp-input-label{
+    @apply  text-left
 }

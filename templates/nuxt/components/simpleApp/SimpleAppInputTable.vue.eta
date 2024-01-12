@@ -3,8 +3,8 @@
      class="simpleapp-datatable p-datatable-sm" :value="modelValue">
     <template #empty> <div class="text-center">No record found.</div> </template>
     <template #header >
-        <div>
-            <Button icon="pi pi-plus" @click="addNew()" class="simpleapp-datatable-add btn-primary" type="button">Add</Button>
+        <div>        
+            <Button v-if="!setting.readonly"  icon="pi pi-plus" @click="addNew()" class="simpleapp-datatable-add btn-primary" type="button">Add</Button>
         </div>
     </template>
     <slot>

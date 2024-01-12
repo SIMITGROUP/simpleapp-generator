@@ -31,9 +31,9 @@ import {ListItem} from '~/types/listview'
 const props = withDefaults(defineProps<{
     list:any[],
     url?:string,
-    titleField:string
+    titleField?:string
     idField?:string
-    subTitleField:string
+    subTitleField?:string
     withFilter?:boolean
 }>(),{
     idField:'_id'
