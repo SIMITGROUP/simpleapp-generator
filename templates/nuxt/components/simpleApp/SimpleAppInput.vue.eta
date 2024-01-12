@@ -14,18 +14,21 @@
             v-else-if="inputType == SimpleAppInputType.date"            
             :inputId="slotprops.uuid" :path="setting.instancepath"
             v-model="datevalue" @update:modelValue="updateDate" :readonly="isReadonly"
+            :placeholder="placeholder"
             v-bind="componentProps"/>
         <!-- calendar component -->        
         <component :is="inputComponent" type="date" :pt="pt" :class="'flex flex-col yyy-'+modelValue+ ' xxx-'+datevalue"
             v-else-if="SimpleAppInputType.calendar==inputType"
             :inputId="slotprops.uuid" :path="setting.instancepath"
             v-model="datevalue" @update:modelValue="updateDate" :readonly="isReadonly"
+            :placeholder="placeholder"
             v-bind="componentProps"/>
         <!-- time component -->        
         <component :is="inputComponent" :pt="pt" 
             v-else-if="inputType == SimpleAppInputType.time"            
             :inputId="slotprops.uuid" :path="setting.instancepath"
             v-model="modelValue" :readonly="isReadonly"
+            :placeholder="placeholder"
             v-bind="componentProps"/>
         <!-- select/list component -->                
         <component :is="inputComponent" v-model="modelValue"  :pt="pt"
@@ -35,6 +38,7 @@
             class="w w-full lg:w-full"
             :disabled="isReadonly"
             :options="getListOptions()" optionLabel="label" optionValue="value"
+            :placeholder="placeholder"
             v-bind="componentProps"/>
         
         <!-- radio component -->                
@@ -57,6 +61,7 @@
                 :inputId="slotprops.uuid"
                 :path="setting.instancepath"
                 :readonly="isReadonly"                
+                :placeholder="placeholder"
                  />
         <!-- v-bind:attributes="componentProps" -->
         <!--  document no input-->
@@ -74,6 +79,7 @@
                 :type="type" v-model="modelValue" :pt="pt" 
                 :readonly="isReadonly" class="flex flex-col"
                 :inputId="slotprops.uuid" :path="setting.instancepath"
+                :placeholder="placeholder"
                 v-bind="componentProps"/>
 
         <!-- rating -->
@@ -89,6 +95,7 @@
                  :pt="pt" 
                 :disabled="isReadonly"                                 
                 :inputId="slotprops.uuid" :path="setting.instancepath"
+                :placeholder="placeholder"
                 v-bind="componentProps"
                 />
         <!-- simple component -->        
@@ -99,6 +106,7 @@
                 :class="!pt ? 'w-full flex flex-col' :''"
                 :inputId="slotprops.uuid" :path="setting.instancepath"
                 v-bind="componentProps"
+                :placeholder="placeholder"
                 />
 
         <component v-else
@@ -108,7 +116,9 @@
                 :pt="pt"
                 :type="type"
                 class="w-full flex flex-col"
-                :inputId="slotprops.uuid" :path="setting.instancepath"
+                :inputId="slotprops.uuid" 
+                :path="setting.instancepath"
+                :placeholder="placeholder"
                 v-bind="componentProps"
                 />
             
@@ -162,6 +172,7 @@ const props = withDefaults( defineProps<{
     hidelabel?: boolean
     readonly?: boolean
     pt?:any,
+    placeholder?:string
     componentProps?: InputNumberProps | InputSwitchProps | InputTextProps | TextareaProps | DropdownProps | CalendarProps | RatingProps
 
 }>(),{type:'text'})

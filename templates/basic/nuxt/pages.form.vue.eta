@@ -14,12 +14,12 @@
             <title v-if="id">{{ t(doc.getDocName())}}</title>
         <%}%> 
                 
-        <div class="simpleapp-tool-bar   col-span-4 text-left gap-4"  >
+        <div class="simpleapp-tool-bar flex flex-row text-left gap-4"  >
               <Button class="" :disabled="disabled" @click="newData" type="button" v-if="canPerform(doc.getDocName(),'create')">New</Button>
               <Button class="btn-primary" :disabled="disabled" @click="createData" type="button" v-if="canPerform(doc.getDocName(),'create') && doc.isNew()">Create</Button>
               <Button class="btn-primary" :disabled="disabled" @click="updateData" type="button" v-if="canPerform(doc.getDocName(),'update') && !doc.isNew()">Update</Button>
               <Button class="btn-danger" :disabled="disabled" @click="deleteData($event)" type="button" v-if="canPerform(doc.getDocName(),'delete') && !doc.isNew()">Delete</Button>
-              <div class="p-2">          
+              <div class="p-3">          
                 <Checkbox  :binary="true"  v-model="ismodify" input-id="ismodify"/>
                 <label for="ismodify" class="ml-2">{{ t('modify') }}</label>
             </div>
@@ -168,14 +168,15 @@
  import ConfirmPopup from 'primevue/confirmpopup';
  import { useConfirm } from "primevue/useconfirm";
  const confirm = useConfirm(); 
- const ismodify = ref(false)
- const isReadOnly = computed(()=>!ismodify.value)
  const props = defineProps<{ _id?: string; skipRedirect?: boolean }>();
  const {$<%= it.typename %>Doc,$event } = useNuxtApp();
  const doc = $<%= it.typename %>Doc()
  const data = doc.getReactiveData(); 
+ const ismodify = ref(doc.isNew() ? true :false )
+ const isReadOnly = computed(()=>!ismodify.value)
+ 
  const emits = defineEmits(["afterCreate","afterDelete","afterUpdate"]);
-
+ 
 const fetchRecord = async (recordid:string) =>{
   await doc.getById(recordid)
 }

@@ -258,7 +258,8 @@ const getField = (
     required: isrequired,
   };
 
-  if (obj.title) f.title = obj.title;
+  // if (obj.title) 
+  f.title = obj.title;
   if (obj.description) f.description = obj.description;
   if (obj.format) f.format = obj.format;
   if (obj.examples) f.examples = obj.examples;

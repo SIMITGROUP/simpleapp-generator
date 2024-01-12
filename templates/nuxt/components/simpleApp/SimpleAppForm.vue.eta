@@ -6,6 +6,7 @@
 </template>
 <script setup lang="ts" >
 // import type {SimpleAppFieldSetting} from '/types'    
+import * as jsonpath from 'jsonpath';
 import { SimpleAppClient } from  '~/simpleapp/generate/clients/SimpleAppClient'
 import type { JSONSchema7,JSONSchema7Definition } from 'json-schema';
 import _ from 'lodash'
@@ -102,31 +103,18 @@ import _ from 'lodash'
     // let paths = path.replace('#/','').split('/')    
     // return '/'+paths[1]
    }
-   const getPathObject=(schema:JSONSchema7,path:string):JSONSchema7|undefined=>{
+   const getPathObject=(schema:JSONSchema7,path:string):JSONSchema7|undefined=>{    
     // console.log("path",path)
-    if(!path){
+    if(!path || !path.includes('#/properties')){
         console.error('unknown path')
         return undefined
     }
-    try{
-        let paths:string[] = path.replace('#/','').split('/')    
-        let tmp :JSONSchema7Definition= schema
-        // console.log(path)
-        for(let i=0;i<paths.length;i++){
-            
-            //silly code, but it seems require to avoid typescript complaint.
-            //ultimately it is to obtain result as "tmp=tmp[path[i]]"
-            const key1 = paths[i] as keyof JSONSchema7
-            let jsonkey: keyof JSONSchema7 = key1
-            let obj:JSONSchema7 = {} as JSONSchema7
-            Object.assign(obj,tmp[jsonkey])
-            tmp = {...obj}            
-        }
-        // console.log('final ',path,tmp)
-        return tmp
+    try{        
+        const modifiedpath = path.replace('#','$').replaceAll('/','.')        
+        const queryresult = jsonpath.query(schema,modifiedpath)[0]
+        return queryresult     
     }catch(err:any){
-        console.error(err.message)
-        
+        console.error(err.message)        
     }    
    }
 </script>

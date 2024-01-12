@@ -57,7 +57,7 @@ const readonlyclass="simpleapp-value-readonly"
 let schema:any 
 
 const fielddesc = computed(()=>{
-    return props.description ?? schema.description ?? ''
+    return props.description ?? ''
 })
 
 if(props.setting.fieldsetting && props.setting.fieldsetting.type){
