@@ -122,22 +122,22 @@ import Textarea, { TextareaProps } from 'primevue/textarea';
 import { SimpleAppInputType } from '~/types'
 
 
-let inputComponent: Component
 
+let inputComponent: Component
 
 const datevalue = ref('')
 const modelValue = defineModel()
-const props = withDefaults(defineProps<{
-    inputType: SimpleAppInputType,
-    label?: string,
-    description?: string,
-    error?: string,
-    setting: any,
-    type?: string,
-    instancepath?: string,
-    hidelabel?: boolean,
-    readonly?: boolean,
-    pt?: any,
+const props = withDefaults( defineProps<{
+    inputType:SimpleAppInputType,
+    label?:string,
+    description?:string,
+    error?:string,
+    setting:any,
+    type?:string,
+    instancepath?:string,
+    hidelabel?: boolean
+    readonly?: boolean
+    pt?:any
     componentProps?: InputNumberProps | InputSwitchProps | InputTextProps | TextareaProps,
 }>(), { type: 'text' })
 
