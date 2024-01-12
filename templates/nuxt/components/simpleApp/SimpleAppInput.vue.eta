@@ -81,16 +81,18 @@
                 :type="type" v-model="modelValue"
                 :readonly="isReadonly"        
                 :pt="pt"
-                class="w-full flex flex-col"                
-                :inputId="slotprops.uuid" :path="setting.instancepath"/>
+                class="w-full flex flex-col"
+                :inputId="slotprops.uuid" :path="setting.instancepath"
+                v-bind="componentProps"/>
 
         <component v-else
             v-model="modelValue"
-            :is="inputComponent"
+                :is="inputComponent"
                 :readonly="isReadonly"        
                 :pt="pt"
                 class="w-full flex flex-col"
-                :inputId="slotprops.uuid" :path="setting.instancepath"/>
+                :inputId="slotprops.uuid" :path="setting.instancepath"
+                v-bind="componentProps"/>
             
         
         <!-- component require special treatment -->
@@ -107,21 +109,21 @@ import Chips from 'primevue/chips';
 import SimpleAppDocumentNo from './SimpleAppDocumentNo.vue';
 import SimpleAppAutocomplete from './SimpleAppAutocomplete.vue'
 import Dropdown from 'primevue/dropdown';
-import InputNumber from 'primevue/inputnumber';
-import InputSwitch from 'primevue/inputswitch';
-import InputText from 'primevue/inputtext';
+import InputNumber, { InputNumberProps } from 'primevue/inputnumber';
+import InputSwitch, { InputSwitchProps } from 'primevue/inputswitch';
+import InputText, { InputTextProps } from 'primevue/inputtext';
 import Listbox from 'primevue/listbox';
 import MultiSelect from 'primevue/multiselect';
 import Password from 'primevue/password';
 import RadioButton from 'primevue/radiobutton';
 import Rating from 'primevue/rating';
 import Slider from 'primevue/slider';
-import Textarea from 'primevue/textarea';
-import {SimpleAppInputType} from '~/types'
+import Textarea, { TextareaProps } from 'primevue/textarea';
+import { SimpleAppInputType } from '~/types'
 
 
-let inputComponent :Component
 
+let inputComponent: Component
 
 const datevalue = ref('')
 const modelValue = defineModel()
@@ -136,8 +138,8 @@ const props = withDefaults( defineProps<{
     hidelabel?: boolean
     readonly?: boolean
     pt?:any
-}>(),{type:'text'})
-
+    componentProps?: InputNumberProps | InputSwitchProps | InputTextProps | TextareaProps,
+}>(), { type: 'text' })
 
 switch(props.inputType){
     case SimpleAppInputType.text:
