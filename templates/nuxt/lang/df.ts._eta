@@ -1,6 +1,12 @@
 export default {
     welcome: 'Welcome',
     create: 'Create',
+    update: 'Update',
+    delete:'Delete',
+    modify: 'Modify',
+    confirm:'Confirm',
+    void:'Void',
+    draft:'Draft',
     profile: 'Profile',
     logout: 'logout',
     language: 'Language',
@@ -27,8 +33,9 @@ export default {
     simpleApproveMessage: 'Approve or reject',
     suspendcustomer:"Suspend Customer",
     formKeyNotFound:'Formkey not found "{formKey}"',
-    modify: 'Modify',
-    
+    managestudents: 'Manage Students',
+    registerSubject: 'Register Subjects',
+    selectAll:'Select All',
     //auto generate from schema
     <% for(let i=0; i< it.allfields.length; i++){ %>
     <% let f = it.allfields[i] %>

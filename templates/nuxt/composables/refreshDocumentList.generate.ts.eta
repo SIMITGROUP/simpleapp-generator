@@ -1,0 +1,1 @@
+export const refreshDocumentList = (docName:string)=>useNuxtApp().$event('RefreshDocumentList',{documentName:docName})

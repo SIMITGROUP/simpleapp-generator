@@ -39,3 +39,14 @@ export type autocompletetype={
     code:string
     [key:string]:any
 }
+
+export type FormActions = {
+    [key:string]:string[]    
+}
+
+export type FormMenu = {
+    type:string
+    action:string
+    label:string
+    command? : Function
+}

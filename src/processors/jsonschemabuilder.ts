@@ -50,9 +50,8 @@ export const readJsonSchemaBuilder = async (docname: string,orijsondata:JSONSche
     orijsondata.properties["docNoFormat"] = tmp as JSONSchema7Definition
   }
 
-  if(schemaconfigs.allStatus && schemaconfigs.allStatus.length>0){
-    orijsondata.properties["readOnly"] = {type:'boolean', default:false}
-    orijsondata.properties["documentStatus"] = {type:'string', default:'D'}
+  if(schemaconfigs.allStatus && schemaconfigs.allStatus.length>0){    
+    orijsondata.properties["documentStatus"] = {type:'string', default:'draft'}
   }
   //enforce format uuid for _id
   orijsondata.properties['_id']['format']='uuid' 

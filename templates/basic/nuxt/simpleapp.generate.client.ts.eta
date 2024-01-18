@@ -81,13 +81,25 @@ export class <%= it.typename%>Client extends SimpleAppClient<<%= it.typename%>,<
     })    
 
   }
-  setNew = ()=>{
-       
-        
-    const newdata = Default<%= it.typename%>(crypto.randomUUID())
-            this.setData(newdata)
+  setNew = ()=>{         
+      const newdata = Default<%= it.typename%>(crypto.randomUUID())
+      this.setData(newdata)
+      return true
     }
-
+  <%if(it.jsonschema.properties['readOnly'] || it.jsonschema.properties['documentStatus']){%>
+  public isReadOnly():boolean{      
+      <%if(it.jsonschema.properties['readOnly']){%>
+        const readonly = this.data.value?.readOnly 
+        if(readonly) return true
+      <%}%>
+      <%if(it.jsonschema.properties['documentStatus']){%>
+        const docstatus = this.data.value.documentStatus
+        const statussetting = this.schema['x-simpleapp-config'].allStatus?.find((item)=>item.status==docstatus)
+        if(statussetting && statussetting.readOnly) return true
+      <%}%>      
+      return false            
+    } 
+  <%}%>
 <%Object.keys(it.jsonschema.properties).forEach(function(key) { %>
     <% let obj=it.jsonschema.properties[key] %>
     
@@ -96,26 +108,54 @@ export class <%= it.typename%>Client extends SimpleAppClient<<%= it.typename%>,<
        public add<%=key%> = () => {
         
         this.getReactiveData().value.<%= key %>.push(Default<%= it.typename%><%=capitalizeFirstLetter(key)%>(crypto.randomUUID()))
+        return this.getReactiveData().value.<%= key %>.length -1
        }
         
           
     <%}%>
   <%})%>
   
+
+  public getActions(){
+    const actions =  super.getActions()
+    actions.docstatus=[
+        <%for(let i=0;i<it.docStatusSettings.length;i++){%>
+        <% let setting = it.docStatusSettings[i] %> 
+        '<%=setting.statusName%>',
+        <%}%> 
+    ]
+    actions.api=[  
+          <%for(let i=0;i<it.apiSettings.length;i++){%>
+          <% let api = it.apiSettings[i] %>
+          '<%=api.action%>',
+          <%}%> 
+          ]
+    return actions
+  }
+
+
   /*****************************begin x-document-api code*****************************************/
 
   <%for(let i=0;i<it.apiSettings.length;i++){%>
   <% let api = it.apiSettings[i] %>
-  async run<%=capitalizeFirstLetter(api.action)%>(<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
-          <%let subpath = api.entryPoint.split('/')%>
-          <% for(let a=0;a<subpath.length;a++){%>
-            <%const partstr = subpath[a]%>
-            <%if(partstr.includes(':')){%>
-              <% const paraname = partstr.replace(':','') %>  
-               <%=paraname%>: string,
-            <%}%>    
-          <%}%>  
-        <%}%>
+  async run<%=capitalizeFirstLetter(api.action)%>(
+    <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
+      <%let subpath = api.entryPoint.split('/')%>
+      <% for(let a=0;a<subpath.length;a++){%>
+        <%const partstr = subpath[a]%>
+        <%if(partstr.includes(':')){%>
+          <% const paraname = partstr.replace(':','') %>  
+            <%=paraname%>: string,
+        <%}%>    
+      <%}%>  
+    <%}%>
+    <% if(api.queryPara && api.queryPara.length>0) {%>
+      <%for(let j=0; j<api.queryPara.length ; j++){%>          
+        <%=api.queryPara[j]%>: string,
+      <%}%> 
+    <%}%>
+     
+
          <% if(['post','put','patch'].includes(api.method)){ %>data:any<%}%>  
         ){
     //const recordid: string = this.data.value._id ?? '';
@@ -236,7 +276,7 @@ export class <%= it.typename%>Client extends SimpleAppClient<<%= it.typename%>,<
   /***************************** begin document status code*****************************************/
   <%for(let i=0;i<it.docStatusSettings.length;i++){%>
     <% let setting = it.docStatusSettings[i] %> 
-    async setStatus<%=capitalizeFirstLetter(setting.status)%>(id:string,data:<%= it.typename%>,runValidate:boolean=false) {
+    async setStatus<%=capitalizeFirstLetter(setting.status)%>(id?:string,data:<%= it.typename%>,runValidate:boolean=false) {
       const {$event} =useNuxtApp()
       if(runValidate){
         const errors = this.validateFailed();

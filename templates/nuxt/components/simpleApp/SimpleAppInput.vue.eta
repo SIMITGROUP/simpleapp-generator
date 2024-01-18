@@ -2,27 +2,28 @@
     <SimpleAppFieldContainer :hidelabel="hidelabel" v-model="modelValue" 
                 :label="label" :description="description" :pt="pt"
                 :setting="setting" :instancepath="instancepath" :error="error" #default="slotprops">        
-        <!-- binary input -->
-        <component :is="inputComponent" :readonly="isReadonly" :pt="pt"
-                v-if="[SimpleAppInputType.checkbox,SimpleAppInputType.switch ].includes(inputType)" 
+        <Checkbox v-if="inputType ==SimpleAppInputType.checkbox"  :readonly="isReadonly" :pt="pt"
                 :inputId="slotprops.uuid" :path="setting.instancepath"
                 v-model="modelValue" :binary="true"
-                v-bind="componentProps"/>
+                v-bind="(componentProps as CheckboxProps)"/>
+        <InputSwitch v-else-if="inputType ==SimpleAppInputType.switch"  :readonly="isReadonly" :pt="pt"
+                :inputId="slotprops.uuid" :path="setting.instancepath"
+                v-model="modelValue as boolean" :binary="true"
+                v-bind="(componentProps as InputSwitchProps)"/>
 
-        <!-- date component -->        
-        <component :is="inputComponent" type="date" :pt="pt" 
+        <InputText type="date" :pt="pt" 
             v-else-if="inputType == SimpleAppInputType.date"            
             :inputId="slotprops.uuid" :path="setting.instancepath"
-            v-model="datevalue" @update:modelValue="updateDate" :readonly="isReadonly"
+            v-model="(datevalue as string)" @update:modelValue="updateDate" :readonly="isReadonly"
             :placeholder="placeholder"
-            v-bind="componentProps"/>
+            v-bind="(componentProps as InputTextProps)"/>
         <!-- calendar component -->        
-        <component :is="inputComponent" type="date" :pt="pt" :class="'flex flex-col yyy-'+modelValue+ ' xxx-'+datevalue"
+        <Calendar type="date" :pt="pt" class="flex flex-col"
             v-else-if="SimpleAppInputType.calendar==inputType"
             :inputId="slotprops.uuid" :path="setting.instancepath"
-            v-model="datevalue" @update:modelValue="updateDate" :readonly="isReadonly"
+            v-model="(datevalue as string)" @update:modelValue="updateDate" :readonly="isReadonly"
             :placeholder="placeholder"
-            v-bind="componentProps"/>
+            v-bind="(componentProps as CalendarProps)"/>
         <!-- time component -->        
         <component :is="inputComponent" :pt="pt" 
             v-else-if="inputType == SimpleAppInputType.time"            
@@ -54,7 +55,7 @@
         
         <!-- autocomplete, need do more enterprise grade component-->
         <SimpleAppAutocomplete     v-else-if="inputType==SimpleAppInputType.autocomplete"  
-                v-model="modelValue"                          
+                v-model="(modelValue as autocompletetype)"                          
                 :pt="pt"
                 :setting="setting"
                 :disabled="isReadonly"                                                             
@@ -66,7 +67,7 @@
         <!-- v-bind:attributes="componentProps" -->
         <!--  document no input-->
         <SimpleAppDocumentNo v-else-if="inputType == SimpleAppInputType.documentno" 
-            :setting="setting" v-model="modelValue" :inputId="slotprops.uuid"
+            :setting="setting" v-model="(modelValue as string)" :inputId="slotprops.uuid"
             :readonly="isReadonly" @update:docNoFormat="triggerDocNoFormatChange"     
             :pt="pt"
              :path="setting.instancepath"
@@ -99,7 +100,8 @@
                 v-bind="componentProps"
                 />
         <!-- simple component -->        
-        <InputNumber v-else-if="inputType == SimpleAppInputType.number" 
+        <component v-else-if="inputType == SimpleAppInputType.number" 
+                :is="inputComponent"                 
                 :type="type" v-model="modelValue"
                 :readonly="isReadonly"        
                 :pt="pt"
@@ -129,6 +131,7 @@
 </template>
 
 <script lang="ts" setup>
+import {autocompletetype} from '~/types'
 import moment from 'moment'
 import AutoComplete,{ AutoCompleteProps } from 'primevue/autocomplete';
 import Calendar,{ CalendarProps } from 'primevue/calendar';
@@ -278,7 +281,7 @@ const getListOptions = () =>{
 const emits = defineEmits(['change','update:modelValue','update:docNoFormat'])
 
 watch(modelValue ,(newvalue:any)=>{
-
+    
     if([SimpleAppInputType.date,SimpleAppInputType.calendar].includes(props.inputType)){
         if(modelValue.value){
             datevalue.value = moment(modelValue.value as string ).format('YYYY-MM-DD')

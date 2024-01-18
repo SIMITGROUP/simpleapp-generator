@@ -1,6 +1,15 @@
+
 import {SimpleAppClient} from '~/simpleapp/generate/clients/SimpleAppClient'
 import {CellSetting} from './documentlist'
 import { Component } from 'vue'
+
+  export type ForeignKey = {
+    _id: string;
+    label: string;
+    code?: string
+    [key:string]: any
+  };
+  
   export type DocumentMetaData =  {
     docName:string
     docType:string
@@ -28,10 +37,6 @@ import { Component } from 'vue'
     sample:string
     }
   
-  export type ForeignKey = {
-    _id : string
-    label: string
-  }
   
   
   export type SearchBody = {

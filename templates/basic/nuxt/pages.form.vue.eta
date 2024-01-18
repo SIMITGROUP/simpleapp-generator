@@ -6,7 +6,7 @@
         (instancepath ?  `:instancepath="\`${instancepath}\`"` : '') + '/>' %>
 <template>    
     
-    <SimpleAppForm #default="o" :document="doc" :readonly="isReadOnly">
+    <SimpleAppForm #default="o" :document="doc">
     <client-only>
         <% if(it.autocompletename){%> 
             <title v-if="id">{{ t(doc.getDocName())}}: {{ data.<%=it.autocompletename%> ?? ''}}</title>
@@ -14,25 +14,7 @@
             <title v-if="id">{{ t(doc.getDocName())}}</title>
         <%}%> 
                 
-        <div class="simpleapp-tool-bar flex flex-row text-left gap-4"  >
-              <Button class="" :disabled="disabled" @click="newData" type="button" v-if="canPerform(doc.getDocName(),'create')">New</Button>
-              <Button class="btn-primary" :disabled="disabled" @click="createData" type="button" v-if="canPerform(doc.getDocName(),'create') && doc.isNew()">Create</Button>
-              <Button class="btn-primary" :disabled="disabled" @click="updateData" type="button" v-if="canPerform(doc.getDocName(),'update') && !doc.isNew()">Update</Button>
-              <Button class="btn-danger" :disabled="disabled" @click="deleteData($event)" type="button" v-if="canPerform(doc.getDocName(),'delete') && !doc.isNew()">Delete</Button>
-              <div class="p-3">          
-                <Checkbox  :binary="true"  v-model="ismodify" input-id="ismodify"/>
-                <label for="ismodify" class="ml-2">{{ t('modify') }}</label>
-            </div>
-              <!-- special api start-->
-              <%for(let i=0;i<it.apiSettings.length;i++){%>
-                <% let api = it.apiSettings[i] %>
-                <Button class="btn-warn" :disabled="disabled" type="button" v-if="canPerform(doc.getDocName(), 'update') && !doc.isNew()"
-                        @click="run<%=capitalizeFirstLetter(api.action)%>" >{{t('<%=api.action%>')}}</Button>
-              <%}%>
-              <!-- special api end -->
-              <ProgressSpinner v-if="disabled==true" style="width: 2rem; height: 2rem" ></ProgressSpinner>
-              <ConfirmPopup></ConfirmPopup>              
-            </div>
+        <SimpleAppFormToolBar  :document="doc" @on="actionListener"></SimpleAppFormToolBar>        
         <div class="grid grid-cols-4 gap-4">
     <% let isautofocus='' %>
      <%Object.keys(it.jsonschema.properties).forEach(function(key) { %>
@@ -164,89 +146,55 @@
  * last change 2023-09-09
  * author: Ks Tan
  */
- import {SimpleAppInputType} from "~/types"
- import ConfirmPopup from 'primevue/confirmpopup';
- import { useConfirm } from "primevue/useconfirm";
- const confirm = useConfirm(); 
- const props = defineProps<{ _id?: string; skipRedirect?: boolean }>();
- const {$<%= it.typename %>Doc,$event } = useNuxtApp();
- const doc = $<%= it.typename %>Doc()
+ import { SimpleAppInputType } from "~/types";
+ 
+ const props = defineProps<{ _id?: string}>();
+ const doc = useNuxtApp().$<%= it.typename %>Doc()
  const data = doc.getReactiveData(); 
- const ismodify = ref(doc.isNew() ? true :false )
- const isReadOnly = computed(()=>!ismodify.value)
- 
- const emits = defineEmits(["afterCreate","afterDelete","afterUpdate"]);
- 
-const fetchRecord = async (recordid:string) =>{
-  await doc.getById(recordid)
+ const emits = defineEmits(["after"]);
+ const id = computed(() => props._id ?? "");
+
+/************ start default methods ****************/
+
+const newData = () =>  doc.setNew()
+const createData = async () => await doc.create()
+const updateData = async () => await doc.update()
+const deleteData = async () => await doc.delete(data.value._id ?? "")
+
+const getRecord = async () => {
+  if(id.value && id.value != 'new'){
+    await doc.getById(id.value)
+  }else{
+      newData()
+    } 
 }
 
-const id = computed(() => props._id ?? '');
+getRecord()
+watch(id,async ()=>getRecord())
+/************ end default methods ****************/
+
+
+const actionListener = async (actionName: string) => {
   
-
-const disabled = computed(()=>{
-  return false
-})
-
-const createData = async () => {
-  // disabled.value=true
+  let result 
+  switch (actionName) {
+    case "create":
+      result =await createData()
+      break;
+    case "update":
+      result = await updateData();
+      break;
+    case "delete":
+      result =await deleteData()
+      break;
+    case "new":
+      result =await newData();
+      break;
+  }
   
-  doc.create().then((res)=>{
-      //refresh()      
-      emits('afterCreate',res.data)
-    }).catch(err=>{
-      console.error(err)
-    })
- 
+  emits('after',actionName,data.value,doc,result)  
 };
-const updateData = async () => {  
-  doc.update().then((res)=>{
-      // visible.value=false
-      refresh()
-      emits("afterUpdate", res.data);
-    }).catch(err=>{
-      console.error(err)
-    })
-  
-};
-const deleteData = (event:Event) => {
-    
-    confirm.require({
-        target: event.currentTarget as HTMLElement,
-        message:'Delete?',
-        icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
-        accept: ()=>{
-            // disabled.value=true 
-            doc.delete(data.value._id ?? "").then((res) => {              
-                refresh();    
-                if (!props.skipRedirect) {
-                    goTo(doc.getDocName());
-                    } else {
-                    doc.setNew();
-                    isReadOnly.value = false;
-                    }
-                emits("afterDelete", res.data);
-            });
-        },
-        reject: () => {
-            console.log("Cancel delete")
-        }
-    })  
-};
-const newData = ()=>{
-  goTo(doc.getDocName(),'new')
-}
-const refresh = ()=>{
-  $event('RefreshDocumentList',{documentName:doc.getDocName()})
-}
-
-
-if (id.value && id.value != 'new') {
-  fetchRecord(id.value);
-}else{
-  isReadOnly.value=false
-}
+/************ start api methods ****************/
 
 <%for(let i=0;i<it.apiSettings.length;i++){%>
   <% let api = it.apiSettings[i] %>
@@ -271,4 +219,6 @@ if (id.value && id.value != 'new') {
         
     }
 <%}%>
+/************ end api methods ****************/
+
 </script>

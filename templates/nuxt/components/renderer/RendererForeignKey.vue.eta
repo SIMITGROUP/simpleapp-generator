@@ -1,14 +1,23 @@
 <template>    
     <span  v-if="setting?.collection" @click="viewRecord" class="text-primary-700 hover:text-primary-500 cursor-pointer">        
-        {{modelValue?.label}}
+            {{ displayText }}    
     </span>
-    <span v-else>{{modelValue?.label || modelValue}}</span>
+    <span v-else>{{ displayText }}</span>
 </template>
 <script setup lang="ts">
+import { ForeignKey } from '~/types';
 
 
-const modelValue = defineModel<{label:string,_id:string}>()
-const props = defineProps<{setting:any}>()
+type SettingProp = {collection:string, displayField?:string}
+const modelValue = defineModel<ForeignKey>()
+const props = defineProps<{setting:SettingProp}>()
+const displayText = computed(()=>{
+    const s = props.setting
+    if (!modelValue.value) return undefined
+    else if(!s.collection) return modelValue.value    
+    else if(s.displayField) return modelValue.value[s.displayField]
+    else return modelValue.value.label
+})
 const {$event} = useNuxtApp()
 const viewer=ref()
 const viewRecord = () => {

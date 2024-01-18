@@ -49,7 +49,19 @@ export class <%= it.typename %>Processor extends SimpleAppService<<%= it.typenam
       })
     <%}%>
     }
-  
+   <%if(it.jsonschema.properties['readOnly'] || it.jsonschema.properties['documentStatus']){%>
+    public isReadOnly():boolean{      
+      <%if(it.jsonschema.properties['readOnly']){%>
+        if(this.data.readOnly) return true
+      <%}%>
+      <%if(it.jsonschema.properties['documentStatus']){%>
+        const docstatus = this.data.documentStatus
+        const statussetting = this.jsonschema['x-simpleapp-config'].allStatus?.find((item)=>item.status==docstatus)
+        if(statussetting && statussetting.readOnly) return true
+      <%}%>      
+      return false            
+    } 
+  <%}%>
 
    reCalculateValue(data:<%= it.typename %>){
     //console.log('trigger new recalculate')    

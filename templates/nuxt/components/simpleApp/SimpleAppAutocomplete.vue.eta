@@ -1,6 +1,7 @@
 <template>   
         <AutoComplete v-model="modelValue"  v-if="!readonly" ref="autocompleteinput"
-               forceSelection optionLabel="label"                
+               forceSelection optionLabel="label"  
+               @focus="($event.target as HTMLInputElement).select()"              
                @item-select="pickAutoComplete"
                @complete="getListFromAutocompleteApi"       
                :placeholder="t('keyword')"
@@ -128,13 +129,14 @@ const openViewer = (readonly:boolean) =>{
         const schema:SchemaType = remotedoc.docClass.getSchema()
         const labelfield = schema['x-simpleapp-config'].documentTitle as string
         const codefield  = schema['x-simpleapp-config'].uniqueKey as string
+        const docname = props.setting.fieldsetting['x-foreignkey']
         $event('ViewRecord',{
             _id: modelValue.value?._id as string,
             eventId: crypto.randomUUID(),
-            label: modelValue.value?.label as string,
+            label: (readonly ? modelValue.value?.label : `${t('new') + ' '+ t(docname) }`)  as string,
             readonly:readonly,
-            viewer : getDocument(props.setting.fieldsetting['x-foreignkey'])?.viewer,
-            documentName: props.setting.fieldsetting['x-foreignkey'],
+            viewer : getDocument(docname)?.viewer,
+            documentName: docname,
 
             //after create, auto copy value into auto complete
             afterCreate:(data:any)=>{                

@@ -1,0 +1,106 @@
+<template>
+    <div class="simpleapp-tool-bar flex flex-row text-left gap-4">           
+        <div v-for="(menu,index) in menus" :key="index">
+            <div>
+                <Button v-if="showMenuButton(menu)" @click="emitEvent(menu,$event)">{{ menu.label  }}</Button>
+            </div>
+            
+        </div>  
+        <div v-for="(menu,index) in getDocActions()" :key="index">
+            <div>
+                <Button @click="emitEvent(menu,$event)">{{ menu.label  }}</Button>
+            </div>
+            
+        </div>     
+        <ConfirmPopup></ConfirmPopup>    
+    </div>
+</template>
+<script setup lang="ts">
+
+import { SimpleAppClient } from '~/simpleapp/generate/clients/SimpleAppClient';
+import { useConfirm } from "primevue/useconfirm";
+const confirm = useConfirm();
+import {FormActions,FormMenu} from '~/types'
+
+const ismodify = ref(false)
+const props = defineProps<{
+    document: SimpleAppClient<any,any>,    
+    disableaction? : string[]
+}>()
+
+const emits = defineEmits(['on'])
+const doc = props.document
+const data = doc.getReactiveData()
+
+const menus = ref<FormMenu[]>([])
+
+
+const getActions = () => {
+    const actions = doc.getActions()
+    
+    // Object.keys(actions).forEach((key)=>{ //crud, api, docstatus
+        actions['crud'].forEach((item)=>{ 
+            if(props.disableaction && props.disableaction.includes(item)){/*skip this item*/}
+            else{                
+                menus.value.push({
+                    action: item,
+                    label: t(item),                    
+                    type: 'crud'               
+                })
+            }
+        })
+    // })        
+    return actions
+}
+
+getActions()
+
+const emitEvent = (menu:FormMenu, clickEvent:any)=>{  
+    if(menu.action=='delete'){
+        confirm.require({
+            target: clickEvent.currentTarget as HTMLElement,
+            message: `${t("delete")}?`,
+            icon: "pi pi-exclamation-triangle",
+            acceptClass: "p-button-danger",
+            accept: () => emits('on',menu.action)
+        });
+    }else{
+        emits('on',menu.action)    
+    }   
+    
+}
+
+
+const getDocActions = () =>{
+        const docstatus:string = data.value.documentStatus
+        const allstatus = doc.getSchema()['x-simpleapp-config'].allStatus
+        let docactionmenus:FormMenu[] = []
+        type stringlist = {[key:string]:string}
+        const statusNames:stringlist = {}
+        allstatus?.forEach(item=>{
+            statusNames[item.status]=t(item.statusName)
+        })
+        if(allstatus){
+            const stateconfig = allstatus.find((item)=>item.status===docstatus)
+            docactionmenus = stateconfig?.actions.map(item=>({
+                    action: item,
+                    label: statusNames[item],                    
+                    type: 'docstatus'  
+            })) ?? []                   
+        }
+        return docactionmenus
+    
+}
+const showMenuButton = (menu:FormMenu)=>{
+    
+    if(!canPerform(doc.getDocName(),menu.action)) return false
+    if(doc.isNew() && menu.action == 'create')  return true    
+    if(!doc.isNew() && menu.action == 'new')  return true
+    if(!doc.isNew() && menu.action == 'update')  return true
+    if(!doc.isNew() && menu.action == 'delete')  return true    
+    
+    if(menu.type == 'api' ) return false
+    return false
+}
+
+</script>

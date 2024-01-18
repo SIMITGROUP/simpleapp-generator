@@ -90,6 +90,9 @@ export class SimpleAppService<T extends { _id?: string }> {
     this.data = { ...newdata };
     return this;
   };
+  public isReadOnly(): boolean {
+    return false;
+  }
   reCalculateValue(data: T) {}
   getIsolationFilter = (appuser: UserContext) => {
     let isolationFilter = {};
@@ -506,7 +509,7 @@ export class SimpleAppService<T extends { _id?: string }> {
         .session(dbsession);
       appuser.addUpdatedRecordId(this.documentName, data._id);
       await this.hook(appuser, HookType.afterUpdate, result);
-      return await this.findById(appuser,id);
+      return await this.findById(appuser, id);
     } catch (err) {
       throw new InternalServerErrorException(err.message);
     }
@@ -593,8 +596,11 @@ export class SimpleAppService<T extends { _id?: string }> {
       await this.hook(appuser, HookType.afterSetStatus, createresult);
       return createresult;
     } else {
-      const updateresult = await this.findIdThenUpdate(appuser, id, data);
-      await this.hook(appuser, HookType.afterSetStatus, data);
+      const originalresult = await this.findById(appuser,id)
+      const newdata = {...originalresult,...data}
+      const updateresult = await this.findIdThenUpdate(appuser, id, newdata);
+      const finaldata = await this.findById(appuser,id)
+      await this.hook(appuser, HookType.afterSetStatus, finaldata);
       return updateresult;
     }
   }

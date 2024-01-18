@@ -1,5 +1,5 @@
 <template>
-    <Crud :_id="_id"/>
+    <Crud :_id="_id" @after="after"/>
 </template>
 
 <script setup lang="ts">
@@ -11,5 +11,27 @@
  * author: Ks Tan
  */
 import Crud from './form.vue'
-defineProps(['_id'])
+import {<%= it.typename %>} from '~/simpleapp/generate/types'
+
+const doc = useNuxtApp().$<%= it.typename %>Doc()
+
+const props = defineProps<{_id:string}>();
+const after = (actionName: string, data: <%= it.typename %>, result: any) => {    
+  switch (actionName) {
+    case "new":
+      goTo(doc.getDocName(), "new");
+      break;
+    case "create":
+      goTo(doc.getDocName(), data._id);      
+      refreshDocumentList(doc.getDocName())
+      break;
+    case "update":
+      refreshDocumentList(doc.getDocName());
+      break;
+    case "delete":
+      goTo(doc.getDocName(), "new");
+      refreshDocumentList(doc.getDocName())
+      break;
+  }
+};
 </script>

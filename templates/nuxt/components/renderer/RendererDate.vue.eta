@@ -1,6 +1,6 @@
 <template >
-    <span>{{ toLocalDate(modelValue) }}</span>
+    <span>{{ toLocalDate(value??'') }}</span>
 </template>
 <script lang="ts" setup>
-    const modelValue = defineModel()    
+const props = defineProps<{value?:string}>()
 </script>
