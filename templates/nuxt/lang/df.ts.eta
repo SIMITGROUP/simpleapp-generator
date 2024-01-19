@@ -1,4 +1,6 @@
-export default {
+import more from './more'
+export default ()=> ({
+    ...more,
     welcome: 'Welcome',
     create: 'Create',
     update: 'Update',
@@ -32,9 +34,7 @@ export default {
     decision: 'Decision',
     simpleApproveMessage: 'Approve or reject',
     suspendcustomer:"Suspend Customer",
-    formKeyNotFound:'Formkey not found "{formKey}"',
-    managestudents: 'Manage Students',
-    registerSubject: 'Register Subjects',
+    formKeyNotFound:'Formkey not found "{formKey}"',    
     selectAll:'Select All',
     //auto generate from schema
     <% for(let i=0; i< it.allfields.length; i++){ %>
@@ -42,4 +42,4 @@ export default {
         <%=f%> : '<%= camelCaseToWords(f) %>',
     <%}%>    
 
-}
+})

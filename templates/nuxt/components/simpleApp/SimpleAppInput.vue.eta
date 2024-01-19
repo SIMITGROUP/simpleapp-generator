@@ -25,15 +25,25 @@
             :placeholder="placeholder"
             v-bind="(componentProps as CalendarProps)"/>
         <!-- time component -->        
-        <component :is="inputComponent" :pt="pt" 
+        <InputText  :pt="pt" 
             v-else-if="inputType == SimpleAppInputType.time"            
             :inputId="slotprops.uuid" :path="setting.instancepath"
-            v-model="modelValue" :readonly="isReadonly"
+            v-model="(modelValue as string)" :readonly="isReadonly"
             :placeholder="placeholder"
-            v-bind="componentProps"/>
+            v-bind="(componentProps as InputTextProps)"/>
         <!-- select/list component -->                
-        <component :is="inputComponent" v-model="modelValue"  :pt="pt"
-            v-else-if="[SimpleAppInputType.select,SimpleAppInputType.list].includes(inputType)"
+        <Listbox v-model="modelValue"  :pt="pt"
+            v-else-if="SimpleAppInputType.list==inputType"
+            :inputId="slotprops.uuid" :path="setting.instancepath"  
+            :readonly="isReadonly"
+            class="w w-full lg:w-full"
+            :disabled="isReadonly"
+            :options="getListOptions()" optionLabel="label" optionValue="value"
+            :placeholder="placeholder"
+            v-bind="(componentProps as ListboxProps)"/>
+
+        <Dropdown  v-model="modelValue"  :pt="pt"
+            v-else-if="SimpleAppInputType.select == inputType"
             :inputId="slotprops.uuid" :path="setting.instancepath"  
             :readonly="isReadonly"
             class="w w-full lg:w-full"
@@ -45,7 +55,7 @@
         <!-- radio component -->                
         <div v-else-if="inputType == SimpleAppInputType.radio" >
             <div v-for="(item,index) in getListOptions()">
-                <component :pt="pt" :is="inputComponent" v-model="modelValue" 
+                <RadioButton :pt="pt"  v-model="modelValue" 
                         :inputId="setting.key+'-'+index" name="smaple" :value="item.value"
                         :readonly="isReadonly"
                         />  {{ ' ' }}
@@ -75,45 +85,43 @@
            
         
         <!-- password -->
-        <component :is="inputComponent"
+        <Password 
                 v-else-if="inputType == SimpleAppInputType.password" 
-                :type="type" v-model="modelValue" :pt="pt" 
+                :type="type" v-model="(modelValue as string)" :pt="pt" 
                 :readonly="isReadonly" class="flex flex-col"
                 :inputId="slotprops.uuid" :path="setting.instancepath"
                 :placeholder="placeholder"
-                v-bind="componentProps"/>
+                v-bind="(componentProps as PasswordProps)"/>
 
         <!-- rating -->
-        <component v-else-if="inputType == SimpleAppInputType.rating" 
-          :type="type" v-model="modelValue" :pt="pt" 
+        <Rating v-else-if="inputType == SimpleAppInputType.rating" 
+          :type="type" v-model="(modelValue as number)" :pt="pt" 
                 :readonly="isReadonly"                 
                 :inputId="slotprops.uuid" :path="setting.instancepath"
-                v-bind="componentProps"/>
+                v-bind="(componentProps as RatingProps)"/>
             
         <!-- chip -->
-        <component  v-else-if="inputType == SimpleAppInputType.chip" 
-         :is="inputComponent" :type="type" v-model="modelValue"
+        <Chips  v-else-if="inputType == SimpleAppInputType.chip" 
+          :type="type" v-model="(modelValue as string[])"
                  :pt="pt" 
                 :disabled="isReadonly"                                 
                 :inputId="slotprops.uuid" :path="setting.instancepath"
                 :placeholder="placeholder"
-                v-bind="componentProps"
+                v-bind="(componentProps as ChipsProps)"
                 />
         <!-- simple component -->        
-        <component v-else-if="inputType == SimpleAppInputType.number" 
-                :is="inputComponent"                 
-                :type="type" v-model="modelValue"
+        <InputNumber v-else-if="inputType == SimpleAppInputType.number"                 
+                :type="type" v-model="(modelValue as number)"
                 :readonly="isReadonly"        
                 :pt="pt"
                 :class="!pt ? 'w-full flex flex-col' :''"
                 :inputId="slotprops.uuid" :path="setting.instancepath"
-                v-bind="componentProps"
+                v-bind="(componentProps as InputNumber)"
                 :placeholder="placeholder"
                 />
 
-        <component v-else
-            v-model="modelValue"
-                :is="inputComponent"
+        <InputText v-else
+            v-model="(modelValue as string)"                
                 :readonly="isReadonly"        
                 :pt="pt"
                 :type="type"
@@ -121,7 +129,7 @@
                 :inputId="slotprops.uuid" 
                 :path="setting.instancepath"
                 :placeholder="placeholder"
-                v-bind="componentProps"
+                v-bind="(componentProps as InputTextProps)"
                 />
             
         
@@ -153,9 +161,6 @@ import Textarea, { TextareaProps } from 'primevue/textarea';
 import {SimpleAppInputType} from '~/types'
 
 
-let inputComponent :Component
-
-
 const datevalue = ref('')
 const modelValue = defineModel()
 
@@ -181,67 +186,67 @@ const props = withDefaults( defineProps<{
 }>(),{type:'text'})
 
 
-switch(props.inputType){
-    case SimpleAppInputType.text:
-        inputComponent = InputText
-        break;
-    case SimpleAppInputType.textarea:
-        inputComponent = Textarea
-        break;
-    case SimpleAppInputType.number:
-        inputComponent = InputNumber
-    break   
-    case SimpleAppInputType.date:
-        inputComponent = InputText
-    break;
-    case SimpleAppInputType.time:
-        inputComponent = InputText
-    break;
-    case SimpleAppInputType.calendar:
-        inputComponent = Calendar
-        break;
-    case SimpleAppInputType.autocomplete: 
-        inputComponent = AutoComplete
-        break;
-    case SimpleAppInputType.autocompletemultiple: //*
-        inputComponent = AutoComplete
-        break;
-    case SimpleAppInputType.selectmultiple: //*
-        inputComponent = MultiSelect
-        break;
-    case SimpleAppInputType.listmultiple: //*
-        break;    
-    case SimpleAppInputType.radio: //*
-        inputComponent = RadioButton
-        break;
-    case SimpleAppInputType.select: //*
-        inputComponent = Dropdown
-        break;
-    case SimpleAppInputType.list: //*
-        inputComponent = Listbox
-        break;
-    case SimpleAppInputType.chip: //*
-        inputComponent = Chips
-        break;
-    case SimpleAppInputType.checkbox:
-        inputComponent = Checkbox
-        break;
-    case SimpleAppInputType.switch:
-        inputComponent = InputSwitch
-        break;    
-    case SimpleAppInputType.documentno:  //*
-        break;
-    case SimpleAppInputType.password: 
-        inputComponent = Password
-        break;    
-    case SimpleAppInputType.rating:
-        inputComponent = Rating
-        break;
-    case SimpleAppInputType.slider:
-        inputComponent = Slider
-        break;
+// switch(props.inputType){
+//     case SimpleAppInputType.text:
+//         inputComponent = InputText
+//         break;
+//     case SimpleAppInputType.textarea:
+//         inputComponent = Textarea
+//         break;
+//     case SimpleAppInputType.number:
+//         inputComponent = InputNumber
+//     break   
+//     case SimpleAppInputType.date:
+//         inputComponent = InputText
+//     break;
+//     case SimpleAppInputType.time:
+//         inputComponent = InputText
+//     break;
+//     case SimpleAppInputType.calendar:
+//         inputComponent = Calendar
+//         break;
+//     case SimpleAppInputType.autocomplete: 
+//         inputComponent = AutoComplete
+//         break;
+//     case SimpleAppInputType.autocompletemultiple: //*
+//         inputComponent = AutoComplete
+//         break;
+//     case SimpleAppInputType.selectmultiple: //*
+//         inputComponent = MultiSelect
+//         break;
+//     case SimpleAppInputType.listmultiple: //*
+//         break;    
+//     case SimpleAppInputType.radio: //*
+//         inputComponent = RadioButton
+//         break;
+//     case SimpleAppInputType.select: //*
+//         inputComponent = Dropdown
+//         break;
+//     case SimpleAppInputType.list: //*
+//         inputComponent = Listbox
+//         break;
+//     case SimpleAppInputType.chip: //*
+//         inputComponent = Chips
+//         break;
+//     case SimpleAppInputType.checkbox:
+//         inputComponent = Checkbox
+//         break;
+//     case SimpleAppInputType.switch:
+//         inputComponent = InputSwitch
+//         break;    
+//     case SimpleAppInputType.documentno:  //*
+//         break;
+//     case SimpleAppInputType.password: 
+//         inputComponent = Password
+//         break;    
+//     case SimpleAppInputType.rating:
+//         inputComponent = Rating
+//         break;
+//     case SimpleAppInputType.slider:
+//         inputComponent = Slider
+//         break;
 
-}
+// }
 const isReadonly = computed(()=>{
     if(props.readonly){
         return props.readonly

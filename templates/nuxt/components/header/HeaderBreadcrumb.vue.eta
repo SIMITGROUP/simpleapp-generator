@@ -24,7 +24,8 @@ const items = computed(()=>{
             pathlabel = getUserProfile().branchName
             data.push ({ label: pathlabel }) 
         }else{
-            pathlabel = t(p)
+            
+            pathlabel =  useNuxtApp().$i18n.te(p) ? t(p) :p
             data.push ({ label: pathlabel  , url:pathurl}) 
         }
 
