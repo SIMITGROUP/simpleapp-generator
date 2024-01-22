@@ -32,7 +32,6 @@ export default defineNuxtPlugin( async(nuxtApp) => {
       }
       else if(error.response.status==401){        
         console.error("axios 401 session expired, pop up for relogin")
-        relogin()
       }else if(error.response && error.response.status){
         console.error("have error response")
         createError({

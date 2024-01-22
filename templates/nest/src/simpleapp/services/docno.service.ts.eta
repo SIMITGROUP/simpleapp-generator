@@ -71,7 +71,7 @@ export class DocnoformatService extends DocnoformatProcessor {
      undefined,
      {default:'desc'}
     );
-    console.log('searchresult',searchresult);
+    //console.log('searchresult',searchresult);
     let data: any = [];
     for (let i = 0; i < searchresult.length; i++) {
       const s = searchresult[i];
