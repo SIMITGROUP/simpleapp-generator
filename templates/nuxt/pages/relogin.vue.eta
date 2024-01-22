@@ -1,0 +1,6 @@
+<template>
+    <div>relogin success</div>
+</template>
+<script lang="ts" setup>
+window.close()
+</script>

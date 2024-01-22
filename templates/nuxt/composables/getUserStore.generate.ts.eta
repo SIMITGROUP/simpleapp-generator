@@ -7,11 +7,14 @@ export const reloadUserStore = async () =>{
     await $userstore.loadRemoteUserInfo()
 }
 
-export const getUserProfile =  () =>{
+export const getUserProfile =  () =>{    
+    const userstore = getUserStore()
+    
     return getUserStore().getUserInfo()
 }
+
 export const getCurrentXorg = () =>{
-    return getUserStore().getCurrentXorg()
+    return  (useRoute().params.xorg) ? String(useRoute().params.xorg) : undefined            
 }
 export const getPageBaseUrl = (resourcename:string) =>{
     return `/${getCurrentXorg()}/${resourcename}`;

@@ -1,22 +1,11 @@
-export const logout = async () => {
+export const logout = async (redirecturl:string='') => {
+    const redirectdata = encodeURIComponent(redirecturl)
     const { signOut } = useAuth();    
     const { data } = await <any>useFetch('/api/auth/logout');    
-    const signoutres = await signOut({redirect:false});
-    console.log("signout data", signoutres)
-    // console.log(data.value)
-    if(data['value']&& data['value']['path']){
-        // const logoutkeycloak = await <any>useFetch(data.value.path); 
-        // console.log('logoutkeycloak',data['value']['path'])
-        if(data['value']['path']){
-            navigateTo(data.value.path, { external: true })
-        }
-        // 
-    }
+    // remove session
+    await signOut({redirect:false});
+    let addPath = encodeURIComponent(`/login?callbackUrl=${redirectdata}`);    
+    const tourl= `${data.value.path}${addPath}`
+    navigateTo(tourl, { external: true })
     
-    // console.log('logout data',data.value)
-    
-    
-    // const addPath = encodeURIComponent("/login");
-    //
-  
 };

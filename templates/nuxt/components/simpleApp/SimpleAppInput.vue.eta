@@ -14,14 +14,14 @@
         <InputText type="date" :pt="pt" 
             v-else-if="inputType == SimpleAppInputType.date"            
             :inputId="slotprops.uuid" :path="setting.instancepath"
-            v-model="(datevalue as string)" @update:modelValue="updateDate" :readonly="isReadonly"
+            v-model="datevalue" @update:modelValue="updateDate" :readonly="isReadonly"
             :placeholder="placeholder"
             v-bind="(componentProps as InputTextProps)"/>
         <!-- calendar component -->        
         <Calendar type="date" :pt="pt" class="flex flex-col"
             v-else-if="SimpleAppInputType.calendar==inputType"
             :inputId="slotprops.uuid" :path="setting.instancepath"
-            v-model="(datevalue as string)" @update:modelValue="updateDate" :readonly="isReadonly"
+            v-model="datevalue" @update:modelValue="updateDate" :readonly="isReadonly"
             :placeholder="placeholder"
             v-bind="(componentProps as CalendarProps)"/>
         <!-- time component -->        

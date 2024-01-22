@@ -27,7 +27,7 @@ import { UserContext } from '../user.context';
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
   protected defaultxorg = Base64URL.encodeText('0-0-0');
-  protected excludeXorgs = ['/profile', '/profile/tenant'];
+  protected excludeXorgs = ['/profile', '/profile/tenant','/profile/session'];
   protected logger = new Logger();
   protected transController;
   constructor(

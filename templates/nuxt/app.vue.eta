@@ -12,6 +12,7 @@ watch(()=>useRoute().params['xorg'],(newval,oldvalue)=>{
 <template>
   <div>    
     <NuxtLayout>      
+      <SessionBlock/>
       <EventDocumentViewer></EventDocumentViewer>      
       <EventDecision/>
       <EventNotification/>

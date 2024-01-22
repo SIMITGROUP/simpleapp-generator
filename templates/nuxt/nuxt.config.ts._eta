@@ -33,7 +33,7 @@ tailwindcss: {
     'nuxt-primevue',
     // "nuxt-security",     //temporary avoid nuxt-security cause cors
     '@vueuse/nuxt', 
-    '@nuxt/ui',
+    //'@nuxt/ui',
     '@nuxtjs/tailwindcss',
     ['@pinia/nuxt',{
       autoImports: [

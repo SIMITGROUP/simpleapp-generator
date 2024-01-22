@@ -29,4 +29,5 @@ export type EventType ={
     'RefreshUser' :string
     'RefreshDocumentList': RefreshDocumentList
     'ViewRecord': ViewRecord
+    'SessionExpire': string
 }
