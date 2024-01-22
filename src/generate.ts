@@ -28,6 +28,7 @@ let frontendFolder=''
 let backendFolder=''
 let frontendpagefolder=''
 const allroles:any={}
+let langdata:any = {}
 let allbpmn:any = {}
 let activatemodules:ModuleObject[]=[]
 let generateTypes:any = {}
@@ -39,6 +40,7 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
   backendFolder=configs.backendFolder
   
   const groupFolder = configs.groupFolder
+  const defaultLangFile = configs.defaultLangFile ??  frontendFolder +'/../lang/default.json'
   if(genFor.includes('nest')){
     generateTypes['nest']=backendFolder
   }
@@ -76,7 +78,8 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
       throw e;
     } 
   }
-  // //generate groups
+  
+
   //prepare group/roles
   const systemgroups = readdirSync(`${groupFolder}`)
   for(let g = 0; g< systemgroups.length;g++){
@@ -88,6 +91,11 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
     allroles[documentname]=roles
   }
   
+  if(existsSync(defaultLangFile)){
+    const langjsonstr = readFileSync(defaultLangFile, 'utf-8');      
+      langdata = JSON.parse(langjsonstr);     
+  }
+
   
   if(configs.bpmnFolder){
     allbpmn = await generateWorkflows(configs,genFor)
@@ -353,7 +361,8 @@ const generateSystemFiles=(modules:ModuleObject[],allbpmn)=>{
     allroles:allroles,
     foreignkeys:allforeignkeys,
     allfields:allfields,
-    allbpmn: allbpmn
+    allbpmn: allbpmn,
+    lang:langdata
   }
   
   

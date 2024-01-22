@@ -1,45 +1,17 @@
-import more from './more'
-export default ()=> ({
-    ...more,
-    welcome: 'Welcome',
-    create: 'Create',
-    update: 'Update',
-    delete:'Delete',
-    modify: 'Modify',
-    confirm:'Confirm',
-    void:'Void',
-    draft:'Draft',
-    profile: 'Profile',
-    logout: 'logout',
-    language: 'Language',
-    theme: 'Theme',
-    welcomeSimpleApp: 'Welcome To SimpleApp',
-    changeHomePageMsg: '{fullName}, it is product front page and by right you shall replace it with something else.',
-    realman:'Real man code with simpleapp',
-    new:'New',
-    keyword: 'Keyword',
-    empty: 'Empty',    
-    noDataFound:'No Data Found',
-    userInfo:'User Information',
-    currentBranchAccessRights: 'Current Branch Access Rights',
-    yourCompanyName: 'Your Company Name',
-    onlyAppearInDebugMode: 'Only Appear In Debug Mode',
-    pickDocument:'Pick Document',
-    sample:'Sample',
-    createYourContentHere: 'Create your content here',
-    setting: 'Setting',
-    mytasks: 'My Tasks',
-    suspend: 'Suspend',
-    submit: 'Submit',
-    decision: 'Decision',
-    simpleApproveMessage: 'Approve or reject',
-    suspendcustomer:"Suspend Customer",
-    formKeyNotFound:'Formkey not found "{formKey}"',    
-    selectAll:'Select All',
+export default {
+
+    //auto generate from lang/default.ts
+    <%let langkeys = Object.keys(it.lang) %>
+    <% for(let l=0; l< langkeys.length; l++){ %>
+    <% let key = langkeys[l] %>
+        <%=key%> : '<%= it.lang[key] %>',
+    <%}%>    
+
+
     //auto generate from schema
     <% for(let i=0; i< it.allfields.length; i++){ %>
     <% let f = it.allfields[i] %>
         <%=f%> : '<%= camelCaseToWords(f) %>',
     <%}%>    
 
-})
+}

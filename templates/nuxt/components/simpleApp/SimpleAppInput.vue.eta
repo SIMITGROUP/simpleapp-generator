@@ -81,7 +81,8 @@
             :readonly="isReadonly" @update:docNoFormat="triggerDocNoFormatChange"     
             :pt="pt"
              :path="setting.instancepath"
-             v-bind:attributes="componentProps"/>
+             v-bind="(componentProps as any)"/> 
+             <!-- use componentProps as any at the moment, no ideal yet, and for compatibility -->
            
         
         <!-- password -->
@@ -164,11 +165,6 @@ import {SimpleAppInputType} from '~/types'
 const datevalue = ref('')
 const modelValue = defineModel()
 
-if(modelValue.value){
-    datevalue.value = moment(modelValue.value as string ).format('YYYY-MM-DD')
-}else{
-    datevalue.value = ''
-}
 const props = withDefaults( defineProps<{
     inputType:SimpleAppInputType,
     label?:string,
@@ -184,6 +180,13 @@ const props = withDefaults( defineProps<{
     componentProps?: InputNumberProps | InputSwitchProps | InputTextProps | TextareaProps | DropdownProps | CalendarProps | RatingProps
 
 }>(),{type:'text'})
+
+
+if(props.inputType== SimpleAppInputType.date && modelValue.value){
+    datevalue.value = moment(modelValue.value as string ).format('YYYY-MM-DD')
+}else{
+    datevalue.value = ''
+}
 
 
 // switch(props.inputType){

@@ -11,6 +11,7 @@ let config = {
     "bpmnFolder":"",//./workflows/bpmn",
     "backendFolder":"./backend", 
     "groupFolder":"./groups",
+    "langFolder":"./lang",
     "backendPort":"8000",
     "mongoConnectStr":'mongodb://127.0.0.1:27017/simpleapp',
     "mongoDbName":'simpleapp',

@@ -16,6 +16,8 @@ const getAxiosConfig = () => {
   };
   return config
 }
+export const getApiSession = async ()=> await (new o.PROFILEApi(getAxiosConfig())).getSession()
+
 export const getDocumentApi = (documentName: string): any => {
   //const { csrf } = useCsrf()    
   //axios.defaults.headers.common = {"CSRF-TOKEN": csrf};
