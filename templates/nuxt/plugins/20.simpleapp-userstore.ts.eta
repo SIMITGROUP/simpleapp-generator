@@ -6,6 +6,7 @@
  */
 import { defineNuxtPlugin } from "#app";
 import {PROFILEApi} from '../simpleapp/generate/openapi'
+import {UserProfile} from '~/types'
 import axios, { Axios, AxiosResponse } from 'axios'
 import _ from 'lodash'
 
@@ -151,8 +152,18 @@ export default defineNuxtPlugin( async(nuxtApp) => {
             }
             return false                        
           },
+          async logout (redirecturl:string){
+            const redirectdata = encodeURIComponent(redirecturl)
+            const { signOut } = useAuth();    
+            const { data } = await <any>useFetch('/api/auth/logout');    
+            // remove session
+            await signOut({redirect:false});
+            let addPath = encodeURIComponent(`/login?callbackUrl=${redirectdata}`);    
+            const tourl= `${data.value.path}${addPath}`            
+            navigateTo(tourl,{external:true})
+          },
           getUserInfo(){
-            return {
+            const userinfo:UserProfile = {
               _id : this._id,
               sessionId : this.sessionId,
               tenantId : this.tenantId,
@@ -174,22 +185,30 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               time:this.time,
               moreProps: this.moreProps
               
-  
-              
             }
+            return userinfo
           }
         }        
       })
     console.log("after define user store")
     
     if( useRoute().meta.auth !==false){
+      
       if(await useUserStore().pingSession()){
         console.log("ping session ok")
         await useUserStore().loadRemoteUserInfo()
+        console.log("load remote user info ok")
+        
       }else{
         console.log("No login session", useRoute().path)
-        await logout(useRoute().path)
+        await useUserStore().logout(useRoute().path)        
       }    
+    }else{
+      // if(await useUserStore().pingSession()){
+
+      // }else{
+
+      // }
     }
     
     return {

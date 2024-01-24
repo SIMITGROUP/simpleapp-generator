@@ -120,7 +120,17 @@
                 v-bind="(componentProps as InputNumber)"
                 :placeholder="placeholder"
                 />
-
+            <Textarea v-else-if="inputType == SimpleAppInputType.textarea"
+            v-model="(modelValue as string)"                
+                :readonly="isReadonly"        
+                :pt="pt"
+                :type="type"
+                class="w-full flex flex-col"
+                :inputId="slotprops.uuid" 
+                :path="setting.instancepath"
+                :placeholder="placeholder"
+                v-bind="(componentProps as TextareaProps)"
+                />
         <InputText v-else
             v-model="(modelValue as string)"                
                 :readonly="isReadonly"        

@@ -34,5 +34,16 @@
     "simpleApproveMessage": "Approve or reject",
     "suspendcustomer": "Suspend Customer",
     "formKeyNotFound": "Formkey not found \"{formKey}\"",
-    "selectAll": "Select All"
+    "selectAll": "Select All",
+
+
+    "branches":"Branches",
+    "accessRights": "Access Rights",
+    "fullName":"Full Name",
+    "type": "Type",
+    "save": "Save",
+    "general": "General",
+    "login":"Login",
+    "sessionExpire": "Session Expire",
+    "reloginMessage": "Session Expire, relogin" 
   }

@@ -41,4 +41,37 @@ export type UserListItem = {
   }
 
 
-  
+export type UserProfile = {
+  _id : string
+  sessionId : string
+  tenantId : number
+  orgId : number
+  branchId : number
+  orgRecordId: string
+  branchRecordId: string
+  uid : string
+  email : string
+  branchCode: string
+  branchName: string
+  orgCode: string
+  orgName: string
+  fullName : string
+  branches: {
+    _id: string
+    branch: any
+    group: string
+    xOrg: string
+  }[]
+  invites: {
+    _id: string;
+    email: string;
+    fullName: string;
+    tenantId: string;
+    tenantName: string;
+    created: string;
+  }[]
+  roles: string[]
+  group: string
+  time: string
+  moreProps: any  
+}

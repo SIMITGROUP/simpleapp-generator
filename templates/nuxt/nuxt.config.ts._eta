@@ -115,7 +115,7 @@ tailwindcss: {
     // },
     //csrf: true,   // been force to off csrf cash it crash with nuxt-auth
   // },
-  // ssr: false,
+  ssr: false,
   // content: [
   //     "./index.html",
   //     "./src/**/*.{vue,js,ts,jsx,tsx}",

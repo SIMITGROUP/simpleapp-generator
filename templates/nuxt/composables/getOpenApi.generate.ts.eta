@@ -28,54 +28,12 @@ export const getDocumentApi = (documentName: string): any => {
 
   const config = getAxiosConfig()
   const docsOpenapi: any = {
-            'tenant': new o.TENANTApi(config),
-
-            'organization': new o.ORGApi(config),
-
-            'branch': new o.BRANCHApi(config),
-
-            'permission': new o.PERMApi(config),
-
-            'autoincreament': new o.AUTOINCApi(config),
-
-            'docnoformat': new o.DOCNOApi(config),
-
-            'category': new o.CATApi(config),
-
-            'customer': new o.CUSTApi(config),
-
-            'enrollment': new o.ENROLLApi(config),
-
-            'invoice': new o.INVApi(config),
-
-            'level': new o.LVLApi(config),
-
-            'payment': new o.PAYApi(config),
-
-            'paymentmethod': new o.PAYMETHODApi(config),
-
-            'period': new o.PERIODApi(config),
-
-            'product': new o.PRDApi(config),
-
-            'room': new o.ROOMApi(config),
-
-            'schedule': new o.SCHEDULEApi(config),
-
-            'school': new o.SCHOOLApi(config),
-
-            'student': new o.STUApi(config),
-
-            'studentgroup': new o.STUGROUPApi(config),
-
-            'teacher': new o.TEACHERApi(config),
-
-            'tuitionclass': new o.TUITIONApi(config),
-
-            'user': new o.USERApi(config),
-
-                  
+   <%for(let i=0; i<it.modules.length;i++){ %>
+    <% const d = it.modules[i] %>
+    '<%= d['docname'].toLowerCase() %>': new o.<%= d['doctype'].toUpperCase() %>Api(config),
+    <%}%>              
     };
+
   if (!docsOpenapi[documentName]) {
     console.error(
       `api for '${documentName}' does not exists, most probably define wrong x-foreignkey`,

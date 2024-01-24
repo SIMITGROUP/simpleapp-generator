@@ -6,7 +6,7 @@
       <h3
         class="text-base font-semibold leading-7 text-gray-900 dark:text-gray-400"
       >
-        {{t('userinfo')}}
+        {{ t("userinfo") }}
       </h3>
     </div>
     <div class="mt-6 border-t border-gray-100">
@@ -15,7 +15,7 @@
           <dt
             class="text-sm font-medium leading-6 text-gray-900 dark:text-gray-400"
           >
-            Full name
+            {{ t("fullName") }}
           </dt>
           <dd
             class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0 dark:text-gray-300"
@@ -27,7 +27,7 @@
           <dt
             class="text-sm font-medium leading-6 text-gray-900 dark:text-gray-400"
           >
-            Group
+            {{ t("group") }}
           </dt>
           <dd
             class="mt-1 text-sm leading-6 text-gray-700 dark:text-gray-300 sm:col-span-2 sm:mt-0"
@@ -39,7 +39,7 @@
           <dt
             class="text-sm font-medium leading-6 text-gray-900 dark:text-gray-400"
           >
-            Email address
+            {{ t("email") }}
           </dt>
           <dd
             class="mt-1 text-sm leading-6 text-gray-700 dark:text-gray-300 sm:col-span-2 sm:mt-0"
@@ -52,7 +52,7 @@
           <dt
             class="text-sm font-medium leading-6 text-gray-900 dark:text-gray-400"
           >
-            Branch Access
+            {{t('branches')}}
           </dt>
           <dd class="mt-2 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
             <ul
@@ -96,8 +96,8 @@
           <dt
             class="text-sm font-medium leading-6 text-gray-900 dark:text-gray-400"
           >
-            Current Branch Access Rights
-            <p class="text-danger-600">only appear in debug mode</p>
+            {{t('accessRights')}}
+            <p class="text-danger-600">{{ t("onlyAppearInDebugMode") }}</p>
             <p class="text-danger-600">{{ getUserProfile().sessionId }}</p>
           </dt>
           <dd
@@ -110,5 +110,4 @@
     </div>
   </div>
 </template>
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>

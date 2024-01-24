@@ -14,8 +14,8 @@
                     <div  :class="getSelectedCSS(item)">
                         <NuxtLink :to="url ? `${url}/${item[idField]}`:undefined">
                             <slot :item="item" :index="index">
-                                <div class="mr-2">{{item[titleField]  }}</div>
-                                <div class="font font-bold text-right">{{item[subTitleField]}}</div>
+                                <div class="mr-2">{{item[titleField??'']  }}</div>
+                                <div class="font font-bold text-right">{{item[subTitleField??'']}}</div>
                             </slot>
                         </NuxtLink>
                     </div>
@@ -25,11 +25,11 @@
         </div>
     </div>
 </template>
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends {[key:string]:any}">
 import {ref} from 'vue'
 import {ListItem} from '~/types/listview'
 const props = withDefaults(defineProps<{
-    list:any[],
+    list:T[],
     url?:string,
     titleField?:string
     idField?:string
@@ -48,13 +48,13 @@ const clickRow=(item:ListItem)=>{
 const filterlist =  computed(()=>{    
     const newlist =props.list.filter((item:any)=>
     {
-     return   String(item[props.titleField]).toLowerCase().includes(searchvalue.value.toLowerCase()) ||
-            String(item[props.subTitleField]).toLowerCase().includes(searchvalue.value.toLowerCase())
+     return   String(item[props.titleField??'']).toLowerCase().includes(searchvalue.value.toLowerCase()) ||
+            String(item[props.subTitleField??'']).toLowerCase().includes(searchvalue.value.toLowerCase())
     }) 
 
     return newlist
 })
-const getSelectedCSS= (item:ListItem)=>{
+const getSelectedCSS= (item:T)=>{
     if(selecteditem.value == item.code){
         return "p-2 border bg-sky-200"
     }else{
