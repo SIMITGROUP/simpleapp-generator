@@ -9,49 +9,17 @@ import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { AutoincreamentProcessor } from '../generate/processors/autoinc.processor';
 
-import { Autoincreament } from '../generate/types/autoinc.type';
+import { Autoincreament,AutoincreamentHooks } from '../generate/types';
 import { UserContext } from '../generate/commons/user.context';
-export { Autoincreament } from '../generate/types/autoinc.type';
+export { Autoincreament } from '../generate/types';
 
 @Injectable()
 export class AutoincreamentService extends AutoincreamentProcessor {
+  hooks: AutoincreamentHooks = {};
   constructor(@InjectModel('Autoincreament') mydoc: Model<Autoincreament>) {
     super(mydoc);
   }
 
-  //    hook = async (appuser:UserContext,type: string, data?: any) => {
-  //     switch(type){
-  //         case 'init':
-  //         break;
-  //         case 'beforeSearch':
-  //         break;
-  //         case 'afterSearch':
-  //         break;
-  //         case 'beforeValidation':
-  //         break;
-  //         case 'afterValidation':
-  //         break;
-  //         case 'beforeCreate':
-  //         break;
-  //         case 'afterCreate':
-  //         break;
-  //         case 'beforeUpdate':
-  //         break;
-  //         case 'afterUpdate':
-  //         break;
-  //         case 'beforeDelete':
-  //         break;
-  //         case 'afterDelete':
-  //         break;
-  //         case 'beforeFetchRecord':
-  //         break;
-  //         case 'afterFetchRecord':
-  //         break;
-  //         default:
-  //         break;
-  //         }
-  //     return true;
-  //   };
 
   async runGenerateNextNo(
     appuser: UserContext,

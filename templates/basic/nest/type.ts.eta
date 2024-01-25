@@ -5,6 +5,7 @@
  * last change 2023-09-09
  * Author: Ks Tan
  */
+import {DefaultHooks} from  "../types"
 
 <%Object.keys(it.models).forEach(function(prop){ %>  
   <% let schema = it.models[prop] %>
@@ -26,3 +27,9 @@
   }
 <%})%>
 
+
+
+export type <%=it.typename%>Hooks = DefaultHooks<<%=it.typename%>> & {
+  
+  
+}

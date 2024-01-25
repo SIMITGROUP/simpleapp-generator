@@ -93,15 +93,15 @@ export default defineNuxtPlugin( async(nuxtApp) => {
             })            
           },                  
           getCurrentXorg(){
-            return  (useRoute().params.xorg) ? String(useRoute().params.xorg) : undefined            
+            return  (useRoute().params.xorg) ? String(useRoute().params.xorg) : undefined           
           },
           async pingSession(){
-            let xorg = this.getCurrentXorg()    
+            let xorg = this.getCurrentXorg() 
             let apiurl=''
-            if(xorg===undefined){
+            if(!xorg){
               apiurl = `${useRuntimeConfig().public.APP_URL}/api`
             }else{
-              apiurl = `${useRuntimeConfig().public.APP_URL}/api/${xorg}`
+            apiurl = `${useRuntimeConfig().public.APP_URL}/api/${xorg}`
             }
             const {$axios} = useNuxtApp()
             return await new PROFILEApi(undefined,apiurl,$axios).getSession()

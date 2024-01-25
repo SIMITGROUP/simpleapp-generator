@@ -8,14 +8,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { OrganizationProcessor } from '../generate/processors/org.processor';
-import { Organization } from '../generate/types/org.type';
-export { Organization } from '../generate/types/org.type';
+import { Organization,OrganizationHooks } from '../generate/types';
+export { Organization } from '../generate/types';
 import { AutoincreamentService } from './autoinc.service';
 import { UserContext } from '../generate/commons/user.context';
 
 @Injectable()
 export class OrganizationService extends OrganizationProcessor {
   protected strictIsolation = false;
+  protected hooks : OrganizationHooks = {
+    beforeCreate: async (appuser: UserContext, data: Organization) => await this.orgBeforeCreate(appuser,data),
+  };
   constructor(
     @InjectModel('Organization') mydoc: Model<Organization>,
     private increament: AutoincreamentService,
@@ -23,43 +26,12 @@ export class OrganizationService extends OrganizationProcessor {
     super(mydoc);
   }
 
-  hook = async (appuser: UserContext, type: string, data?: any) => {
-    switch (type) {
-      //         case 'init':
-      //         break;
-      //         case 'beforeSearch':
-      //         break;
-      //         case 'afterSearch':
-      //         break;
-      //         case 'beforeValidation':
-      //         break;
-      //         case 'afterValidation':
-      //         break;
-      case 'beforeCreate':
-        const searchresult = await this.increament.runGenerateNextNo(
+  async orgBeforeCreate(appuser:UserContext,data:Organization){
+    const searchresult = await this.increament.runGenerateNextNo(
           appuser,
           'organization',
           'orgId',
         );
         data.orgId = searchresult.nextno;
-        break;
-      //         case 'afterCreate':
-      //         break;
-      //         case 'beforeUpdate':
-      //         break;
-      //         case 'afterUpdate':
-      //         break;
-      //         case 'beforeDelete':
-      //         break;
-      //         case 'afterDelete':
-      //         break;
-      //         case 'beforeFetchRecord':
-      //         break;
-      //         case 'afterFetchRecord':
-      //         break;
-      //         default:
-      //         break;
-    }
-    return true;
-  };
+  }  
 }

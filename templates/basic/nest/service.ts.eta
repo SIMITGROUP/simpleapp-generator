@@ -9,9 +9,9 @@ import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { UserContext } from '../generate/commons/user.context';
 import { <%= it.typename %>Processor } from '../generate/processors/<%= it.doctype %>.processor';
-import { <%= it.typename %>} from '../generate/types/<%= it.doctype %>.type';
-import {HookType} from '../generate/types'
-export { <%= it.typename %>} from '../generate/types/<%= it.doctype %>.type';
+import { <%= it.typename %>,<%= it.typename %>Hooks} from '../generate/types';
+
+export { <%= it.typename %>} from '../generate/types';
 
 
 @Injectable()
@@ -19,50 +19,12 @@ export class <%= it.typename %>Service extends <%= it.typename %>Processor {
   <% const config = it.jsonschema['x-simpleapp-config']%>   
   <%if(config['loseDataIsolation']){%>protected strictIsolation = false;<%}%> 
       
-
+  public hooks: <%= it.typename %>Hooks = {}
     constructor(
         @InjectModel('<%= it.typename %>')  mydoc: Model<<%= it.typename %>>
         ){
         super(mydoc)
     }
-
- //  hook = async (appuser:UserContext,type: HookType, data?: any) => {
-  //   switch(type){
-  //       case HookType.init:  //data = undefined
-  //       break;
-  //       case HookType.beforeSearch:  //data = filters
-  //       break;
-  //       case HookType.afterSearch: //data = search result
-  //       break;
-  //       case HookType.beforeValidation: //data = documentdata
-  //       break;
-  //       case HookType.afterValidation: //data = documentdata
-  //       break;
-  //       case HookType.beforeCreate: //data = documentdata
-  //       break;
-  //       case HookType.afterCreate: //data = after create result (final data from mongodb)
-  //       break;
-  //       case HookType.beforeUpdate: //data = documentdata
-  //       break;
-  //       case HookType.afterUpdate: //data = after update result (return from mongodb)
-  //       break;
-  //       case HookType.beforeDelete: //data = record _id
-  //       break;
-  //       case HookType.afterDelete: //data = deleted result
-  //       break;
-  //       case HookType.beforeFetchRecord: //data = record _id
-  //       break;
-  //       case HookType.afterFetchRecord: //data = document data
-  //       break;
-  //       case HookType.beforeSetStatus: //data = document data
-  //       break;
-  //       case HookType.afterSetStatus: //data = document data
-  //       break;
-  //       default:
-  //       break;
-  //       }
-  //   return true;
-  // };
 
 /***************************** begin x-document-api definitions *****************************************/
 <% for(let i=0;i<it.apiSettings.length;i++){%>

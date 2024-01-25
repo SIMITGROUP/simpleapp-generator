@@ -8,63 +8,20 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, PipelineStage } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { PermissionProcessor } from '../generate/processors/perm.processor';
-import { Permission } from '../generate/types/perm.type';
+import { Permission,PermissionHooks } from '../generate/types';
 import { UserContext } from '../generate/commons/user.context';
-
-export { Permission } from '../generate/types/perm.type';
+export { Permission } from '../generate/types';
 
 @Injectable()
 export class PermissionService extends PermissionProcessor {
   protected strictIsolation = false;
+  protected hooks : PermissionHooks = {};
   constructor(
     @InjectModel('Permission') mydoc: Model<Permission>,    
     ) {
     super(mydoc);
   }
 
-  hook = async (appuser: UserContext, type: string, data?: any) => {
-    switch (
-      type
-      //         case 'init':
-      //         break;
-      //         case 'beforeSearch':
-      //         break;
-      //         case 'afterSearch':
-      //         break;
-      //         case 'beforeValidation':
-      //         break;
-      //         case 'afterValidation':
-      //         break;
-      //         case 'beforeCreate':
-      //         break;
-      //         case 'afterCreate':
-      //         break;
-      //         case 'beforeUpdate':
-      //         break;
-      //         case 'afterUpdate':
-      //         break;
-      //         case 'beforeDelete':
-      //         break;
-      //         case 'afterDelete':
-      // case 'beforeDeleteMany':
-      // this.logger.log(data, 'beforeDeleteMany');
-      // this.deleteMany(appuser,data)
-      //   break;
-      // case 'afterDeleteMany':
-      // this.logger.log(data, 'afterDeleteMany', data);
-      // break;
-
-      //         break;
-      //         case 'beforeFetchRecord':
-      //         break;
-      //         case 'afterFetchRecord':
-      //         break;
-      //         default:
-      //         break;
-    ) {
-    }
-    return true;
-  };
 
   async runListUser(appuser: UserContext) {
     const getallrecords: PipelineStage = { $match: {} };

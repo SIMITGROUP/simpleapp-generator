@@ -31,12 +31,12 @@ import {
 } from '@nestjs/common/exceptions';
 import { UserContext } from '../commons/user.context';
 import { DocNumberFormatGenerator } from '../commons/docnogenerator.service';
-import { IsolationType, HookType, MoreProjectionType } from '../types';
+import { IsolationType, DefaultHooks, MoreProjectionType } from '../types';
 @Injectable()
 export class SimpleAppService<T extends { _id?: string }> {
   @Inject(EventEmitter2)
   protected eventEmitter: EventEmitter2;
-
+  protected hooks: DefaultHooks<T> = {};
   protected logger = new Logger();
   protected strictIsolation = true;
   protected jsonschema = { type: 'object', properties: {}, required: [] };
@@ -73,7 +73,7 @@ export class SimpleAppService<T extends { _id?: string }> {
     this.documentName = docname;
     this.doc = newdoc;
     this.isolationtype = isolationtype;
-    this.hook(undefined, HookType.init, undefined);
+    if (this.hooks.init) this.hooks.init();
     // this.tenantdoc = tenantdoc
   }
   getDocumentType = () => this.documentType;
@@ -81,6 +81,7 @@ export class SimpleAppService<T extends { _id?: string }> {
   getRecordId = (): string => this.data._id;
   setSchema = (newschema) => (this.jsonschema = newschema);
   getSchema = () => this.doc.schema.obj;
+  getHooks = () => this.hooks;
   getData = () => {
     //console.log('thisdata', this.data);
     return this.data;
@@ -181,12 +182,15 @@ export class SimpleAppService<T extends { _id?: string }> {
    */
   private async searchNoIsolation(appuser: UserContext, filters: Object) {
     try {
-      await this.hook(appuser, HookType.beforeSearch, filters);
+      if (this.hooks.beforeSearch)
+        await this.hooks.beforeSearch(appuser, filters);
       const products = await this.doc.find(filters);
       const productlist = products.map((p: T) => {
         return p;
       });
-      await this.hook(appuser, HookType.afterSearch, productlist);
+      if (this.hooks.afterSearch)
+        await this.hooks.afterSearch(appuser, productlist);
+
       //   console.log(products);
       return productlist;
     } catch (err) {
@@ -224,7 +228,9 @@ export class SimpleAppService<T extends { _id?: string }> {
 
       // console.log("initial search",filters)
       const newfilters = { ...filters, ...isolationFilter };
-      await this.hook(appuser, HookType.beforeSearch, newfilters);
+
+      if (this.hooks.beforeSearch)
+        await this.hooks.beforeSearch(appuser, newfilters);
       // console.log("before _find",newfilters)
       // console.log("this.doc",this.doc)
       const products = await this.doc
@@ -235,7 +241,9 @@ export class SimpleAppService<T extends { _id?: string }> {
         return p;
       });
       // console.log("after map",productlist)
-      await this.hook(appuser, HookType.afterSearch, productlist);
+      if (this.hooks.afterSearch)
+        await this.hooks.afterSearch(appuser, productlist);
+
       //   console.log(products);
       return productlist;
     } catch (err) {
@@ -244,9 +252,12 @@ export class SimpleAppService<T extends { _id?: string }> {
     // return this;
   }
   async findById(appuser: UserContext, id: string) {
-    await this.hook(appuser, HookType.beforeFetchRecord, id);
+    if (this.hooks.beforeFetchRecord)
+      await this.hooks.beforeFetchRecord(appuser, id);
     const data = await this.search(appuser, { _id: id });
-    await this.hook(appuser, HookType.afterFetchRecord, data[0]);
+    if (this.hooks.afterFetchRecord)
+      await this.hooks.afterFetchRecord(appuser, data[0]);
+
     if (data.length == 1) {
       // console.log('data0', data[0]);
       return data[0];
@@ -276,8 +287,7 @@ export class SimpleAppService<T extends { _id?: string }> {
       await this.genNewDocNo(appuser, data);
     }
 
-    await this.hook(appuser, HookType.beforeCreate, data);
-
+    if (this.hooks.beforeCreate) await this.hooks.beforeCreate(appuser, data);
     let isolationFilter: any = { ...appuser.getCreateFilter() };
     isolationFilter = this.polishIsolationFilter(isolationFilter, data);
 
@@ -287,11 +297,10 @@ export class SimpleAppService<T extends { _id?: string }> {
     this.logger.debug(data, 'SimpleAppService');
     Object.assign(data, isolationFilter);
     this.reCalculateValue(data);
-    await this.validateData(appuser, data);
-    this.logger.debug('Create record', 'SimpleAppService');
-    this.logger.debug(data, 'SimpleAppService');
-
+    await this.validateData(appuser, data);        
+    this.logger.debug(data, `after create validation`);
     this.applyNestedDateTime(appuser, data, 'create');
+    this.logger.debug(data, `Create Record ${this.documentName}`);
     const newdoc = new this.doc(data);
     await this.identifyForeignKeys(appuser, data);
     try {
@@ -306,7 +315,8 @@ export class SimpleAppService<T extends { _id?: string }> {
     // this.doc
 
     // result = await newdoc.save()
-    await this.hook(appuser, HookType.afterCreate, result);
+
+    if (this.hooks.afterCreate) await this.hooks.afterCreate(appuser, result);
 
     return result as T;
   }
@@ -345,9 +355,6 @@ export class SimpleAppService<T extends { _id?: string }> {
       }
     }
   };
-  hook = async (appuser: UserContext, type: string, data?: any) => {
-    return true;
-  };
   async validateData(appuser: UserContext, data: T) {
     const ajv = new Ajv({ allErrors: true, useDefaults: true });
     addFormats(ajv);
@@ -360,14 +367,18 @@ export class SimpleAppService<T extends { _id?: string }> {
 
     ajv.addKeyword({ keyword: 'x-foreignkey', schemaType: 'string' });
     ajv.addKeyword({ keyword: 'x-simpleapp-config', schemaType: 'object' });
-
-    const issuccess = await this.hook(appuser, HookType.beforeValidation, data);
+    this.logger.debug('run hook during validation');
+    let issuccess = true;
+    if (this.hooks.beforeValidation) {
+      issuccess = await this.hooks.beforeValidation(appuser, data);
+    }
+    // const issuccess = await this.hook(appuser, HookType.beforeValidation, data);
     if (!issuccess) {
       const errormsg: string[] = [];
       for (let i = 0; i < this.errorlist.length; i++) {
         errormsg.push(this.errorlist[i].message);
       }
-      this.logger.log('run hook during validation');
+      
       throw new BadRequestException(
         'Before validation hook failed',
         errormsg as HttpExceptionOptions,
@@ -389,7 +400,8 @@ export class SimpleAppService<T extends { _id?: string }> {
         validate.errors as HttpExceptionOptions,
       );
     }
-    await this.hook(appuser, HookType.afterValidation, data);
+    if (this.hooks.afterValidation)
+      await this.hooks.afterValidation(appuser, data);
   }
 
   polishIsolationFilter = (filterIsolation: any, data: any = {}) => {
@@ -431,7 +443,7 @@ export class SimpleAppService<T extends { _id?: string }> {
 
     let dependency;
     try {
-      await this.hook(appuser, HookType.beforeDelete, id);
+      if (this.hooks.beforeDelete) await this.hooks.beforeDelete(appuser, id);
       this.logger.debug('delete record', this.documentName, id);
       dependency = await this.getRelatedRecords(id);
       //console.log('dependency', dependency);
@@ -452,8 +464,9 @@ export class SimpleAppService<T extends { _id?: string }> {
           ' delete result' + this.doc.collection.name,
         );
         // this.doc.findByIdAndDelete(id)
-        await this.hook(appuser, HookType.afterDelete, deleteresult);
 
+        if (this.hooks.afterDelete)
+          await this.hooks.afterDelete(appuser, deleteresult, id);
         //this.doc.findByIdAndDelete(id);
         return deleteresult;
       } else {
@@ -481,7 +494,9 @@ export class SimpleAppService<T extends { _id?: string }> {
     if (!existingdata) {
       throw new NotFoundException(`${id} not found`, 'not found');
     }
-    await this.hook(appuser, HookType.beforeUpdate, data);
+
+    if (this.hooks.beforeUpdate)
+      await this.hooks.beforeUpdate(appuser, id, data);
 
     const dbsession = appuser.getDBSession();
     if (!dbsession.inTransaction()) {
@@ -508,7 +523,9 @@ export class SimpleAppService<T extends { _id?: string }> {
         .findOneAndUpdate(isolationFilter, data)
         .session(dbsession);
       appuser.addUpdatedRecordId(this.documentName, data._id);
-      await this.hook(appuser, HookType.afterUpdate, result);
+
+      if (this.hooks.afterUpdate)
+        await this.hooks.afterUpdate(appuser, id, result);
       return await this.findById(appuser, id);
     } catch (err) {
       throw new InternalServerErrorException(err.message);
@@ -590,17 +607,23 @@ export class SimpleAppService<T extends { _id?: string }> {
     }
 
     data['documentStatus'] = docstatus;
-    await this.hook(appuser, HookType.beforeSetStatus, data);
+    // await this.hook(appuser, HookType.beforeSetStatus, data);
+    if (this.hooks.beforeSetStatus)
+      await this.hooks.beforeSetStatus(appuser, docstatus, data);
     if (data && !data['created']) {
       const createresult = await this.create(appuser, data);
-      await this.hook(appuser, HookType.afterSetStatus, createresult);
+      if (this.hooks.afterSetStatus)
+        await this.hooks.afterSetStatus(appuser, docstatus, createresult);
+
       return createresult;
     } else {
-      const originalresult = await this.findById(appuser,id)
-      const newdata = {...originalresult,...data}
+      const originalresult = await this.findById(appuser, id);
+      const newdata = { ...originalresult, ...data };
       const updateresult = await this.findIdThenUpdate(appuser, id, newdata);
-      const finaldata = await this.findById(appuser,id)
-      await this.hook(appuser, HookType.afterSetStatus, finaldata);
+      const finaldata = await this.findById(appuser, id);
+      if (this.hooks.afterSetStatus)
+        await this.hooks.afterSetStatus(appuser, docstatus, finaldata);
+
       return updateresult;
     }
   }

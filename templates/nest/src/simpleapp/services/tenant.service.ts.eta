@@ -9,13 +9,16 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { TenantProcessor } from '../generate/processors/tenant.processor';
-import { Tenant } from '../generate/types/tenant.type';
+import { Tenant,TenantHooks } from '../generate/types';
 import { AutoincreamentService } from './autoinc.service';
 import { UserContext } from '../generate/commons/user.context';
-export { Tenant } from '../generate/types/tenant.type';
+export { Tenant } from '../generate/types';
 
 @Injectable()
 export class TenantService extends TenantProcessor {
+  protected hooks : TenantHooks = {
+    beforeCreate: async (appuser: UserContext, data: Tenant) => await this.tenantBeforeCreate(appuser,data),
+  };
   constructor(
     @InjectModel('Tenant') mydoc: Model<Tenant>,
     private increament: AutoincreamentService,
@@ -24,45 +27,12 @@ export class TenantService extends TenantProcessor {
     super(mydoc);
   }
 
-  hook = async (appuser: UserContext, type: string, data?: any) => {
-    switch (type) {
-      //         case 'init':
-      //         break;
-      //         case 'beforeSearch':
-      //         break;
-      //         case 'afterSearch':
-      //         break;
-      //         case 'beforeValidation':
-      //         break;
-      //         case 'afterValidation':
-      //         break;
-      case 'beforeCreate':
-        const searchresult = await this.increament.runGenerateNextNo(
+  async tenantBeforeCreate(appuser:UserContext,data:Tenant){
+     const searchresult = await this.increament.runGenerateNextNo(
           appuser,
           'tenant',
           'tenantId',
         );
-        data.tenantId = searchresult.nextno;
-        data.uuid = crypto.randomUUID()
-        break;
-      // case 'afterCreate':
-      //   console.log('this.data',data)
-      // break;
-      //         case 'beforeUpdate':
-      //         break;
-      //         case 'afterUpdate':
-      //         break;
-      //         case 'beforeDelete':
-      //         break;
-      //         case 'afterDelete':
-      //         break;
-      //         case 'beforeFetchRecord':
-      //         break;
-      //         case 'afterFetchRecord':
-      //         break;
-      //         default:
-      //         break;
-    }
-    return true;
-  };
+        data.tenantId = searchresult.nextno;        
+  }    
 }

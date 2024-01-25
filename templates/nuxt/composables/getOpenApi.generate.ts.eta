@@ -10,12 +10,15 @@ import axios from 'axios'
 
 
 const getAxiosConfig = () => {
+  const suffix = getCurrentXorg() ?  '/'+getCurrentXorg() : ''
   const config: o.Configuration = {
-    basePath: `${useRuntimeConfig().public.APP_URL}/api/${getCurrentXorg()}`,
+    basePath: `${useRuntimeConfig().public.APP_URL}/api${suffix}`,
     isJsonMime: () => true,
   };
   return config
 }
+
+
 export const getApiSession = async ()=> {
   const res = await (new o.PROFILEApi(getAxiosConfig(),undefined,useNuxtApp().$axios)).getSession()
   return res
