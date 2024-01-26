@@ -17,7 +17,7 @@ import { catchError, tap } from 'rxjs/operators';
 import { Model, Connection, ClientSession } from 'mongoose';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { UserContext } from '../user.context';
-import { ApiEvent } from '../../types/apievent.type';
+import { ApiEvent } from '../../types';
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {
   constructor(

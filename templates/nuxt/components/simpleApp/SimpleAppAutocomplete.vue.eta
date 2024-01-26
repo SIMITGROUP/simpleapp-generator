@@ -21,16 +21,15 @@
         <div v-else class="p-3 border rounded-lg border-gray-300 dark:border-blue-900/40 ">
             <span :readonly="readonly" class="cursor-pointer text-primary-600  dark:text-primary-400 "
                 tabindex="0" @click="openViewer(true)">{{ modelValue && modelValue.label ?  modelValue.label:'-' }}</span>
-        </div>
+        </div>        
 </template>
 <script setup lang="ts">
 import { isNull } from 'lodash';
+import * as jsonpath from 'jsonpath';
 import {autocompletetype,SchemaConfig,SchemaType} from '~/types'
 const autocompleteinput = ref()
 const {$event} = useNuxtApp()
 const list = ref<any[]>([])
-const emptyautocomplete =():autocompletetype=> ({_id:'',code:'',label:''})
-
 const props = withDefaults(defineProps<{
     setting:any    
     allowAddNew?:boolean
@@ -41,15 +40,22 @@ const props = withDefaults(defineProps<{
 }>(),{
 allowAddNew:true,showNull:true
 })
-const autocompleteitem = ref<autocompletetype>(emptyautocomplete())
+
+const path = '$'+props.setting.instancepath
+const modifiedpath = path.replaceAll('/','.')        
+const queryresult = jsonpath.query(props.setting.defaultValue,modifiedpath)[0]
+
+const emptyautocomplete = computed(():autocompletetype=> queryresult)
+
+const autocompleteitem = ref<autocompletetype>(emptyautocomplete.value)
 const modelValue = defineModel<autocompletetype>()        
 if(modelValue.value && modelValue.value._id){
     autocompleteitem.value={...modelValue.value}
 }
 //clear auto complete auto set value = empty
 const clear = ()=>{
-    autocompleteitem.value = emptyautocomplete()
-    modelValue.value = emptyautocomplete()
+    autocompleteitem.value = emptyautocomplete.value
+    modelValue.value = emptyautocomplete.value
 }
 const buttonClass=computed(()=>modelValue.value?._id ? 'pi pi-link' : 'pi pi-angle-down')
 
@@ -63,7 +69,7 @@ const beforeShow = ()=>{
 //recorrect data if lose focus
 const onBlurAutocomplete = ()=>{   
     if(  autocompleteitem.value === null){
-        autocompleteitem.value = emptyautocomplete()
+        autocompleteitem.value = emptyautocomplete.value
     }
     if(isNull(modelValue.value )){
         modelValue.value = autocompleteitem.value
@@ -94,13 +100,13 @@ const pickAutoComplete = (event:any)=>{
     console.log("event",event,'event.value._id',"'"+event.value._id+"'")
     if(event.value._id===''){
         
-        modelValue.value =  emptyautocomplete()
-        autocompleteitem.value = emptyautocomplete()
+        modelValue.value =  emptyautocomplete.value
+        autocompleteitem.value = emptyautocomplete.value
         console.log(modelValue.value )
     } else if(event.value._id==='new'){
         
-        modelValue.value =  emptyautocomplete()
-        autocompleteitem.value = emptyautocomplete()
+        modelValue.value =  emptyautocomplete.value
+        autocompleteitem.value = emptyautocomplete.value
         openViewer(false)        
     } 
     else if(typeof event.value.query == 'undefined'){      

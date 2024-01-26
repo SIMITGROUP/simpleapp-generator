@@ -1,0 +1,4 @@
+<%for(let i=0; i<it.modules.length;i++){ %>
+<% const d = it.modules[i] %>      
+export {Default<%= d['docname']%>} from './<%= d['docname']%>.default'        
+<%}%> 

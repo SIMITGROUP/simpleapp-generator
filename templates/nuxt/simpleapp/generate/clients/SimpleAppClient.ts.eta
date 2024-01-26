@@ -45,7 +45,7 @@ export class SimpleAppClient<
   }
 
   getDocType = () => this.doctype;
-  getDocName = () => this.docname;
+  getDocName = (capFirst:boolean=false) => capFirst ? upperFirst(this.docname) :this.docname;
   setNew = ()=>{}
   isNew = () => this.data.value?.created==''
   setSchema = (schema: SchemaType) => (this.schema = schema);

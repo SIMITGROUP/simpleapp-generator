@@ -1,4 +1,6 @@
 import plugin from 'primevue/config';
+import _ from 'lodash'
+
 import {Md5} from 'ts-md5'
 import moment from "moment";
 export const camelCaseToWords = (s: string) =>{
@@ -20,3 +22,4 @@ export const today = () => moment().format('YYYY-MM-DD')
 export const dateToString = (date:Date) => moment(date).format('YYYY-MM-DD')
 export const getMoment = (startTime:string)=> moment(startTime)
 export const lastDateOfMonth = (datestr:string) => moment(datestr).endOf('month').format('YYYY-MM-DD');
+export const upperFirst = (str:string) => _.upperFirst(str)

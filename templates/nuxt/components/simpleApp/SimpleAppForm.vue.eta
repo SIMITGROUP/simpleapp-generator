@@ -1,5 +1,5 @@
 <template>
-    <form class="simpleapp-form" @submit.prevent="true">
+    <form class="simpleapp-form" @submit.prevent="true">        
         <slot name="header"><h3 class="flex flex-col">{{ title }}</h3></slot>
         <slot  name="default" :data="document.getData()" :getField="getField"></slot>
     </form>
@@ -9,7 +9,8 @@
 import * as jsonpath from 'jsonpath';
 import { SimpleAppClient } from  '~/simpleapp/generate/clients/SimpleAppClient'
 import type { JSONSchema7,JSONSchema7Definition } from 'json-schema';
-import _ from 'lodash'
+import * as alldefaults from '~/simpleapp/generate/defaults'
+import _, { upperFirst } from 'lodash'
     const props = defineProps<{
         title?:string,
         document: SimpleAppClient<any,any>
@@ -29,7 +30,11 @@ import _ from 'lodash'
         const fieldsetting = getPathObject(schema,path)
         // console.log("setting",fieldsetting)
         
+        type defaulttype = typeof alldefaults
+        type keytype = keyof defaulttype
         
+        const x : keytype = 'Default'+ props.document.getDocName(true)   as keytype
+        const defaultvalue = alldefaults[x](crypto.randomUUID())
         return {
             path: path,
             key: _.last(path.split('/')),
@@ -41,15 +46,13 @@ import _ from 'lodash'
             modelField: 'email',
             isrequired: getIsRequired(schema,path),
             errors: props.document.getErrors(),
-            readonly: isreadonly.value
+            readonly: isreadonly.value,
+            defaultValue: defaultvalue
         } //as SimpleAppFieldSetting
     }
 
     //    "schemaPath": "#/properties/email/format",
 
-    const getModelValue=(data:any,path:string)=>{
-
-    }
     const getIsRequired=(schema:any,path:string)=>{
         if(!path){
             console.error('unknown path')
