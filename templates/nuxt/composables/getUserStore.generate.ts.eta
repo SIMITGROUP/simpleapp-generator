@@ -10,7 +10,7 @@ export const reloadUserStore = async () =>{
 export const getUserProfile =  () =>{    
     const userstore = getUserStore()
     
-    return getUserStore().getUserInfo()
+    return !userstore ? undefined :userstore.getUserInfo()
 }
 
 export const getCurrentXorg = () =>{
@@ -29,5 +29,5 @@ export const canPerform = (resource:string,action:string):boolean =>{
     return getUserStore().canPerform(resource,action)
 }
 
-export const getProfileEmail = () => getUserProfile().email
-export const getProfileFullName = () => getUserProfile().fullName
+export const getProfileEmail = () => getUserProfile()?.email
+export const getProfileFullName = () => getUserProfile()?.fullName

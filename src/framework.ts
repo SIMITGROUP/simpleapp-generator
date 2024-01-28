@@ -69,6 +69,7 @@ export const prepareNest = (callback:Function)=>{
     const targetfolder =config.backendFolder
     log.info(`creating backend project ${targetfolder}`)
     if(!fs.existsSync(`${targetfolder}/.env`)){
+        
 
     
         exec(`cd ${targetfolder};pnpm install --save @nestjs/event-emitter dayjs bpmn-server@2.0.8-alpha2 moment @casl/ability jsonpath yaml lodash @types/lodash nest-keycloak-connect keycloak-connect bpmn-client @nestjs/serve-static jsonwebtoken axios @darkwolf/base64url json-schema @wearenova/mongoose-tenant @nestjs/swagger @nestjs/mongoose mongoose  ajv ajv-formats ajv-errors @nestjs/config`,async (error, stdout, stderr)=>{

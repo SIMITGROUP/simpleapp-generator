@@ -117,28 +117,25 @@ export default defineEventHandler(async (event:any) => {
                 resolve(res.data);
             }
 
-        }).catch((error) => {
-            // console.log("==============================================================")
-            // console.log('@@@@@@@@@@@@@ API error', error)
-            // console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-            // console.log('######### response', error.response)
-            // console.log('#####################################')
-            // console.log(axiosConfig);
-            // console.log('#####################################')
+        }).catch((error) => {            
+            if(!error?.response){
+                console.log("backend server no response ",error.code)              
+                reject({ 
+                    statusMessage:"backendServerDownMessage",
+                    statusCode: 503,                    
+                });            
+            }else{
 
-            if (error.response?.status && error.response.status == '401') {
-                //return reject({ statusMessage: 'Unauthorized', statusCode: 401 });
-                return sendRedirect(event, '/login', 401)
-                // throw createError({ statusMessage: 'Unauthorized', statusCode: 401 })
+                if (error.response?.status && error.response.status == 401) {
+                    return sendRedirect(event, '/login', 401)
+                }
+                reject({ 
+                    statusMessage: error.response.statusText, 
+                    statusCode: error.response.status ,
+                    data: error.response.data
+                });            // resolve({ status: 'ok' })
+                // throw createError({ statusMessage: 'Bad Requests', statusCode: 404 })
             }
-
-            // reject(error.data)
-            reject({ 
-                statusMessage: error.response.statusText, 
-                statusCode: error.response.status ,
-                data: error.response.data
-            });            // resolve({ status: 'ok' })
-            // throw createError({ statusMessage: 'Bad Requests', statusCode: 404 })
         })
 
         // resolve({

@@ -87,16 +87,6 @@ export default defineEventHandler(async (event:any) => {
             params: forwardData,
         }
         
-        // if(key === 'system') {
-        //     axiosConfig.headers["X-Global"] = true;
-        //     delete axiosConfig.headers["X-Org"];
-        // }
-
-        // if(otherLink.includes('avatar')) {
-        //     axiosConfig.responseType = 'arraybuffer';
-        //     // axiosConfig.headers['Acceptable'] = 'text/html,image/avif,image/webp,image/apng';
-        // }
-
         axios(axiosConfig).then((res) => {
             if (res.headers['content-type'] === 'image/png') {
                 // Set the response headers for the image
@@ -118,27 +108,28 @@ export default defineEventHandler(async (event:any) => {
             }
 
         }).catch((error) => {
-            // console.log("==============================================================")
-            // console.log('@@@@@@@@@@@@@ API error', error)
-            // console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-            // console.log('######### response', error.response)
-            // console.log('#####################################')
-            // console.log(axiosConfig);
-            // console.log('#####################################')
-
-            if (error.response?.status && error.response.status == '401') {
-                //return reject({ statusMessage: 'Unauthorized', statusCode: 401 });
-                return sendRedirect(event, '/login', 401)
-                // throw createError({ statusMessage: 'Unauthorized', statusCode: 401 })
+            if(!error?.response){
+                console.log("backend server no response ",error.code)              
+                reject({ 
+                    statusMessage:"backendServerDownMessage",
+                    statusCode: 503,                    
+                });            
+            }else if (error.response.status == 401) {
+                return sendRedirect(event, '/login', 401)             
+            }else{
+                const responseCode = error.response.data?.statusCode ? error.response.data.statusCode : error.response.status 
+                const responseMsg = error.response.data ? error.response.data.message : error.response.statusText 
+                // reject(error.data)
+                // console.log("----error.response.data--",responseMsg,error.response.data,error.response.status,responseCode)
+                reject({ 
+                    statusMessage: responseMsg, 
+                    statusCode: responseCode ,
+                    data: error.response.data
+                });         
+                
             }
 
-            // reject(error.data)
-            reject({ 
-                statusMessage: error.response.statusText, 
-                statusCode: error.response.status ,
-                data: error.response.data
-            });            // resolve({ status: 'ok' })
-            // throw createError({ statusMessage: 'Bad Requests', statusCode: 404 })
+     
         })
 
         // resolve({

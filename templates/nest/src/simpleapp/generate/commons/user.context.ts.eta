@@ -10,10 +10,11 @@ import {
   Inject,
   Logger,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Model, model, connect, PipelineStage } from 'mongoose';
 import { ModifiedCollection, ModifiedRecords } from '../types';
-import _ from 'lodash';
+import _, { isNumber } from 'lodash';
 import { Module } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { Role } from './roles/roles.enum';
@@ -58,7 +59,7 @@ export class UserContext {
   protected lastActivity: string = new Date().toISOString();
   protected invites: any[] = []; //User + field tenant:Tenant[]
   protected roles: string[] = [];
-  protected moreProps: any[] =[]
+  protected moreProps: any[] = [];
   private dbsession: ClientSession;
   protected modifiedRecords: ModifiedRecords = {
     createds: {},
@@ -258,7 +259,7 @@ export class UserContext {
       this.branchRecordId = userinfo['branchRecordId'] ?? '';
       this.group = userinfo['group'] ?? '';
       this.roles = userinfo['roles'] ?? [Role.Everyone, Role.User];
-      this.moreProps = this.setMoreProps(userinfo)
+      this.moreProps = this.setMoreProps(userinfo);
     } else {
       this.logger.debug(`Set unknown id of current user`, 'setUserToken');
       // this.group = ''
@@ -339,18 +340,23 @@ export class UserContext {
   setXorg = (xorg) => {
     try {
       const decodedText: string = Base64URL.decodeText(xorg);
-      const arrXorg = decodedText.split('-');
+      const x = decodedText.includes('/')
+        ? decodedText.split('/')
+        : decodedText.split('-');
 
-      if (arrXorg.length == 3) {
+      const x1 = Number(x[0]);
+      const x2 = Number(x[1]);
+      const x3 = Number(x[2]);
+      if (x.length == 3 && !isNaN(x1) && !isNaN(x2) && !isNaN(x3)) {
         const u = this;
-        u.tenantId = Number(arrXorg[0]);
-        u.orgId = Number(arrXorg[1]);
-        u.branchId = Number(arrXorg[2]);
+        u.tenantId = x1;
+        u.orgId = x2;
+        u.branchId = x3;
       } else {
-        throw 'invalid x-org';
+        throw new BadRequestException('invalidXorg');
       }
     } catch (err) {
-      throw err;
+      throw new BadRequestException(err);
     }
   };
 
@@ -375,7 +381,7 @@ export class UserContext {
       roles: this.getRoles(),
       branches: this.getBranches(),
       invites: await this.getInvites(),
-      morePros: this.getMoreProps()
+      moreProps: this.getMoreProps(),
     };
     this.logger.debug(userinfo, 'init getUserInfo()');
 
@@ -438,10 +444,8 @@ export class UserContext {
       userinfo.branches = this.getBranches();
       userinfo.invites = this.getInvites();
       // this.logger.debug(`getUserInfo result ${userinfo}`)
-    } else {
-      this.logger.log(
-        `${this.getUid()} does not exists in current tenant (${this.tenantId})`,
-      );
+    } else if (this.getTenantId() > 0) {
+      throw new ForbiddenException(`userNotExistInTenant`, 'access deny');
     }
 
     return userinfo;
@@ -500,6 +504,19 @@ export class UserContext {
     return this.modifiedRecords.createds[collection].find(
       (item) => item === _id,
     );
+  }
+  searchDeletedRecordId(collection: string, _id: string) {
+    console.log("check is deleted: ",collection,_id)
+    const deletedlist =this.modifiedRecords.deleteds[collection]
+    
+    if(deletedlist){
+      return this.modifiedRecords.deleteds[collection].find(
+        (item) => item === _id,
+      );
+    }else{
+      return undefined
+    }
+    
   }
   addInsertedRecordId(collection: string, _id: string) {
     if (this.modifiedRecords.createds[collection]) {
@@ -635,17 +652,38 @@ export class UserContext {
   /**
    * define additional properties from user into moreProps
    */
-  setMoreProps(userinfo:any){
-    const allprops = Object.keys(userinfo)
-    const excludekeys=['created','createdBy','updated','updatedBy','_id','email','fullName','permissions','roles','branchCode','branchId','branchName','orgCode','orgId','orgName','tenantId','lastActivity','group','__v','uid','orgRecordId']
-    let data:any = {}
-    for(let i=0; i< allprops.length; i++){
-      const key = allprops[i]
-      if(!excludekeys.includes(key)){
-        data[key] = userinfo[key]
+  setMoreProps(userinfo: any) {
+    const allprops = Object.keys(userinfo);
+    const excludekeys = [
+      'created',
+      'createdBy',
+      'updated',
+      'updatedBy',
+      '_id',
+      'email',
+      'fullName',
+      'permissions',
+      'roles',
+      'branchCode',
+      'branchId',
+      'branchName',
+      'orgCode',
+      'orgId',
+      'orgName',
+      'tenantId',
+      'lastActivity',
+      'group',
+      '__v',
+      'uid',
+      'orgRecordId',
+    ];
+    let data: any = {};
+    for (let i = 0; i < allprops.length; i++) {
+      const key = allprops[i];
+      if (!excludekeys.includes(key)) {
+        data[key] = userinfo[key];
       }
-      
     }
-    return data
+    return data;
   }
 }

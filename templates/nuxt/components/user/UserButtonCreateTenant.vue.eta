@@ -12,7 +12,7 @@
               <div class="p-inputgroup flex flex-row">
                 <InputText
                   class="flex-1"
-                  placeholder="yourCompanyMame"
+                  :placeholder="t('yourCompanyName')"
                   v-model:model-value="data.tenantName"
                 />
                 <div class="p-inputgroup-addon p p-0">

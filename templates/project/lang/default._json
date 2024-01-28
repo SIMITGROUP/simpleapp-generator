@@ -10,7 +10,7 @@
     "draft": "Draft",
     "profile": "Profile",
     "logout": "logout",
-    "language": "Language",
+    "language": "Language",    
     "theme": "Theme",
     "welcomeSimpleApp": "Welcome To SimpleApp",
     "changeHomePageMsg": "{fullName}, it is product front page and by right you shall replace it with something else.",
@@ -35,8 +35,6 @@
     "suspendcustomer": "Suspend Customer",
     "formKeyNotFound": "Formkey not found \"{formKey}\"",
     "selectAll": "Select All",
-
-
     "branches":"Branches",
     "accessRights": "Access Rights",
     "fullName":"Full Name",
@@ -45,5 +43,11 @@
     "general": "General",
     "login":"Login",
     "sessionExpire": "Session Expire",
-    "reloginMessage": "Session Expire, relogin" 
+    "reloginMessage": "Session Expire, relogin" ,
+    "backToHome":"Back To Home",
+    "undefined": "Undefined",
+
+    "backendServerDownMessage":"Seems there is some connectivity issue, please try again later",
+    "invalidXorg":"Invalid XOrg ",
+    "userNotExistInTenant":"This tenant is not accessible" 
   }

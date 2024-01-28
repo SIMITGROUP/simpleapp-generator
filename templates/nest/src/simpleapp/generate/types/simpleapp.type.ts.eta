@@ -31,7 +31,6 @@ export type SearchBody = {
   sorts?: any[];
 };
 
-
 export enum IsolationType {
   'none' = 'none',
   'org' = 'org',
@@ -39,38 +38,50 @@ export enum IsolationType {
   'branch' = 'branch',
 }
 export type DefaultHooks<T> = {
-  init?: () => Promise<void> ;
-  beforeSearch?: (appuser:UserContext,filter:any) => Promise<void> ;
-  afterSearch?: (appuser:UserContext,data:T[]) => Promise<void> ;
-  beforeValidation?: (appuser:UserContext,data:T) => Promise<boolean> ;
-  afterValidation?: (appuser:UserContext,data:T) => Promise<void> ;
-  beforeCreate?: (appuser:UserContext,data:T) => Promise<void> ;
-  afterCreate?: (appuser:UserContext,data:T) => Promise<void> ;
-  beforeUpdate?: (appuser:UserContext,id:string,data:T) => Promise<void> ;
-  afterUpdate?: (appuser:UserContext,id:string,data:T) => Promise<void> ;
-  beforeDelete?: (appuser:UserContext,id:string) => Promise<void> ;
-  afterDelete?: (appuser:UserContext,data:any,id:string) => Promise<void> ;
-  beforeFetchRecord?: (appuser:UserContext,id:string) => Promise<void> ;
-  afterFetchRecord?: (appuser:UserContext,data:T) => Promise<void> ;
-  beforeSetStatus?: (appuser:UserContext,id:string,data:T) => Promise<void> ;
-  afterSetStatus ?: (appuser:UserContext,id:string,data:T) => Promise<void> ;
+  init?: () => Promise<void>;
+  beforeSearch?: (appuser: UserContext, filter: any) => Promise<void>;
+  afterSearch?: (appuser: UserContext, data: T[]) => Promise<void>;
+  beforeValidation?: (appuser: UserContext, data: T) => Promise<boolean>;
+  afterValidation?: (appuser: UserContext, data: T) => Promise<void>;
+  beforeCreate?: (appuser: UserContext, data: T) => Promise<void>;
+  afterCreate?: (appuser: UserContext, data: T) => Promise<void>;
+  beforeUpdate?: (appuser: UserContext, id: string, data: T) => Promise<void>;
+  afterUpdate?: (appuser: UserContext, id: string, data: T) => Promise<void>;
+  beforeDelete?: (appuser: UserContext, id: string) => Promise<void>;
+  afterDelete?: (appuser: UserContext, result: DeleteResultType<T>, id: string) => Promise<void>;
+  beforeFetchRecord?: (appuser: UserContext, id: string) => Promise<void>;
+  afterFetchRecord?: (appuser: UserContext, data: T) => Promise<void>;
+  beforeSetStatus?: (
+    appuser: UserContext,
+    id: string,
+    data: T,
+  ) => Promise<void>;
+  afterSetStatus?: (appuser: UserContext, id: string, data: T) => Promise<void>;
 };
 export type MoreProjectionType = {
   [key: string]: string;
 };
 export type ApiEvent = {
-    _id: string
-    created: string
-    updated?:string
-    duration: number
-    createdBy: string
-    path: string
-    ip: string
-    method: string
-    headers: any
-    data?:  any
-    statusCode:number
-    status:string
-    errMsg?:string
-    errData?: any
+  _id: string;
+  created: string;
+  updated?: string;
+  duration: number;
+  createdBy: string;
+  path: string;
+  ip: string;
+  method: string;
+  headers: any;
+  data?: any;
+  statusCode: number;
+  status: string;
+  errMsg?: string;
+  errData?: any;
+};
+
+export type DeleteResultType <T> = {
+  data:T
+  result: {
+    acknowledged: boolean
+    deletedCount:number
+  }
 }

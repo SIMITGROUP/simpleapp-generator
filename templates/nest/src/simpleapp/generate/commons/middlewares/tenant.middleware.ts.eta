@@ -10,6 +10,7 @@ import {
   Logger,
   Scope,
   Inject,
+  BadRequestException,
 } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { InjectModel } from '@nestjs/mongoose';
@@ -27,13 +28,12 @@ import { UserContext } from '../user.context';
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
   protected defaultxorg = Base64URL.encodeText('0-0-0');
-  protected excludeXorgs = ['/profile', '/profile/tenant','/profile/session'];
+  protected excludeXorgs = ['/profile', '/profile/tenant', '/profile/session'];
   protected logger = new Logger();
   protected transController;
   constructor(
     @InjectModel('User') private readonly usermodel: Model<User>,
     @InjectModel('Permission') private readonly permmodel: Model<Permission>,
-    
   ) {}
 
   requireXorg(baseurl: string): boolean {
@@ -62,7 +62,8 @@ export class TenantMiddleware implements NestMiddleware {
         'undefine x-org and require that at ' + req.baseUrl,
         'TenantMiddleware',
       );
-      return res.status(401).send('undefine header string x-org');
+      throw new BadRequestException('undefine header string x-org')
+      // return res.status(401).send('undefine header string x-org');
     }
     // const session = await this.connection.startSession();
     const u = new UserContext(this.usermodel, this.permmodel);
@@ -93,13 +94,8 @@ export class TenantMiddleware implements NestMiddleware {
         next();
       }
     } catch (err) {
-      this.logger.warn(err, 'invalid xorg or user info');
       this.logger.error(err);
-      if (err == 'invalid x-org') {
-        return res.status(401).send(err);
-      } else {
-        return res.status(401).send(err);
-      }
+      throw new BadRequestException(err,)      
     }
   }
 }

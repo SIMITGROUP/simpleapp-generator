@@ -7,6 +7,7 @@
  */
 import { Component } from 'vue';
 import {Notification} from './notifications'
+import { SimpleAppClient } from '~/simpleapp/generate/clients/SimpleAppClient';
 export type ViewRecord = {
     _id: string    
     eventId:string
@@ -15,6 +16,7 @@ export type ViewRecord = {
     viewer?: any 
     readonly?:boolean
     afterCreate?:Function
+    document?:SimpleAppClient<any,any>
 }
 export type RefreshDocumentList ={
     documentName : string,

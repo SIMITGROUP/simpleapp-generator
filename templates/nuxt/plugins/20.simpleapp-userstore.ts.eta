@@ -12,7 +12,6 @@ import _ from 'lodash'
 
 
 export default defineNuxtPlugin( async(nuxtApp) => {
-    console.log("start plugin 20")
     const useUserStore = defineStore('userstore', {
         state: ()=>({      
           _id: ref(''),  
@@ -75,25 +74,15 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               this.roles = res.data.roles
               this.time = res.data.time              
               this.invites = res.data.invites
-              this.moreProps = res.data.morePros
+              this.moreProps = res.data.moreProps
               return Promise.resolve(true)
                 // return true
-            }).catch((err:any)=>{
-              if(err.response=== undefined){
-                // console.error("no backend server")
-                const errdata = createError({statusCode:503,statusMessage:"Backend server timeout, verify it is up and running!"})
-                return Promise.reject(errdata)
-              }
-              else if(err.response && err.response.status==401){
-                console.error("Unauthorise(plugin-userstore)")
-              }else{
-                const errdata = createError({statusCode:500,statusMessage:"Unknown error"})                
-                return Promise.reject(errdata)
-              }
+            }).catch((err:any)=>{            
+                return Promise.reject(err)
             })            
           },                  
           getCurrentXorg(){
-            return  (useRoute().params.xorg) ? String(useRoute().params.xorg) : undefined           
+            return  (useRoute().params.xorg) ? <String>useRoute().params.xorg : undefined           
           },
           async pingSession(){
             let xorg = this.getCurrentXorg() 
@@ -104,7 +93,8 @@ export default defineNuxtPlugin( async(nuxtApp) => {
             apiurl = `${useRuntimeConfig().public.APP_URL}/api/${xorg}`
             }
             const {$axios} = useNuxtApp()
-            return await new PROFILEApi(undefined,apiurl,$axios).getSession()
+            const pingresult = await new PROFILEApi(undefined,apiurl,$axios).getSession()
+            return pingresult
           },
           async decideInvitation(id:string,decision:string){
             const apiurl = `${useRuntimeConfig().public.APP_URL}/api`
@@ -190,17 +180,14 @@ export default defineNuxtPlugin( async(nuxtApp) => {
           }
         }        
       })
-    console.log("after define user store")
+    
     
     if( useRoute().meta.auth !==false){
       
       if(await useUserStore().pingSession()){
-        console.log("ping session ok")
         await useUserStore().loadRemoteUserInfo()
-        console.log("load remote user info ok")
         
       }else{
-        console.log("No login session", useRoute().path)
         await useUserStore().logout(useRoute().path)        
       }    
     }else{

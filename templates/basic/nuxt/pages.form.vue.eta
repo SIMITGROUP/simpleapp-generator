@@ -190,10 +190,14 @@ const actionListener = async (actionName: string) => {
     case "new":
       result =await newData();
       break;
+    case "mount":
+      break;
   }
   
   emits('after',actionName,data.value,doc,result)  
 };
+onMounted(async ()=> await actionListener('mount'))
+
 /************ start api methods ****************/
 
 <%for(let i=0;i<it.apiSettings.length;i++){%>

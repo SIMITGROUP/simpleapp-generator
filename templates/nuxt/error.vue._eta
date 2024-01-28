@@ -9,8 +9,9 @@
                       </div>
                       <div>
                         <h1 class="px-4 pt-2 pb-4 text-left text-5xl font-bold leading-10 text-gray-800">OOPS!</h1>                    
-                        <p class="px-4 mt mb-4 text-4xl text-left font font-bold">{{error.statusCode}} Error</p>                    
-                        <p class="px-4 pb-10 text-base leading-none text-left text-gray-400">{{error.message}}</p>                    
+                        <p class="px-4 mt mb-4 text-4xl text-left font font-bold">{{error?.statusCode}} Error</p>                    
+                        <p class="px-4 pb-10 text-base leading-none text-left text-red-400">{{t(error?.statusMessage)}}</p>  
+                        <p>    <Button @click="handleError" class="btn-primary">{{ t('backToHome') }}</Button></p>                  
                       </div>
                     </div>
                     
@@ -22,9 +23,13 @@
 </template>
 <script setup lang="ts">
 
-defineProps(['error'])
+const props = defineProps({
+  error: Object
+})
+const handleError = () => navigateTo('/',{external:true})
+console.error(props.error)
+// handleError()
 definePageMeta({
-// //   name: "Login",
   auth: false,
 });
 </script>

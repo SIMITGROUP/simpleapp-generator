@@ -24,35 +24,29 @@ export default defineNuxtPlugin( async(nuxtApp) => {
     //axios.defaults.headers.common = {"CSRF-TOKEN": csrf};
     const myaxios = axios.create({timeout:5000})
     myaxios.interceptors.response.use((response) => response, (error) => {
-      if(error.code && error.code["ECONNABORTED"]){
-        console.error("Failed to reach backend server")
-        // navigateTo("/error503")
-        createError({statusCode:503,statusMessage:"Backend server timeout, verify it is up and running!"})
-        
-      }
-      else if(error.response.status==401){        
+
+      if(error.response.status==401){        
         console.error("axios 401 session expired, pop up for relogin")
       }else if(error.response && error.response.status){
-        console.error("have error response")
-        createError({
-          statusCode:error.response.status,
-          statusMessage:error.response.message})
-          return Promise.reject(error)
+        let errmsg = error.response.message
+        let errorcode =error.response.status
+        if(error.response?.data && error.response?.data?.message){
+          errmsg = error.response.data.message
+          errorcode = error.response.data.statusCode
+        }
+        
+        throw createError({
+          statusCode:errorcode,
+          statusMessage:errmsg,
+          fatal:true
+        })  
+          // return Promise.reject(error)
       }else{
         console.error("unknown error")
-        createError({statusCode:500,statusMessage:"Internal server error"})
+        throw createError({statusCode:500,statusMessage:"Internal server error"}) 
       }
     });
     
-    // nuxtApp.vueApp.use(PrimeVue, { ripple: true,Tailwind:true, pt: Tailwind});
-    // nuxtApp.vueApp.use(PrimeVue,  { unstyled: true, pt: {} });
-    // nuxtApp.vueApp    
-    // .use(ToastService)
-    // .use(ConfirmationService)
-    // .directive('tooltip', Tooltip)
-    // ;    
-
-  
     return {
         provide: {
           
