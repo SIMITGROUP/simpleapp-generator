@@ -32,8 +32,7 @@ tailwindcss: {
     '@sidebase/nuxt-auth',
     'nuxt-primevue',
     // "nuxt-security",     //temporary avoid nuxt-security cause cors
-    '@vueuse/nuxt', 
-    //'@nuxt/ui',
+    '@vueuse/nuxt',    
     '@nuxtjs/tailwindcss',
     ['@pinia/nuxt',{
       autoImports: [

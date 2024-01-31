@@ -55,6 +55,7 @@ export class UserContext {
   protected branchName: string = '';
   protected orgCode: string = '';
   protected orgName: string = '';
+  protected timeZone:string=''
   protected branches: any[] = [];
   protected lastActivity: string = new Date().toISOString();
   protected invites: any[] = []; //User + field tenant:Tenant[]
@@ -85,6 +86,7 @@ export class UserContext {
   getOrgId = () => this.orgId;
   getBranchId = () => this.branchId;
   getEmail = () => this.email;
+  getTimeZone = () => this.timeZone;
   getGroup = () => this.group;
   getMoreProps = () => this.moreProps;
   getRoles = () => this.roles;
@@ -206,6 +208,7 @@ export class UserContext {
           userinfo.orgRecordId = myperm.currentorg[0]._id;
           userinfo.orgCode = myperm.currentorg[0].orgCode;
           userinfo.orgName = myperm.currentorg[0].orgName;
+          userinfo.timeZone = myperm.currentorg[0].timeZone;
         }
       } else {
         userinfo.group = '';
@@ -255,6 +258,7 @@ export class UserContext {
       this.branchName = userinfo['branchName'] ?? '';
       this.orgCode = userinfo['orgCode'] ?? '';
       this.orgName = userinfo['orgName'] ?? '';
+      this.timeZone = userinfo['timeZone']?? '';
       this.orgRecordId = userinfo['orgRecordId'] ?? '';
       this.branchRecordId = userinfo['branchRecordId'] ?? '';
       this.group = userinfo['group'] ?? '';
@@ -374,6 +378,7 @@ export class UserContext {
       branchName: this.branchName,
       orgCode: this.orgCode,
       orgName: this.orgName,
+      timeZone: this.getTimeZone(),
       email: this.getEmail(),
       uid: this.getUid(),
       fullName: this.getFullname(),
@@ -506,17 +511,16 @@ export class UserContext {
     );
   }
   searchDeletedRecordId(collection: string, _id: string) {
-    console.log("check is deleted: ",collection,_id)
-    const deletedlist =this.modifiedRecords.deleteds[collection]
-    
-    if(deletedlist){
+    console.log('check is deleted: ', collection, _id);
+    const deletedlist = this.modifiedRecords.deleteds[collection];
+
+    if (deletedlist) {
       return this.modifiedRecords.deleteds[collection].find(
         (item) => item === _id,
       );
-    }else{
-      return undefined
+    } else {
+      return undefined;
     }
-    
   }
   addInsertedRecordId(collection: string, _id: string) {
     if (this.modifiedRecords.createds[collection]) {
@@ -670,6 +674,7 @@ export class UserContext {
       'orgCode',
       'orgId',
       'orgName',
+      'timeZone',
       'tenantId',
       'lastActivity',
       'group',

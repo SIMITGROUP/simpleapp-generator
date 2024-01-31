@@ -6,7 +6,7 @@
  * last change 2023-09-09
  * author: Ks Tan
  */
- import { SimpleAppInputType } from "~/types";
+import { SimpleAppInputType } from "~/types";
 import ConfirmPopup from "primevue/confirmpopup";
 import { useConfirm } from "primevue/useconfirm";
 const confirm = useConfirm();
@@ -44,10 +44,9 @@ const refresh = () => {
   $event("RefreshDocumentList", { documentName: doc.getDocName() });
 };
 
-
 definePageMeta({
   menuPath: "setting/organization",
-  })
+});
 
 //branch record update then reload
 $listen("RefreshDocumentList", (data) => {
@@ -61,14 +60,11 @@ if (id) {
   fetchRecord(id.value);
 }
 
-
-
-
 getCurrentOrg();
 </script>
 <template>
   <div class="grid grid-cols-3">
-    <title>{{ t('organization')}} </title>
+    <title>{{ t("organization") }}</title>
     <div class="">
       <Card>
         <template #header><h1 class="text-2xl">Organization</h1></template>
@@ -95,7 +91,7 @@ getCurrentOrg();
               <ConfirmPopup></ConfirmPopup>
             </div>
             <div class="flex flex-col">
-              <div class="flex flex-row gap-4">
+              <div class="grid grid-cols-2 gap-4">
                 <SimpleAppInput
                   :input-type="SimpleAppInputType.text"
                   autofocus
@@ -109,9 +105,14 @@ getCurrentOrg();
                   :setting="o.getField('#/properties/orgName')"
                 />
                 <SimpleAppInput
-                :input-type="SimpleAppInputType.checkbox"
+                  :input-type="SimpleAppInputType.checkbox"
                   v-model="data.active"
                   :setting="o.getField('#/properties/active')"
+                />
+                <SimpleAppInput
+                  :input-type="SimpleAppInputType.text"
+                  v-model="data.timeZone"
+                  :setting="o.getField('#/properties/timeZone')"
                 />
               </div>
               <div>

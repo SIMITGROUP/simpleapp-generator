@@ -24,13 +24,17 @@
             v-model="datevalue" @update:modelValue="updateDate" :readonly="isReadonly"
             :placeholder="placeholder"
             v-bind="(componentProps as CalendarProps)"/>
+
         <!-- time component -->        
-        <InputText  :pt="pt" 
-            v-else-if="inputType == SimpleAppInputType.time"            
+        <Calendar  :pt="pt" 
+            v-else-if="inputType == SimpleAppInputType.time" timeOnly showTime 
+            :hourFormat="componentProps && componentProps['hourFormat']? componentProps['hourFormat']: 12" 
+             @update:modelValue="updateTime"      
             :inputId="slotprops.uuid" :path="setting.instancepath"
             v-model="(modelValue as string)" :readonly="isReadonly"
-            :placeholder="placeholder"
-            v-bind="(componentProps as InputTextProps)"/>
+            :placeholder="placeholder"            
+            v-bind="(componentProps as CalendarProps)"/>
+
         <!-- select/list component -->                
         <Listbox v-model="modelValue"  :pt="pt"
             v-else-if="SimpleAppInputType.list==inputType"
@@ -141,11 +145,8 @@
                 :path="setting.instancepath"
                 :placeholder="placeholder"
                 v-bind="(componentProps as InputTextProps)"
-                />
-            
-        
-        <!-- component require special treatment -->
-        
+                />                    
+        <!-- component require special treatment -->        
     </SimpleAppFieldContainer>    
 </template>
 
@@ -171,9 +172,10 @@ import Slider,{ SliderProps }  from 'primevue/slider';
 import Textarea, { TextareaProps } from 'primevue/textarea';
 import {SimpleAppInputType} from '~/types'
 
-
 const datevalue = ref('')
 const modelValue = defineModel()
+const timestr = `${today()}T${modelValue.value??'00:00:00Z'}`
+const timevalue = ref<Date>(moment(timestr).toDate())
 
 const props = withDefaults( defineProps<{
     inputType:SimpleAppInputType,
@@ -198,68 +200,6 @@ if(props.inputType== SimpleAppInputType.date && modelValue.value){
     datevalue.value = ''
 }
 
-
-// switch(props.inputType){
-//     case SimpleAppInputType.text:
-//         inputComponent = InputText
-//         break;
-//     case SimpleAppInputType.textarea:
-//         inputComponent = Textarea
-//         break;
-//     case SimpleAppInputType.number:
-//         inputComponent = InputNumber
-//     break   
-//     case SimpleAppInputType.date:
-//         inputComponent = InputText
-//     break;
-//     case SimpleAppInputType.time:
-//         inputComponent = InputText
-//     break;
-//     case SimpleAppInputType.calendar:
-//         inputComponent = Calendar
-//         break;
-//     case SimpleAppInputType.autocomplete: 
-//         inputComponent = AutoComplete
-//         break;
-//     case SimpleAppInputType.autocompletemultiple: //*
-//         inputComponent = AutoComplete
-//         break;
-//     case SimpleAppInputType.selectmultiple: //*
-//         inputComponent = MultiSelect
-//         break;
-//     case SimpleAppInputType.listmultiple: //*
-//         break;    
-//     case SimpleAppInputType.radio: //*
-//         inputComponent = RadioButton
-//         break;
-//     case SimpleAppInputType.select: //*
-//         inputComponent = Dropdown
-//         break;
-//     case SimpleAppInputType.list: //*
-//         inputComponent = Listbox
-//         break;
-//     case SimpleAppInputType.chip: //*
-//         inputComponent = Chips
-//         break;
-//     case SimpleAppInputType.checkbox:
-//         inputComponent = Checkbox
-//         break;
-//     case SimpleAppInputType.switch:
-//         inputComponent = InputSwitch
-//         break;    
-//     case SimpleAppInputType.documentno:  //*
-//         break;
-//     case SimpleAppInputType.password: 
-//         inputComponent = Password
-//         break;    
-//     case SimpleAppInputType.rating:
-//         inputComponent = Rating
-//         break;
-//     case SimpleAppInputType.slider:
-//         inputComponent = Slider
-//         break;
-
-// }
 const isReadonly = computed(()=>{
     if(props.readonly){
         return props.readonly
@@ -269,7 +209,9 @@ const isReadonly = computed(()=>{
         return false
     }
 })
-
+const updateTime = () =>{
+    modelValue.value = moment(timevalue.value).format("HH:mm:ss")   
+}
 const updateDate = (value:any)=>{
     
     if(value){
@@ -287,7 +229,12 @@ const getListOptions = () =>{
     if(props.setting.fieldsetting.enum){
         for(let i=0;i<props.setting.fieldsetting.enum.length;i++){
             const v = props.setting.fieldsetting.enum[i]
-            options.push({value:v, label: camelCaseToWords(v)})
+            if(typeof v == 'string'){
+                options.push({value:v, label: t(v)})
+            }else{
+                options.push({value:v.value, label: t(v.label)})
+            }
+            
         }
 
 
@@ -308,9 +255,7 @@ watch(modelValue ,(newvalue:any)=>{
         }
         
     }
-    // else if(props.inputType==SimpleAppInputType.autocomplete){            
-    //         modelValue.value=autocompleteitem.value                
-    // }
+
 
     emits('change',modelValue.value)
     emits('update:modelValue',modelValue.value)    
