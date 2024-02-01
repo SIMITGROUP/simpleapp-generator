@@ -97,12 +97,9 @@ const getListFromAutocompleteApi =  (event:any)=>{
 
 //on select
 const pickAutoComplete = (event:any)=>{
-    console.log("event",event,'event.value._id',"'"+event.value._id+"'")
-    if(event.value._id===''){
-        
+    if(event.value._id===''){        
         modelValue.value =  emptyautocomplete.value
         autocompleteitem.value = emptyautocomplete.value
-        console.log(modelValue.value )
     } else if(event.value._id==='new'){
         
         modelValue.value =  emptyautocomplete.value

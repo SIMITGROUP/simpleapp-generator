@@ -91,11 +91,11 @@ export class SimpleAppClient<
         .then((res: AxiosResponse) => {
           // if(this.event){this.event('success:create',res.data);return res.data}
           // console.log(this.getDocName(), "ok")
-          $event('Notification',{
-            documentName:this.getDocName(),
-            summary:'Record create successfully',
-            status:NotificationStatus.success
-          })
+          // $event('Notification',{
+          //   documentName:this.getDocName(),
+          //   summary:'Record create successfully',
+          //   status:NotificationStatus.success
+          // })
           this.data.value = { ...res.data };
           return res;
         }).catch((errors:any)=>{   
@@ -131,12 +131,12 @@ export class SimpleAppClient<
         .runUpdate(recordid, this.data.value,{timeout:this.defaultTimeOut})
         .then((res: AxiosResponse) => {
           // if(this.event){this.event('success:update',res.data)}
-          $event('Notification',{
-            documentName:this.getDocName(),
-            summary:'Record update success',
-            status:NotificationStatus.success,
-            data:errors
-          })        
+          // $event('Notification',{
+          //   documentName:this.getDocName(),
+          //   summary:'Record update success',
+          //   status:NotificationStatus.success,
+          //   data:errors
+          // })        
           this.data.value = res.data          
           return res.data;
         }).catch((errors:any)=>{
@@ -162,12 +162,12 @@ export class SimpleAppClient<
     return await this.docapi.runDelete(id,{timeout:this.defaultTimeOut})
       .then((res:AxiosResponse)=>{
         // if(this.event){this.event('success:delete',res.data)}
-        $event('Notification',{
-          documentName:this.getDocName(),
-          summary:'Record deleted successfully',
-          status:NotificationStatus.success,
-          data:res.data
-        })
+        // $event('Notification',{
+        //   documentName:this.getDocName(),
+        //   summary:'Record deleted successfully',
+        //   status:NotificationStatus.success,
+        //   data:res.data
+        // })
         return Promise.resolve(res.data)
       }).catch((errors:any)=>{
         // if(this.event){this.event('error:delete',errors.response.data.data)}

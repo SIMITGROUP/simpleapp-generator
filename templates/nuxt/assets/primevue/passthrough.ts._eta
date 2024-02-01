@@ -30,7 +30,7 @@ const CustomTailwind = usePassThrough(
             label:{class: 'text-sm'},
         },
         button:{root:{class: 'focus:outline-none transition duration-150 ease-in-out rounded p-2 m-1 border dark:border-gray-600'}},
-        dialog:{root:{class:['border p-2']}},        
+        dialog:{root:{class:['border p-2  h-4/5']}},        
         autocomplete:{
             root:{class:'border border-gray-300 dark:!border-blue-900/40  rounded-lg flex flex-row'},
             input:{class:'w-full p-2 font-sans  rounded-lg  rounded-tr-none rounded-br-none transition-colors duration-200 appearance-none hover:border-blue-500 focus:outline-none focus:outline-offset-0 focus:shadow-[0_0_0_0.2rem_rgba(191,219,254,1)] dark:focus:shadow-[0_0_0_0.2rem_rgba(147,197,253,0.5)]  text-base'},

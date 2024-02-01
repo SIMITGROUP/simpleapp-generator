@@ -28,7 +28,7 @@
         <!-- time component -->        
         <Calendar  :pt="pt" 
             v-else-if="inputType == SimpleAppInputType.time" timeOnly showTime 
-            :hourFormat="componentProps && componentProps['hourFormat']? componentProps['hourFormat']: 12" 
+            hourFormat="12" 
              @update:modelValue="updateTime"      
             :inputId="slotprops.uuid" :path="setting.instancepath"
             v-model="(modelValue as string)" :readonly="isReadonly"
@@ -172,10 +172,9 @@ import Slider,{ SliderProps }  from 'primevue/slider';
 import Textarea, { TextareaProps } from 'primevue/textarea';
 import {SimpleAppInputType} from '~/types'
 
-const datevalue = ref('')
 const modelValue = defineModel()
-const timestr = `${today()}T${modelValue.value??'00:00:00Z'}`
-const timevalue = ref<Date>(moment(timestr).toDate())
+const datevalue = ref('')
+const timevalue = ref<Date>()
 
 const props = withDefaults( defineProps<{
     inputType:SimpleAppInputType,
