@@ -1,5 +1,5 @@
 <template>
-    <Crud :_id="_id" @after="after"/>
+    <Crud :_id="_id" @after="after" :paras="paras"/>
 </template>
 <script setup lang="ts">
 /**
@@ -11,8 +11,8 @@
  */
 import Crud from './form.vue'
 import {<%= it.typename %>} from '~/simpleapp/generate/types'
-const props = defineProps<{_id:string}>();
-const emits = defineEmits(["afterCreate"]);
+const props = defineProps<{_id:string,paras?:<%= it.typename %>}>();
+const emits = defineEmits(["afterCreate","after"]);
 
 const after = (actionName: string, data: <%= it.typename %>, result: any) => {
   switch (actionName) {
@@ -26,5 +26,6 @@ const after = (actionName: string, data: <%= it.typename %>, result: any) => {
     case "delete":
       break;
   }
+  emits("after",actionName,data,result)
 };
 </script>

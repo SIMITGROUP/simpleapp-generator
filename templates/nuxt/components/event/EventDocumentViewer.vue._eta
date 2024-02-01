@@ -2,9 +2,7 @@
     <Dialog v-model:visible="visible"         
         :pt="{root:{class:'w-5/6 h-5/6'}}"
         :modal="true" 
-        :close-on-escape="false" >                
-        
-
+        :close-on-escape="false" >                        
         <template #header>
             <div class="flex flex-row gap-4">
                 <Chip v-for="(v,k) in allview" :label="v.label" @remove="deleteTab" :removable="true"
@@ -16,8 +14,9 @@
                     <component                             
                         :is="defineAsyncComponent(v.viewer)" 
                         :_id="v._id" 
-                        :readonly="v.readonly" 
-                        @after-create="callback(v,$event)" 
+                        :readonly="v.readonly"   
+                        :paras="v.paras"                      
+                        @after="(eventType:string,data:any,result:any)=>after(v,eventType,data,result)"
                             />
             </div>
         </template>                
@@ -41,13 +40,14 @@ import Chip from 'primevue/chip';
 const {$listen,} = useNuxtApp()
 const visible = ref(false)
 const allview = ref<{[key:string]:ViewRecord}>({})
-
-const callback = (v:ViewRecord,data:any)=>{
-    if(v.afterCreate){
-        v.afterCreate(data)
+const after = (v:ViewRecord,eventType:string,data:any,result:any)=>{
+    if(v.after){        
+        v.after(eventType,data,result)
+        //only after mount consider no remove tab
+        if(eventType!='mount') deleteTab()
     }
-    deleteTab()
 }
+
 onKeyStroke('Escape', (e) => {
   e.preventDefault()
   deleteTab()

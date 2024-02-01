@@ -1,0 +1,7 @@
+//put additional customize types in this folder
+export type ForeignKey = {
+    _id: string
+    code?:string
+    label: string
+    [key:string]:any
+  };

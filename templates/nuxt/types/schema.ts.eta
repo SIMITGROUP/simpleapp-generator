@@ -13,6 +13,7 @@ export type DocumentStatus = {
     requiredRole?: string[]   // what special user role wish to allow for this api, example: ['SuperUser']
     workflowSetting?: {bpmn:string} //optional property, once define code gen connect the bpmn workflow
     method:RESTMethods    
+    schema?:string //any schema/type name in types & apischemas
     description:string //description of api
   }
   export enum IsolationType {"none"="none" , "tenant"="tenant","org"="org", "branch"="branch"}

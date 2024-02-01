@@ -34,6 +34,12 @@ SimpleApp generator is a typescript code generator for convert jsonschemas becom
 4. [End to End test](./docs/test.md)
 5. [BPMN walk through](./docs/bpmn.md)
 6. [Language](./doc/language.md)
+7. Viewer, with add, update. using event after and properties `paras`
+8. Document Status
+9. Additional Api & define api schema
+10.SimpleAppInputs
+11.Role Base Access Control
+
 
 # Quick start
 1. Simpleapp implement database transaction, and require mongodb cluster, below setup 3 nodes

@@ -147,8 +147,8 @@
  * author: Ks Tan
  */
  import { SimpleAppInputType } from "~/types";
- 
- const props = defineProps<{ _id?: string}>();
+ import { <%= it.typename %> } from "~/simpleapp/generate/types";
+ const props = defineProps<{ _id?: string,paras?:<%= it.typename %>}>();
  const doc = useNuxtApp().$<%= it.typename %>Doc()
  const data = doc.getReactiveData(); 
  const emits = defineEmits(["after"]);
@@ -159,7 +159,7 @@
 const newData = () =>  doc.setNew()
 const createData = async () => await doc.create()
 const updateData = async () => await doc.update()
-const deleteData = async () => await doc.delete(data.value._id ?? "")
+const deleteData = async () => await doc.delete()
 
 const getRecord = async () => {
   if(id.value && id.value != 'new'){

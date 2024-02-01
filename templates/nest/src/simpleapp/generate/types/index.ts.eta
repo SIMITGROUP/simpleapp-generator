@@ -1,7 +1,7 @@
-
-
 <%for(let i=0; i<it.modules.length;i++){ %>
 <% const d = it.modules[i] %>      
 export * from './<%= d['doctype']%>.type'      
 <%}%>
 export * from './simpleapp.type'
+
+export * from '../../types';

@@ -9,8 +9,8 @@ import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { UserContext } from '../generate/commons/user.context';
 import { <%= it.typename %>Processor } from '../generate/processors/<%= it.doctype %>.processor';
-import { <%= it.typename %>,<%= it.typename %>Hooks} from '../generate/types';
-
+//import { <%= it.typename %>,<%= it.typename %>Hooks} from '../generate/types';
+import * as types from '../generate/types';
 export { <%= it.typename %>} from '../generate/types';
 
 
@@ -19,9 +19,9 @@ export class <%= it.typename %>Service extends <%= it.typename %>Processor {
   <% const config = it.jsonschema['x-simpleapp-config']%>   
   <%if(config['loseDataIsolation']){%>protected strictIsolation = false;<%}%> 
       
-  public hooks: <%= it.typename %>Hooks = {}
+  public hooks: types.<%= it.typename %>Hooks = {}
     constructor(
-        @InjectModel('<%= it.typename %>')  mydoc: Model<<%= it.typename %>>
+        @InjectModel('<%= it.typename %>')  mydoc: Model<types.<%= it.typename %>>
         ){
         super(mydoc)
     }
@@ -48,7 +48,7 @@ export class <%= it.typename %>Service extends <%= it.typename %>Processor {
             <%}%>
         <%}%>
         <%if(['post','put','patch'].includes(api.method.toLowerCase())){%>
-            data:any,
+            data:<%= api.schema? 'types.'+api.schema: 'any'%>,
         <%}%>
          ){
     <%if (api.workflowSetting && api.workflowSetting.bpmn){ %>      

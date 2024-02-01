@@ -24,10 +24,10 @@ import {
 } from '@nestjs/common';
 import { SimpleAppAbstractController } from './simpleapp.controller';
 import { <%= it.typename %>Service } from '../../services/<%= it.doctype %>.service';
-import * as <%= it.doctype %>type from '../types/<%= it.doctype %>.type';
-import {SearchBody} from '../types';
-import {ApiSearchBody} from '../apischemas';
-import * as <%= it.doctype %>apischema from '../apischemas/<%= it.doctype %>.apischema';
+// import * as <%= it.doctype %>type from '../types/<%= it.doctype %>.type';
+import * as types from '../types';
+import * as schemas from '../apischemas';
+//import * as <%= it.doctype %>apischema from '../apischemas/<%= it.doctype %>.apischema';
 import { ApiTags, ApiBody, ApiResponse,ApiOperation,ApiQuery } from '@nestjs/swagger';
 import {Roles} from '../commons/roles/roles.decorator'
 import {Role} from '../commons/roles/roles.enum'
@@ -40,9 +40,9 @@ const doctype = '<%= it.doctype %>'.toUpperCase();
 @ApiTags(doctype)
 @Controller(doctype.toLowerCase())
 export class <%= it.typename %>Controller extends SimpleAppAbstractController<
-  <%= it.typename %>Service,
-  <%= it.doctype %>apischema.<%= it.typename %>,
-  <%= it.doctype %>type.<%= it.typename %>
+  <%= it.typename %>Service,  
+  schemas.<%= it.typename%>,
+  types.<%= it.typename %>
 > {
   constructor(service: <%= it.typename %>Service) {
     super(service);
@@ -57,7 +57,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiResponse({
     status: 200,
     description: 'Found',
-    type: String //[<%= it.fullApiSchemaName%>]
+    type: String 
   })
   @ApiResponse({ status: 500, description: 'Internal error' })
   @ApiOperation({ operationId: 'runHello', description:"Say hello only" })
@@ -93,13 +93,13 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiResponse({
     status: 201,
     description: 'success',
-    type: <%= it.fullApiSchemaName%>
+    type: schemas.<%= it.typename%>
   })
   @ApiResponse({ status: 400, description: 'bad request' })
   @ApiResponse({ status: 500, description: 'internal error' })
-  @ApiBody({ description: 'Data',type:<%= it.fullApiSchemaName%> })
+  @ApiBody({ description: 'Data',type:schemas.<%= it.typename%> })
   @ApiOperation({ operationId: 'runCreate' })
-  async create(@AppUser() appuser: UserContext,@Body() data: <%= it.fullApiSchemaName%>) {    
+  async create(@AppUser() appuser: UserContext,@Body() data: schemas.<%= it.typename%>) {    
     return await this._create(appuser,data)
   }
 
@@ -113,13 +113,13 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiResponse({
     status: 200,
     description: 'success',
-    type: [<%= it.fullApiSchemaName%>]
+    type: [schemas.<%= it.typename%>]
   })
   @ApiResponse({ status: 400, description: 'bad request' })
   @ApiResponse({ status: 500, description: 'internal error' })
-  @ApiBody({ description: 'Data', type: ApiSearchBody })
+  @ApiBody({ description: 'Data', type: schemas.ApiSearchBody })
   @ApiOperation({ operationId: 'runSearch' })
-  async search(@AppUser() appuser: UserContext,@Body() data: SearchBody) {
+  async search(@AppUser() appuser: UserContext,@Body() data: types.SearchBody) {
     return await this._search(appuser,data)
   }
 
@@ -143,7 +143,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
       )
   <%}%>
   <% if(['post','put','patch'].includes(api.method)){ %>
-    @ApiBody({ description: 'Data', type: Object })
+    @ApiBody({ description: 'Request Body', type: <%= api.schema? 'schemas.'+api.schema : 'Object'%> })
   <%}%>  
   @ApiResponse({status: 200,description: '<%=api.description%>' ,type: Object  })  
   @ApiOperation({ operationId: 'run<%=capitalizeFirstLetter(api.action)%>' })
@@ -155,7 +155,8 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   async <%=capitalizeFirstLetter(api.action) %>(
     @AppUser() appuser: UserContext,
     <%if(['post','put','patch'].includes(api.method.toLowerCase())){%>
-      @Body() data:any,
+      @Body() data:<%= api.schema? 'types.'+api.schema : 'Object'%>,
+      //@Body() data:any,
     <%}%>
     <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
           <%let subpath = api.entryPoint.split('/')%>
@@ -222,7 +223,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiResponse({
     status: 200,
     description: 'Founds',
-    type: <%= it.fullApiSchemaName%>
+    type: schemas.<%= it.typename%>
   })
   @ApiResponse({ status: 404, description: 'Document not found' })
   @ApiResponse({ status: 500, description: 'Internal error' })
@@ -249,9 +250,9 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   <%}%>  
   @ApiResponse({ status: 404, description: 'Document not found' })
   @ApiResponse({ status: 500, description: 'Internal error' })
-  @ApiBody({ description: 'Data',type: <%= it.fullApiSchemaName%> })
+  @ApiBody({ description: 'Data',type: schemas.<%= it.typename%> })
   @ApiOperation({ operationId: 'runUpdate' })
-  async update(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data: <%= it.fullApiSchemaName%>) {    
+  async update(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data: schemas.<%= it.typename%>) {    
     return await this._update(appuser,id, data) ;
   }
 
@@ -264,7 +265,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiResponse({
     status: 200,
     description: 'success',
-    type: <%= it.fullApiSchemaName%>
+    type: schemas.<%= it.typename%>
   })
   @ApiResponse({ status: 404, description: 'Document not found' })
   @ApiResponse({ status: 500, description: 'Internal error' })

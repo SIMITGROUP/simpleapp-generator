@@ -5,10 +5,7 @@
  * Author: Ks Tan
  */
 import { UserContext } from 'src/simpleapp/generate/commons/user.context';
-export type ForeignKey = {
-  _id: string;
-  label: string;
-};
+
 export type ModifiedCollection = {
   [key: string]: string[];
 };

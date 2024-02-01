@@ -14,8 +14,9 @@ export type ViewRecord = {
     label:string
     documentName: string
     viewer?: any 
-    readonly?:boolean
-    afterCreate?:Function
+    readonly?:boolean    
+    paras?:any
+    after?: (eventType:string,data:any,result:any )=>any
     document?:SimpleAppClient<any,any>
 }
 export type RefreshDocumentList ={

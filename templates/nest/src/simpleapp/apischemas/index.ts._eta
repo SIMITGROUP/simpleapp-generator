@@ -1,0 +1,10 @@
+//put customize schemas in this folder
+import { ApiProperty } from '@nestjs/swagger';
+export class ForeignKey {
+    @ApiProperty({ type: 'string', required: false, format: 'uuid', default: '' })
+    _id: string;
+    @ApiProperty({ type: 'string', required: false,  default: '' })
+    code: string;
+    @ApiProperty({ type: 'string', required: false,  default: '' })
+    label: string;
+}
