@@ -1,10 +1,49 @@
-<script lang="ts" setup>
-// import Menus from '~/components/Menus.vue'
-</script>
 <template>
-    <div>
-        <HeaderBar />
-        <UserInvitation/>
-        <slot></slot>
+    <div class="h-full flex flex-row"  v-if="!isMobile()">
+        <div>
+            <HeaderButtonMenuPicker class="p-2  text-6xl cursor-pointer"></HeaderButtonMenuPicker>
+            <div class="" v-for="item in menus">
+                <div class="border">                    
+                    <NuxtLink 
+                        :class="`pi ${item.iconClass} p-2  text-6xl cursor-pointer`"
+                        :to="getDocumentUrl(item.path)"
+                        ></NuxtLink>
+                </div>
+            </div>            
+        </div>        
+        <div class="flex-1">
+            <HeaderBar />
+            <UserInvitation/>
+            <slot></slot>
+        </div>                
+    </div>
+    <div v-else class="mb-20">
+        <div v-if="getCurrentXorg()" class="border flex flex-row h-20 fixed left-0 w-full  justify justify-between bottom-0 z-50 bg-white dark:bg-gray-800" >
+                
+                <div v-for="item in menus">                    
+                    <NuxtLink 
+                        :class="`pi ${item.iconClass} p-2  text-6xl cursor-pointer`"
+                        :to="getDocumentUrl(item.path)"
+                        ></NuxtLink>
+                </div>
+                <HeaderButtonMenuPicker class="p-2  text-6xl cursor-pointer"></HeaderButtonMenuPicker>
+        </div> 
+        <div class="flex flex-col h-screen ">
+            
+                <HeaderBar />
+                <UserInvitation/>
+                <slot></slot>
+            
+        </div> 
     </div>
 </template>
+<script setup lang="ts">
+const menus=[
+    // {iconClass:'pi-bars',path:'managestudents/profile'},
+    {iconClass:'pi-home',path:''},
+    {iconClass:'pi-users',path:'managestudents/profile'},
+    {iconClass:'pi-calendar',path:`manageclasses`},
+    // {iconClass:'pi-database',path:'managedata'},
+    {iconClass:'pi-chart-pie',path:'reports'},
+]
+</script>

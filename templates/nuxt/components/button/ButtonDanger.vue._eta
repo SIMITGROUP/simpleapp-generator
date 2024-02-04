@@ -1,0 +1,6 @@
+<template>
+    <!-- this component allow modify -->
+    <Button class="btn-danger">
+        <slot></slot>
+    </Button>
+</template>

@@ -26,7 +26,7 @@ export const organization:SchemaType ={
         orgName: {type: "string",},
         active: {type: "boolean","default":true,},
         description: {type: "string",format:"text",},
-        timeZone: {"type": "string","examples": ["Asia/Kuala_Lumpur"]
-        }    
+        timeZone: {"type": "string","examples": ["Asia/Kuala_Lumpur"]},
+        currency:{"type":"string",minimum:3,maximum:3}
     }
   }

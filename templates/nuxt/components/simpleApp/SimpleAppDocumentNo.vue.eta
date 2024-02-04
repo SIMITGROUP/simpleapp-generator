@@ -45,7 +45,7 @@ const props = defineProps<{
 const op = ref();
 const placeholder = ref('')
 const docFormatlist = ref()
-const modelValue = defineModel<string>()
+const modelValue = defineModel<string>({required:true})
 const docNoFormat = props.setting.document.getReactiveData().value.docNoFormat
 const emits = defineEmits(['update:docNoFormat'])
 

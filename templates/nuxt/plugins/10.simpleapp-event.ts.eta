@@ -24,8 +24,19 @@ export default defineNuxtPlugin( async(nuxtApp) => {
     //axios.defaults.headers.common = {"CSRF-TOKEN": csrf};
     const myaxios = axios.create({timeout:5000})
     myaxios.interceptors.response.use((response) => response, (error) => {
-
-      if(error.response.status==401){        
+      console.error('errorerrorerrorerror',error)
+      
+      if(error.code == 'ERR_BAD_REQUEST'){
+        console.error("axios ERR_BAD_REQUEST, redirect to relogin")
+      }
+      else if(error.code){        
+        throw createError({
+          statusCode:error.code,
+          statusMessage:error.message,
+          fatal:true
+        })           
+      }
+      else if(error.response.status==401){        
         console.error("axios 401 session expired, pop up for relogin")
       }else if(error.response && error.response.status){
         let errmsg = error.response.message

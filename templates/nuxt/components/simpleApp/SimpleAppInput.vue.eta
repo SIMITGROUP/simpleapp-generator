@@ -172,7 +172,7 @@ import Slider,{ SliderProps }  from 'primevue/slider';
 import Textarea, { TextareaProps } from 'primevue/textarea';
 import {SimpleAppInputType} from '~/types'
 
-const modelValue = defineModel()
+const modelValue = defineModel({required:true})
 const datevalue = ref('')
 const timevalue = ref<Date>()
 

@@ -1,0 +1,37 @@
+
+/* calendar */
+
+#monthviewcal .vuecal__cell--current,
+#monthviewcal .vuecal__cell--today {
+  background-color: lightblue;
+}
+#monthviewcal .vuecal__cell--selected {
+  background-color: lightgreen;
+}
+
+#monthviewcal .vuecal__cell {
+  height: 3rem;
+}
+
+#resourceviewcal .vuecal__event {
+border-radius: 0.5rem;
+}
+#resourceviewcal .vuecal__split-days-headers {
+min-height: 6rem;
+}
+
+#resourceviewcal .vuecal__event {
+border: solid 1px #ccc !important;
+}
+
+#resourceviewcal .normalevent{
+    background-color: aqua;
+}
+
+#resourceviewcal .urgentevent{
+    background-color: lightcoral;
+}
+
+#resourceviewcal .seminal{
+    background-color: lightblue;
+}

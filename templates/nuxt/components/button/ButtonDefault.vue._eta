@@ -1,0 +1,6 @@
+<template>
+    <!-- this component allow modify -->
+    <Button>
+        <slot></slot>
+    </Button>
+</template>

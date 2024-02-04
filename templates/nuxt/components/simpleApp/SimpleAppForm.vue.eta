@@ -34,7 +34,7 @@ import _, { upperFirst } from 'lodash'
         type keytype = keyof defaulttype
         
         const x : keytype = 'Default'+ props.document.getDocName(true)   as keytype
-        const defaultvalue = alldefaults[x](crypto.randomUUID())
+        const defaultvalue = alldefaults[x](randomUUID())
         return {
             path: path,
             key: _.last(path.split('/')),

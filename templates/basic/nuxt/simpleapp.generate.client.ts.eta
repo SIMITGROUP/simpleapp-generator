@@ -71,7 +71,7 @@ export class <%= it.typename%>Client extends SimpleAppClient<openapi.<%= it.type
 
   }
   setNew = ()=>{         
-      const newdata = Default<%= it.typename%>(crypto.randomUUID())
+      const newdata = Default<%= it.typename%>(randomUUID())
       this.setData(newdata)
       return true
     }
@@ -96,7 +96,7 @@ export class <%= it.typename%>Client extends SimpleAppClient<openapi.<%= it.type
         <%let tablefields = Object.keys(obj.items.properties) %>
        public add<%=key%> = () => {
         
-        this.getReactiveData().value.<%= key %>.push(Default<%= it.typename%><%=capitalizeFirstLetter(key)%>(crypto.randomUUID()))
+        this.getReactiveData().value.<%= key %>.push(Default<%= it.typename%><%=capitalizeFirstLetter(key)%>(randomUUID()))
         return this.getReactiveData().value.<%= key %>.length -1
        }
         

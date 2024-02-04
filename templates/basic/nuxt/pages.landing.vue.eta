@@ -30,7 +30,16 @@
 
   const columns:CellSetting[] = [<%Object.keys(it.jsonschema.properties).forEach(function(key) { %>
         <%let obj=it.jsonschema.properties[key] %>
+        <%let config=it.jsonschema['x-simpleapp-config'] %>
         <%if(skipcolumns.indexOf(key)>=0){%>/* skip system columns <%=key%>*/
+        <%} else if(config['uniqueKey'] && (config['uniqueKey']==key || config['documentTitle']==key)  ){%>
+          {
+            title: '<%=key%>',
+            field: '*',
+            moreFields:['<%=key%>'],
+            rendererName: "RendererLink",
+            rendererSetting: { path: "<%=config['documentName']%>" },
+          },
         <%} else if(['string','number','integer'].indexOf(obj.type)>=0){%>'<%=key%>',
         <%} else if(obj.type =='object' && obj['x-foreignkey'] ){%>
             { 

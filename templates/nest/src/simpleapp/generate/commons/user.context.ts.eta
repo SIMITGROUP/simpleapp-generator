@@ -55,7 +55,8 @@ export class UserContext {
   protected branchName: string = '';
   protected orgCode: string = '';
   protected orgName: string = '';
-  protected timeZone:string=''
+  protected timeZone: string = '';
+  protected currency: string = '';
   protected branches: any[] = [];
   protected lastActivity: string = new Date().toISOString();
   protected invites: any[] = []; //User + field tenant:Tenant[]
@@ -88,6 +89,7 @@ export class UserContext {
   getEmail = () => this.email;
   getTimeZone = () => this.timeZone;
   getGroup = () => this.group;
+  getCurrency = () => this.currency;
   getMoreProps = () => this.moreProps;
   getRoles = () => this.roles;
   getModifieds = () => this.modifiedRecords;
@@ -209,6 +211,7 @@ export class UserContext {
           userinfo.orgCode = myperm.currentorg[0].orgCode;
           userinfo.orgName = myperm.currentorg[0].orgName;
           userinfo.timeZone = myperm.currentorg[0].timeZone;
+          userinfo.currency = myperm.currentorg[0].currency;
         }
       } else {
         userinfo.group = '';
@@ -258,7 +261,8 @@ export class UserContext {
       this.branchName = userinfo['branchName'] ?? '';
       this.orgCode = userinfo['orgCode'] ?? '';
       this.orgName = userinfo['orgName'] ?? '';
-      this.timeZone = userinfo['timeZone']?? '';
+      this.timeZone = userinfo['timeZone'] ?? '';
+      this.currency= userinfo['currency'] ?? '';
       this.orgRecordId = userinfo['orgRecordId'] ?? '';
       this.branchRecordId = userinfo['branchRecordId'] ?? '';
       this.group = userinfo['group'] ?? '';
@@ -379,6 +383,7 @@ export class UserContext {
       orgCode: this.orgCode,
       orgName: this.orgName,
       timeZone: this.getTimeZone(),
+      currency: this.getCurrency(),
       email: this.getEmail(),
       uid: this.getUid(),
       fullName: this.getFullname(),
@@ -675,8 +680,9 @@ export class UserContext {
       'orgId',
       'orgName',
       'timeZone',
+      'currency',
       'tenantId',
-      'lastActivity',
+      'lastActivity',      
       'group',
       '__v',
       'uid',

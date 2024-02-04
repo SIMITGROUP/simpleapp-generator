@@ -26,7 +26,7 @@ import SimpleAppValue from './SimpleAppValue.vue'
 import {ref} from 'vue'
 
 
-const uuid =  crypto.randomUUID();
+const uuid =  randomUUID();
 // const fieldlabel = ref('')
 // const fielddesc = ref('')
 const defaultcssclass='simpleapp-input-container'

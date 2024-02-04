@@ -114,6 +114,11 @@ getCurrentOrg();
                   v-model="data.timeZone"
                   :setting="o.getField('#/properties/timeZone')"
                 />
+                <SimpleAppInput
+                  :input-type="SimpleAppInputType.text"
+                  v-model="data.currency"
+                  :setting="o.getField('#/properties/currency')"
+                />
               </div>
               <div>
                 <SimpleAppInput

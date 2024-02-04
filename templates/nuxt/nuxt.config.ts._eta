@@ -26,6 +26,9 @@ export default defineNuxtConfig({
 tailwindcss: {
     // Options
   },
+  devServer: {
+      // host: "0.0.0.0",
+  },
   modules: [
     // "@hebilicious/authjs-nuxt",
     '@nuxtjs/i18n',
@@ -122,7 +125,8 @@ tailwindcss: {
   // ],
   css: [ 
     'primeicons/primeicons.css',
-    path.resolve(__dirname,'./assets/css/style.css')
+    path.resolve(__dirname,'./assets/css/style.css'),
+    path.resolve(__dirname,'./assets/css/calendar.css'),
     ],
 
   // devtools: { enabled: true },

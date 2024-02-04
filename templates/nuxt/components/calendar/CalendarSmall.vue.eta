@@ -1,0 +1,74 @@
+<template>    
+    <vue-cal
+        :id="id"
+        class="w-full"
+        hide-view-selector
+        click-to-navigate
+        :time="false"
+        today-button
+        active-view="month"
+        :disable-views="['week', 'day']"
+        :selected-date="selectedDate"
+        events-count-on-year-view
+        @view-change="viewChange"
+        :events="allevents"
+        @cell-focus="chooseDate"
+        xsmall
+        >
+        <template #cell-content="{ cell, view, events }" class="bg-red-300">            
+            <div class="flex flex-col" @contextmenu="(mouseevent:MouseEvent)=>onRightClickDate(mouseevent,cell)">
+                <div>
+                    <s
+                        v-if="dateExists(new Date(cell.formattedDate),alloffdays)"
+                        v-tooltip="getHolidayName(new Date(cell.formattedDate))"
+                        class="text text-red-400 font-bold"
+                        >{{ cell.content }}</s
+                    >
+                    <span v-else>{{ cell.content }} </span>
+                </div>
+                <div>
+                    <slot name="default" :cell="cell" events="events">                            
+                        <Badge  v-if="events.length>0"  
+                            @contextmenu="(mouseevent:MouseEvent)=>onRightClickDate(mouseevent,cell)"
+                            severity="info"
+                            :value="events.length"/>                               
+                    </slot>
+                </div>
+            </div>            
+        </template>
+    </vue-cal>    
+</template>
+<script lang="ts" setup generic="T">
+import VueCal, { Event, SplitDaysAttributes } from "vue-cal";
+import { CalEventType,CalRightClickEvent,OffDay } from '~/types'
+
+const props = defineProps<{
+    id:string
+    items:CalEventType<T>[]
+    offdays:OffDay[]
+}>()
+const emits =  defineEmits(['chooseDate','rightClick'])
+const alloffdays = computed(()=> props.offdays.map(item=>item.date))
+const selectedDate = defineModel<Date>({required:true})
+const getHolidayName = (date:Date) => props.offdays.find(item=>item.date.getTime() == date.getTime())?.title
+const allevents = computed(()=>{
+    const list = props.items.map(item=>{
+        if(item.start instanceof Date) item.start = item.start.format('YYYY-MM-DD HH:mm')
+        if(item.end instanceof Date) item.end = item.end.format('YYYY-MM-DD HH:mm')
+        return item
+    })
+    return list
+})
+const viewChange = (event: any) => {    
+    console.log("Calendar Small view change")
+  chooseDate(event.startDate);
+};
+const chooseDate = (date1: Date) => {
+  selectedDate.value = date1;
+  emits('chooseDate',selectedDate.value)
+};
+const onRightClickDate=(e: MouseEvent,cell:CalRightClickEvent)=>{    
+    emits('rightClick',e,cell)
+}
+
+</script>

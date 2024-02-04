@@ -145,7 +145,10 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   <% if(['post','put','patch'].includes(api.method)){ %>
     @ApiBody({ description: 'Request Body', type: <%= api.schema? 'schemas.'+api.schema : 'Object'%> })
   <%}%>  
-  @ApiResponse({status: 200,description: '<%=api.description%>' ,type: Object  })  
+  @ApiResponse({status: 200,description: '<%=api.description%>' 
+      ,type: <%= api.responseType
+          ?  (api.responseType.includes('[') ?  '[schemas.'+api.responseType.replace('[','').replace(']','') + ']' : 'schemas.'+api.responseType  )
+          : 'Object'%>  })  
   @ApiOperation({ operationId: 'run<%=capitalizeFirstLetter(api.action)%>' })
   <% if(api.queryPara && api.queryPara.length>0) {%>
       <%for(let q=0;q<api.queryPara.length; q++){%>

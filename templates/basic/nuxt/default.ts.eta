@@ -32,7 +32,7 @@ export const Default<%=modelname%> = (uuid:string)=>{
             <%} else if(Array.isArray(field) && ['string','integer','number','boolean'].includes(field[0])) {%>
               <%=key%> : <<%=field[0]%>[]>[],  //typeof field == array     <%~JSON.stringify(field)%>    
             <%} else if(Array.isArray(field)) {%>
-              <%=key%> : [Default<%=field[0]%>(crypto.randomUUID())],  //typeof field == array     <%~JSON.stringify(field)%>    
+              <%=key%> : [Default<%=field[0]%>(randomUUID())],  //typeof field == array     <%~JSON.stringify(field)%>    
             <%} else {%>
               <%=key%> : <%=field.default%>,  //else <%= typeof field %>
           <%}%>

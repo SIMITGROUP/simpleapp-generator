@@ -22,7 +22,7 @@ import {camelCaseToWords} from './helper'
 import {computed,watch} from 'vue'
 import {ref} from 'vue'
 const modelValue = defineModel()
-const uuid = crypto.randomUUID()
+const uuid = randomUUID()
 const fieldlabel = ref('')
 const fielddesc = ref('')
 const defaultcssclass='simpleapp-input-container'

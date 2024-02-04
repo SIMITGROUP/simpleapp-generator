@@ -1,14 +1,15 @@
 <template>
+    <!-- dont modify this component -->
     <div class="simpleapp-tool-bar flex flex-row text-left gap-4">           
         <div v-for="(menu,index) in menus" :key="index">
             <div>
-                <Button v-if="showMenuButton(menu)" @click="emitEvent(menu,$event)">{{ menu.label  }}</Button>
+                <ButtonDefault v-if="showMenuButton(menu)" @click="emitEvent(menu,$event)">{{ menu.label  }}</ButtonDefault>
             </div>
             
         </div>  
         <div v-for="(menu,index) in getDocActions()" :key="index">
             <div>
-                <Button @click="emitEvent(menu,$event)">{{ menu.label  }}</Button>
+                <ButtonDefault @click="emitEvent(menu,$event)">{{ menu.label  }}</ButtonDefault>
             </div>
             
         </div>     

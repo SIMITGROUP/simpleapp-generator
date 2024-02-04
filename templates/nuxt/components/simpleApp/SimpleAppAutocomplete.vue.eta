@@ -48,7 +48,7 @@ const queryresult = jsonpath.query(props.setting.defaultValue,modifiedpath)[0]
 const emptyautocomplete = computed(():autocompletetype=> queryresult)
 
 const autocompleteitem = ref<autocompletetype>(emptyautocomplete.value)
-const modelValue = defineModel<autocompletetype>()        
+const modelValue = defineModel<autocompletetype>({required:true})
 if(modelValue.value && modelValue.value._id){
     autocompleteitem.value={...modelValue.value}
 }
@@ -135,14 +135,14 @@ const openViewer = (readonly:boolean) =>{
         const docname = props.setting.fieldsetting['x-foreignkey']
         $event('ViewRecord',{
             _id: modelValue.value?._id as string,
-            eventId: crypto.randomUUID(),
+            eventId: randomUUID(),
             label: (readonly ? modelValue.value?.label : `${t('new') + ' '+ t(docname) }`)  as string,
             readonly:readonly,
             viewer : getDocument(docname)?.viewer,
             documentName: docname,
 
             //after create, auto copy value into auto complete
-            afterCreate:(data:any)=>{                
+            after:(eventType:string,data:any,result:any)=>{                
                 autocompleteitem.value = {
                     _id: data._id,
                     code: data[codefield],                    
