@@ -6,7 +6,11 @@
  */
 import path from 'path'
 export default defineNuxtConfig({
-  // colorMode: {}  ,  
+  colorMode: {
+    classSuffix: ''
+
+  },  
+  
   runtimeConfig:{     
     public:{
       APP_URL: process.env.APP_URL,
@@ -26,16 +30,18 @@ export default defineNuxtConfig({
 tailwindcss: {
     // Options
   },
-  devServer: {
-      // host: "0.0.0.0",
-  },
+devServer: {
+    host: "0.0.0.0",
+},
   modules: [
     // "@hebilicious/authjs-nuxt",
+    '@nuxtjs/color-mode',
     '@nuxtjs/i18n',
     '@sidebase/nuxt-auth',
     'nuxt-primevue',
+    // '@nuxtjs/pwa', //cannot turn on, will cause nuxt cant start
     // "nuxt-security",     //temporary avoid nuxt-security cause cors
-    '@vueuse/nuxt',    
+    '@vueuse/nuxt',     
     '@nuxtjs/tailwindcss',
     ['@pinia/nuxt',{
       autoImports: [
@@ -44,7 +50,7 @@ tailwindcss: {
         ['defineStore', 'definePiniaStore'], // import { defineStore as definePiniaStore } from 'pinia'
       ],
     }],
-    '@nuxtjs/color-mode',
+    
     
 
   ],  
@@ -70,6 +76,7 @@ tailwindcss: {
         iso: "cn",
         name: "Chinese",
         file: "cn.ts",
+      
       },
     ],
     defaultLocale: "df",    
@@ -96,7 +103,7 @@ tailwindcss: {
 
   // },
   auth: {
-    globalAppMiddleware: true
+    globalAppMiddleware: false
   },
   // security: {
     // corsHandler:{
@@ -127,13 +134,12 @@ tailwindcss: {
     'primeicons/primeicons.css',
     path.resolve(__dirname,'./assets/css/style.css'),
     path.resolve(__dirname,'./assets/css/calendar.css'),
-    ],
+    ],        
+  },
 
   // devtools: { enabled: true },
   // build: {
   //               // transpile: ["primevue"]
-  //       },
-  
-  
+  //       },  
 
-})
+)

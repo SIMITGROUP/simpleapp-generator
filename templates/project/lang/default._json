@@ -51,5 +51,7 @@
     "select":"Select",
     "backendServerDownMessage":"Seems there is some connectivity issue, please try again later",
     "invalidXorg":"Invalid XOrg ",
-    "userNotExistInTenant":"This tenant is not accessible" 
+    "userNotExistInTenant":"This tenant is not accessible" ,
+    "light":"Light",
+    "dark":"Dark",
   }

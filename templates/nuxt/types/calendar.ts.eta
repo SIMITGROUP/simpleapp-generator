@@ -51,4 +51,7 @@ export type CalResource = ForeignKey  & {
     displayName: string; //use to display at calendar, undefine will use foreignkey label
     email?: string; //for generate avatar only
 };
-  
+export type CalViewClickSlotEvent = {
+  split:string
+  date:Date
+}

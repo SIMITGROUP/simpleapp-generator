@@ -1,9 +1,9 @@
 <template>
     <!-- <header>       -->
         <!-- <MegaMenu :model="getMenus()" orientation="horizontal" />               -->
-    <client-only>
-    <div class="flex flex-row">
-        
+    
+    <div >
+        <client-only>
         
         <div class="flex-1 flex flex-row gap-2 p-2">
             <!-- <div class="">
@@ -13,7 +13,7 @@
             <!-- <div class="">
                 <HeaderButtonHome/>                
             </div> -->
-            <div v-if="isMobile()">                
+            <div v-if="isMobile()" class="dark:text-white max-w-[15rem] truncate ...">                
                 <div v-if="useRoute().fullPath.split('/').length<=3">{{ t('home') }}</div>
                 <div v-else>{{ _.last(useRoute().fullPath.split('/'))  }}</div>
             </div>
@@ -24,7 +24,7 @@
         </div>
         <div class="flex-1 flex flex-row-reverse  gap-2 p-2">
 
-            <div class=" text-right">
+            <div class=" text-right" v-if="!isMobile()">
                 <HeaderButtonProfile/>
             </div>
             <!-- <div class=" text-right">
@@ -36,9 +36,9 @@
         </div>
 
         
-        
+    </client-only>    
     </div>
-    </client-only>
+    
     <!-- </header> -->
 </template>
 

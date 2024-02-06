@@ -30,3 +30,4 @@ export const getPathPara = (paraname:string,emptyvalue:string=''):string=>{
    }
 }
 
+export const setCurrentUrl = (path:string)=>useRouter().push({path:path})

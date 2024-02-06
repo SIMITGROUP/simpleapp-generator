@@ -93,8 +93,29 @@ const getFieldName = (path:string)=>{
 }
 </script>
 <template>
-    <Toast group="default" :pt="{}">
+    <Toast group="default">
         <template #message="p">
+            <div class="h-full w-full border">
+                <p class="text-lg text-gray-800 dark:text-gray-100 font-semibold pb-1">{{ p.message.summary }}</p>              
+                <div v-if="p.message.detail" class="flex flex-col gap-2 ">                            
+                    <p v-if="Array.isArray(p.message.detail)"  v-for="item in p.message.detail"
+                        class="text-sm text-gray-600 dark:text-gray-400 font-normal">
+                        <span v-if="item.instancePath">{{ item.instancePath }}&nbsp;</span>
+                        <span v-if="item.message"> {{ item.message }}&nbsp;</span>
+                        
+                    </p>
+                    <p v-else-if="typeof p.message.detail == 'string'" class="text-sm text-gray-600 dark:text-gray-400 font-normal">
+                        {{ p.message.detail }}
+                    </p>
+                    <p v-else-if="typeof p.message.detail == 'object'" class="text-sm text-gray-600 dark:text-gray-400 font-normal">
+                        {{ p.message.detail.message }}
+                    </p>
+                    <p v-else></p>
+                </div>
+
+            </div>
+        </template>
+        <!-- <template #message="p">
             
             <div class="bg-gray-200 dark:bg-gray-900 h-full w-full border">                
                 <div class=" flex content content-end w-full">
@@ -126,7 +147,7 @@ const getFieldName = (path:string)=>{
                     </div>
                 </div>
             </div>
-        </template>
+        </template> -->
     </Toast>
     <!-- <Toast group="list">
         <template #message="p">

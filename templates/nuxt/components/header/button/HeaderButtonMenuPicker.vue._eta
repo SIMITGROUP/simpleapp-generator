@@ -27,29 +27,21 @@ getMenustFromPageMeta().reduce((r, item) => {
 
 </script>
 <template>
-  <div>    
-    <button class="text-center border-none  cursor-pointer" v-if="getCurrentXorg()" @click="visible=true">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-      </svg>
-    </button>
-
-     <Dialog v-model:visible="visible" modal :header="t('pickDocument')" :pt="{dialog:{ class:' bg-primary-800 ' }}">
+  
+    <button class="text-center border-none  cursor-pointer pi pi-bars dark:text-white" v-if="getCurrentXorg()" @click="visible=true">     
+      <Dialog v-model:visible="visible" modal :header="t('pickDocument')" :pt="{dialog:{ class:' bg-primary-800 ' }}">
       <div class="">
           <div v-for="m in treemenu" class="m-4">
             <h3>{{ t(m.name) }}</h3>
-            <div class="grid grid-cols-6 gap-4">
-              <button v-for="submenu in m.children" class="border rounded-lg p-2" @click="selectMenu(submenu)">              
+            <div class="grid md:grid-cols-2 lg:grid-cols-6 gap-4">
+              <ButtonPrimary v-for="submenu in m.children" class="border rounded-lg p-2" @click="selectMenu(submenu)">              
                 {{ t(submenu.name) }}
-              </button>
+              </ButtonPrimary>
             </div>
             
           </div>
           
         </div>
     </Dialog>           
-  </div>
+    </button>  
 </template>
-<style scoped>
-
-</style>
