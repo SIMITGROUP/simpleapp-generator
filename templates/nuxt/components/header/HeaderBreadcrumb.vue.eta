@@ -52,11 +52,11 @@ const getBranches = ()=>{
 <template>
     <Breadcrumb :home="home" :model="items" class="!p-0 border-none ">
                 <template #item="{ item }">
-                        <NuxtLink :to="item.url" v-if="item.url" :active-class="'-'" :exact-active-class="'-'">
+                        <NuxtLink :to="item.url" v-if="item.url" class="dark:text-white" :active-class="'-'" :exact-active-class="'-'">
                             <span :class="item.icon"></span>{{ item.label }}
                         </NuxtLink>
                         <div v-else>
-                            <span class="cursor-pointer" @click="showSwitcher">{{ item.label }}</span>
+                            <span class="cursor-pointer dark:text-white" @click="showSwitcher">{{ item.label }}</span>
                             <OverlayPanel ref="op">
                                 <div>
                                     <ul class="flex flex-col">

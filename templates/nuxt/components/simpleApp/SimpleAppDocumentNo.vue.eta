@@ -7,7 +7,7 @@
                 v-model="modelValue"    
                 :placeholder="placeholder"
                 :pt="pt"
-                :class=" !pt ? 'flex-1 w-full rounded-lg  '+ ( props.readonly?'':'dark:!bg-gray-700 rounded-tr-none rounded-br-none') : ''"
+                :class=" !pt ? 'flex-1 w-full rounded-lg  '+ ( props.readonly?'':'rounded-tr-none rounded-br-none') : ''"
             />
             <span class="" v-if="!readonly">
                 <button  type="button" @click="toggle"  tabindex="-1"

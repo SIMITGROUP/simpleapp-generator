@@ -16,22 +16,35 @@
 #resourceviewcal .vuecal__event {
 border-radius: 0.5rem;
 }
-#resourceviewcal .vuecal__split-days-headers {
-min-height: 6rem;
+#resourceviewcal .vuecal__time-column {
+  margin-top: 3rem;
+  /* background-color: red; */
 }
 
+#resourceviewcal .vuecal__split-days-headers{
+  min-height: 3rem;
+  /* background-color: blue; */
+  /* margin-left:-4rem; */
+}
 #resourceviewcal .vuecal__event {
 border: solid 1px #ccc !important;
 }
 
-#resourceviewcal .normalevent{
+
+
+
+#resourceviewcal .nostudent{
     background-color: aqua;
 }
-
-#resourceviewcal .urgentevent{
-    background-color: lightcoral;
+#resourceviewcal .full{
+  @apply bg-orange-700 text-white
+    /* background-color: darkorange; */
+    /* color:white; */
 }
-
-#resourceviewcal .seminal{
+#resourceviewcal .overlimit{
+    background-color: darkred;
+    color:white;
+}
+#resourceviewcal .default{
     background-color: lightblue;
 }

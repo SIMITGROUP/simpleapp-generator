@@ -10,13 +10,11 @@ watch(()=>useRoute().params['xorg'],(newval,oldvalue)=>{
 })
 </script>
 <template>
-  <div>    
-    <NuxtLayout>      
+    <NuxtLayout :name="useDevice().isMobile ? 'mobile' : 'default'">      
       <SessionBlock/>
       <EventDocumentViewer></EventDocumentViewer>      
       <EventDecision/>
       <EventNotification/>
       <NuxtPage />
     </NuxtLayout>
-    </div>
 </template>

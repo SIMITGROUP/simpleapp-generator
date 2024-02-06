@@ -36,6 +36,7 @@ devServer: {
   modules: [
     // "@hebilicious/authjs-nuxt",
     '@nuxtjs/color-mode',
+     '@nuxtjs/device',
     '@nuxtjs/i18n',
     '@sidebase/nuxt-auth',
     'nuxt-primevue',
@@ -53,7 +54,10 @@ devServer: {
     
     
 
-  ],  
+  ], 
+  device: {
+    refreshOnResize: true
+  }, 
   i18n: {
     lazy: true,
     langDir: "lang/",
@@ -83,7 +87,7 @@ devServer: {
   },
   primevue: {
     options: {
-      unstyled: true,
+      //unstyled: true,
       ripple: true,
       inputStyle: 'filled'
     }, 

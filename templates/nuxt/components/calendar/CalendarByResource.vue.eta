@@ -1,11 +1,10 @@
 <template> 
-    {{ calendarMode }}
     <VueCal
         :id="id"
         :disable-views="['years', 'year', 'month', 'week']"
         :time-from="8 * 60"
         :time-to="20 * 60"
-        :time-step="30"
+        :time-step="60"
         active-view="day"
         :snap-to-time="15"
         hide-view-selector
@@ -22,7 +21,7 @@
         @event-drag-create="onDragNew"
         @event-drop="onEventDrop"
         @view-change="viewChange"
-        
+        @cell-click="onCellClick"
         @cell-contextmenu="eventHappend"
         
     >
@@ -68,12 +67,12 @@
 
 import "vue-cal/dist/vuecal.css";
 import VueCal, { Event, SplitDaysAttributes } from "vue-cal";
-import { CalEventType,CalRightClickEvent,OffDay,CalResource,CalResourceType,RelocateEvent } from '~/types'
+import { CalEventType,CalViewClickSlotEvent,CalResource,CalResourceType,RelocateEvent } from '~/types'
 import { emit } from "process";
 
 const timezoneoffset = new Date().getTimezoneOffset() 
 const eventsdata = ref<CalEventType<T>[]>()
-const emits = defineEmits(['eventRghtClick','eventClick','eventDrop','eventDragNew','viewChange','resourceClick'])
+const emits = defineEmits(['eventRghtClick','eventClick','eventDrop','eventDragNew','viewChange','resourceClick','slotClick'])
 const props = defineProps<{
     id:string    
     items:CalEventType<T>[]
@@ -126,6 +125,9 @@ const allresources = computed(()=>{
     })
     return tmplist
 })
+const onCellClick = async(e:CalViewClickSlotEvent)=>{
+    emits('slotClick',e)
+}
 const onEventDrop = async (relocateData: RelocateEvent<T>)=>{
     emits('eventDrop', relocateData)
 }
@@ -143,7 +145,7 @@ const onEventClick = (eventdata: CalResource) => {
 
 const calendarMode = computed(()=>{
     
-    if(isMobile()){
+    if(useDevice().isMobile){
         return {
             title: false,
             drag: true,

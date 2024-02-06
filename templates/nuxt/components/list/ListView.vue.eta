@@ -1,11 +1,11 @@
 <template>
     <div>
-        <div v-if="withFilter">
+        <div v-if="withFilter" class="border rounded mb-2">
             <input 
                 autofocus
                 placeholder="search" 
                 v-model="searchvalue"                    
-                class="w-full border  p-2" 
+                class="w-full  p-3 dark:text-white" 
                 type="search" />
         </div>
         <div class="max-h-screen overflow-auto">
@@ -56,9 +56,9 @@ const filterlist =  computed(()=>{
 })
 const getSelectedCSS= (item:T)=>{
     if(selecteditem.value == item.code){
-        return "p-2 border bg-sky-200"
+        return "p-2 border-l-none border-r-none bg-sky-200 border-t-2"
     }else{
-        return "p-2 border hover-list-primary"
+        return "p-2 border-l-none border-r-none hover-list-primary border-t-2 dark:border-t-gray-700"
     }
 
 }
