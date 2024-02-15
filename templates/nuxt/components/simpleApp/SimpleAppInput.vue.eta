@@ -1,6 +1,6 @@
 <template>
     <SimpleAppFieldContainer :hidelabel="hidelabel" v-model="modelValue" 
-                :label="label" :description="description" :pt="pt"
+                :label="label" :description="description" :pt="pt" :inputType="inputType"
                 :setting="setting" :instancepath="instancepath" :error="error" #default="slotprops">        
         <Checkbox v-if="inputType ==SimpleAppInputType.checkbox"  :readonly="isReadonly" :pt="pt"
                 :inputId="slotprops.uuid" :path="setting.instancepath"
@@ -93,6 +93,7 @@
         <Password 
                 v-else-if="inputType == SimpleAppInputType.password" 
                 :type="type" v-model="(modelValue as string)" :pt="pt" 
+                @focus="setFocus"
                 :readonly="isReadonly" class="flex flex-col"
                 :inputId="slotprops.uuid" :path="setting.instancepath"
                 :placeholder="placeholder"
@@ -117,6 +118,7 @@
         <!-- simple component -->        
         <InputNumber v-else-if="inputType == SimpleAppInputType.number"                 
                 :type="type" v-model="(modelValue as number)"
+                @focus="setFocus"
                 :readonly="isReadonly"        
                 :pt="pt"
                 :class="!pt ? 'w-full flex flex-col' :''"
@@ -125,7 +127,7 @@
                 :placeholder="placeholder"
                 />
             <Textarea v-else-if="inputType == SimpleAppInputType.textarea"
-            v-model="(modelValue as string)"                
+                v-model="(modelValue as string)"                                
                 :readonly="isReadonly"        
                 :pt="pt"
                 :type="type"
@@ -136,7 +138,8 @@
                 v-bind="(componentProps as TextareaProps)"
                 />
         <InputText v-else
-            v-model="(modelValue as string)"                
+            v-model="(modelValue as string)"    
+                @focus="setFocus"
                 :readonly="isReadonly"        
                 :pt="pt"
                 :type="type"
@@ -221,6 +224,9 @@ const updateDate = (value:any)=>{
     
 }
 
+const setFocus = (ev:any) => {
+    if(!isMobile()) ev.target.select()
+}
 
 const getListOptions = () =>{
     
@@ -244,6 +250,7 @@ const getListOptions = () =>{
 
 const emits = defineEmits(['change','update:modelValue','update:docNoFormat'])
 
+
 watch(modelValue ,(newvalue:any)=>{
     
     if([SimpleAppInputType.date,SimpleAppInputType.calendar].includes(props.inputType)){
@@ -259,7 +266,16 @@ watch(modelValue ,(newvalue:any)=>{
     emits('change',modelValue.value)
     emits('update:modelValue',modelValue.value)    
 })
-
+onMounted(()=>{
+    if([SimpleAppInputType.date,SimpleAppInputType.calendar].includes(props.inputType)){
+        if(modelValue.value){
+            datevalue.value = moment(modelValue.value as string ).format('YYYY-MM-DD')
+        }else{
+            datevalue.value = ''
+        }
+        
+    }
+})
 
 /************ start autocomplete only ***************/
 

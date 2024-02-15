@@ -54,4 +54,5 @@
     "userNotExistInTenant":"This tenant is not accessible" ,
     "light":"Light",
     "dark":"Dark",
+    "redirectToLoginPage":"Redirect To Login Page",
   }

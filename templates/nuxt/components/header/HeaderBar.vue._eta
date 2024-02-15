@@ -23,11 +23,11 @@
             
         </div>
         <div class="flex-1 flex flex-row-reverse  gap-2 p-2">
-
+            <!--
             <div class=" text-right" v-if="!isMobile()">
                 <HeaderButtonProfile/>
             </div>
-            <!-- <div class=" text-right">
+             <div class=" text-right">
                 <HeaderButtonTaskList/>
             </div> -->
             <!-- <div class="">

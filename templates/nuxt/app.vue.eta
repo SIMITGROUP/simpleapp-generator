@@ -8,9 +8,15 @@
 watch(()=>useRoute().params['xorg'],(newval,oldvalue)=>{
   reloadUserStore()
 })
+
+const getLayout = ()=>{
+  const { status } = useAuth();    
+  if(status.value=='unauthenticated') return 'loginlayout'
+  else return useDevice().isMobile ? 'mobile' : 'default'
+}
 </script>
 <template>
-    <NuxtLayout :name="useDevice().isMobile ? 'mobile' : 'default'">      
+    <NuxtLayout :name="getLayout()">      
       <SessionBlock/>
       <EventDocumentViewer></EventDocumentViewer>      
       <EventDecision/>

@@ -97,7 +97,7 @@ export class SimpleAppClient<
           //   status:NotificationStatus.success
           // })
           this.data.value = { ...res.data };
-          return res;
+          return res.data;
         }).catch((errors:any)=>{   
           // console.log(this.getDocName(),"-----failed")
             $event('Notification',{

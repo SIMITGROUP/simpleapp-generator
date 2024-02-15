@@ -3,6 +3,7 @@
     
         <div class="flex flex-row w-full">
             <InputText 
+                @focus="setFocus"              
                 :readonly="readonly"
                 v-model="modelValue"    
                 :placeholder="placeholder"
@@ -70,6 +71,11 @@ const loadDocFormats = async () =>{
         docNoFormat.value = { _id : f._id, label : f.docNoFormatName}
         placeholder.value = docFormatlist.value[0].sample        
     }
+}
+
+
+const setFocus = (ev:any) => {
+    if(!isMobile()) ev.target.select()
 }
 
 onMounted(()=>{

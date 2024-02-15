@@ -1,0 +1,3 @@
+<template>
+        <slot v-if="useRoute().path=='/login'"></slot>        
+</template>

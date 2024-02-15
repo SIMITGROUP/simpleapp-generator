@@ -1,10 +1,11 @@
 
 <template>
-    <span>  {{ Intl.NumberFormat('en',{
+    <span v-if="showCurrency"> {{ Intl.NumberFormat(  useI18n().defaultLocale,{
         style:'currency',
         currency: getUserProfile()?.currency,
         currencyDisplay: 'symbol',        
     }).format(modelValue) }}</span>
+    <span v-else> {{ modelValue.toLocaleString(useI18n().defaultLocale,options) }}</span>
 </template>
 <script lang="ts" setup>
 /**
@@ -13,5 +14,12 @@
  * last change 2024-02-04
  * author: Ks Tan
  */
-const props = defineProps(['modelValue'])
+
+const options = {
+  style: 'decimal',  // Other options: 'currency', 'percent', etc.
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+};
+const modelValue = defineModel<number>({required:true})
+const props = defineProps<{showCurrency?:boolean}>()
 </script>

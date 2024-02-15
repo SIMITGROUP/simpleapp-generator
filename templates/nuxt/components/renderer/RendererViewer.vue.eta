@@ -1,7 +1,7 @@
 <template>
-    <a @click="openViewer" class="text-primary-700 hover:text-primary-500 cursor-pointer">
+    <a @click="openViewer" class="text-primary-700 dark:text-primary-400 hover:text-primary-500 cursor-pointer">
         <slot name="default">
-            <div >{{ value[fields[0]] }}</div>
+            <div v-if="fields">{{ value[fields[0]] }}</div>
         </slot>
     </a>
 </template>
@@ -12,10 +12,10 @@
  * last change 2024-02-04
  * author: Ks Tan
  */
-
+import { RendererSetting } from '~/types';
 const props = defineProps<{
-    fields:any,
-    setting:any,
+    fields?:string[],
+    setting:RendererSetting,
     value:any
 }>()
 

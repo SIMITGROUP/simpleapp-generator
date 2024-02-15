@@ -23,40 +23,42 @@ export default defineNuxtPlugin( async(nuxtApp) => {
     //const { csrf } = useCsrf()    
     //axios.defaults.headers.common = {"CSRF-TOKEN": csrf};
     const myaxios = axios.create({timeout:5000})
-    myaxios.interceptors.response.use((response) => response, (error) => {
-      console.error('errorerrorerrorerror',error)
-      
-      if(error.code == 'ERR_BAD_REQUEST'){
-        console.error("axios ERR_BAD_REQUEST, redirect to relogin")
-      }
-      else if(error.code){        
-        throw createError({
-          statusCode:error.code,
-          statusMessage:error.message,
-          fatal:true
-        })           
-      }
-      else if(error.response.status==401){        
-        console.error("axios 401 session expired, pop up for relogin")
-      }else if(error.response && error.response.status){
-        let errmsg = error.response.message
-        let errorcode =error.response.status
-        if(error.response?.data && error.response?.data?.message){
-          errmsg = error.response.data.message
-          errorcode = error.response.data.statusCode
+    myaxios.interceptors.response.use(
+      (response) => {        
+        return  response
+      }, 
+      (error) => {
+        if(error.code && error.code == 'ERR_BAD_REQUEST'){
+          console.error("axios ERR_BAD_REQUEST, redirect to relogin")
+        }        
+        else if(error.code){        
+          throw createError({
+            statusCode:error.code,
+            statusMessage:error.message,
+            fatal:true
+          })           
         }
-        
-        throw createError({
-          statusCode:errorcode,
-          statusMessage:errmsg,
-          fatal:true
-        })  
-          // return Promise.reject(error)
-      }else{
-        console.error("unknown error")
-        throw createError({statusCode:500,statusMessage:"Internal server error"}) 
-      }
-    });
+        else if(error.response && error.response.status==302){        
+          console.error("axios 302 session expired, start login flow")
+        }else if(error.response && error.response.status){
+          let errmsg = error.response.message
+          let errorcode =error.response.status
+          if(error.response?.data && error.response?.data?.message){
+            errmsg = error.response.data.message
+            errorcode = error.response.data.statusCode
+          }
+          
+          throw createError({
+            statusCode:errorcode,
+            statusMessage:errmsg,
+            fatal:true
+          })  
+            // return Promise.reject(error)
+        }else{
+          console.error("unknown error")
+          throw createError({statusCode:500,statusMessage:"Internal server error"}) 
+        }
+      });
     
     return {
         provide: {

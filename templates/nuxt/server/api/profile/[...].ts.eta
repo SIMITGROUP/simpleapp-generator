@@ -21,43 +21,14 @@ export default defineEventHandler(async (event:any) => {
     } catch (error) {
         return sendRedirect(event, '/login', 401)
     }
-
+    if(!session) {
+        throw createError({ statusText: 'Unauthorized', status: 302 })
+     }
     return new Promise<any>(async (resolve, reject) => {
-        if(!session) {
-        //if(!session || !session.accessToken) {    
-            reject({ statusMessage: 'Unauthorized', statusCode: 401 });
-            throw createError({ statusMessage: 'Unauthorized', statusCode: 401 })
-        }
-        //console.log("------hihi------",event.context.params)
         
         const seperateSymbol = '.';
-        // const seperateSymbol = '&';
-        // const xOrg = event.context.params?.xorg ?? ''
         const documentLink = event.context.params?._ ?? ''
-        // const platform = event.context.params?.platform ?? ''
-        
-
-        // console.error("event.context???",event.context)
         const accessToken = session?.accessToken;
-        
-        // const allowPlatform = ['report-api', 'cloudapi'];
-        // if(!key || !platform || !allowPlatform.includes(platform) || !accessToken) {
-        //     reject({ statusMessage: 'Unauthorized', statusCode: 401 });
-        //     // throw createError({ statusMessage: 'Unauthorized', statusCode: 401 })
-        // }
-
-        // let tenantKey = '', organizationKey = '';
-        // let xOrg = '';
-
-        // if(key !== 'system') {
-        //     [tenantKey, organizationKey] = key.split(seperateSymbol);
-        //     xOrg = `${tenantKey}/${organizationKey}/`;
-        // }
-
-        // if(key === 'system' && platform == 'cloudapi') {
-        //     // xOrg = 'MC0wLTA'
-        // }
-
         let forwardData: any = {};
 
         const req = event.node.req;

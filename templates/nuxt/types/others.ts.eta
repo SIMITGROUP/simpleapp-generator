@@ -43,7 +43,10 @@ import { Component } from 'vue'
     }
   
   
-  
+  export type RendererSetting ={
+    documentName:string,
+    [key:string]:any
+  }
   export type SearchBody = {
       
       filter?:object;

@@ -8,7 +8,7 @@
                 class="w-full  p-3 dark:text-white" 
                 type="search" />
         </div>
-        <div class="max-h-screen overflow-auto">
+        <div class="max-h-screen overflow-auto" v-if="filterlist.length>0">                        
             <ul >            
                 <li v-for="(item,index) in filterlist">                    
                     <div  :class="getSelectedCSS(item)">
@@ -22,6 +22,9 @@
                 
                 </li>
             </ul>
+        </div>
+        <div v-else class="p-10">            
+            <div class="text-xl text-center dark:text-gray-400 border p-10" >{{ t('noDataFound')  }}</div>
         </div>
     </div>
 </template>

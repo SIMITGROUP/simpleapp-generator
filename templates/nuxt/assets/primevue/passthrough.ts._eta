@@ -34,15 +34,23 @@ const CustomTailwind = usePassThrough(
             // }),
             label:{class: 'text-sm dark:text-white'},
         },
+        checkbox:{
+            input:{ class:' flex items-center justify-center border-2 w-6 h-6 text-gray-600  rounded-lg transition-colors duration-200 border-gray-300 bg-white dark:border-blue-900/40 dark:bg-gray-500 hover:border-blue-500 dark:hover:border-blue-400 focus:outline-none focus:outline-offset-0 focus:shadow-[0_0_0_0.2rem_rgba(191,219,254,1)] dark:focus:shadow-[inset_0_0_0_0.2rem_rgba(147,197,253,0.5)]'}
+            // p-checkbox p-component cursor-pointer inline-flex relative select-none align-bottom w-6 h-6
+             
+        },
         button:{root:{class: 'focus:outline-none transition duration-150 ease-in-out rounded p-2 m-1 border dark:border-gray-600'}},
-        dialog:{root:{class:['border p-2 w-full max-h-full max-w-full md:h-3/4 lg:h-1/2']},},        
+        dialog:{
+            root:{class:['border w-full max-h-full max-w-full md:h-3/4 lg:h-1/2']},
+            header:{class: 'p-dialog-header flex items-center  text-2xl justify-between shrink-0 bg-white text-gray-800 border-t-0  rounded-tl-lg rounded-tr-lg p-6 dark:bg-gray-900  dark:text-white/80'},
+            content:{class:'p-dialog-content overflow-y-auto bg-white text-gray-700 px-6 pb-8 pt-0 dark:bg-gray-900  dark:text-white/80 rounded-bl-lg rounded-br-lg h-full'}
+        },        
         calendar:{
-            root:{class:'border border-grey-900 dark:!border-blue-900/40  rounded-lg flex flex-row p-1'},            
+            root:{class:'border border-grey-900 dark:!border-blue-900/40  rounded-lg flex flex-row p-0'},            
             input:{class:'w-full p-inputtext p-component font-sans text-base text-gray-600 dark:text-white/80 bg-white dark:bg-gray-900 p-3 border border-gray-300 dark:border-blue-900/40 transition-colors duration-200 appearance-none hover:border-blue-500 rounded-lg'},
         },
         autocomplete:{
             root:{class:'border border-gray-400 dark:!border-blue-900/40  rounded-lg flex flex-row'},
-            // input:{class:'w-full p-2 font-sans dark:text-white rounded-lg  rounded-tr-none rounded-br-none transition-colors duration-200 appearance-none hover:border-blue-500 focus:outline-none focus:outline-offset-0 focus:shadow-[0_0_0_0.2rem_rgba(191,219,254,1)] dark:focus:shadow-[0_0_0_0.2rem_rgba(147,197,253,0.5)]  text-base'},
             loadingIcon:{class:'hidden'},
             dropdownbutton: {
                 root:' btn-primary dark:shadow-primary-800 dark:border-primary-900 text-white rounded-lg flex flex-row  p-3 rounded-tl-none rounded-bl-none '
@@ -50,6 +58,7 @@ const CustomTailwind = usePassThrough(
         },
         sidebar:{
             root:{class:'w-full md:w-1/2 xl:w-1/4   bg-white dark:bg-gray-800 border p-0 h-full'},
+            header:{class:'dark:text-white text-2xl p-2'},
             content:{class:'p-0 pt-0 h-full w-full grow overflow-y-auto'}
         },        
         panel: {

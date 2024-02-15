@@ -56,8 +56,3 @@ input {
 .btn-warn {
     @apply btn bg-warning-600 hover:bg-warning-400 
 }
-
-.simpleapp-input-label{
-    @apply  text-left
-}
-

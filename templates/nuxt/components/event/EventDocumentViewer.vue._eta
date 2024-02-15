@@ -1,6 +1,5 @@
 <template>
-    <Dialog v-model:visible="visible"         
-        :pt="{root:{class:'w-5/6 h-5/6'}}"
+    <Dialog v-model:visible="visible"        
         :modal="true" 
         :close-on-escape="false" >                        
         <template #header>
@@ -66,6 +65,7 @@ const deleteTab=()=>{
 }
 
 $listen('ViewRecord',(setting)=>{     
+    console.log("ViewRecord event received by listener")
     visible.value=true    
     allview.value[setting.eventId]=setting
     

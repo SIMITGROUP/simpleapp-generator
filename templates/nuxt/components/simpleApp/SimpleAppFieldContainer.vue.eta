@@ -1,8 +1,9 @@
 <template>
-    <div v-if="schema" class="flex flex-col">          
-        <div v-if="hidelabel"></div>
-        <label v-else-if="error" class="simpleapp-input-label text-danger-600 overflow-hidden" :for="uuid">{{ fieldlabel }} <span v-if="props.setting.isrequired && fieldlabel" class="text-danger-600">*</span></label>        
-        <label v-else  :for="uuid" class="simpleapp-input-label whitespace-nowrap	text-gray-500 truncate">{{ fieldlabel }} <span v-if="props.setting.isrequired && fieldlabel" class="text-danger-600">*</span></label>        
+    <div v-if="schema" :class="getLayoutClass()">          
+        <label v-if="hidelabel"></label>
+        <label v-else  :for="uuid" :class="getLabelClass()" @click="console.log(inputType)">{{ fieldlabel }} <span v-if="props.setting.isrequired && fieldlabel" class="text-danger-600">*</span></label>
+        <!-- <label v-else-if="error" class="simpleapp-input-label text-danger-600 overflow-hidden" :for="uuid">{{ fieldlabel }} <span v-if="props.setting.isrequired && fieldlabel" class="text-danger-600">*</span></label>        
+        <label v-else  :for="uuid" class="simpleapp-input-label whitespace-nowrap	text-gray-500 truncate">{{ fieldlabel }} <span v-if="props.setting.isrequired && fieldlabel" class="text-danger-600">*</span></label>         -->
         
         <!-- <div :uuid="uuid" >{{ modelValue }}</div> -->
         <!-- <div v-if="typeof modelValue =='object' && typeof modelValue['_id']!='undefined' && typeof modelValue['label']!='undefined' &&  readonly ==true " :uuid="uuid" class="simpleapp-value-readonly">{{ modelValue['label'] }}</div> -->
@@ -34,6 +35,7 @@ const fieldcontainerclass = ref(defaultcssclass)
 let instancepath = ref('')
 const props = defineProps<{
     label?: string,    
+    inputType: string,
     description?: string,
     instancepath?:string,
     hidelabel?:boolean,
@@ -45,16 +47,26 @@ const props = defineProps<{
 const readonly = computed(()=>{
    return props.readonly ??  props.setting.readonly ?? false
 })
-// if(props.readonly !== undefined){
-//     readonly.value=props.readonly
-// }else if(props.setting.readonly !==undefined){
-//     readonly.value=props.readonly
-// }
-// console.log("props.setting.format",props.setting.format)
-const modelValue = defineModel()
+
+const modelValue = defineModel<any>() //this model value support all kind of data, string, number, autocomplete and etc
 const readonlyclass="simpleapp-value-readonly"
 // console.log('props.setting',modelValue.value,props.setting)
 let schema:any 
+
+const getLayoutClass = () =>  `simpleapp-input-container flex  ${ props.inputType == 'checkbox' ? " flex-row gap-4 mt-1 ml-1 " : "flex flex-col "}`
+
+const getLabelClass = () => {
+    let class1= "simpleapp-input-label text-left text-gray-500  "
+    if(!isMobile()) class1 += "whitespace-nowrap truncate"
+    else if (props.inputType == 'checkbox' ) class1 += " ml-1 dark:text-grey-200"
+    else if (props.inputType != 'autocomplete' &&  modelValue.value) class1 += "-mb-4 ml-1 z-50 text-xs dark:text-grey-100"
+    else if (props.inputType == 'autocomplete' &&  modelValue.value?.label) class1 += "-mb-4 ml-1 z-50 text-xs dark:text-grey-100"
+    else if (props.inputType == 'number' && modelValue.value !== undefined) class1 += "-mb-4 ml-1 z-50 text-xs dark:text-grey-100"
+    else  class1 += "-mb-4 ml-1 z-50 text-xs dark:text-grey-100 hidden"
+    return class1    
+}
+
+
 
 const fielddesc = computed(()=>{
     return props.description ?? ''
@@ -116,8 +128,3 @@ watch(props.setting.errors,(newvalue,oldvalue)=>{
 })
 
 </script>
-<style scoped>
-.simpleapp-input-container{
-    @apply flex flex-col
-}
-</style>
