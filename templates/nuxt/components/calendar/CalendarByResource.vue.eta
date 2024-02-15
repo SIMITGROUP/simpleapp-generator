@@ -1,9 +1,11 @@
 <template> 
     <VueCal
+        
         :id="id"
+        ref="vueresourcecal"
         :disable-views="['years', 'year', 'month', 'week']"
         :time-from="8 * 60"
-        :time-to="20 * 60"
+        :time-to="22 * 60"
         :time-step="60"
         active-view="day"
         :snap-to-time="15"
@@ -69,9 +71,10 @@ import "vue-cal/dist/vuecal.css";
 import VueCal, { Event, SplitDaysAttributes } from "vue-cal";
 import { CalEventType,CalViewClickSlotEvent,CalResource,CalResourceType,RelocateEvent } from '~/types'
 import { emit } from "process";
-
+import moment from 'moment'
 const timezoneoffset = new Date().getTimezoneOffset() 
 const eventsdata = ref<CalEventType<T>[]>()
+const vueresourcecal = ref()
 const emits = defineEmits(['eventRghtClick','eventClick','eventDrop','eventDragNew','viewChange','resourceClick','slotClick'])
 const props = defineProps<{
     id:string    
@@ -125,8 +128,24 @@ const allresources = computed(()=>{
     })
     return tmplist
 })
-const onCellClick = async(e:CalViewClickSlotEvent)=>{
-    emits('slotClick',e)
+const onCellClick = async(e:CalViewClickSlotEvent)=>{    
+    const date =e.date
+    date.setHours(date.getHours() + Math.floor(date.getMinutes()/60));
+    date.setMinutes(0, 0, 0); // Resets also seconds and milliseconds
+    
+    
+    const newevent:CalEventType<T> = {
+        id: 'new',
+        start: date,
+        end: date.addHours(1),
+        class: 'nostudent',
+        title: t('new'),
+        // content?: string | undefined;
+        split: e.split,
+        data: {} as T
+    }
+    // emits('slotClick',e)
+    emits('eventDragNew',newevent)
 }
 const onEventDrop = async (relocateData: RelocateEvent<T>)=>{
     emits('eventDrop', relocateData)

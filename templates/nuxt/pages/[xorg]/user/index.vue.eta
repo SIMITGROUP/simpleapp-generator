@@ -22,21 +22,17 @@
             />
 
             <SimpleAppInput
-            :input-type="SimpleAppInputType.checkbox"
+              :input-type="SimpleAppInputType.checkbox"
               :setting="o.getField('#/properties/active')"
               v-model="userdata.active"
             />
             <SimpleAppInput
-            :input-type="SimpleAppInputType.textarea"
+              :input-type="SimpleAppInputType.textarea"
               :setting="o.getField('#/properties/description')"
               v-model="userdata.description"
             />
             <div>
-              <Button
-                @click="saveUser"
-                class="btn btn-primary"
-                >Save</Button
-              >
+              <Button @click="saveUser" class="btn btn-primary">Save</Button>
               <Button
                 v-if="canPerform('user', 'delete')"
                 @click="deleteUser"
@@ -103,7 +99,7 @@
 </template>
 <script setup lang="ts">
 // import Card from "primevue/card";
-import {SimpleAppInputType} from "~/types"
+import { SimpleAppInputType } from "~/types";
 import { Permission, User } from "../../../simpleapp/generate/openapi/api";
 import _ from "lodash";
 import SelectButton from "primevue/selectbutton";
@@ -294,9 +290,11 @@ const getPermssionData = (userId: string, branchId: number) => {
   return pm;
 };
 
-onMounted(() => {
-  const id = String(useRoute().params.id);
-  console.log("id", id);
-  onSelectUser(id);
+onMounted(async () => {
+  const id = getPathPara('id')
+  if(id){
+    await onSelectUser(id);
+  }
+  
 });
 </script>

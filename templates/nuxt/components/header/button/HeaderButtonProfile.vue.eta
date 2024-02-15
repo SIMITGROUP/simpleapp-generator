@@ -37,7 +37,7 @@ const saveLocale=async (v:string)=>{
 </script>
 
 <template>          
-        <div class="bg-cover bg-center rounded-md p-2 cursor-pointer profile-button"  @click="toggle">
+        <div class="bg-cover bg-center rounded-md p-3  cursor-pointer profile-button"  @click="toggle">
             <img  :src="getAvatarLink(<string>getProfileEmail(),32)" alt="" class="h-full w-full overflow-hidden object-cover rounded-full border-2 border-white dark:border-gray-700 shadow" />
         </div>
     

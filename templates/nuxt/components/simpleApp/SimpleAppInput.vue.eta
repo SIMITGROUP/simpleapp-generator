@@ -127,7 +127,8 @@
                 :placeholder="placeholder"
                 />
             <Textarea v-else-if="inputType == SimpleAppInputType.textarea"
-                v-model="(modelValue as string)"                                
+                v-model="(modelValue as string)"    
+                :autofocus="autofocus"                            
                 :readonly="isReadonly"        
                 :pt="pt"
                 :type="type"
@@ -140,6 +141,7 @@
         <InputText v-else
             v-model="(modelValue as string)"    
                 @focus="setFocus"
+                :autofocus="autofocus"
                 :readonly="isReadonly"        
                 :pt="pt"
                 :type="type"
@@ -189,6 +191,7 @@ const props = withDefaults( defineProps<{
     instancepath?:string,
     hidelabel?: boolean
     readonly?: boolean
+    autofocus?:boolean
     pt?:any,
     placeholder?:string
     componentProps?: InputNumberProps | InputSwitchProps | InputTextProps | TextareaProps | DropdownProps | CalendarProps | RatingProps
@@ -289,5 +292,3 @@ const triggerDocNoFormatChange=(formatdata:any)=>{
     emits('update:docNoFormat',formatdata)
 }
 </script>
-<style scoped>
-</style>
