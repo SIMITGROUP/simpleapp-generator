@@ -1,5 +1,5 @@
-<template >
-    <span>{{ toLocalDate(value??'') }}</span>
+<template>
+  <span>{{ toLocalDate(value ?? "") }}</span>
 </template>
 <script lang="ts" setup>
 /**
@@ -8,5 +8,5 @@
  * last change 2024-02-04
  * author: Ks Tan
  */
-const props = defineProps<{value?:string}>()
+const props = defineProps<{ value?: string }>();
 </script>

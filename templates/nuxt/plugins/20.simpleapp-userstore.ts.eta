@@ -27,6 +27,8 @@ export default defineNuxtPlugin( async(nuxtApp) => {
           orgName:ref(''),
           timeZone:ref(''),
           currency:ref(''),
+          country: ref(''),
+          offsetMinute: ref(0),
           uid: ref(''),
           email: ref(''),
           fullName: ref(''),
@@ -70,6 +72,8 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               this.orgName = res.data.orgName
               this.timeZone = res.data.timeZone
               this.currency = res.data.currency
+              this.country = res.data.country
+              this.offsetMinute = res.data.offsetMinute
               this.uid = res.data.uid
               this.email = res.data.email
               this.fullName = res.data.fullName              
@@ -173,6 +177,8 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               orgName: this.orgName,
               currency: this.currency,
               timeZone: this.timeZone,
+              country: this.country,
+              offsetMinute: this.offsetMinute,
               fullName : this.fullName,        
               branches:this.branches??[],
               invites: this.invites ?? [],

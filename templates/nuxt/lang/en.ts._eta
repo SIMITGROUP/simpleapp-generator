@@ -1,6 +1,0 @@
-export default {
-      welcome: 'Welcome',
-      welcomeSimpleApp: 'Welcome To SimpleApp',
-      changeHomePageMsg: 'It is product front page and by right you shall replace it with something else.',
-      category: 'Category'
-    }

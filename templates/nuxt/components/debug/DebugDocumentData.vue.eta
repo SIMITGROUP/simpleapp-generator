@@ -1,8 +1,7 @@
 <template>
-    <div class="p-0 top-0  absolute left-1/2 text-right bg-yellow-200" v-if="isdebug=='1'">
-        <Button @click="visible=true"  class=" text-white bg-warning-800">
-            <i class="pi pi-code"></i>
-            {{ label }}</Button>      
+    <div :class="`p-0 absolute bg-yellow-200 bottom-0 right-0`" v-if="isdebug=='1'">
+        <button @click="visible=true"  class=" text-white text-xs bg-warning-800 p-0 m-0">
+            <i class="pi pi-code"></i>{{ label }}</button>      
         <Sidebar v-model:visible="visible" class="text-red-100">
             
             <template #header >

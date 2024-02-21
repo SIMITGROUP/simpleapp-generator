@@ -1,68 +1,137 @@
 <template>
-    <div>
-        <div v-if="withFilter" class="">
-            <InputText                 
-                placeholder="search" 
-                v-model="searchvalue"                    
-                class="w-full dark:text-white" 
-                type="search" />                
-        </div>
-        <div class=" overflow-auto" v-if="filterlist.length>0">                        
-            <ul >            
-                <li v-for="(item,index) in filterlist">                    
-                    <div  :class="getSelectedCSS(item)">
-                        <NuxtLink :to="url ? `${url}/${item[idField]}`:undefined">
-                            <slot :item="item" :index="index">
-                                <div class="mr-2">{{item[titleField??'']  }}</div>
-                                <div class="font font-bold text-right">{{item[subTitleField??'']}}</div>
-                            </slot>
-                        </NuxtLink>
-                    </div>
-                
-                </li>
-            </ul>
-        </div>
-        <div v-else class="p-10">            
-            <div class="text-xl text-center dark:text-gray-400 border p-10" >{{ t('noDataFound')  }}</div>
-        </div>
+  <div class="relative  ">
+    <div v-if="withFilter" class="flex flex-row  ">
+      <InputText
+        placeholder="search"
+        v-model="searchvalue"
+        class="w-full dark:text-white"
+        type="search"
+      />
+      <ButtonPrimary v-if="withAddNew" @click="emits('add')"
+        ><i class="pi pi-plus"></i
+      ></ButtonPrimary>
     </div>
+    <div v-if="showIndex" class="flex flex-col text-sm fixed  left-1 top-1/5 text-primary-600 dark:text-primary-400 p-1 z-10 rounded border bg-white dark:bg-black opacity-90">
+      <A :href="'#'+l" v-for="l in allLetters">{{ l }}</A>
+    </div>
+    
+    <div  v-if="filterlist && filterlist.length > 0">
+      <div >
+        <div v-for="(item, index) in filterlist" :class="isMobile() ? '' : 'overflow overflow-y-scroll overflow-auto '">          
+          <div class="w-full bg-gray-400 dark:bg-gray-500 p-1 pl-2 top-0 sticky opacity-90" v-if="showIndex && titleField &&  showCategoryBar(item[titleField][0])">
+            <a :id="item[titleField][0]">{{ item[titleField][0] }}</a></div>
+          <div :class="getSelectedCSS(item)">
+            <NuxtLink :to="url ? `${url}/${item[idField]}` : undefined">
+              
+              <slot name="default" :item="item" :index="index">
+                <div class="flex flex-row">
+                  <div class="flex-1 mr-2 dark:text-white">
+                    {{ item[titleField ?? ""] }}
+                  </div>
+                  <div class="text-right dark:text-gray-400 text-gray-600">
+                    {{ item[subTitleField ?? ""] }}
+                  </div>
+                </div>
+              </slot>
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-else>
+      <div
+        class="w-full h-20 p-2 border-l-none border-r-none hover-list-primary"
+      >
+        <slot name="nodata">
+          <div class="border-round border-1 surface-border p-4 surface-card">
+            {{ t("noDataFound") }}
+          </div>
+        </slot>
+      </div>
+    </div>
+  </div>
 </template>
-<script setup lang="ts" generic="T extends {[key:string]:any}">
-import {ref} from 'vue'
-import {ListItem} from '~/types/listview'
-const props = withDefaults(defineProps<{
-    list:T[],
-    url?:string,
-    titleField?:string
-    idField?:string
-    subTitleField?:string
-    withFilter?:boolean
-}>(),{
-    idField:'_id'
+<script setup lang="ts" generic="T extends { [key: string]: any }">
+import { ref } from "vue";
+import { ListItem } from "~/types/listview";
+const props = withDefaults(
+  defineProps<{
+    list: T[];
+    url?: string;
+    titleField?: string;
+    idField?: string;
+    subTitleField?: string;
+    withFilter?: boolean;
+    withAddNew?: boolean;
+    showIndex?:boolean
+  }>(),
+  {
+    idField: "_id",
+  },
+);
+const letters =ref<string[]> ([])
+let lastchar=''
+
+const emits = defineEmits(["add"]);
+const searchvalue = ref("");
+const selecteditem = ref("");
+const clickRow = (item: ListItem) => {
+  // emit('clickitem',item)
+  // selecteditem.value = item.code
+};
+const filterlist = computed(() => {
+  let newlist: T[] = [];
+  if (!Array.isArray(props.list)) {
+    return [];
+  }
+  if (props.list !== undefined) {
+    newlist = props.list.filter((item: T) => {
+      return (
+        String(item[props.titleField ?? ""])
+          .toLowerCase()
+          .includes(searchvalue.value.toLowerCase()) ||
+        String(item[props.subTitleField ?? ""])
+          .toLowerCase()
+          .includes(searchvalue.value.toLowerCase())
+      );
+    });
+  }
+
+  return newlist;
+});
+const getSelectedCSS = (item: T) => {
+  if (selecteditem.value == item.code) {
+    return "p-2 border-l-none border-r-none bg-sky-200 border-t-2";
+  } else {
+    return "p-2 border-l-none border-r-none hover-list-primary border-t-2 dark:border-t-gray-700";
+  }
+};
+
+
+const allLetters = computed(()=>{
+  console.log('props.titleFieldprops.titleField',props.titleField,props.list)
+  if(props.titleField && props.list){
+
+    return props.list.filter((item)=>{
+      const titlevalue:string = item[props.titleField as keyof typeof item]
+      if(titlevalue[0]!=lastchar){
+        lastchar = item[props.titleField as keyof typeof item][0]
+        return true
+      }
+    }).map(item=>item[props.titleField  as keyof typeof item][0])
+    
+  }else{
+    return []
+  }
+
 })
-// const emit = defineEmits(['clickitem'])
-const searchvalue = ref('')
-const selecteditem =ref('')
-const clickRow=(item:ListItem)=>{
-    // emit('clickitem',item)
-    // selecteditem.value = item.code
+
+const showCategoryBar=(letter:string)=>{
+  if(lastchar!=letter){
+    lastchar=letter
+    return true
+  }else{
+    return false
+  }
 }
-const filterlist =  computed(()=>{    
-    const newlist =props.list.filter((item:any)=>
-    {
-     return   String(item[props.titleField??'']).toLowerCase().includes(searchvalue.value.toLowerCase()) ||
-            String(item[props.subTitleField??'']).toLowerCase().includes(searchvalue.value.toLowerCase())
-    }) 
-
-    return newlist
-})
-const getSelectedCSS= (item:T)=>{
-    if(selecteditem.value == item.code){
-        return "p-2 border-l-none border-r-none bg-sky-200 border-t-2"
-    }else{
-        return "p-2 border-l-none border-r-none hover-list-primary border-t-2 dark:border-t-gray-700"
-    }
-
-}
-
 </script>

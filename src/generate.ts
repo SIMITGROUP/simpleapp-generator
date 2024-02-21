@@ -262,12 +262,14 @@ const generateSchema = ( docname: string,
                
         }else if(foldertype=='nuxt'){
           const capname = capitalizeFirstLetter(docname)
-          const validateWritePage = (folder:string,isexists:boolean)=>{
+        
+          const validateWritePage = (targetfile:string,isexists:boolean)=>{
             if(!jsonschemas[docname][X_SIMPLEAPP_CONFIG]['pageType'] ){
               return false
             }else if(!isexists){
-              return true
-            }else if( existsSync(`${folder}/delete-me.txt`)){
+              return true              
+            }else if(!existsSync(targetfile) || readFileSync(targetfile, 'utf-8').includes('--remove-this-line-to-prevent-override--')
+               || readFileSync(targetfile, 'utf-8').includes('delete-me')){
               return true
             }else{
               return false
@@ -275,8 +277,8 @@ const generateSchema = ( docname: string,
           }
           const mapfiles = {
             'pages.form.vue.eta': { 
-              to:`pages/[xorg]/${docname}`, 
-              as:'form.vue',
+              to:'components/form', 
+              as: `Form${_.upperFirst(docname)}.vue`,
               validate: validateWritePage
             },
             'pages.[id].vue.eta': { 
@@ -284,11 +286,11 @@ const generateSchema = ( docname: string,
               as:'[id].vue',
               validate: validateWritePage
             },
-            'pages.new.vue.eta': { 
-              to:`pages/[xorg]/${docname}`, 
-              as:'new.vue',
-              validate: validateWritePage
-            },
+            // 'pages.new.vue.eta': { 
+            //   to:`pages/[xorg]/${docname}`, 
+            //   as:'new.vue',
+            //   validate: validateWritePage
+            // },
             'pages.viewer.vue.eta': { 
               to:`pages/[xorg]/${docname}`, 
               as:'viewer.vue',
@@ -302,12 +304,12 @@ const generateSchema = ( docname: string,
             'simpleapp.doc.ts.eta': { 
               to:`simpleapp/docs`, 
               as:`${capname}Doc.ts`,
-              validate: (folder:string,isexists:boolean)=>!isexists
+              validate: (targetfile:string,isexists:boolean)=>!isexists
             },
             'default.ts.eta': { 
               to:`simpleapp/generate/defaults`, 
               as:`${capname}.default.ts`,
-              validate: (folder:string,isexists:boolean)=>{
+              validate: (targetfile:string,isexists:boolean)=>{
                 return true
               }
             },
@@ -315,7 +317,7 @@ const generateSchema = ( docname: string,
             'simpleapp.generate.client.ts.eta': { 
               to:`simpleapp/generate/clients`, 
               as:`${capname}Client.ts`, 
-              validate: (folder:string,isexists:boolean)=>{
+              validate: (targetfile:string,isexists:boolean)=>{
                 return true
               }
             },
@@ -326,13 +328,12 @@ const generateSchema = ( docname: string,
             const targetfile = `${targetfolder}/${target.as}`
 
             if(jsonschemas[docname][X_SIMPLEAPP_CONFIG]['pageType'] && !existsSync(targetfolder)){
-              mkdirSync(targetfolder,{recursive:true})
-              writeFileSync(`${targetfolder}/delete-me.txt`,"delete this file for keep modified page");
+              mkdirSync(targetfolder,{recursive:true})              
             }
 
 
             const isexists = existsSync(targetfile)
-            const iswrite:boolean = target.validate(targetfolder,isexists)
+            const iswrite:boolean = target.validate(targetfile,isexists)
             log.info("process: ",targetfile)
             
             if(iswrite){

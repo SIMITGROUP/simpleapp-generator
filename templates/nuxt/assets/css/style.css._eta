@@ -1,6 +1,6 @@
 
 [disabled] ,[readonly]{
-    @apply bg-gray-300 dark:bg-gray-900
+    @apply bg-gray-300 dark:bg-gray-600
 }
 
 [aria-selected=true]{
@@ -13,21 +13,27 @@
 [data-pc-section=pagebutton]{
     @apply p-3 m-0 border
 }
+html {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+/* #__nuxt{
+
+} */
 
 body {
-    @apply bg-gray-50  dark:bg-gray-800  h-screen w-screen overflow-y-scroll 
+    @apply bg-gray-100  dark:bg-slate-950 dark:text-gray-300 h-screen w-screen 
+    /* overflow-y-scroll  overflow-x-scroll  */    
 }
 
-input {
-    @apply  bg-opacity-0	 bg-black
-}
 
 .route-link-list {
- @apply hover:bg-secondary-200  dark:hover:bg-gray-800 
+ @apply text-black hover:text-secondary-200  dark:hover:text-primary-400 
 }
 
 .router-link-exact-active{
-    @apply  bg-primary-100  dark:bg-gray-800  block
+    @apply  text-primary-100  dark:text-primary-600  block
 }
 
 .invisible{
@@ -39,6 +45,10 @@ input {
 .subtitle-text{
     @apply text-base text-gray-500
 }
+.p-inputnumber-input{
+    @apply text-right
+}
+
 
 .btn {
     @apply font-medium  text-gray-50 dark:text-gray-300 border
@@ -56,3 +66,5 @@ input {
 .btn-warn {
     @apply btn bg-warning-600 hover:bg-warning-400 
 }
+
+

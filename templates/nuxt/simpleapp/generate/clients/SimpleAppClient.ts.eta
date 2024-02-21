@@ -20,6 +20,7 @@ type crudType = {
   runFindOne: Function;  
   runCreate: Function;
   runUpdate: Function;  
+  runPatch: Function;  
   runDelete: Function;
   runSearch: Function
 };
@@ -154,6 +155,37 @@ export class SimpleAppClient<
         });
     }
   }
+
+  async patch() {
+    const {$event} =useNuxtApp()
+    const recordid: string = this.data.value._id ?? '';
+      return await this.docapi
+        .runPatch(recordid, this.data.value,{timeout:this.defaultTimeOut})
+        .then((res: AxiosResponse) => {
+          // if(this.event){this.event('success:update',res.data)}
+          // $event('Notification',{
+          //   documentName:this.getDocName(),
+          //   summary:'Record update success',
+          //   status:NotificationStatus.success,
+          //   data:errors
+          // })        
+          this.data.value = res.data          
+          return res.data;
+        }).catch((errors:any)=>{
+          $event('Notification',{
+            documentName:this.getDocName(),
+            summary:'Record patch failed',
+            status:NotificationStatus.error,
+            data:errors.response.data.data
+          })
+          // console.error('error:update---',errors,",---",errors.message)
+          // if(this.event){
+          // this.event('error:update',errors.response.data.data)}
+          console.error('error:patch',errors.response.data.data)
+          return Promise.reject(errors)
+        
+    })
+  }
   async delete(id?: string) {
     if(!id){
       id = this.data.value._id ?? ''
@@ -219,7 +251,14 @@ export class SimpleAppClient<
       const tmp: { [key: string]: any } = {};
       if (errors) {
         for (let i = 0; i < errors?.length; i++) {
-          const key: string = errors[i]['instancePath'];
+          const err = errors[i]
+          let key: string =  err.instancePath
+          if(err.keyword == 'required'){            
+            key += `/${err.params.missingProperty}`
+          }
+          
+          
+
           if (!tmp[key]) {
             tmp[key] = [];
           }
@@ -240,7 +279,7 @@ export class SimpleAppClient<
 
   public getActions():FormActions{
     const data:FormActions =  {
-      crud:['new','create','update','delete',],
+      crud:['create','update','delete',],
       docstatus:[],
       api:[]
     }

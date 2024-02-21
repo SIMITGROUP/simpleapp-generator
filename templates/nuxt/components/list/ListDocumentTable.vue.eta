@@ -1,0 +1,77 @@
+<template>
+  <DataTable
+    v-bind="$attrs"
+    stripedRows
+    dataKey="_id"
+    :showGridlines="true"
+    size="small"
+    :pt="{
+      header: { class: '' },
+      headerRow: { class: ' bg-gray-200' },
+    }"
+    v-on:row-click="clickRow"
+    :value="value"
+    :filters="filters"
+    :paginator="true"
+    :rows="20"
+    :rowsPerPageOptions="[20, 40, 60, 100]"
+  >
+    <!-- header -->
+    <template #header>
+      <div class="flex flex-row w-full text-right justify-content-end">
+        <div class="flex-1">
+          <slot name="toolbar"></slot>
+        </div>
+        <div class="flex-1">
+          <slot name="title">
+            <h1 class="text text-2xl pt-2 text-center dark:text-white">
+              {{ t(title) }}
+            </h1>
+          </slot>
+        </div>
+        <span class="p-input-icon-left flex-1">
+          <i class="pi pi-search mt-4 ml-2 text-gray-400 absolute" />
+          <InputText
+            type="search"
+            v-model="filters['global'].value"
+            class="text-right"
+            placeholder="Keyword Search"
+          />
+        </span>
+      </div>
+    </template>
+    <!-- no data found -->
+    <template #empty>
+      <div class="text-center">
+        <div class="text-3xl text-gray-400 pi pi-exclamation-circle"></div>
+        <div class="text-3xl text-gray-400">{{ t("noDataFound") }}</div>
+      </div>
+    </template>    
+      <slot name="default">
+        <Column header="undefineColumns"></Column>
+      </slot>    
+  </DataTable>
+</template>
+<script setup lang="ts" generic="T">
+// import { CellSetting } from "~/types";
+import { FilterMatchMode } from "primevue/api";
+import DataTable from "primevue/datatable";
+import Column from "primevue/column";
+import renderComponent from "~/components/renderer";
+import { emit } from "process";
+const props = defineProps<{
+  value: T[]
+  title: string
+  columns: string[]
+  uniqueKey: string
+  documentTitle: string
+}>();
+const emits = defineEmits(["selectRow"]);
+const clickRow = (eventdata: any) => {
+  emits("selectRow", eventdata.data);
+};
+
+const filters = ref({
+  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+});
+</script>

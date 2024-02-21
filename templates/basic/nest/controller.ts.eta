@@ -258,6 +258,23 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   async update(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data: schemas.<%= it.typename%>) {    
     return await this._update(appuser,id, data) ;
   }
+  @Patch(':id')
+  @ApiResponse({
+    status: 200,
+    description: 'success',
+  })
+  <%if(superadmindoctype.includes(it.doctype)){%>
+  @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_update`%>)
+  <%}else{%>
+  @Roles(Role.SuperAdmin,Role.SuperUser,Role.<%= `${it.typename}_update`%>)
+  <%}%>  
+  @ApiResponse({ status: 404, description: 'Document not found' })
+  @ApiResponse({ status: 500, description: 'Internal error' })
+  @ApiBody({ description: 'Data',type: schemas.<%= it.typename%> })
+  @ApiOperation({ operationId: 'runPatch' })
+  async patch(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data: schemas.<%= it.typename%>) {    
+    return await this._patch(appuser,id, data) ;
+  }
 
   @Delete(':id')
   <%if(superadmindoctype.includes(it.doctype)){%>

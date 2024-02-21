@@ -1,193 +1,220 @@
-<template>   
-        <AutoComplete v-model="modelValue"  v-if="!readonly" ref="autocompleteinput"
-               forceSelection optionLabel="label"  
-               @focus="setFocus"              
-               @item-select="pickAutoComplete"
-               @complete="getListFromAutocompleteApi"       
-               :placeholder="t('keyword')"
-               :dropdown="true"
-               :dropdown-icon="buttonClass"               
-               @before-show="beforeShow"
-               @clear = "clear"
-               :dropdown-mode="'current'"
-                :pt="pt"
-                :delay="500"
-               :disabled="readonly"
-               :suggestions="list"                                
-               @blur="onBlurAutocomplete"
-               :inputId="inputId" :path="setting.instancepath"
-               :readonly="readonly"
-                >
-                    <template #header>
-                        <slot name="header">
-                            <div class="flex flex-row font font-bold  dark:text-white">                            
-                                <div class="w w-1/3">{{ t(codefield) ?? t('code') }}</div>
-                                <div class="w w-2/3" >{{ t(labelfield) ?? t('label') }}</div>
-                            </div>
-                        </slot>
-                    </template>
-                    <template #option="{index,option}">
-                        <slot name="option" :index="index" :option="option">
-                            <div class="flex flex-row dark:text-white">                            
-                                <div class="w w-1/3" >{{ option.code }}</div>
-                                <div class="w w-2/3" >{{ option.label }}</div>
-                            </div>
-                        </slot>
-                    </template>
-                <!-- </slot> -->
-            </AutoComplete>
-        <div v-else class="p-3 border rounded-lg border-gray-300 dark:border-blue-900/40 ">
-            <span :readonly="readonly" class="cursor-pointer text-primary-600  dark:text-primary-400 "
-                tabindex="0" @click="openViewer(true)">{{ modelValue && modelValue.label ?  modelValue.label:'-' }}</span>
-        </div>        
+<template>
+  <div v-if="!readonly" class="relative">
+    <div
+      class="absolute h-full top-0 right-10 text-right dark:text-white z-10 align-middle p-3"
+      v-if="modelValue?._id"
+    >
+      <span
+        class="pi pi-times rounded-full bg-slate-500 p-1 cursor-pointer text-xs"
+        @click="clear"
+      ></span>      
+    </div>
+
+    <AutoComplete
+      class="w-full"
+      v-model="modelValue"
+      ref="autocompleteinput"
+      forceSelection
+      optionLabel="label"
+      @focus="setFocus"
+      @item-select="pickAutoComplete"
+      @complete="getListFromAutocompleteApi"
+      :placeholder="placeholdertxt"
+      :dropdown="true"
+      @clear="clear"
+      :dropdown-mode="'current'"
+      :pt="pt"
+      :delay="500"
+      :disabled="readonly"
+      :suggestions="list"
+      @blur="onBlurAutocomplete"
+      :inputId="inputId"
+      :path="setting.instancepath"
+      :readonly="readonly"
+    >
+      <template #header>
+        <slot name="header">
+          <div class="flex flex-row font font-bold dark:text-white">
+            <div class="w w-1/3">{{ t(codefield) ?? t("code") }}</div>
+            <div class="w w-2/3">{{ t(labelfield) ?? t("label") }}</div>
+          </div>
+        </slot>
+      </template>
+      <template #content>
+        <div class="bg-red-300">content</div>
+      </template>
+      <template #option="{ index, option }">
+        <slot name="option" :index="index" :option="option">
+          <div class="flex flex-row dark:text-white">
+            <div class="w w-1/3">{{ option.code }}</div>
+            <div class="w w-2/3">{{ option.label }}</div>
+          </div>
+        </slot>
+      </template>
+      <!-- </slot> -->
+    </AutoComplete>
+  </div>
+  <div
+    v-else
+    class="p-3 border rounded-lg border-gray-300 dark:border-blue-900/40"
+  >
+    <span
+      :readonly="readonly"
+      class="cursor-pointer text-primary-600 dark:text-primary-400"
+      tabindex="0"
+      @click="openViewer(true)"
+      >{{ modelValue && modelValue.label ? modelValue.label : "-" }}</span
+    >
+  </div>
 </template>
 <script setup lang="ts">
-import { isNull } from 'lodash';
-import * as jsonpath from 'jsonpath';
-import {autocompletetype,SchemaConfig,SchemaType} from '~/types'
-const autocompleteinput = ref()
-const {$event} = useNuxtApp()
-const list = ref<any[]>([])
-const props = withDefaults(defineProps<{
-    setting:any    
-    allowAddNew?:boolean
-    showNull?:boolean
-    readonly?:boolean
-    inputId:string
-    pt?:any
-}>(),{
-allowAddNew:true,showNull:true
-})
+import { isNull } from "lodash";
+import * as jsonpath from "jsonpath";
+import { AutoCompleteDropdownClickEvent } from "primevue/autocomplete";
+import { autocompletetype, SchemaConfig, SchemaType } from "~/types";
+const autocompleteinput = ref<autocompletetype|undefined>();
+const { $event } = useNuxtApp();
+const list = ref<any[]>([]);
+const props = withDefaults(
+  defineProps<{
+    setting: any;
+    allowAddNew?: boolean;
+    showNull?: boolean;
+    readonly?: boolean;
+    placeholder?:string;
+    hidelabel?:boolean;
+    inputId: string;
+    pt?: any;
+  }>(),
+  {
+    allowAddNew: true,
+    showNull: true,
+  },
+);
 
-const path = '$'+props.setting.instancepath
-const modifiedpath = path.replaceAll('/','.')        
-const queryresult = jsonpath.query(props.setting.defaultValue,modifiedpath)[0]
-const remotedoc = getDocument(props.setting.fieldsetting['x-foreignkey'])
-const schema:SchemaType = <SchemaType>remotedoc?.docClass.getSchema()
-    
-const labelfield = schema['x-simpleapp-config'].documentTitle as string
-const codefield  = schema['x-simpleapp-config'].uniqueKey as string
-const docname = props.setting.fieldsetting['x-foreignkey']
-
-const emptyautocomplete = computed(():autocompletetype=> queryresult)
-
-const autocompleteitem = ref<autocompletetype>(emptyautocomplete.value)
-const modelValue = defineModel<autocompletetype>({required:true})
-if(modelValue.value && modelValue.value._id){
-    autocompleteitem.value={...modelValue.value}
+const path = "$" + props.setting.instancepath;
+const modifiedpath = path.replaceAll("/", ".");
+const queryresult = jsonpath.query(props.setting.defaultValue, modifiedpath)[0];
+const remotedoc = getDocument(props.setting.fieldsetting["x-foreignkey"]);
+const schema: SchemaType = <SchemaType>remotedoc?.docClass.getSchema();
+const labelfield = schema["x-simpleapp-config"].documentTitle as string;
+const codefield = schema["x-simpleapp-config"].uniqueKey as string;
+const docname = props.setting.fieldsetting["x-foreignkey"];
+const placeholdertxt = computed(()=> props.placeholder ?? t(docname)   )
+const emptyautocomplete = computed((): autocompletetype => queryresult);
+const cancelShowList = ref(false);
+const autocompleteitem = ref<autocompletetype|undefined>(emptyautocomplete.value);
+const modelValue = defineModel<autocompletetype|undefined>({ required: true });
+if (modelValue.value && modelValue.value._id) {
+  autocompleteitem.value = { ...modelValue.value };
 }
 //clear auto complete auto set value = empty
-const clear = ()=>{
-    autocompleteitem.value = emptyautocomplete.value
-    modelValue.value = emptyautocomplete.value
-}
-const buttonClass=computed(()=>modelValue.value?._id ? 'pi pi-link' : 'pi pi-angle-down')
+const clear = () => {
+  autocompleteitem.value = undefined
+  modelValue.value = undefined
+};
 
 //if record picked, click button show record info instead
-const beforeShow = ()=>{    
-    if(modelValue.value?._id ){                
-        openViewer(true)        
-    }
-}
-   
+const openlink = () => {
+  if (modelValue.value?._id) {
+    openViewer(true);
+  }
+};
+
 //recorrect data if lose focus
-const onBlurAutocomplete = ()=>{   
-    if(  autocompleteitem.value === null){
-        autocompleteitem.value = emptyautocomplete.value
-    }
-    if(isNull(modelValue.value )){
-        modelValue.value = autocompleteitem.value
-    }
-    else if(typeof modelValue.value =='object'){
-        
-    }else{
-        modelValue.value = autocompleteitem.value
-    }
-}
+const onBlurAutocomplete = () => {
+  if (autocompleteitem.value === null) {
+    autocompleteitem.value = emptyautocomplete.value;
+  }
+  if (isNull(modelValue.value)) {
+    modelValue.value = autocompleteitem.value;
+  } else if (typeof modelValue.value == "object") {
+  } else {
+    modelValue.value = autocompleteitem.value;
+  }
+};
 
 //obtain remote data
-const getListFromAutocompleteApi =  (event:any)=>{    
- const keyword = event.query??''  
- const targetDocument = props.setting.fieldsetting['x-foreignkey']
- getDocumentApi(targetDocument).autoComplete(keyword).then((res:any)=>{
+const getListFromAutocompleteApi = (event: any) => {
+  const keyword = event.query ?? "";
+  const targetDocument = props.setting.fieldsetting["x-foreignkey"];
+  getDocumentApi(targetDocument)
+    .autoComplete(keyword)
+    .then((res: any) => {
+      list.value = res.data;
 
-   list.value = res.data
-
-   if(props.allowAddNew){
-    list.value = list.value.concat({_id:'new',label:'<'+t('new')+'>'})
-   }
- })
-}
+      if (props.allowAddNew) {
+        list.value = list.value.concat({
+          _id: "new",
+          label: "<" + t("new") + ">",
+        });
+      }
+    });
+};
 
 //on select
-const pickAutoComplete = (event:any)=>{
-    if(event.value._id===''){        
-        modelValue.value =  emptyautocomplete.value
-        autocompleteitem.value = emptyautocomplete.value
-    } else if(event.value._id==='new'){
-        
-        modelValue.value =  emptyautocomplete.value
-        autocompleteitem.value = emptyautocomplete.value
-        openViewer(false)        
-    } 
-    else if(typeof event.value.query == 'undefined'){      
-        modelValue.value=event.value
-        autocompleteitem.value = event.value      
-    }
-}
+const pickAutoComplete = (event: any) => {
+  if (event.value._id === "") {
+    modelValue.value = emptyautocomplete.value;
+    autocompleteitem.value = emptyautocomplete.value;
+  } else if (event.value._id === "new") {
+    modelValue.value = emptyautocomplete.value;
+    autocompleteitem.value = emptyautocomplete.value;
+    openViewer(false);
+  } else if (typeof event.value.query == "undefined") {
+    modelValue.value = event.value;
+    autocompleteitem.value = event.value;
+  }
+};
 
-const emits = defineEmits(['change','update:modelValue','update:docNoFormat'])
-watch(modelValue ,(newvalue:any)=>{
-   
-   emitChanges()
-   
-})
-const emitChanges = () =>{
-    
-    emits('change',modelValue.value)
- 
-}
+const emits = defineEmits([
+  "change",
+  "update:modelValue",
+  "update:docNoFormat",
+]);
+watch(modelValue, (newvalue: any) => {
+  emitChanges();
+});
+const emitChanges = () => {
+  emits("change", modelValue.value);
+};
 
-
-const setFocus = (ev:any) => {
-    if(!isMobile()) ev.target.select()
-}
+const setFocus = (ev: any) => {
+  if (!isMobile()) ev.target.select();
+};
 
 //pop up records
-const openViewer = (readonly:boolean) =>{    
-    
-    if(remotedoc){
-        
-        $event('ViewRecord',{
-            _id: modelValue.value?._id as string,
-            eventId: randomUUID(),
-            label: (readonly ? modelValue.value?.label : `${t('new') + ' '+ t(docname) }`)  as string,
-            readonly:readonly,
-            viewer : getDocument(docname)?.viewer,
-            documentName: docname,
+const openViewer = (readonly: boolean) => {
+  if (remotedoc) {
+    $event("ViewRecord", {
+      _id: modelValue.value?._id as string,
+      eventId: randomUUID(),
+      label: (readonly
+        ? modelValue.value?.label
+        : `${t("new") + " " + t(docname)}`) as string,
+      readonly: readonly,
+      viewer: getDocument(docname)?.viewer,
+      documentName: docname,
 
-            //after create, auto copy value into auto complete
-            after:(eventType:string,data:any,result:any)=>{                
-                autocompleteitem.value = {
-                    _id: data._id,
-                    code: data[codefield],                    
-                    label: data[labelfield],
-                }
-                if(schema['x-simpleapp-config'].additionalAutoCompleteFields){
-                    const addfields = schema['x-simpleapp-config'].additionalAutoCompleteFields
-                    for(let i=0;i<addfields.length;i++){
-                        const fieldname = addfields[i] as string
-                        autocompleteitem.value[fieldname] = data[fieldname]
-                    }
-                }   
-                modelValue.value = {...autocompleteitem.value}                             
-                emitChanges()
-                
-                
-            }
-        })
-
-    }
+      //after create, auto copy value into auto complete
+      after: (eventType: string, data: any, result: any) => {
+        autocompleteitem.value = {
+          _id: data._id,
+          code: data[codefield],
+          label: data[labelfield],
+        };
+        if (schema["x-simpleapp-config"].additionalAutoCompleteFields) {
+          const addfields =
+            schema["x-simpleapp-config"].additionalAutoCompleteFields;
+          for (let i = 0; i < addfields.length; i++) {
+            const fieldname = addfields[i] as string;
+            autocompleteitem.value[fieldname] = data[fieldname];
+          }
+        }
+        modelValue.value = { ...autocompleteitem.value };
+        emitChanges();
+      },
+    });
   }
-
+};
 </script>

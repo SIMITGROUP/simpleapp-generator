@@ -10,6 +10,7 @@ import axios, { Axios, AxiosResponse } from 'axios'
 import {Notification,EventType} from '~/types'
 // import PrimeVue from "primevue/config";
 import mitt from 'mitt'
+
 // import ToastService from 'primevue/toastservice';
 // import ConfirmationService from 'primevue/confirmationservice';
 // import Tooltip from 'primevue/tooltip';
@@ -58,11 +59,9 @@ export default defineNuxtPlugin( async(nuxtApp) => {
           console.error("unknown error")
           throw createError({statusCode:500,statusMessage:"Internal server error"}) 
         }
-      });
-    
+      });      
     return {
         provide: {
-          
           event: emitter.emit, // Will emit an event
           listen: emitter.on, // Will register a listener for an event
           axios: myaxios,

@@ -1,16 +1,21 @@
-import moment from "moment";
 
+
+
+export const setDateLocale = (localename:string) =>  useDayjs().locale(localename)
 export const dateExists = (date:Date,listDate:Date[]) => {
     const existsrecord = listDate.find(item=>{
       return date.getTime()===item.getTime()
     })
     return existsrecord===undefined ? false :true
   }
-export const getMoment = (startTime:string)=> moment(startTime)
-export const lastDateOfMonth = (datestr:string) => moment(datestr).endOf('month').format('YYYY-MM-DD');
-export const today = () => moment().format('YYYY-MM-DD')
-export const dateToString = (date:Date) => moment(date).format('YYYY-MM-DD')
-export const dateToDateTimeString = (date:Date)=> moment(date).format('YYYY-MM-DD HH:mm:ss')
-export const toLocalDate = (dateiso8601:string)=> new Date(String(dateiso8601)).toLocaleDateString()
-
-
+export const getDayJs = ()=>useDayjs()
+export const lastDateOfMonth = (datestr:string) =>  useDayjs()(datestr).endOf('month').format('YYYY-MM-DD');
+export const today = () => useDayjs()().format('YYYY-MM-DD')
+export const dateToString = (date:Date) => useDayjs()(date).format('YYYY-MM-DD')
+export const dateToDateTimeString = (date:Date)=> useDayjs()(date).format('YYYY-MM-DD HH:mm:ss')
+export const toLocalDate = (date:string | Date)=> useDayjs()(date).format(getDateFormat())
+export const getDateFormat = ():string=> 'DD-MM-YYYY'
+export const getPrimevueCalendarDateFormat = () => {
+  const country = <string>getUserProfile()?.country
+  return 'dd/mm/yy'
+}

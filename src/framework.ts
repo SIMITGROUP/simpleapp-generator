@@ -26,11 +26,7 @@ let config = {
         "oauthAuthSecretKey":"my-secret",        
         "adminRole":"realmadmin"
     },
-    "bpmnsetting":{
-        "bpmnHost":"127.0.0.1",
-        "bpmnPort":"9000",
-        "bpmnApiKey":"12345"
-    }
+    
 }
 
 export const setConfiguration=(paraconfig)=>{
@@ -160,10 +156,10 @@ export const prepareNuxt = (callback:Function)=>{
     const targetfolder = config.frontendFolder
     if(!fs.existsSync(`${targetfolder}/.env`)){
         //asume no environment. prepare now
-        exec(`cd ${targetfolder};pnpm install;pnpm install -D  @nuxtjs/device @nuxtjs/color-mode @types/json-schema @nuxtjs/i18n@next nuxt-primevue @nuxtjs/tailwindcss @types/jsonpath @sidebase/nuxt-auth @types/node @vueuse/nuxt @sidebase/nuxt-auth @vueuse/core  prettier `, (error, stdout, stderr)=>{                
+        exec(`cd ${targetfolder};pnpm install;pnpm install -D dayjs-nuxt @nuxtjs/device @nuxtjs/color-mode @types/json-schema @nuxtjs/i18n@next nuxt-primevue @nuxtjs/tailwindcss @types/jsonpath @sidebase/nuxt-auth @types/node @vueuse/nuxt @sidebase/nuxt-auth @vueuse/core  prettier `, (error, stdout, stderr)=>{                
             //;pnpm install    
             console.log(error, stdout, stderr)
-                exec(`cd ${targetfolder};pnpm install --save chart.js tailwind-merge @iconify-json/heroicons  json-schema @vueuse/core ts-md5 primeicons moment memory-cache jsonpath pinia @pinia/nuxt @nuxt/kit lodash @types/lodash @darkwolf/base64url next-auth@4.21.1 @darkwolf/base64url @nuxt/ui ajv ajv-formats ajv-errors dotenv @fullcalendar/core @fullcalendar/vue3 quill prettier axios json-schema mitt `, (error, stdout, stderr)=>{                
+                exec(`cd ${targetfolder};pnpm install --save country-code-dateformat chart.js tailwind-merge @iconify-json/heroicons  json-schema @vueuse/core ts-md5 primeicons moment memory-cache jsonpath pinia @pinia/nuxt @nuxt/kit lodash @types/lodash @darkwolf/base64url next-auth@4.21.1 @darkwolf/base64url @nuxt/ui ajv ajv-formats ajv-errors dotenv @fullcalendar/core @fullcalendar/vue3 quill prettier axios json-schema mitt `, (error, stdout, stderr)=>{                
                 console.log(error, stdout, stderr)
                 
                 // fs.mkdirSync(`${targetfolder}/assets/css/`,{recursive:true})
@@ -225,7 +221,7 @@ export const prepareNuxt = (callback:Function)=>{
 export const prettyNuxt = ()=>{
     
     prepareOpenApiClient()
-    exec(`cd ${config.frontendFolder};npx prettier --write "./pages/**/*.vue" "./generate/docs/*.ts" `)
+    exec(`cd ${config.frontendFolder};npx prettier --write "./pages/**/*.vue" "./components/**/*.vue" "./generate/*/*.ts" `)
                         
 }
 export const prettyNest = ()=>{

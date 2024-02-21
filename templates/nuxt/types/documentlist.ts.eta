@@ -4,12 +4,3 @@
  * last change 2024-02-03
  * Author: Ks Tan
  */
-export type CellSetting  = {
-    title: string
-    field: string
-    cssClass?:string
-    moreFields?: string[]
-    rendererName ?: string
-    rendererSetting ?:any
- } | string 
-

@@ -1,0 +1,25 @@
+<template>
+  <ListView
+    :list="recordlist as T[]"
+    with-filter
+    :title-field="documentTitle"
+    :sub-title-field="uniqueKey"
+    #default="{ item, index }"
+  >
+    <div class="cursor-pointer flex flex-row gap-2" @click="emits('click', item)">
+      <slot name="default" :index="index" :item="item">      
+        <TextTitle class="flex-1">{{ item[(documentTitle as  keyof typeof item) ] }}</TextTitle>
+        <TextSubtitle >{{ item[uniqueKey as  keyof typeof item] }}</TextSubtitle>
+      </slot>
+    </div>
+  </ListView>
+</template>
+<script setup lang="ts" generic="T extends { [key: string]: any }">
+import { SearchBody } from "~/types";
+const emits = defineEmits(["click"]);
+const props = defineProps<{
+  recordlist: T[];  
+  uniqueKey?: string;
+  documentTitle?: string;
+}>();
+</script>

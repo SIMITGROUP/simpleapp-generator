@@ -62,6 +62,8 @@ export type UserProfile = {
   orgCode: string
   orgName: string
   currency:string
+  country:string
+  offsetMinute:number
   timeZone:string
   fullName : string
   branches: {

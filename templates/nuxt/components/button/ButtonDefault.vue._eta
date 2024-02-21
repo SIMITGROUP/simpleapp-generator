@@ -1,6 +1,5 @@
 <template>
-    <!-- this component allow modify -->
-    <Button>
+    <Button class="dark:text-white">
         <slot></slot>
     </Button>
 </template>

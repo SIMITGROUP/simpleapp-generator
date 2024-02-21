@@ -1,0 +1,21 @@
+<template>
+  <div v-for="o in options">
+    <ButtonPrimary v-if="value == o.value" @click="switchButton(o.value)">{{
+      o.label
+    }}</ButtonPrimary>
+    <ButtonDefault v-else @click="switchButton(o.value)">{{
+      o.label
+    }}</ButtonDefault>
+  </div>
+</template>
+<script setup lang="ts">
+type keyvalue = { label: string; value: string };
+const emits = defineEmits(["switch"]);
+const props = defineProps<{
+  options: keyvalue[];
+  value: string;
+}>();
+const switchButton = (v: string) => {
+  if (v != props.value) emits("switch", v);
+};
+</script>

@@ -1,0 +1,21 @@
+<template>
+  <Sidebar
+    position="right"
+    v-if="showDialog"
+    v-model:visible="showDialog"
+    modal
+    :show-close-icon="false"
+    #container
+  >
+    <div class="overflow-y-scroll">
+      <slot name="default"></slot>
+    </div>
+  </Sidebar>
+</template>
+<script lang="ts" setup>
+const showDialog = defineModel<boolean>({ required: true });
+const props = defineProps<{ closeEventName: string }>();
+useNuxtApp().$listen("CloseDialog", (closeEventName: string) => {
+  if (props.closeEventName == closeEventName) showDialog.value = false;
+});
+</script>

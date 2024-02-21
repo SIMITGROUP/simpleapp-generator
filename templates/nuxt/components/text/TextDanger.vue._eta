@@ -1,0 +1,5 @@
+<template>
+  <div class="text-red-600 dark:text-red-500">
+    <slot name="default"></slot>
+  </div>
+</template>

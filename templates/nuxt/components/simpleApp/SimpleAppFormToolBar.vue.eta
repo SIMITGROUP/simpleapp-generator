@@ -1,107 +1,199 @@
 <template>
-    <!-- dont modify this component -->
-    <div class="simpleapp-tool-bar flex flex-row text-left gap-4">           
-        <div v-for="(menu,index) in menus" :key="index">
-            <div>
-                <ButtonDefault v-if="showMenuButton(menu)" @click="emitEvent(menu,$event)">{{ menu.label  }}</ButtonDefault>
-            </div>
-            
-        </div>  
-        <div v-for="(menu,index) in getDocActions()" :key="index">
-            <div>
-                <ButtonDefault @click="emitEvent(menu,$event)">{{ menu.label  }}</ButtonDefault>
-            </div>
-            
-        </div>     
-        <ConfirmPopup></ConfirmPopup>    
-    </div>
+  <div v-if="isMobile()" class="w-full">
+    <MobileToolbar>
+      <template #start>
+        <ButtonText class="text-xl" @click="callClose"
+          ><i class="pi pi-angle-left"></i
+        ></ButtonText>
+      </template>
+      <template #center>
+        <TextTitle>{{ title }}</TextTitle>
+      </template>
+      <template #end>
+        <div class="flex flex-row-reverse gap-1 w-full">
+          <ButtonText class="text-xl" @click="toggleMenu" v-if="isShow">
+            <i class="pi pi-ellipsis-v"></i>
+          </ButtonText>
+
+          <ButtonText
+            class="text text-xl"
+            @click="
+              emitEvent(
+                {
+                  action: doc.isNew() ? 'create' : 'update',
+                  label: '',
+                  type: 'crud',
+                },
+                $event,
+              )
+            "
+          >
+            <i class="pi pi-save"></i>
+          </ButtonText>
+
+          <ContextMenu ref="menu" :model="menus as MenuItem[]" />
+        </div>
+      </template>
+    </MobileToolbar>
+    <ConfirmDialog></ConfirmDialog>
+  </div>
+  <div v-else class="simpleapp-tool-bar">
+    <Toolbar>
+      <template #start>
+        <div v-for="(menu, index) in menus" :key="index">
+          <div v-if="menu.label && menu.type == 'crud'">
+            <ButtonDefault @click="emitEvent(menu, $event)">{{
+              menu.label
+            }}</ButtonDefault>
+          </div>
+        </div>
+      </template>
+      <template #center>
+        <div v-for="(menu, index) in menus" :key="index">
+          <div v-if="menu.label && menu.type == 'docstatus'">
+            <ButtonDefault @click="emitEvent(menu, $event)">{{
+              menu.label
+            }}</ButtonDefault>
+          </div>
+        </div>
+      </template>
+      <template #end> </template>
+    </Toolbar>
+
+    <ConfirmPopup></ConfirmPopup>
+  </div>
 </template>
 <script setup lang="ts">
-
-import { SimpleAppClient } from '~/simpleapp/generate/clients/SimpleAppClient';
+import { SimpleAppClient } from "~/simpleapp/generate/clients/SimpleAppClient";
 import { useConfirm } from "primevue/useconfirm";
+import { FormActions, FormCrudEvent, FormMenu } from "~/types";
+import { MenuItem } from "primevue/menuitem";
 const confirm = useConfirm();
-import {FormActions,FormMenu} from '~/types'
-
-const ismodify = ref(false)
+const emits = defineEmits(["on", "close"]);
 const props = defineProps<{
-    document: SimpleAppClient<any,any>,    
-    disableaction? : string[]
-}>()
+  document: SimpleAppClient<any, any>;
+  disableaction?: string[];
+}>();
+const createData = async () => await doc.create();
+const updateData = async () => await doc.update();
+const deleteData = async () => await doc.delete();
 
-const emits = defineEmits(['on'])
-const doc = props.document
-const data = doc.getReactiveData()
+const doc = props.document;
+const data = doc.getReactiveData();
+type Datatype = keyof typeof data.value;
+const config = doc.getSchema()["x-simpleapp-config"];
+const titlefield = (config.documentTitle ?? config.documentTitle) as Datatype;
+const title = ref<string>(
+  data.value[titlefield as Datatype]
+    ? data.value[titlefield as Datatype]
+    : t(doc.getDocName()),
+);
+const menu = ref();
+const menus = computed(() =>
+  [...getActions(), { separator: true }, ...getDocActions()].filter((item) =>
+    showMenuButton(item),
+  ),
+);
 
-const menus = ref<FormMenu[]>([])
+const isShow = computed(
+  () => menus.value.filter((item) => item.action != undefined).length > 0,
+);
+const toggleMenu = (event: MouseEvent) => {
+  menu.value.toggle(event);
+};
 
+const callClose = (e:MouseEvent) => {
+  useNuxtApp().$event("CloseDialog", doc.getDocName());
+  emitEvent({action:'exit',type:'menu',label:''},e)
+  // async (menu: FormMenu, clickEvent: MouseEvent) 
+};
+const emitMobileEvent = (itemevent: {
+  item: any;
+  originalEvent: MouseEvent;
+}) => {
+  const actionname: string = itemevent.item.action;
+  const event = itemevent.originalEvent;
+  emitEvent({ action: actionname, type: "crud", label: "" }, event);
+};
 
 const getActions = () => {
-    const actions = doc.getActions()
-    
-    // Object.keys(actions).forEach((key)=>{ //crud, api, docstatus
-        actions['crud'].forEach((item)=>{ 
-            if(props.disableaction && props.disableaction.includes(item)){/*skip this item*/}
-            else{                
-                menus.value.push({
-                    action: item,
-                    label: t(item),                    
-                    type: 'crud'               
-                })
-            }
-        })
-    // })        
-    return actions
-}
+  const actions = doc.getActions();
+  const crudmenus: any[] = [];
+  // Object.keys(actions).forEach((key)=>{ //crud, api, docstatus
+  actions["crud"].forEach((item) => {
+    if (props.disableaction && props.disableaction.includes(item)) {
+      /*skip this item*/
+    } else {
+      crudmenus.push({
+        action: item,
+        label: t(item),
+        type: "crud",
+        command: emitMobileEvent,
+      });
+    }
+  });
+  // })
+  return crudmenus;
+};
 
-getActions()
+const emitEvent = async (menu: FormMenu, clickEvent: MouseEvent) => {
+  if (menu.action == "delete") {
+    confirm.require({
+      target: clickEvent.target as HTMLElement,
+      header: t("deleteRecord"),
+      message: `${t("deleteThisRecord?")}`,
 
-const emitEvent = (menu:FormMenu, clickEvent:any)=>{  
-    if(menu.action=='delete'){
-        confirm.require({
-            target: clickEvent.currentTarget as HTMLElement,
-            message: `${t("delete")}?`,
-            icon: "pi pi-exclamation-triangle",
-            acceptClass: "p-button-danger",
-            accept: () => emits('on',menu.action)
-        });
-    }else{
-        emits('on',menu.action)    
-    }   
-    
-}
+      // icon: "pi pi-exclamation-triangle gap-4",
+      acceptClass: "p-button-danger",
+      accept: async () => {
+        if (await deleteData()) emits("on", FormCrudEvent.delete);
+      },
+    });
+  } else {
+    if (menu.action == "create") {
+      if (await createData()) emits("on", FormCrudEvent.create);
+    }
+    else if (menu.action == "update") {
+      if (await updateData()) emits("on", FormCrudEvent.update);
+    }
+    else if (menu.type == "setDocStatus")
+      emits("on", FormCrudEvent.setDocStatus, menu.action);
+    else if (menu.action == FormCrudEvent.exit)
+      emits("on", FormCrudEvent.exit);
+  } 
+};
 
+const getDocActions = () => {
+  const docstatus: string = data.value.documentStatus;
+  const allstatus = doc.getSchema()["x-simpleapp-config"].allStatus;
+  let docactionmenus: FormMenu[] = [];
+  type stringlist = { [key: string]: string };
+  const statusNames: stringlist = {};
+  allstatus?.forEach((item) => {
+    statusNames[item.status] = t(item.statusName);
+  });
+  if (allstatus) {
+    const stateconfig = allstatus.find((item) => item.status === docstatus);
+    docactionmenus =
+      stateconfig?.actions.map((item) => ({
+        action: item,
+        label: statusNames[item],
+        type: "docstatus",
+      })) ?? [];
+  }
+  return docactionmenus;
+};
+const showMenuButton = (menu: FormMenu) => {
+  if (menu.separator) return true;
+  if (isMobile() && ["create", "update"].includes(menu.action)) return false;
+  if (!canPerform(doc.getDocName(), menu.action)) return false;
+  if (doc.isNew() && menu.action == "create") return true;
+  if (!doc.isNew() && menu.action == "new") return true;
+  if (!doc.isNew() && menu.action == "update") return true;
+  if (!doc.isNew() && menu.action == "delete") return true;
 
-const getDocActions = () =>{
-        const docstatus:string = data.value.documentStatus
-        const allstatus = doc.getSchema()['x-simpleapp-config'].allStatus
-        let docactionmenus:FormMenu[] = []
-        type stringlist = {[key:string]:string}
-        const statusNames:stringlist = {}
-        allstatus?.forEach(item=>{
-            statusNames[item.status]=t(item.statusName)
-        })
-        if(allstatus){
-            const stateconfig = allstatus.find((item)=>item.status===docstatus)
-            docactionmenus = stateconfig?.actions.map(item=>({
-                    action: item,
-                    label: statusNames[item],                    
-                    type: 'docstatus'  
-            })) ?? []                   
-        }
-        return docactionmenus
-    
-}
-const showMenuButton = (menu:FormMenu)=>{
-    
-    if(!canPerform(doc.getDocName(),menu.action)) return false
-    if(doc.isNew() && menu.action == 'create')  return true    
-    if(!doc.isNew() && menu.action == 'new')  return true
-    if(!doc.isNew() && menu.action == 'update')  return true
-    if(!doc.isNew() && menu.action == 'delete')  return true    
-    
-    if(menu.type == 'api' ) return false
-    return false
-}
+  if (menu.type == "api") return false;
 
+  return false;
+};
 </script>

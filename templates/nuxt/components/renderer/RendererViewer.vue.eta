@@ -1,9 +1,12 @@
 <template>
-    <a @click="openViewer" class="text-primary-700 dark:text-primary-400 hover:text-primary-500 cursor-pointer">
-        <slot name="default">
-            <div v-if="fields">{{ value[fields[0]] }}</div>
-        </slot>
-    </a>
+  <a
+    @click="openViewer"
+    class="text-primary-700 dark:text-primary-400 hover:text-primary-500 cursor-pointer"
+  >
+    <slot name="default">
+      <div v-if="fields">{{ value[fields[0]] }}</div>
+    </slot>
+  </a>
 </template>
 <script setup lang="ts">
 /**
@@ -12,21 +15,24 @@
  * last change 2024-02-04
  * author: Ks Tan
  */
-import { RendererSetting } from '~/types';
+import { RendererSetting } from "~/types";
 const props = defineProps<{
-    fields?:string[],
-    setting:RendererSetting,
-    value:any
-}>()
+  fields?: string[];
+  setting: RendererSetting;
+  value: any;
+}>();
 
-const openViewer = ()=>{
-    useNuxtApp().$event('ViewRecord',{
-        _id: props.value._id ,
-        documentName: props.setting.documentName,
-        viewer: getDocument(props.setting.documentName)?.viewer,
-        label: props.setting.documentName,
-        document:getDocument(props.setting.documentName)?.docClass,
-        eventId: randomUUID()
-    })
-} 
+const openViewer = () => {
+  useNuxtApp().$event("ViewRecord", {
+    _id: props.value._id,
+    documentName: props.setting.documentName,
+    viewer: getDocument(props.setting.documentName)?.viewer,
+    label: props.fields !== undefined ? props.value[props.fields[0]] : props.setting.documentName,
+    document: getDocument(props.setting.documentName)?.docClass,
+    eventId: randomUUID(),    
+    after:()=>{
+      useNuxtApp().$event('CloseDialog',props.setting.documentName)
+    }
+  });
+};
 </script>

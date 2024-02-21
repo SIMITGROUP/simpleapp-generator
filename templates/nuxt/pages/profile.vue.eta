@@ -52,7 +52,7 @@
           <dt
             class="text-sm font-medium leading-6 text-gray-900 dark:text-gray-400"
           >
-            {{t('branches')}}
+            {{ t("branches") }}
           </dt>
           <dd class="mt-2 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
             <ul
@@ -88,6 +88,7 @@
             </ul>
           </dd>
         </div>
+     
 
         <div
           v-if="useRuntimeConfig().public.DEBUGDATA == '1'"
@@ -96,14 +97,22 @@
           <dt
             class="text-sm font-medium leading-6 text-gray-900 dark:text-gray-400"
           >
-            {{t('accessRights')}}
+            {{ t("more") }}
             <p class="text-danger-600">{{ t("onlyAppearInDebugMode") }}</p>
             <p class="text-danger-600">{{ getUserProfile().sessionId }}</p>
           </dt>
           <dd
             class="mt-1 text-sm leading-6 text-gray-700 dark:text-gray-300 sm:col-span-2 sm:mt-0"
           >
-            {{ getUserProfile().roles }}
+            <div>
+              <p>{{t('accessRights')}}</p>
+              {{ getUserProfile().roles }}
+            </div>
+            <div>
+              <p>{{ t('others') }}</p>
+              {{ getUserProfile()?.country }} / {{ getUserProfile()?.currency }} / {{ getUserProfile()?.offsetMinute }}
+            </div>
+            
           </dd>
         </div>
       </dl>

@@ -15,8 +15,8 @@ import {
   Type,
 } from '@nestjs/common';
 // import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
-import {UserContext} from '../commons/user.context'
-import {SearchBody} from '../types';
+import { UserContext } from '../commons/user.context';
+import { SearchBody } from '../types';
 const doctype = 'person'.toUpperCase();
 type ServiceType = {
   list: Function;
@@ -27,13 +27,18 @@ type ServiceType = {
   findById: Function;
   findIdThenDelete: Function;
   findIdThenUpdate: Function;
+  findIdThenPatch: Function;
   setData: Function;
   getAutoComplete: Function;
 };
 
 // @ApiTags(doctype)
 // @Controller(doctype.toLowerCase())
-export class SimpleAppAbstractController<TService extends ServiceType, TApiSchema, T> {
+export class SimpleAppAbstractController<
+  TService extends ServiceType,
+  TApiSchema,
+  T,
+> {
   protected service: TService;
   protected tryno: number;
   //   protected apiSchemaClass=
@@ -42,36 +47,45 @@ export class SimpleAppAbstractController<TService extends ServiceType, TApiSchem
     this.service = service;
   }
 
-  async _list(appuser:UserContext) {
-    return this.service.list(appuser,);
+  async _list(appuser: UserContext) {
+    return this.service.list(appuser);
   }
-  async _search(appuser:UserContext,searchObject:SearchBody) {
-    
-    return this.service.search(appuser,searchObject['filter'], searchObject['fields'],searchObject['sorts']);
+  async _search(appuser: UserContext, searchObject: SearchBody) {
+    return this.service.search(
+      appuser,
+      searchObject['filter'],
+      searchObject['fields'],
+      searchObject['sorts'],
+    );
   }
-  async _autocomplete(appuser:UserContext,keyword: string) {
-    return this.service.getAutoComplete(appuser,keyword);
+  async _autocomplete(appuser: UserContext, keyword: string) {
+    return this.service.getAutoComplete(appuser, keyword);
   }
-  async _findOne(appuser:UserContext,id: string) {
-    const result = (await this.service.findById(appuser,id)) as TApiSchema;
+  async _findOne(appuser: UserContext, id: string) {
+    const result = (await this.service.findById(appuser, id)) as TApiSchema;
 
     return result as Type<TApiSchema>;
   }
 
-  async _create(appuser:UserContext,data: TApiSchema) {
+  async _create(appuser: UserContext, data: TApiSchema) {
     //const newdata: persontype.Person = { ...data };
     const newdata: T = {} as T; //= { ...data };
     Object.assign(newdata, data); //
-    return this.service.create(appuser,newdata) as TApiSchema;
+    return this.service.create(appuser, newdata) as TApiSchema;
   }
 
-  async _update(appuser:UserContext,id: string, data: TApiSchema) {
+  async _update(appuser: UserContext, id: string, data: TApiSchema) {
     const newdata: T = {} as T; //= { ...data };
     Object.assign(newdata, data); //
-    return this.service.findIdThenUpdate(appuser,id, newdata) as TApiSchema;
+    return this.service.findIdThenUpdate(appuser, id, newdata) as TApiSchema;
+  }
+  async _patch(appuser: UserContext, id: string, data: TApiSchema) {
+    const newdata: T = {} as T; //= { ...data };
+    Object.assign(newdata, data); //
+    return this.service.findIdThenPatch(appuser, id, newdata) as TApiSchema;
   }
 
-  async _delete(appuser:UserContext,id: string) {
-    return this.service.findIdThenDelete(appuser,id);
+  async _delete(appuser: UserContext, id: string) {
+    return this.service.findIdThenDelete(appuser, id);
   }
 }

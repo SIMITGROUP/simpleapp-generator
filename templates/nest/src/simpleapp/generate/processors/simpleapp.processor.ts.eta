@@ -32,7 +32,12 @@ import {
 } from '@nestjs/common/exceptions';
 import { UserContext } from '../commons/user.context';
 import { DocNumberFormatGenerator } from '../commons/docnogenerator.service';
-import { IsolationType, DefaultHooks, MoreProjectionType,DeleteResultType } from '../types';
+import {
+  IsolationType,
+  DefaultHooks,
+  MoreProjectionType,
+  DeleteResultType,
+} from '../types';
 @Injectable()
 export class SimpleAppService<T extends { _id?: string }> {
   @Inject(EventEmitter2)
@@ -447,7 +452,7 @@ export class SimpleAppService<T extends { _id?: string }> {
     try {
       if (this.hooks.beforeDelete) await this.hooks.beforeDelete(appuser, id);
       this.logger.debug('delete record', this.documentName, id);
-      dependency = await this.getRelatedRecords(appuser,id);
+      dependency = await this.getRelatedRecords(appuser, id);
       //console.log('dependency', dependency);
       if (!dependency) {
         let filterIsolation = this.getIsolationFilter(appuser);
@@ -460,7 +465,10 @@ export class SimpleAppService<T extends { _id?: string }> {
           .session(dbsession);
 
         appuser.addDeletedRecordId(this.documentName, id);
-        const deleteresult:DeleteResultType<T> = { result: result, data: deletedata };
+        const deleteresult: DeleteResultType<T> = {
+          result: result,
+          data: deletedata,
+        };
         this.logger.debug(
           deleteresult,
           ' delete result' + this.doc.collection.name,
@@ -472,9 +480,9 @@ export class SimpleAppService<T extends { _id?: string }> {
         //this.doc.findByIdAndDelete(id);
         return deleteresult;
       } else {
-        console.log("reject query",dependency)
+        console.log('reject query', dependency);
 
-        throw new ForbiddenException(dependency,'Foreignkey constraint');
+        throw new ForbiddenException(dependency, 'Foreignkey constraint');
       }
     } catch (err) {
       throw new InternalServerErrorException(err);
@@ -504,13 +512,13 @@ export class SimpleAppService<T extends { _id?: string }> {
     if (!dbsession.inTransaction()) {
       dbsession.startTransaction();
     }
-
     // try {
     Object.assign(data, appuser.getUpdateFilter());
-    Object.assign(existingdata, data);
+    // Object.assign(existingdata, data);
     delete data['_id'];
 
     this.reCalculateValue(data);
+
     // existingdata['_id']=''
     // console.log("newdata",data)
     await this.validateData(appuser, data);
@@ -520,10 +528,63 @@ export class SimpleAppService<T extends { _id?: string }> {
 
     isolationFilter['_id'] = id;
     this.applyNestedDateTime(appuser, data, 'update');
+
     try {
-      const result = await this.doc
-        .findOneAndUpdate(isolationFilter, data)
-        .session(dbsession);
+      const result = await this.doc.findOneAndReplace(isolationFilter, data, {
+        session: dbsession,
+      });
+
+      appuser.addUpdatedRecordId(this.documentName, data._id);
+
+      if (this.hooks.afterUpdate)
+        await this.hooks.afterUpdate(appuser, id, result);
+      return await this.findById(appuser, id);
+    } catch (err) {
+      throw new InternalServerErrorException(err.message);
+    }
+  };
+  
+  findIdThenPatch = async (
+    appuser: UserContext,
+    id: string,
+    data: T,
+    session: mongo.ClientSession = undefined,
+  ) => {
+    const existingdata = await this.findById(appuser, id);
+    if (!existingdata) {
+      throw new NotFoundException(`${id} not found`, 'not found');
+    }
+
+    if (this.hooks.beforeUpdate)
+      await this.hooks.beforeUpdate(appuser, id, data);
+
+    const dbsession = appuser.getDBSession();
+    if (!dbsession.inTransaction()) {
+      dbsession.startTransaction();
+    }
+    // try {
+    Object.assign(data, appuser.getUpdateFilter());
+    // Object.assign(existingdata, data);
+    delete data['_id'];
+
+    this.reCalculateValue(data);
+
+    // existingdata['_id']=''
+    // console.log("newdata",data)
+    //path record no validation
+    // await this.validateData(appuser, data);
+
+    const isolationFilter = { ...this.getIsolationFilter(appuser) };
+    this.polishIsolationFilter(isolationFilter);
+
+    isolationFilter['_id'] = id;
+    this.applyNestedDateTime(appuser, data, 'update');
+
+    try {
+      const result = await this.doc.findOneAndUpdate(isolationFilter, data, {
+        session: dbsession,
+      });
+
       appuser.addUpdatedRecordId(this.documentName, data._id);
 
       if (this.hooks.afterUpdate)
@@ -535,9 +596,9 @@ export class SimpleAppService<T extends { _id?: string }> {
   };
 
   //find what foreign key constraint
-  async getRelatedRecords(appuser:UserContext,id: string) {
+  async getRelatedRecords(appuser: UserContext, id: string) {
     this.logger.debug('get foreignkey for delete:', id);
-    console.log("session modifeds",appuser.getModifieds())
+    console.log('session modifeds', appuser.getModifieds());
     if (foreignkeys === undefined) {
       this.logger.error('foreignkeys object undetected');
       throw new InternalServerErrorException('foreignkeys object undetected');
@@ -562,7 +623,9 @@ export class SimpleAppService<T extends { _id?: string }> {
           //not deleted in current session, check from database
           let filter = {};
           filter[fkey] = id;
-          const result = await collection.findOne(filter,{session:appuser.getDBSession()});
+          const result = await collection.findOne(filter, {
+            session: appuser.getDBSession(),
+          });
           if (result) {
             this.logger.error(result, 'related result found');
             return result;

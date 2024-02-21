@@ -1,0 +1,10 @@
+<template>
+  <div
+    class="w-full dark:bg-gray-800 z-20 bg-white justify justify-between absolute h h-14 flex flex-row place-items-center opacity-90 dark:text-white"
+  >
+    <div class="w-full text-left"><slot name="start"></slot></div>
+    <div class="w-full text-center"><slot name="center"></slot></div>
+    <div class="w-full text-right"><slot name="end"></slot></div>
+  </div>
+  <div class="h-14"></div>  
+</template>

@@ -1,9 +1,9 @@
 <template>
-    <a @click="go" class="text-primary-700 hover:text-primary-500 cursor-pointer">
-        <slot name="default">
-            <div >{{ value[fields[0]] }}</div>
-        </slot>
-    </a>
+  <a @click="go" class="text-primary-700 dark:text-primary-300 dark:hover:text-primary-200 hover:text-primary-500 cursor-pointer">
+    <slot name="default">
+      <div>{{ value[fields[0]] }}</div>
+    </slot>
+  </a>
 </template>
 <script setup lang="ts">
 /**
@@ -14,20 +14,12 @@
  */
 
 const props = defineProps<{
-    fields:any,
-    setting:any,
-    value:any
-}>()
+  fields: any;
+  setting: any;
+  value: any;
+}>();
 
-const go = ()=>{
-    goTo(props.setting.path,props.value._id)
-    // useNuxtApp().$event('ViewRecord',{
-    //     _id: props.value._id ,
-    //     documentName: props.setting.documentName,
-    //     viewer: getDocument(props.setting.documentName)?.viewer,
-    //     label: props.setting.documentName,
-    //     document:getDocument(props.setting.documentName)?.docClass,
-    //     eventId: crypto.randomUUID()
-    // })
-} 
+const go = () => {
+  goTo(props.setting.path, props.value._id);  
+};
 </script>

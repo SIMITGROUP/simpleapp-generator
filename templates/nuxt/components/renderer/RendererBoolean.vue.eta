@@ -1,5 +1,9 @@
-<template>    
-    <i class="pi" :class="{ 'pi-check-circle text-green-500 ': modelValue, 'pi-times-circle text-red-500': !modelValue }"></i>
+<template>
+  <span class="pi pi-check-circle text-green-500" v-if="modelValue">    
+  </span>
+  <span class="pi pi-times-circle text-red-500" v-else>  
+  </span>
+  
 </template>
 <script lang="ts" setup>
 /**
@@ -8,5 +12,5 @@
  * last change 2024-02-04
  * author: Ks Tan
  */
-const modelValue = defineModel()
+const modelValue = defineModel<boolean>();
 </script>

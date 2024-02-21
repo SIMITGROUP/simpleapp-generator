@@ -16,12 +16,16 @@ const CustomTailwind = usePassThrough(
             // buttonContainer:{class:'hidden'},
         },
         card:{
-            root:{class:'bg-white dark:bg-gray-600  shadow p-4 rounded-2xl m-2'},
+            root:{class:'bg-white dark:bg-gray-800  shadow p-4 rounded-2xl'},
             // title:{class:''},
             // header:{class:''}
         },       
         tabpanel:{
             headerTitle:{class:'m-0 p-0'},            
+        },
+        accordiontab:{
+            content:{style:'padding: 0.7rem;'}
+            
         },
         selectbutton:{
             root:{class:'flex flex-row gap-1 '},
@@ -41,7 +45,7 @@ const CustomTailwind = usePassThrough(
         },
         button:{root:{class: 'focus:outline-none transition duration-150 ease-in-out rounded p-2 m-1 border dark:border-gray-600'}},
         dialog:{
-            root:{class:['border w-full max-h-full max-w-full md:h-3/4 lg:h-1/2']},
+            root:{class:[' w-full max-h-full max-w-full md:h-3/4 lg:h-1/2 p-2']},
             header:{class: 'p-dialog-header flex items-center  text-2xl justify-between shrink-0 bg-white text-gray-800 border-t-0  rounded-tl-lg rounded-tr-lg p-6 dark:bg-gray-900  dark:text-white/80'},
             content:{class:'p-dialog-content overflow-y-auto bg-white text-gray-700 px-6 pb-8 pt-0 dark:bg-gray-900  dark:text-white/80 rounded-bl-lg rounded-br-lg h-full'}
         },        
@@ -50,14 +54,22 @@ const CustomTailwind = usePassThrough(
             input:{class:'w-full p-inputtext p-component font-sans text-base text-gray-600 dark:text-white/80 bg-white dark:bg-gray-900 p-3 border border-gray-300 dark:border-blue-900/40 transition-colors duration-200 appearance-none hover:border-blue-500 rounded-lg'},
         },
         autocomplete:{
-            root:{class:'border border-gray-400 dark:!border-blue-900/40  rounded-lg flex flex-row'},
-            loadingIcon:{class:'hidden'},
+            // root:{class:'border border-gray-400 dark:!border-blue-900/40  rounded-lg flex flex-row'},
+            // loadingIcon:{class:'hidden'},
+            panel:{
+                class:'p-autocomplete-panel p-component p-2 w-full md:max-w-[500px] p-input-filled bg-white text-gray-700 border-0 rounded-md shadow-lg max-h-[200px] overflow-auto dark:bg-gray-900 dark:text-white/80'
+            },
             dropdownbutton: {
                 root:' btn-primary dark:shadow-primary-800 dark:border-primary-900 text-white rounded-lg flex flex-row  p-3 rounded-tl-none rounded-bl-none '
             }
         },
+        column:{
+            bodycell:{
+                style:'padding:5px;'
+            },
+        },
         sidebar:{
-            root:{class:'w-full md:w-1/2 xl:w-1/4   bg-white dark:bg-gray-800 border p-0 h-full'},
+            root:{class:'w-full md:w-2/3  bg-white dark:bg-slate-950  p-0 h-full'},
             header:{class:'dark:text-white text-2xl p-2'},
             content:{class:'p-0 pt-0 h-full w-full grow overflow-y-auto'}
         },        
@@ -70,10 +82,9 @@ const CustomTailwind = usePassThrough(
         breadcrumb:{
             root:{class:''}
         },
-        inputnumber:{
-            // root:{class:''},
-            input:{class:'bg-white dark:bg-white text-black dark-text-black'}
-        }
+        // inputnumber:{            
+            // input:{class:'text-right text-yellow-700'}
+        // }
     },
 );
 

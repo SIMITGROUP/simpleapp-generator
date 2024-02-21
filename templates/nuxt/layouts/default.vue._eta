@@ -1,18 +1,22 @@
 <template>
     <div class="h-full flex flex-row">
-        <div class="flex flex-col justify justify-between">
-            <div  > 
-                <HeaderButtonMenuPicker class="cursor-pointer p-2  text-6xl "></HeaderButtonMenuPicker>
+        <div class="flex flex-col h-screen ">        
+            <div class="flex-1">            
                 <div class="" v-for="item in menus">
-                    <div class="">                    
-                        <NuxtLink 
-                            :class="`pi ${item.iconClass} p-2  text-6xl cursor-pointer`"
-                            :to="getDocumentUrl(item.path)"
-                            ></NuxtLink>
-                    </div>
-                </div> 
+                        <div class="">                    
+                            <NuxtLink   v-if="item.path !==undefined"
+                                :class="`pi ${item.iconClass} p-2  text-6xl cursor-pointer`"
+                                :to="getDocumentUrl(item.path)"
+                                ></NuxtLink>
+                            <div v-else-if="item.command" :class="`pi ${item.iconClass} p-2  text-6xl cursor-pointer`" @click="item.command">
+                        </div>
+                    </div> 
+                </div>
+            </div>                    
+            <div class="p-2 text-6xl cursor-pointer pi pi-user dark:text-white" @click="openProfile">
+                <HeaderButtonProfile v-model="showProfile"/>           
             </div>
-            <HeaderButtonProfile class="p-6"/>           
+            
         </div>        
         <div class="flex-1">
             <HeaderBar />
@@ -20,15 +24,26 @@
             <slot></slot>
         </div>                
     </div>
+    <div >
+        <HeaderButtonMenuPicker v-model="showMenu"></HeaderButtonMenuPicker>
+    </div>
     
 </template>
 <script setup lang="ts">
-const menus=[
-    // {iconClass:'pi-bars',path:'managestudents/profile'},
-    {iconClass:'pi-home text-white',path:''},
-    {iconClass:'pi-users text-white',path:'managestudents/profile'},
-    {iconClass:'pi-calendar text-white',path:`manageclasses`},
+const showMenu =ref(false)
+const showProfile =ref(false)
+
+const openMenu = ()=>showMenu.value=true
+const openProfile = ()=>showProfile.value=true
+
+const menus=[    
+    {iconClass:'pi-home dark:text-white',path:''},
+    //{iconClass:'pi-users dark:text-white',path:'managestudents/new'},
+    //{iconClass:'pi-calendar dark:text-white',path:`manageclasses`},
     // {iconClass:'pi-database',path:'managedata'},
-    {iconClass:'pi-chart-pie text-white',path:'reports'},
+    {iconClass:'pi-chart-pie dark:text-white',path:'reports'},
+    {iconClass:'pi-bars dark:text-white',command: openMenu},    
+ 
+
 ]
 </script>

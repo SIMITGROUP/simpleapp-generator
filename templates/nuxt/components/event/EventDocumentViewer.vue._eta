@@ -1,25 +1,36 @@
-<template>
-    <Dialog v-model:visible="visible"        
-        :modal="true" 
-        :close-on-escape="false" >                        
-        <template #header>
-            <div class="flex flex-row gap-4">
-                <Chip v-for="(v,k) in allview" :label="v.label" @remove="deleteTab" :removable="true"
-                />
-            </div>            
-        </template>
-        <template #default>                    
-            <div v-for="(v,k) in allview" v-memo="[k]" class="viewer-item flex flex-col">            
-                    <component                             
-                        :is="defineAsyncComponent(v.viewer)" 
-                        :_id="v._id" 
-                        :readonly="v.readonly"   
-                        :paras="v.paras"                      
-                        @after="(eventType:string,data:any,result:any)=>after(v,eventType,data,result)"
-                            />
-            </div>
-        </template>                
-    </Dialog>
+<template>  
+  <OverlayViewer v-model="visible" :close-event-name="initDocumentName"  >
+    <!-- <template #header>
+      
+    </template> -->
+      <div class="w-full h-full ">
+          <div class="flex flex-row gap-4">
+            <Chip
+              v-for="(v, k) in allview"
+              :label="v.label"
+              @remove="deleteTab"
+              :removable="true"
+            />
+          </div>
+        
+        <div
+          v-for="(v, k) in allview"
+          v-memo="[k]"
+          class="viewer-item flex flex-col"
+        >
+          <component
+            :is="defineAsyncComponent(v.viewer)"
+            :_id="v._id"
+            :readonly="v.readonly"
+            :paras="v.paras"
+            @after="
+              (eventType: FormCrudEvent, data: any, result: any) =>
+                after(v, eventType, data, result)
+            "
+          />
+        </div>
+      </div>
+  </OverlayViewer>
 </template>
 <script setup lang="ts">
 /**
@@ -28,56 +39,55 @@
  * last change 2024-01-27
  * author: Ks Tan
  */
-import { onKeyStroke } from '@vueuse/core'
-import { useDialog } from 'primevue/usedialog';
-import {defineAsyncComponent} from 'vue'
-import { ViewRecord } from '~/types';
+import { onKeyStroke } from "@vueuse/core";
+import { useDialog } from "primevue/usedialog";
+import { defineAsyncComponent } from "vue";
+import { ViewRecord,FormCrudEvent } from "~/types";
 // import TabView from 'primevue/tabview';
-import Chip from 'primevue/chip';
+import Chip from "primevue/chip";
 
+const { $listen } = useNuxtApp();
+const initDocumentName = ref('')
+const visible = ref(false);
+const allview = ref<{ [key: string]: ViewRecord }>({});
+const after = (v: ViewRecord, eventType: FormCrudEvent, data: any, result: any) => {
+  if (v.after) {
+    v.after(eventType, data, result);
+    //only after mount consider no remove tab
+    if (eventType != "mount") deleteTab();
+  }
+};
 
-const {$listen,} = useNuxtApp()
-const visible = ref(false)
-const allview = ref<{[key:string]:ViewRecord}>({})
-const after = (v:ViewRecord,eventType:string,data:any,result:any)=>{
-    if(v.after){        
-        v.after(eventType,data,result)
-        //only after mount consider no remove tab
-        if(eventType!='mount') deleteTab()
-    }
-}
+onKeyStroke("Escape", (e) => {
+  e.preventDefault();
+  deleteTab();
+});
 
-onKeyStroke('Escape', (e) => {
-  e.preventDefault()
-  deleteTab()
-})
+const deleteTab = () => {
+  const keys = Object.keys(allview.value);
+  const lastkey = keys[keys.length - 1];
+  delete allview.value[lastkey];
+  console.log("DeleteTab",allview.value)
+  // updateprops.value++
+  if (Object.keys(allview.value).length == 0) {
+    visible.value = false;
+    useNuxtApp().$event('CloseDialog','viewer')
+    return;
+  }
+};
 
-const deleteTab=()=>{
-    
-    const keys = Object.keys(allview.value)
-    const lastkey = keys[keys.length-1]
-    delete allview.value[lastkey]
-    // updateprops.value++
-    if(Object.keys(allview.value).length==0){
-        visible.value=false
-        return
-    }
-}
-
-$listen('ViewRecord',(setting)=>{     
-    console.log("ViewRecord event received by listener")
-    visible.value=true    
-    allview.value[setting.eventId]=setting
-    
-})
-
+$listen("ViewRecord", (setting) => {  
+  if(initDocumentName.value=='') initDocumentName.value= setting.documentName
+  visible.value = true;
+  allview.value[setting.eventId] = setting;
+});
 </script>
 
 <style scoped>
-.viewer-item{
-    display: none;
+.viewer-item {
+  display: none;
 }
-.viewer-item:last-child{    
-    display: flex;    
+.viewer-item:last-child {
+  display: flex;
 }
 </style>

@@ -2,6 +2,7 @@
     "home":"Home",
     "welcome": "Welcome",
     "create": "Create",
+    "close": "Close",
     "update": "Update",
     "delete": "Delete",
     "modify": "Modify",
@@ -55,4 +56,8 @@
     "light":"Light",
     "dark":"Dark",
     "redirectToLoginPage":"Redirect To Login Page",
+    "cancel":"Cancel",
+    "deleteRecord":"Delete Record",
+    "deleteThisRecord?":"Delete this Record?",
+    "ok":"OK"
   }

@@ -2,7 +2,10 @@
 <%Object.keys(it.models).forEach(function(modelname) { %>    
 export const Default<%=modelname%> = (uuid:string)=>{
     // <%~ JSON.stringify(it.models[modelname].model) %>
-        
+    <% let model = it.models[modelname].model%>    
+    <% if(model['_id'] && model['code'] && model['label']){%>
+      return undefined
+    <%} else{%>
     return {
         _id : uuid,
         <%Object.keys(it.models[modelname].model).forEach(function(key){%>      
@@ -25,7 +28,7 @@ export const Default<%=modelname%> = (uuid:string)=>{
           <%} else if(field.type=='boolean' ){%> 
               <%=key%> :false ,
           <%} else if(typeof field=='string'){%>
-            <%=key%> : Default<%= field  %>(''),
+            <%=key%> :  Default<%= field  %>(''),
           <%} else if(field.type=='string'){%>
               <%=key%> : '<%= field.default  %>',
 
@@ -38,5 +41,6 @@ export const Default<%=modelname%> = (uuid:string)=>{
           <%}%>
         <%})%>
     }
+  <%}%>
 } 
 <%})%>

@@ -45,14 +45,24 @@ export type autocompletetype={
     code:string
     [key:string]:any
 }
-
+export enum FormCrudEvent  {
+    'mount'='mount',
+    'exit'='exit',
+    'create'='create',
+    'update'='update',
+    'delete'='delete',
+    'setDocStatus'='setDocStatus',        
+}
 export type FormActions = {
     [key:string]:string[]    
 }
 
+
 export type FormMenu = {
     type:string
-    action:string
+    action:string    
     label:string
     command? : Function
+    event?:FormCrudEvent
+    [key:string] : any
 }

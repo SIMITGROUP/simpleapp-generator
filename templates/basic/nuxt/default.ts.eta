@@ -1,7 +1,10 @@
 <%Object.keys(it.models).forEach(function(modelname) { %>    
 export const Default<%=modelname%> = (uuid:string)=>{
     // <%~ JSON.stringify(it.models[modelname].model) %>
-        
+    <% let model = it.models[modelname].model%>    
+    <% if(model['_id'] && model['code'] && model['label']){%>
+      return undefined
+    <%} else{%>
     return {
         _id : uuid,
         <%Object.keys(it.models[modelname].model).forEach(function(key){%>      
@@ -13,11 +16,11 @@ export const Default<%=modelname%> = (uuid:string)=>{
           <%}else if(key=='doctype'){ %>
             doctype : '<%=it.doctype.toUpperCase()%>',
           <%}else if(key=='tenantId'){ %>
-            tenantId : getUserProfile().tenantId,
+            tenantId : getUserProfile()?.tenantId,
           <%}else if(key=='orgId'){ %>
-            orgId : getUserProfile().orgId,
+            orgId : getUserProfile()?.orgId,
           <%}else if(key=='branchId'){ %>
-            branchId : getUserProfile().branchId,
+            branchId : getUserProfile()?.branchId,
           <% } else if(typeof field.default !='undefined' && field.type=='string'){%> 
             <%=key%> : '<%= field.default  %>',
           <%} else if(typeof field.default !='undefined'){%> 
@@ -25,12 +28,12 @@ export const Default<%=modelname%> = (uuid:string)=>{
           <%} else if(field.type=='boolean' ){%> 
               <%=key%> :false ,
           <%} else if(typeof field=='string'){%>
-            <%=key%> : Default<%= field  %>(''),
+            <%=key%> : Default<%= field  %>(''), //<%= field%> 
           <%} else if(field.type=='string'){%>
               <%=key%> : '<%= field.default  %>',
 
             <%} else if(Array.isArray(field) && ['string','integer','number','boolean'].includes(field[0])) {%>
-              <%=key%> : <<%=field[0]%>[]>[],  //typeof field == array     <%~JSON.stringify(field)%>    
+              <%=key%> : <<%=field[0]%>[]>[],  //typeof field == array     <%~JSON.stringify(field)%> 
             <%} else if(Array.isArray(field)) {%>
               <%=key%> : [Default<%=field[0]%>(randomUUID())],  //typeof field == array     <%~JSON.stringify(field)%>    
             <%} else {%>
@@ -38,5 +41,6 @@ export const Default<%=modelname%> = (uuid:string)=>{
           <%}%>
         <%})%>
     }
+  <%}%>
 } 
 <%})%>

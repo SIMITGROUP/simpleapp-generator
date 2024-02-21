@@ -1,0 +1,5 @@
+<template>
+    <div class="text-xl  text-black dark:text-white content-center">
+        <slot name="default"></slot>
+    </div>
+</template>

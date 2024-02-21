@@ -38,6 +38,7 @@ devServer: {
     '@nuxtjs/color-mode',
      '@nuxtjs/device',
     '@nuxtjs/i18n',
+    'dayjs-nuxt',
     '@sidebase/nuxt-auth',
     'nuxt-primevue',
     // '@nuxtjs/pwa', //cannot turn on, will cause nuxt cant start
@@ -63,12 +64,7 @@ devServer: {
     langDir: "lang/",
     strategy: "no_prefix",
     locales: [
-      {
-        code: "df",
-        iso: "df",
-        name: "Default",
-        file: "df.ts",
-      },
+  
       {
         code: "en",
         iso: "en",
@@ -83,7 +79,7 @@ devServer: {
       
       },
     ],
-    defaultLocale: "df",    
+    defaultLocale: "en",    
   },
   primevue: {
     options: {

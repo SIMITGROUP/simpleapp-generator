@@ -22,7 +22,7 @@
                     </div>
                     <div class="flex-1">
                         <slot name="title">
-                            <h1 class="text text-2xl pt-2 text-center">{{ t(title) }}</h1>
+                            <h1 class="text text-2xl pt-2 text-center dark:text-white">{{ t(title) }}</h1>
                         </slot>
                         
                     </div>                    
@@ -95,7 +95,7 @@
             </slot>
     </Datatable>
 </template>
-<script setup lang="ts">
+<script setup lang="ts" generic="T">
 import {CellSetting} from '~/types'
 import { FilterMatchMode } from 'primevue/api';
 import DataTable from 'primevue/datatable';
@@ -103,7 +103,7 @@ import Column from 'primevue/column';
 import renderComponent from '~/components/renderer'
 import { emit } from 'process';
 const props = defineProps<{
-    value:any[]
+    value:T[]
     columns: CellSetting[]    
     title:string    
     
