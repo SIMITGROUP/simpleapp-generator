@@ -383,14 +383,18 @@ const generateSystemFiles=(modules:ModuleObject[],allbpmn)=>{
         const arrfilename:string[] = filename.split('.')
         // log.info("check longfilename:::",longfilename,"become====",arrfilename)
         //only process .eta
-        if(['eta','_eta','-eta'].includes(_.last(arrfilename))){                    
+        if(['eta','_eta'].includes(_.last(arrfilename))){                    
           const relativepath = longfilename.includes('/') ? longfilename.replace(`/${filename}`,'') : ''
           const foldername = `${frameworkpath}/${relativepath}`
           const shortfilename = filename.replace('.eta','').replace('._eta','')
           const targetfilename = `${foldername}/${shortfilename}`
           let forceoverride=true
-          if(filename.includes('._eta')){
-            forceoverride=false
+          if(filename.includes('._eta') && existsSync(targetfilename)){
+            if(readFileSync(targetfilename, 'utf-8').includes('--remove-this-line-to-prevent-override--')){
+              forceoverride=true
+            }else{
+              forceoverride=false
+            }            
           }
           // log.warn("Process=== ",targetfilename)
           if(existsSync(targetfilename) &&  forceoverride == false){
