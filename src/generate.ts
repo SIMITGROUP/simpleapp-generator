@@ -390,7 +390,11 @@ const generateSystemFiles=(modules:ModuleObject[],allbpmn)=>{
           const targetfilename = `${foldername}/${shortfilename}`
           let forceoverride=true
           if(filename.includes('._eta') && existsSync(targetfilename)){
-            if(readFileSync(targetfilename, 'utf-8').includes('--remove-this-line-to-prevent-override--')){
+            const filecontent = readFileSync(targetfilename, 'utf-8')
+            if(!filecontent.includes('simpleapp')){
+              forceoverride=true
+            }
+            else if(filecontent.includes('--remove-this-line-to-prevent-override--')){
               forceoverride=true
             }else{
               forceoverride=false
