@@ -1,6 +1,8 @@
 <template>
-  <Button class="dark:text-white"
-  @touchcancel="onActivate" @click="onActivate">
+  <Button
+  @touchcancel="onActivate" @click="onActivate"
+    class="border-none dark:text-white active:text-primary-600 click:bg-gray-600"
+  >
     <slot></slot>
   </Button>
 </template>
@@ -12,6 +14,7 @@
  * author: Ks Tan
  */
 const emits = defineEmits(['click'])
+
 const onActivate=(e:Event)=>{
   emits('click',e)
 }

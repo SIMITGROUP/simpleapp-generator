@@ -133,8 +133,9 @@
       <%})%>  
       </div>
     </client-only>
-    </SimpleAppForm>
     <DebugDocumentData v-model="data" :label="doc.getDocName()"/>
+    </SimpleAppForm>
+    
 </template>
 
 

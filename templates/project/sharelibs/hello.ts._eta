@@ -3,5 +3,4 @@
  * last change 2023-11-12
  * Author: Ks Tan
  */
-export * from './hello';
-export * from './money'
+export const hello = () => "hello"
