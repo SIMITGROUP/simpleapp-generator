@@ -292,8 +292,8 @@ const generateSchema = ( docname: string,
             //   validate: validateWritePage
             // },
             'pages.viewer.vue.eta': { 
-              to:`pages/[xorg]/${docname}`, 
-              as:'viewer.vue',
+              to:`components/viewer`, 
+              as: `Viewer${_.upperFirst(docname)}.vue`,
               validate: validateWritePage
             },
             'pages.landing.vue.eta': { 
