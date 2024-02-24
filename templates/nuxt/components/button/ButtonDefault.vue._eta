@@ -1,6 +1,9 @@
 <template>
-  <Button class="dark:text-white"
-  @touchcancel="onActivate" @click="onActivate">
+  <Button :class="
+      isMobile()
+        ? 'w-full rounded-full text-center block dark:bg-gray-700 bg-gray-600 text-white'
+        : 'btn'
+    " @touchcancel="onActivate" @click="onActivate">
     <slot></slot>
   </Button>
 </template>
@@ -11,8 +14,8 @@
  * last change 2024-02-22
  * author: Ks Tan
  */
-const emits = defineEmits(['click'])
-const onActivate=(e:Event)=>{
-  emits('click',e)
-}
+const emits = defineEmits(["click"]);
+const onActivate = (e: Event) => {
+  emits("click", e);
+};
 </script>

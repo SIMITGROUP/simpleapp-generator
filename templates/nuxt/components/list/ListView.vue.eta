@@ -7,14 +7,20 @@
         class="w-full dark:text-white"
         type="search"
       />
-      <ButtonPrimary v-if="withAddNew" @click="emits('add')"
-        ><i class="pi pi-plus"></i
-      ></ButtonPrimary>
+      <template v-if="withAddNew">
+        <ButtonText v-if="isMobile()" @click="emits('add')"
+          ><i class="pi pi-plus"></i
+        ></ButtonText>
+        <ButtonPrimary v-else @click="emits('add')"
+          ><i class="pi pi-plus"></i
+        ></ButtonPrimary>
+      </template>
+      
     </div>
 
     <div
       v-if="showIndex"
-      class="flex flex-col fixed left-1 top-1/5 gap-2  z-10 rounded border bg-white dark:bg-black opacity-90"
+      class="flex flex-col fixed left-1 top-1/5 gap-2 z-10 rounded border bg-white dark:bg-black opacity-90"
     >
       <NuxtLink
         class="text-primary-600 dark:text-primary-400 text-lg p-2"
@@ -37,8 +43,13 @@
           >
             <span>{{ item[titleField][0] }}</span>
           </div>
-          <div class=" border-l-none border-r-none listview-item border-t-2 dark:border-t-gray-700 hover:" >
-            <NuxtLink :to="url ? `${url}/${item[idField]}` : undefined" class="p-2">
+          <div
+            class="border-l-none border-r-none listview-item border-t-2 dark:border-t-gray-700 "
+          >
+            <NuxtLink
+              :to="url ? `${url}/${item[idField]}` : undefined"
+              class="p-2"
+            >
               <slot name="default" :item="item" :index="index">
                 <div class="flex flex-row">
                   <div class="flex-1 mr-2 dark:text-white">
@@ -55,9 +66,7 @@
       </div>
     </div>
     <div v-else>
-      <div
-        class="w-full h-20 p-2 border-l-none border-r-none "
-      >
+      <div class="w-full h-20 p-2 border-l-none border-r-none">
         <slot name="nodata">
           <div class="border-round border-1 surface-border p-4 surface-card">
             {{ t("noDataFound") }}
@@ -121,7 +130,6 @@ const filterlist = computed(() => {
 
   return newlist;
 });
-
 
 const allLetters = computed(() => {
   if (props.titleField && props.list) {

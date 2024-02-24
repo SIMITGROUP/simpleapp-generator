@@ -480,7 +480,7 @@ export class SimpleAppService<T extends { _id?: string }> {
         //this.doc.findByIdAndDelete(id);
         return deleteresult;
       } else {
-        console.log('reject query', dependency);
+        this.logger.debug('reject query', dependency);
 
         throw new ForbiddenException(dependency, 'Foreignkey constraint');
       }
@@ -543,7 +543,7 @@ export class SimpleAppService<T extends { _id?: string }> {
       throw new InternalServerErrorException(err.message);
     }
   };
-  
+
   findIdThenPatch = async (
     appuser: UserContext,
     id: string,
@@ -598,7 +598,7 @@ export class SimpleAppService<T extends { _id?: string }> {
   //find what foreign key constraint
   async getRelatedRecords(appuser: UserContext, id: string) {
     this.logger.debug('get foreignkey for delete:', id);
-    console.log('session modifeds', appuser.getModifieds());
+    // console.log('session modifeds', appuser.getModifieds());
     if (foreignkeys === undefined) {
       this.logger.error('foreignkeys object undetected');
       throw new InternalServerErrorException('foreignkeys object undetected');
@@ -763,7 +763,7 @@ export class SimpleAppService<T extends { _id?: string }> {
         pipelines.push(stagefilter);
       }
     });
-    this.logger.log(pipelines, 'identifyForeignKeys pipelines');
+    this.logger.debug(pipelines, 'identifyForeignKeys pipelines');
     // this.doc.db.collection(collectionname);
     const unionresult = await this.doc.aggregate(pipelines);
 
@@ -782,7 +782,7 @@ export class SimpleAppService<T extends { _id?: string }> {
           searchresult[item.collection] = [item._id];
         }
       });
-      this.logger.log(unionresult, this.documentType + ' search Result');
+      this.logger.debug(unionresult, this.documentType + ' search Result');
 
       //search is it all foreign key exists in db
       for (let i = 0; i < collections.length; i++) {
@@ -807,7 +807,7 @@ export class SimpleAppService<T extends { _id?: string }> {
               `${this.documentType}: Foreignkey ${key} at collection ${collectionname} does not exist`,
               'identifyForeignKeys',
             );
-            this.logger.log(appuser.getModifieds, 'appuser.getModifieds');
+            this.logger.debug(appuser.getModifieds, 'appuser.getModifieds');
             const errordata = { key: key, collection: collectionname };
             throw new BadRequestException(
               `${this.documentType}: Foreignkey ${key} at collection ${collectionname} does not exist`,

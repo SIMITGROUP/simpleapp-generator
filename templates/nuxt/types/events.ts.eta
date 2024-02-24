@@ -7,6 +7,7 @@
 import { Component } from 'vue';
 import {Notification} from './notifications'
 import { SimpleAppClient } from '~/simpleapp/generate/clients/SimpleAppClient';
+import { FormCrudEvent } from './simpleappinput';
 export type ViewRecord = {
     _id: string    
     eventId:string
@@ -15,7 +16,7 @@ export type ViewRecord = {
     viewer?: any 
     readonly?:boolean    
     paras?:any
-    after?: (eventType:string,data:any,result:any )=>any
+    after?: (eventType:FormCrudEvent,data:any )=>void
     document?:SimpleAppClient<any,any>
 }
 export type RefreshDocumentList ={

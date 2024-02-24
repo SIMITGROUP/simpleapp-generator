@@ -1,6 +1,5 @@
 <template>
-  <Button class="btn-primary"
-  @touchcancel="onActivate" @click="onActivate">
+  <Button :class="isMobile() ? 'w-full rounded-full text-center block dark:bg-primary-700 bg-primary-600 text-white': 'btn-primary'" @touchcancel="onActivate" @click="onActivate">
     <slot></slot>
   </Button>
 </template>
