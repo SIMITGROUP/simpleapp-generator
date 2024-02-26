@@ -144,7 +144,7 @@ export class SimpleAppService<T extends { _id?: string }> {
     }
     // console.log(this.moreAutoCompleteField);
   };
-  async getAutoComplete(appuser: UserContext, keyword: string) {
+  async getAutoComplete(appuser: UserContext, keyword: string, data?: T) {
     try {
       const filter1 = {};
       const filter2 = {};
@@ -156,11 +156,11 @@ export class SimpleAppService<T extends { _id?: string }> {
         filter1[this.documentIdentityCode] = { $regex: keyword, $options: 'i' };
         filters.push(filter1);
       }
-
       filter2[this.documentIdentityLabel] = { $regex: keyword, $options: 'i' };
       filters.push(filter2);
-      const filterobj = { $or: filters };
 
+      const filterobj = { $or: filters };
+      Object.assign(filterobj, data);
       Object.assign(filterobj, this.getIsolationFilter(appuser));
       let projections = {
         label: `\$${this.documentIdentityLabel}`,

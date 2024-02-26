@@ -136,6 +136,7 @@
       :path="setting.instancepath"
       :readonly="isReadonly"
       :placeholder="placeholder"
+      :autocompleteFilter="autocompleteFilter"
     />
     <!-- v-bind:attributes="componentProps" -->
     <!--  document no input-->
@@ -192,7 +193,7 @@
       v-bind="componentProps as ChipsProps"
     />
     <!-- simple component  -->
-    
+
     <InputNumber
       v-else-if="inputType == SimpleAppInputType.number"
       :type="type"
@@ -233,7 +234,7 @@
       :placeholder="placeholder"
       v-bind="componentProps as InputTextProps"
     />
-    <!-- component require special treatment -->        
+    <!-- component require special treatment -->
   </SimpleAppFieldContainer>
 </template>
 
@@ -284,6 +285,7 @@ const props = withDefaults(
     autofocus?: boolean;
     pt?: any;
     placeholder?: string;
+    autocompleteFilter?:any
     componentProps?:
       | InputNumberProps
       | InputSwitchProps
@@ -296,7 +298,7 @@ const props = withDefaults(
   { type: "text" },
 );
 
-const pt =ref(props.pt)
+const pt = ref(props.pt);
 
 if (props.inputType == SimpleAppInputType.date && modelValue.value) {
   datevalue.value = moment(modelValue.value as string).format("YYYY-MM-DD");
@@ -305,36 +307,36 @@ if (props.inputType == SimpleAppInputType.date && modelValue.value) {
 }
 
 if (props?.instancepath) instancepath.value = props.instancepath;
-  else if (props.setting?.instancepath)
-    instancepath.value = props.setting.instancepath;
-  else instancepath.value = "/unknown";
+else if (props.setting?.instancepath)
+  instancepath.value = props.setting.instancepath;
+else instancepath.value = "/unknown";
 
 watch(props.setting.errors, (newvalue, oldvalue) => {
-  let errmsg = ''
+  let errmsg = "";
   if (newvalue[instancepath.value]) {
-    const errlist: any[] = newvalue[instancepath.value];    
+    const errlist: any[] = newvalue[instancepath.value];
     for (let i = 0; i < errlist.length; i++) {
       errmsg += errlist[i].message + ",";
-    }    
+    }
   } else {
-    errmsg = "";    
+    errmsg = "";
   }
-  if(errmsg!=''){
-    const errorstyle = { style:'border-color: lightcoral; color:white '}
-    if(!pt.value)pt.value = {}
+  if (errmsg != "") {
+    const errorstyle = { style: "border-color: lightcoral; color:white " };
+    if (!pt.value) pt.value = {};
 
-    if(props.inputType == SimpleAppInputType.text) pt.value={ root: errorstyle}
-    else if(props.inputType == SimpleAppInputType.autocomplete) pt.value={ input:errorstyle} 
-    else  if(props.inputType == SimpleAppInputType.number) pt.value={ input: {root:errorstyle}  } 
-    else pt.value = {root: errorstyle, input:{root:errorstyle}}
+    if (props.inputType == SimpleAppInputType.text)
+      pt.value = { root: errorstyle };
+    else if (props.inputType == SimpleAppInputType.autocomplete)
+      pt.value = { input: errorstyle };
+    else if (props.inputType == SimpleAppInputType.number)
+      pt.value = { input: { root: errorstyle } };
+    else pt.value = { root: errorstyle, input: { root: errorstyle } };
     //some component still not working
-
-  }else{
-   pt.value=props.pt 
+  } else {
+    pt.value = props.pt;
   }
-    
-  
-})
+});
 const isReadonly = computed(() => {
   if (props.readonly) {
     return props.readonly;

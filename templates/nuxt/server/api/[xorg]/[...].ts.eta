@@ -6,7 +6,7 @@
  */
 
  
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import { getServerSession } from '#auth'
 import type { Session } from 'next-auth';
 
@@ -33,27 +33,26 @@ export default defineEventHandler(async (event:any) => {
 
         let forwardData: any = {};
         const req = event.node.req;
+        let bodydata: any
+        let querydata:any
+        querydata = getQuery(event);
         if(req.method == 'POST' || req.method == 'PUT' || req.method == 'PATCH' ) {
-
-            forwardData = await readBody(event);
-        } else {
-            forwardData = getQuery(event);
-        }
+            bodydata = await readBody(event);
+        } 
 
 
         const frontEndRes = event.node.res;
         const url = process.env.SIMPLEAPP_BACKEND_URL + '/' + documentLink;
-        const axiosConfig: any = {
+        const axiosConfig: AxiosRequestConfig = {
             method: req.method,
             url: url,
             headers: {
                 Authorization: `Bearer ${accessToken}`,
                 'X-Org': xOrg,
             },
-            data: forwardData,
-            params: forwardData,
+            data: bodydata,
+            params: querydata,
         }
-        
         axios(axiosConfig).then((res) => {
             if (res.headers['content-type'] === 'image/png') {
                 // Set the response headers for the image

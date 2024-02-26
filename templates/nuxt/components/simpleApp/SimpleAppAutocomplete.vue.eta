@@ -7,7 +7,7 @@
       <span
         class="pi pi-times rounded-full bg-slate-500 p-1 cursor-pointer text-xs"
         @click="clear"
-      ></span>      
+      ></span>
     </div>
 
     <AutoComplete
@@ -52,7 +52,7 @@
         </slot>
       </template>
       <!-- </slot> -->
-    </AutoComplete>
+    </AutoComplete>    
   </div>
   <div
     v-else
@@ -64,7 +64,7 @@
       tabindex="0"
       @click="openViewer(true)"
       >{{ modelValue && modelValue.label ? modelValue.label : "-" }}</span
-    >
+    >    
   </div>
 </template>
 <script setup lang="ts">
@@ -76,9 +76,9 @@
  */
 import { isNull } from "lodash";
 import jsonpath from "jsonpath";
-import { AutoCompleteDropdownClickEvent } from "primevue/autocomplete";
+import { AutoCompleteDropdownClickEvent, AutoCompleteProps } from "primevue/autocomplete";
 import { autocompletetype, SchemaConfig, SchemaType } from "~/types";
-const autocompleteinput = ref<autocompletetype|undefined>();
+const autocompleteinput = ref<autocompletetype | undefined>();
 const { $event } = useNuxtApp();
 const list = ref<any[]>([]);
 const props = withDefaults(
@@ -87,9 +87,11 @@ const props = withDefaults(
     allowAddNew?: boolean;
     showNull?: boolean;
     readonly?: boolean;
-    placeholder?:string;
-    hidelabel?:boolean;
+    placeholder?: string;
+    hidelabel?: boolean;
     inputId: string;
+    componentProps?: AutoCompleteProps;
+    autocompleteFilter?: any
     pt?: any;
   }>(),
   {
@@ -102,22 +104,26 @@ const path = "$" + props.setting.instancepath;
 const modifiedpath = path.replaceAll("/", ".");
 const queryresult = jsonpath.query(props.setting.defaultValue, modifiedpath)[0];
 const remotedoc = getDocument(props.setting.fieldsetting["x-foreignkey"]);
-const schema: SchemaType = <SchemaType>remotedoc?.docClass.getSchema();
+const schema: SchemaType = <SchemaType>remotedoc?.docClass.getSchema();  
 const labelfield = schema["x-simpleapp-config"].documentTitle as string;
 const codefield = schema["x-simpleapp-config"].uniqueKey as string;
 const docname = props.setting.fieldsetting["x-foreignkey"];
-const placeholdertxt = computed(()=> props.placeholder ?? t(docname)   )
+const placeholdertxt = computed(() => props.placeholder ?? t(docname));
 const emptyautocomplete = computed((): autocompletetype => queryresult);
 const cancelShowList = ref(false);
-const autocompleteitem = ref<autocompletetype|undefined>(emptyautocomplete.value);
-const modelValue = defineModel<autocompletetype|undefined>({ required: true });
+const autocompleteitem = ref<autocompletetype | undefined>(
+  emptyautocomplete.value,
+);
+const modelValue = defineModel<autocompletetype | undefined>({
+  required: true,
+});
 if (modelValue.value && modelValue.value._id) {
   autocompleteitem.value = { ...modelValue.value };
 }
 //clear auto complete auto set value = empty
 const clear = () => {
-  autocompleteitem.value = undefined
-  modelValue.value = undefined
+  autocompleteitem.value = undefined;
+  modelValue.value = undefined;
 };
 
 //if record picked, click button show record info instead
@@ -143,9 +149,11 @@ const onBlurAutocomplete = () => {
 //obtain remote data
 const getListFromAutocompleteApi = (event: any) => {
   const keyword = event.query ?? "";
+  const defaultfilter:any = schema.properties['active'] ? {active:true} : {}
+  const morefilter= props.autocompleteFilter ?? defaultfilter
   const targetDocument = props.setting.fieldsetting["x-foreignkey"];
   getDocumentApi(targetDocument)
-    .autoComplete(keyword)
+    .autoComplete(keyword,morefilter)
     .then((res: any) => {
       list.value = res.data;
 
@@ -203,7 +211,7 @@ const openViewer = (readonly: boolean) => {
       documentName: docname,
 
       //after create, auto copy value into auto complete
-      after: (eventType: string, data: any, result: any) => {
+      after:  async(eventType: string, data: any) => {
         autocompleteitem.value = {
           _id: data._id,
           code: data[codefield],

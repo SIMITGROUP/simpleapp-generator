@@ -64,7 +64,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
     return `Hello, welcome to ${ this.service.getDocumentName()}`//this._list(appuser);
   }
   //autocomplete shall above :id
-  @Get('/autocomplete')
+  @Post('/autocomplete')
   <%if(superadmindoctype.includes(it.doctype)){%>
   @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_search`%>)
   <%}else{%>
@@ -76,9 +76,14 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
     type: ()=>[{id:'100',label:'label1'}],
   })
   @ApiResponse({ status: 500, description: 'Internal error' })
+  @ApiQuery({ name: 'keyword', type:String})
+  @ApiBody({ description: 'Data', type: ()=>Object})
   @ApiOperation({ operationId: 'autoComplete',description:"retrieve array of {_id, code, name}" })
-  async autoComplete(@AppUser() appuser: UserContext,@Query('keyword') keyword: string) {
-    return this._autocomplete(appuser,keyword);
+  async autoComplete(@AppUser() appuser: UserContext,
+  @Query('keyword') keyword:string,
+  @Body() data: types.<%=it.typename%>,
+  ) {
+    return this._autocomplete(appuser, keyword,data);
   }
 
 

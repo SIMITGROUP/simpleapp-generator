@@ -11,18 +11,33 @@ export const getDocument = (docname:string) =>{
 }
 
 // (appuser: UserContext, filter: any) => Promise<void>;
-export const onScreenAddDocument = <T>(docname:string,after:(eventType:FormCrudEvent, data:T)=>Promise<void>)=>{
+export const onScreenAddDocument = <T>(docname:string,paras?:T,after?:(eventType:FormCrudEvent, data:T)=>Promise<void>)=>{
         useNuxtApp().$event('ViewRecord',{
             documentName: docname,
             eventId:randomUUID(),
             _id:'new',
+            paras:paras,
             document: getDocument(docname)?.docClass,
             viewer: getDocument(docname)?.viewer,    
             after: (eventType:FormCrudEvent, data: any) => {
                 //do nothing
-                 after(eventType,data as T)
+                 if(after)after(eventType,data as T)
             },
             label:t(docname)
         
+          })
+    }
+    export const onScreenEditDocument = <T>(docname:string,_id:string,after?:(eventType:FormCrudEvent, data:T)=>Promise<void>)=>{
+        useNuxtApp().$event('ViewRecord',{
+            documentName: docname,
+            eventId:randomUUID(),
+            _id:_id,
+            document: getDocument(docname)?.docClass,
+            viewer: getDocument(docname)?.viewer,    
+            after: async (eventType:FormCrudEvent, data: any) => {
+                //do nothing
+                 if(after)after(eventType,data as T)
+            },
+            label:t(docname)        
           })
     }
