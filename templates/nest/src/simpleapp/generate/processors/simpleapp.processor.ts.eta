@@ -666,9 +666,11 @@ export class SimpleAppService<T extends { _id?: string }> {
         'set documentstatus id not match with submited data',
       );
     }
-    const existdata = await this.findById(appuser,id)
-    if(existdata['documentStatus'] == docstatus){
-      throw new BadRequestException(`Same document status "${docstatus}" is not allowed`);
+    const existdata = await this.findById(appuser, id);
+    if (existdata && existdata['documentStatus'] == docstatus) {
+      throw new BadRequestException(
+        `Same document status "${docstatus}" is not allowed`,
+      );
     }
     data['documentStatus'] = docstatus;
     // await this.hook(appuser, HookType.beforeSetStatus, data);
@@ -678,7 +680,6 @@ export class SimpleAppService<T extends { _id?: string }> {
       const createresult = await this.create(appuser, data);
       if (this.hooks.afterSetStatus)
         await this.hooks.afterSetStatus(appuser, docstatus, createresult);
-
       return createresult;
     } else {
       const updateresult = await this.findIdThenPatch(appuser, id, data);

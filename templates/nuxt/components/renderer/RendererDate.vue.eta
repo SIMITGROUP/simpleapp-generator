@@ -1,5 +1,5 @@
 <template>
-  <span v-if="value">{{ toLocalDate( value  ) }}</span>
+  <span v-if="modelValue">{{ toLocalDate(modelValue) }}</span>
   <span v-else>-</span>
 </template>
 <script lang="ts" setup>
@@ -9,6 +9,5 @@
  * last change 2024-02-04
  * author: Ks Tan
  */
-const props = defineProps<{ value?: string|Date }>();
-
+const modelValue = defineModel<Date|string>()
 </script>

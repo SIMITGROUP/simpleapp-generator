@@ -43,9 +43,10 @@
             <span>{{ item[titleField][0] }}</span>
           </div>
           <div
-            @click="onClick(index, item)"
-            @touchend="onClick(index, item)"
-            :class="`border-l-none border-r-none listview-item dark:border-t-gray-700 ${ index> 0 ?'border-t-2' : ''}` "
+            @click="onClick(index, item)"            
+            :class="`border-l-none border-r-none listview-item dark:border-t-gray-700 ${
+              index > 0 ? 'border-t-2' : ''
+            }`"
           >
             <NuxtLink
               :to="url ? `${url}/${item[idField]}` : undefined"
