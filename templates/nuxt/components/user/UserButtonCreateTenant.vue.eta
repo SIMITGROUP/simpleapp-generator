@@ -1,34 +1,33 @@
 <template>
   <div>
-
     <div class="mt-8 md:flex justify-start md:gap-4">
-        <!-- <input  placeholder="Company Name" 
+      <!-- <input  placeholder="Company Name" 
           class="placeholder-gray-600 dark:bg-gray-800 dark:border-transparent dark:placeholder-gray-200 dark:text-white w-full md:w-1/2 p-4 grid place-items-center border rounded-md focus:outline-none" 
           v-model:model-value="data.tenantName"
           /> -->
-         
-        <!-- <button class="">Create</button> -->
-        <form @submit.prevent="true" class="w-full">
-              <div class="p-inputgroup flex flex-row">
-                <InputText
-                  class="flex-1"
-                  :placeholder="t('yourCompanyName')"
-                  v-model:model-value="data.tenantName"
-                />
-                <div class="p-inputgroup-addon p p-0">
-                  <button
-                    :label="t('create')"
-                    class="border rounded-tl-none rounded-bl-none btn btn-primary -ml-1 h-full p-3 rounded-r-md"
-                    @click="createTenant" :loading="onhold"
-                  >
-                  {{t('create')}}
-                  </button>
-                </div>
-              </div>
-            </form>
 
+      <!-- <button class="">Create</button> -->
+      <form @submit.prevent="true" class="w-full">
+        <div class="p-inputgroup flex flex-row">
+          <InputText
+            class="flex-1"
+            :placeholder="t('yourCompanyName')"
+            v-model:model-value="data.tenantName"
+          />
+          <div class="p-inputgroup-addon p p-0">
+            <button
+              :label="t('create')"
+              class="border rounded-tl-none rounded-bl-none btn btn-primary -ml-1 h-full p-3 rounded-r-md"
+              @click="createTenant"
+              :loading="onhold"
+            >
+              {{ t("create") }}
+            </button>
+          </div>
+        </div>
+      </form>
 
-        <!-- <form @submit.prevent="true" class="flex flex-row text-center">
+      <!-- <form @submit.prevent="true" class="flex flex-row text-center">
 
           <div class="flex flex-col">
             <InputText            
@@ -46,17 +45,11 @@
         </form> -->
     </div>
 
-
-
-
-
-<!-- 
+    <!-- 
       <Button @click="visible = true"  v-bind="$attrs">
         <slot>Create Company</slot>        
       </Button> -->
-      
   </div>
-  
 </template>
 <script setup lang="ts">
 /**
@@ -65,39 +58,39 @@
  * last change 2023-10-28
  * Author: Ks Tan
  */
-import {ref} from 'vue'
-import {AxiosResponse} from 'axios'
+import { ref } from "vue";
+import { AxiosResponse } from "axios";
 const visible = ref(false);
-const data = ref({tenantName: "",});
+const data = ref({ tenantName: "" });
 
 const createtitle = ref("Create My Company");
 const errCreateTenant = ref();
 const onhold = ref(false);
 
 const createTenant = async () => {
-onhold.value = true;
-const { $axios, $listen } = useNuxtApp();
+  onhold.value = true;
+  // const { $axios, $listen } = useNuxtApp();
 
-const openapi = getAllApi();
-const apipath = `${useRuntimeConfig().public.API_URL}`;
-let profileapi = new openapi.PROFILEApi(undefined, apipath, $axios);
+  // const openapi = getAllApi();
+  // const apipath = `${useRuntimeConfig().public.API_URL}`;
+  //let profileapi = new openapi.PROFILEApi(undefined, apipath, $axios);
 
-profileapi
-  .createTenant(data.value)
-  .then((res:AxiosResponse) => {
-    if (res && res.status && res.status == 201) {
-      if (res.data && res.data["xOrg"]) {
-        const xorg = res.data["xOrg"];
-        navigateTo("/" + xorg, { external: true });
+  getPorfileApi()
+    .createTenant(data.value)
+    .then((res: AxiosResponse) => {
+      if (res && res.status && res.status == 201) {
+        if (res.data && res.data["xOrg"]) {
+          const xorg = res.data["xOrg"];
+          navigateTo("/" + xorg, { external: true });
+        }
       }
-    }
-  })
-  .catch((err) => {
-    errCreateTenant.value = err["message"];
-    console.error("errCreateTenant", err);
-  })
-  .finally(() => {
-    onhold.value = false;
-  });
+    })
+    .catch((err) => {
+      errCreateTenant.value = err["message"];
+      console.error("errCreateTenant", err);
+    })
+    .finally(() => {
+      onhold.value = false;
+    });
 };
 </script>

@@ -286,11 +286,11 @@ const generateSchema = ( docname: string,
               as:'[id].vue',
               validate: validateWritePage
             },
-            // 'pages.new.vue.eta': { 
-            //   to:`pages/[xorg]/${docname}`, 
-            //   as:'new.vue',
-            //   validate: validateWritePage
-            // },
+            'component.select.vue.eta': { 
+              to:'components/select', 
+              as: `Select${_.upperFirst(docname)}.vue`,
+              validate: validateWritePage
+            },
             'pages.viewer.vue.eta': { 
               to:`components/viewer`, 
               as: `Viewer${_.upperFirst(docname)}.vue`,

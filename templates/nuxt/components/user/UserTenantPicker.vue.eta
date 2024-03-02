@@ -1,41 +1,51 @@
 <template>
-    <div v-if="alltenants" v-for="tenant in alltenants">
-    <card  :pt="{ header:{class:'text-xl text-gray-600'}}">
-        
-        <template #header>
-            {{tenant.tenantName }}
-        </template>
-        <template #content>   
-            
-            <ul >
-                <li v-for="o in getOrglist(tenant)">
-                    <h1 class="subtitle-text">{{ o.orgName }}</h1>
-                    <ul role="list" class="divide-y divide-gray-100 rounded-md border border-gray-200">
-                        <li v-for="b in getBranchlist(tenant)"   class="w-full items-center justify-between py-4 pl-4 pr-4  text-sm route-link-list">
-                            <NuxtLink :href="`/${b.xOrg }`"  v-if="o.orgId==b.orgId" :external="true" >                    
-                                <div class="flex w-full flex-1 items-center ">
-                                    <!-- <i class="pi pi-sitemap"></i> -->
-                                    <p class="flex-1 flex-shrink-0 font-bold text-primary-600 ">
-                                        {{ b.branchCode }}
-                                    </p>
-                                    <p class=" text-right min-w-0 flex-1 gap-2">
-                                        <span href="#" class="font-medium text-gray-600 ">{{ b.group }}</span>    
-                                    </p>
-                                </div>
-                                <div class=" flex-shrink-0">
-                                    
-                                    <span class=" font-medium text-gray-400">{{useRuntimeConfig().public.APP_URL}}/{{b.xOrg }}</span>
-                                    
-                                </div>
-                                    
-                                </NuxtLink>
-                            </li>
-                    </ul>
-
-                </li>
+  <div v-if="alltenants" v-for="tenant in alltenants">
+    <card :pt="{ header: { class: 'text-xl text-gray-600' } }">
+      <template #header>
+        {{ tenant.tenantName }}
+      </template>
+      <template #content>
+        <ul>
+          <li v-for="o in getOrglist(tenant)">
+            <h1 class="subtitle-text">{{ o.orgName }}</h1>
+            <ul
+              role="list"
+              class="divide-y divide-gray-100 rounded-md border border-gray-200"
+            >
+              <li
+                v-for="b in getBranchlist(tenant)"
+                class="w-full items-center justify-between py-4 pl-4 pr-4 text-sm route-link-list"
+              >
+                <NuxtLink
+                  :href="`/${b.xOrg}`"
+                  v-if="o.orgId == b.orgId"
+                  :external="true"
+                >
+                  <div class="flex w-full flex-1 items-center">
+                    <!-- <i class="pi pi-sitemap"></i> -->
+                    <p class="flex-1 flex-shrink-0 font-bold text-primary-600">
+                      {{ b.branchCode }}
+                    </p>
+                    <p class="text-right min-w-0 flex-1 gap-2">
+                      <span href="#" class="font-medium text-gray-600">{{
+                        b.group
+                      }}</span>
+                    </p>
+                  </div>
+                  <div class="flex-shrink-0">
+                    <span class="font-medium text-gray-400"
+                      >{{ useRuntimeConfig().public.APP_URL }}/{{
+                        b.xOrg
+                      }}</span
+                    >
+                  </div>
+                </NuxtLink>
+              </li>
             </ul>
-            
-           <!-- <ul>
+          </li>
+        </ul>
+
+        <!-- <ul>
             <li v-for="b in branches" class="border border-b-1">
                 <NuxtLink :href="`/${b.xOrg }`" :external="true">
 
@@ -53,9 +63,9 @@
                 </NuxtLink>
             </li>
            </ul> -->
-        </template>
+      </template>
     </card>
-    </div>
+  </div>
 </template>
 <script setup lang="ts">
 /**
@@ -64,29 +74,27 @@
  * last change 2023-10-28
  * Author: Ks Tan
  */
-import _ from 'lodash'
-const profileapi = getAllApi().PROFILEApi;
-const alltenants = ref() 
+import _ from "lodash";
+const alltenants = ref();
 
-
-
-
-const loadAllTenants = async () =>{
-    const api = new profileapi(undefined,useRuntimeConfig().public.API_URL,)
-    alltenants.value =  (await api.getAllTenants()).data
-}
+const loadAllTenants = async () => {
+  // const api = new profileapi(getAxiosConfig());  
+  alltenants.value = (await getPorfileApi().getAllTenants()).data;
+};
 
 // const props = defineProps<{
 //    tenant:any
 // }>()
-const getBranchlist = (tenant:any)=>tenant.permissions
+const getBranchlist = (tenant: any) => tenant.permissions;
 
+const getOrglist = (tenant: any) =>
+  _.uniqBy(getBranchlist(tenant), "orgId").map((item: any) => ({
+    orgId: item.orgId,
+    orgCode: item.orgCode,
+    orgName: item.orgName,
+  }));
 
-const getOrglist = (tenant:any) => _.uniqBy(getBranchlist(tenant),'orgId')
-        .map((item:any)=>({ orgId:item.orgId,orgCode:item.orgCode,orgName:item.orgName}) ) 
-
-
-onNuxtReady(()=>{
-    loadAllTenants()
-})
+onNuxtReady(() => {
+  loadAllTenants();
+});
 </script>

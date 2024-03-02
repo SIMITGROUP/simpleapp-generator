@@ -56,3 +56,7 @@ export const getWorkflowApi = () => {
   return new o.WorkflowApi(getAxiosConfig())
   
 }
+
+export const getPorfileApi = () => {
+  return new o.PROFILEApi(getAxiosConfig())
+}

@@ -1,0 +1,1 @@
+all static select filter

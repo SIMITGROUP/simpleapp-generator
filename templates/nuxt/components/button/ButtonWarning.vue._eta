@@ -1,11 +1,12 @@
 <template>
-  <Button 
-  :class="
-      isMobile()
-        ? 'w-full rounded-full text-center block dark:bg-warning-700 bg-warning-600 text-white'
-        : 'btn-warn'
-    "
-   @touchcancel="onActivate" @click="onActivate">
+  <Button
+    v-if="isMobile()"
+    class="w-full rounded-full text-center block dark:bg-warning-600 bg-warning-600 active:bg-warning-400 text-white"
+    @click="onActivate"
+  >
+    <slot></slot>
+  </Button>
+  <Button v-else class="btn-warn" @click="onActivate">
     <slot></slot>
   </Button>
 </template>

@@ -15,6 +15,8 @@ export const getDayJs = ()=>useDayjs()
 export const lastDateOfMonth = (datestr:string) =>  useDayjs()(datestr).endOf('month').format('YYYY-MM-DD');
 export const today = () => useDayjs()().format('YYYY-MM-DD')
 export const dateToString = (date:Date) => useDayjs()(date).format('YYYY-MM-DD')
+export const dateToTimeString = (date:Date) => useDayjs()(date).format('HH:mm:ss')
+export const stringToDate = (datestr:string) => new Date(datestr)
 export const dateToDateTimeString = (date:Date)=> useDayjs()(date).format('YYYY-MM-DD HH:mm:ss')
 export const toLocalDate = (date:string | Date)=> useDayjs()(date).format(getDateFormat())
 export const getDateFormat = ():string=> 'DD-MM-YYYY'

@@ -5,6 +5,10 @@
  * author: Ks Tan
  */
 
+.bodycolorclass {
+   @apply bg-gray-100  dark:bg-slate-800 dark:text-gray-300
+}
+
 [disabled] ,[readonly]{
     @apply bg-gray-300 dark:bg-gray-600
 }
@@ -29,7 +33,7 @@ html {
 } */
 
 body {
-    @apply bg-gray-100  dark:bg-slate-950 dark:text-gray-300 h-screen w-screen 
+    @apply bodycolorclass h-screen w-screen 
     /* overflow-y-scroll  overflow-x-scroll  */    
 }
 
@@ -60,7 +64,10 @@ body {
     @apply btn bg-primary-600 hover:bg-primary-400 dark:!bg-primary-700 dark:hover:bg-primary-800 
 }
 .btn-secondary {
-    @apply btn bg-secondary-600 hover:bg-secondary-400 
+    @apply btn bg-secondary-600 hover:bg-secondary-400 dark:bg-secondary-400 dark:hover:bg-secondary-600 
+}
+.btn-default {
+    @apply btn bg-gray-600 hover:bg-gray-400 dark:bg-gray-400 hover:dark:bg-gray-500 
 }
 .btn-danger {
     @apply btn bg-danger-600 hover:bg-danger-400  dark:bg-danger-700 dark:hover:bg-danger-800 
@@ -70,3 +77,32 @@ body {
 }
 
 
+
+
+.p-component-overlay-enter {
+    animation: p-component-overlay-enter-animation 150ms forwards;
+}
+
+.p-component-overlay-leave {
+    animation: p-component-overlay-leave-animation 150ms forwards;
+}
+
+.p-component-overlay {
+    @keyframes p-component-overlay-enter-animation {
+        from {
+            background-color: transparent;
+        }
+        to {
+            background-color: var(--maskbg);
+        }
+    }
+    
+    @keyframes p-component-overlay-leave-animation {
+        from {
+            background-color: var(--maskbg);
+        }
+        to {
+            background-color: transparent;
+        }
+    }
+}

@@ -31,7 +31,7 @@
       :binary="true"
       v-bind="componentProps as InputSwitchProps"
     />
-
+    <!--
     <InputText
       type="date"
       :pt="pt"
@@ -43,19 +43,21 @@
       :readonly="isReadonly"
       :placeholder="placeholder"
       v-bind="componentProps as InputTextProps"
-    />
+    /> -->
     <!-- calendar component -->
     <Calendar
       type="date"
       :pt="pt"
       class="flex flex-col"
-      v-else-if="SimpleAppInputType.calendar == inputType"
+      v-else-if="SimpleAppInputType.calendar == inputType || inputType == SimpleAppInputType.date"
       :inputId="slotprops.uuid"
       :path="setting.instancepath"
       v-model="datevalue"
       @update:modelValue="updateDate"
+      showButtonBar
       :readonly="isReadonly"
       :placeholder="placeholder"
+      :date-format="getDateFormat()"
       v-bind="componentProps as CalendarProps"
     />
 
@@ -65,11 +67,11 @@
       v-else-if="inputType == SimpleAppInputType.time"
       timeOnly
       showTime
-      hourFormat="12"
+      hourFormat="12"          
       @update:modelValue="updateTime"
       :inputId="slotprops.uuid"
       :path="setting.instancepath"
-      v-model="modelValue as string"
+      v-model="timevalue"
       :readonly="isReadonly"
       :placeholder="placeholder"
       v-bind="componentProps as CalendarProps"
@@ -207,6 +209,21 @@
       v-bind="componentProps as InputNumber"
       :placeholder="placeholder"
     />
+    <InputNumber
+      v-else-if="inputType == SimpleAppInputType.money"
+      :type="type"
+      v-model="modelValue as number"
+      @focus="setFocus"
+      :max-fraction-digits="2"
+      :min-fraction-digits="2"
+      :readonly="isReadonly"
+      :pt="pt"
+      :class="!pt ? 'w-full flex flex-col' : ''"
+      :inputId="slotprops.uuid"
+      :path="setting.instancepath"
+      v-bind="componentProps as InputNumber"
+      :placeholder="placeholder"
+    />
     <Textarea
       v-else-if="inputType == SimpleAppInputType.textarea"
       v-model="modelValue as string"
@@ -268,7 +285,7 @@ import { SimpleAppInputType } from "~/types";
 
 const instancepath = ref("");
 const modelValue = defineModel({ required: true });
-const datevalue = ref("");
+const datevalue = ref<Date>();
 const timevalue = ref<Date>();
 
 const props = withDefaults(
@@ -285,7 +302,7 @@ const props = withDefaults(
     autofocus?: boolean;
     pt?: any;
     placeholder?: string;
-    autocompleteFilter?:any
+    autocompleteFilter?: any;
     componentProps?:
       | InputNumberProps
       | InputSwitchProps
@@ -301,10 +318,18 @@ const props = withDefaults(
 const pt = ref(props.pt);
 
 if (props.inputType == SimpleAppInputType.date && modelValue.value) {
-  datevalue.value = moment(modelValue.value as string).format("YYYY-MM-DD");
+  datevalue.value = stringToDate(<string>modelValue.value ) //.format("YYYY-MM-DD");
 } else {
-  datevalue.value = "";
+  datevalue.value = undefined;
 }
+
+if(props.inputType == SimpleAppInputType.time){
+    if (modelValue.value) {
+      timevalue.value = stringToDate(today()+'T'+modelValue.value as string)//.format("YYYY-MM-DD");
+    }else{
+      timevalue.value=undefined
+    }
+  }
 
 if (props?.instancepath) instancepath.value = props.instancepath;
 else if (props.setting?.instancepath)
@@ -346,12 +371,13 @@ const isReadonly = computed(() => {
     return false;
   }
 });
-const updateTime = () => {
-  modelValue.value = moment(timevalue.value).format("HH:mm:ss");
+const updateTime = (value:Date) => {  
+  value.setSeconds(0)
+  modelValue.value = dateToTimeString(value)
 };
 const updateDate = (value: any) => {
   if (value) {
-    modelValue.value = moment(value).format("YYYY-MM-DD");
+    modelValue.value = dateToString(value)
   } else {
     modelValue.value = "";
   }
@@ -382,6 +408,10 @@ const emits = defineEmits([
   "update:docNoFormat",
 ]);
 
+const getDateFormat=()=>{
+  return getPrimevueCalendarDateFormat()
+}
+
 watch(modelValue, (newvalue: any) => {
   if (
     [SimpleAppInputType.date, SimpleAppInputType.calendar].includes(
@@ -389,9 +419,15 @@ watch(modelValue, (newvalue: any) => {
     )
   ) {
     if (modelValue.value) {
-      datevalue.value = moment(modelValue.value as string).format("YYYY-MM-DD");
+      datevalue.value = stringToDate(modelValue.value as string)
     } else {
-      datevalue.value = "";
+      timevalue.value=undefined
+    }
+  }else if(props.inputType == SimpleAppInputType.time){
+    if (modelValue.value) {
+      timevalue.value = stringToDate(today()+'T'+modelValue.value as string)
+    }else{
+      timevalue.value=undefined
     }
   }
 
@@ -405,10 +441,16 @@ onMounted(() => {
     )
   ) {
     if (modelValue.value) {
-      datevalue.value = moment(modelValue.value as string).format("YYYY-MM-DD");
+      datevalue.value = stringToDate(modelValue.value as string)
     } else {
-      datevalue.value = "";
+      datevalue.value = undefined;
     }
+  } else if(props.inputType == SimpleAppInputType.time){
+      if (modelValue.value) {
+        timevalue.value = stringToDate(today()+'T'+modelValue.value as string)
+      }else{
+        timevalue.value=undefined
+      }
   }
 });
 

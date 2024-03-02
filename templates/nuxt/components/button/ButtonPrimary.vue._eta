@@ -1,5 +1,12 @@
 <template>
-  <Button :class="isMobile() ? 'w-full rounded-full text-center block dark:bg-primary-700 bg-primary-600 text-white': 'btn-primary'" @touchcancel="onActivate" @click="onActivate">
+  <Button
+    v-if="isMobile()"
+    class="w-full rounded-full text-center block dark:bg-primary-600 bg-primary-600 active:dark:bg-primary-400 text-white"
+    @click="onActivate"
+  >
+    <slot></slot>
+  </Button>
+  <Button v-else class="btn-primary" @click="onActivate">
     <slot></slot>
   </Button>
 </template>
@@ -10,8 +17,8 @@
  * last change 2024-02-22
  * author: Ks Tan
  */
-const emits = defineEmits(['click'])
-const onActivate=(e:Event)=>{
-  emits('click',e)
-}
+const emits = defineEmits(["click"]);
+const onActivate = (e: Event) => {
+  emits("click", e);
+};
 </script>

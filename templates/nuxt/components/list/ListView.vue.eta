@@ -15,7 +15,6 @@
           ><i class="pi pi-plus"></i
         ></ButtonPrimary>
       </template>
-      
     </div>
 
     <div
@@ -44,7 +43,9 @@
             <span>{{ item[titleField][0] }}</span>
           </div>
           <div
-            class="border-l-none border-r-none listview-item border-t-2 dark:border-t-gray-700 "
+            @click="onClick(index, item)"
+            @touchend="onClick(index, item)"
+            :class="`border-l-none border-r-none listview-item dark:border-t-gray-700 ${ index> 0 ?'border-t-2' : ''}` "
           >
             <NuxtLink
               :to="url ? `${url}/${item[idField]}` : undefined"
@@ -103,7 +104,7 @@ const props = withDefaults(
 const letters = ref<string[]>([]);
 let lastchar = "";
 
-const emits = defineEmits(["add"]);
+const emits = defineEmits(["add", "click"]);
 const searchvalue = ref("");
 const selecteditem = ref("");
 const clickRow = (item: ListItem) => {
@@ -154,5 +155,9 @@ const showCategoryBar = (letter: string) => {
   } else {
     return false;
   }
+};
+
+const onClick = (index: number, data: T) => {
+  emits("click", index, data);
 };
 </script>

@@ -1,5 +1,6 @@
 <template>
-  <span>{{ toLocalDate(value ?? "") }}</span>
+  <span v-if="value">{{ toLocalDate( value  ) }}</span>
+  <span v-else>-</span>
 </template>
 <script lang="ts" setup>
 /**
@@ -8,5 +9,6 @@
  * last change 2024-02-04
  * author: Ks Tan
  */
-const props = defineProps<{ value?: string }>();
+const props = defineProps<{ value?: string|Date }>();
+
 </script>

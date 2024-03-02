@@ -147,7 +147,10 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
       )
   <%}%>
   <% if(['post','put','patch'].includes(api.method)){ %>
-    @ApiBody({ description: 'Request Body', type: <%= api.schema? 'schemas.'+api.schema : 'Object'%> })
+    @ApiBody({ description: 'Request Body', 
+        type: <%= api.schema
+        ?  (api.schema.includes('[') ?  '[schemas.'+api.schema.replace('[','').replace(']','') + ']' : 'schemas.'+api.schema  )
+        : 'Object'%> })
   <%}%>  
   @ApiResponse({status: 200,description: '<%=api.description%>' 
       ,type: <%= api.responseType
@@ -162,7 +165,9 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   async <%=capitalizeFirstLetter(api.action) %>(
     @AppUser() appuser: UserContext,
     <%if(['post','put','patch'].includes(api.method.toLowerCase())){%>
-      @Body() data:<%= api.schema? 'types.'+api.schema : 'Object'%>,
+      @Body() data:<%= api.schema 
+      ?  (api.schema.includes('[') ?  'types.'+api.schema.replace('[','').replace(']','') + '[]' : 'types.'+api.schema  )
+      : 'Object'%>,
       //@Body() data:any,
     <%}%>
     <% if(api.entryPoint && api.entryPoint.includes(':')) {%>

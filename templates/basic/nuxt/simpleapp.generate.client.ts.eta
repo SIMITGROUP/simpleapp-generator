@@ -144,7 +144,9 @@ export class <%= it.typename%>Client extends SimpleAppClient<openapi.<%= it.type
     <%}%>
      
 
-         <% if(['post','put','patch'].includes(api.method)){ %>data:<%=api.schema ? 'openapi.'+api.schema :'any'%><%}%>  
+         <% if(['post','put','patch'].includes(api.method)){ %>data:<%=api.schema 
+         ?  (api.schema.includes('[') ?  'openapi.'+api.schema.replace('[','').replace(']','') + '[]' : 'openapi.'+api.schema  )
+         :'any'%><%}%>  
         ){
     //const recordid: string = this.data.value._id ?? '';
     return await this.docapi.run<%=capitalizeFirstLetter(api.action)%>(

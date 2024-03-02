@@ -279,7 +279,7 @@ export class SimpleAppService<T extends { _id?: string }> {
       data._id = crypto.randomUUID();
     }
     const dbsession = appuser.getDBSession();
-    if (!dbsession.inTransaction()) {
+    if (dbsession && !dbsession.inTransaction()) {
       dbsession.startTransaction();
     }
 
@@ -307,6 +307,7 @@ export class SimpleAppService<T extends { _id?: string }> {
     await this.validateData(appuser, data);
     this.logger.debug(data, `after create validation`);
     this.applyNestedDateTime(appuser, data, 'create');
+
     this.logger.debug(data, `Create Record ${this.documentName}`);
     const newdoc = new this.doc(data);
     await this.identifyForeignKeys(appuser, data);
@@ -322,10 +323,15 @@ export class SimpleAppService<T extends { _id?: string }> {
     // this.doc
 
     // result = await newdoc.save()
-
-    if (this.hooks.afterCreate) await this.hooks.afterCreate(appuser, result);
-
-    return result as T;
+    try {
+      if (this.hooks.afterCreate) await this.hooks.afterCreate(appuser, result);
+      return result as T;
+    } catch (err) {
+      throw new InternalServerErrorException(
+        `createHook ${this.documentType} error: ${err}`,
+        `${this.documentType} createHook error`,
+      );
+    }
   }
 
   applyNestedDateTime = (
@@ -444,7 +450,7 @@ export class SimpleAppService<T extends { _id?: string }> {
       throw new NotFoundException(`${id} not found`, 'not found');
     }
     const dbsession = appuser.getDBSession();
-    if (!dbsession.inTransaction()) {
+    if (dbsession && !dbsession.inTransaction()) {
       dbsession.startTransaction();
     }
 
@@ -494,12 +500,7 @@ export class SimpleAppService<T extends { _id?: string }> {
   //   this.doc.updateOne(data);
   // };
 
-  findIdThenUpdate = async (
-    appuser: UserContext,
-    id: string,
-    data: T,
-    session: mongo.ClientSession = undefined,
-  ) => {
+  findIdThenUpdate = async (appuser: UserContext, id: string, data: T) => {
     const existingdata = await this.findById(appuser, id);
     if (!existingdata) {
       throw new NotFoundException(`${id} not found`, 'not found');
@@ -509,37 +510,32 @@ export class SimpleAppService<T extends { _id?: string }> {
       await this.hooks.beforeUpdate(appuser, id, data);
 
     const dbsession = appuser.getDBSession();
-    if (!dbsession.inTransaction()) {
+    if (dbsession && !dbsession.inTransaction()) {
       dbsession.startTransaction();
     }
     // try {
     Object.assign(data, appuser.getUpdateFilter());
     // Object.assign(existingdata, data);
     delete data['_id'];
-
     this.reCalculateValue(data);
 
     // existingdata['_id']=''
-    // console.log("newdata",data)
     await this.validateData(appuser, data);
 
     const isolationFilter = { ...this.getIsolationFilter(appuser) };
     this.polishIsolationFilter(isolationFilter);
-
     isolationFilter['_id'] = id;
     this.applyNestedDateTime(appuser, data, 'update');
-
     try {
       const result = await this.doc.findOneAndReplace(isolationFilter, data, {
         session: dbsession,
       });
-
       appuser.addUpdatedRecordId(this.documentName, data._id);
-
       if (this.hooks.afterUpdate)
         await this.hooks.afterUpdate(appuser, id, result);
       return await this.findById(appuser, id);
     } catch (err) {
+      this.logger.error(err);
       throw new InternalServerErrorException(err.message);
     }
   };
@@ -559,7 +555,7 @@ export class SimpleAppService<T extends { _id?: string }> {
       await this.hooks.beforeUpdate(appuser, id, data);
 
     const dbsession = appuser.getDBSession();
-    if (!dbsession.inTransaction()) {
+    if (dbsession && !dbsession.inTransaction()) {
       dbsession.startTransaction();
     }
     // try {
@@ -670,7 +666,10 @@ export class SimpleAppService<T extends { _id?: string }> {
         'set documentstatus id not match with submited data',
       );
     }
-
+    const existdata = await this.findById(appuser,id)
+    if(existdata['documentStatus'] == docstatus){
+      throw new BadRequestException(`Same document status "${docstatus}" is not allowed`);
+    }
     data['documentStatus'] = docstatus;
     // await this.hook(appuser, HookType.beforeSetStatus, data);
     if (this.hooks.beforeSetStatus)
@@ -682,9 +681,7 @@ export class SimpleAppService<T extends { _id?: string }> {
 
       return createresult;
     } else {
-      const originalresult = await this.findById(appuser, id);
-      const newdata = { ...originalresult, ...data };
-      const updateresult = await this.findIdThenUpdate(appuser, id, newdata);
+      const updateresult = await this.findIdThenPatch(appuser, id, data);
       const finaldata = await this.findById(appuser, id);
       if (this.hooks.afterSetStatus)
         await this.hooks.afterSetStatus(appuser, docstatus, finaldata);

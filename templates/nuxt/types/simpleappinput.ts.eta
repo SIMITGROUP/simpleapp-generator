@@ -33,6 +33,7 @@ export enum SimpleAppInputType  {
     'password'='password',
 
     'number'='number',
+    'money'='money',
     'rating'='rating',
     'slider'='slider',
 

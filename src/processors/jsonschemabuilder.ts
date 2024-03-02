@@ -53,9 +53,20 @@ export const readJsonSchemaBuilder = async (docname: string,orijsondata:JSONSche
   if(schemaconfigs.allStatus && schemaconfigs.allStatus.length>0){    
     orijsondata.properties["documentStatus"] = {type:'string', default:'draft'}
   }
+  
+  //ensure all important field exists
+  const compulsoryfields = ['_id','tenantId','orgId','branchId','created','createdBy','updated','updatedBy']
+  for(let cf=0 ; cf< compulsoryfields.length;cf++){
+    if(!orijsondata.properties[compulsoryfields[cf]]){
+      log.error(`Undefine "${compulsoryfields[cf]}"`)
+      throw new Error(`Undefine "${compulsoryfields[cf]}"`)
+    }
+  }
+
   //enforce format uuid for _id
   orijsondata.properties['_id']['format']='uuid' 
-
+  
+  
 
   // let newschema:JSONSchema7 & SchemaType = {
   //   type: 'object',

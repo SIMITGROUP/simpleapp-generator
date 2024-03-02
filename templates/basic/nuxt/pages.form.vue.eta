@@ -5,15 +5,13 @@
         (hidelabel? ':hidelabel="true"':'') +
         (instancepath ?  `:instancepath="\`${instancepath}\`"` : '') + '/>' %>
 <template>    
-    
-    <SimpleAppForm #default="o" :document="doc">
-    <client-only>
+    <div>
         <% if(it.autocompletename){%> 
             <title v-if="id">{{ data.<%=it.autocompletename%> ??  data.<%=it.autocompletecode%>}}</title>
         <%}else{%> 
             <title v-if="id">{{ t(doc.getDocName())}}</title>
         <%}%> 
-                
+    <SimpleAppForm #default="o" :document="doc">                    
         <SimpleAppFormToolBar  :document="doc" @on="actionListener"></SimpleAppFormToolBar>        
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-2">
     <% let isautofocus='' %>
@@ -131,11 +129,10 @@
             <!--  <%~ JSON.stringify(obj) %>-->  
         <%}%>
       <%})%>  
-      </div>
-    </client-only>
-    <DebugDocumentData v-model="data" :label="doc.getDocName()"/>
+      </div>        
     </SimpleAppForm>
-    
+    <DebugDocumentData v-model="data" :label="doc.getDocName()"/>
+    </div>
 </template>
 
 

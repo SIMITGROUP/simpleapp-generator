@@ -1,9 +1,9 @@
 <template>
   <div v-for="o in options">
-    <ButtonPrimary v-if="value == o.value" @touchend="switchButton(o.value)" @click="switchButton(o.value)">{{
+    <ButtonPrimary v-if="value == o.value" @click="switchButton(o.value)">{{
       o.label
     }}</ButtonPrimary>
-    <ButtonDefault v-else @touchend="switchButton(o.value)" @click="switchButton(o.value)">{{
+    <ButtonDefault v-else @click="switchButton(o.value)">{{
       o.label
     }}</ButtonDefault>
   </div>

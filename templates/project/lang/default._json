@@ -59,5 +59,6 @@
     "cancel":"Cancel",
     "deleteRecord":"Delete Record",
     "deleteThisRecord?":"Delete this Record?",
-    "ok":"OK"
+    "ok":"OK",
+    "null":"Null"
   }

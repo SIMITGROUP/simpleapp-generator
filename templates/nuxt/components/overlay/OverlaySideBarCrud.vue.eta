@@ -22,9 +22,8 @@
 const showDialog = defineModel<boolean>({ required: true });
 const props = defineProps<{ closeEventName: string }>();
 useNuxtApp().$listen("CloseDialog", (closeEventName: string) => {
-  if (props.closeEventName == closeEventName){    
-     showDialog.value = false;
-    }
+  if (props.closeEventName == closeEventName) {
+    showDialog.value = false;
+  }
 });
-
 </script>

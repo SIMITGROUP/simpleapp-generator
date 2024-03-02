@@ -1,6 +1,14 @@
 <template>
   <Button
-  @touchcancel="onActivate" @click="onActivate"
+    v-if="isMobile()"
+    @click="onActivate"
+    class="border-none dark:text-white active:text-primary-600 click:bg-gray-600"
+  >
+    <slot></slot>
+  </Button>
+  <Button
+    v-else
+    @click="onActivate"
     class="border-none dark:text-white active:text-primary-600 click:bg-gray-600"
   >
     <slot></slot>
@@ -13,9 +21,9 @@
  * last change 2024-02-22
  * author: Ks Tan
  */
-const emits = defineEmits(['click'])
-
-const onActivate=(e:Event)=>{
-  emits('click',e)
-}
+const emits = defineEmits(["click"]);
+let stopawhile = false;
+const onActivate = (e: Event) => {
+  emits("click", e);
+};
 </script>

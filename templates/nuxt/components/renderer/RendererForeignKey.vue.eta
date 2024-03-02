@@ -1,8 +1,15 @@
-<template>    
-    <span  v-if="setting?.collection" @click="viewRecord" class="text-primary-700 hover:text-primary-500 cursor-pointer">        
-            {{ displayText }}    
-    </span>
-    <span v-else>{{ displayText }}</span>
+<template>
+  <span
+    v-if="setting?.collection"
+    @click="viewRecord"
+    class="text-primary-700 hover:text-primary-500  dark:text-primary-400 cursor-pointer"
+  >
+    <slot>
+      {{ displayText }}
+    </slot>
+    
+  </span>
+  <span v-else>{{ displayText }}</span>
 </template>
 <script setup lang="ts">
 /**
@@ -11,35 +18,32 @@
  * last change 2024-02-04
  * author: Ks Tan
  */
-import { ForeignKey } from '~/types';
+import { ForeignKey } from "~/types";
 
-
-type SettingProp = {collection:string, displayField?:string}
-const modelValue = defineModel<ForeignKey>()
-const props = defineProps<{setting:SettingProp}>()
-const displayText = computed(()=>{
-    const s = props.setting
-    if (!modelValue.value) return undefined
-    else if(!s.collection) return modelValue.value    
-    else if(s.displayField) return modelValue.value[s.displayField]
-    else return modelValue.value.label
-})
-const {$event} = useNuxtApp()
-const viewer=ref()
+type SettingProp = { collection: string; displayField?: string };
+const modelValue = defineModel<ForeignKey>();
+const props = defineProps<{ setting: SettingProp }>();
+const displayText = computed(() => {
+  const s = props.setting;
+  if (!modelValue.value) return undefined;
+  else if (!s.collection) return modelValue.value;
+  else if (s.displayField) return modelValue.value[s.displayField];
+  else return modelValue.value.label;
+});
+const { $event } = useNuxtApp();
+const viewer = ref();
 const viewRecord = () => {
-    viewer.value = getDocument(props.setting.collection)?.viewer
-    
-    // getDocumentUrl(setting.collection,modelValue ? modelValue['_id']:'')
-    //getDocumentUrl(setting.collection,modelValue ? modelValue['_id']:'')
-    $event('ViewRecord',{
-        _id: modelValue.value?._id as string,
-        label: modelValue.value?.label as string,
-        eventId: randomUUID(),
-        documentName: props.setting.collection,
-        viewer: viewer.value,
-        readonly:true
+  viewer.value = getDocument(props.setting.collection)?.viewer;
 
-    })
-
-}
+  // getDocumentUrl(setting.collection,modelValue ? modelValue['_id']:'')
+  //getDocumentUrl(setting.collection,modelValue ? modelValue['_id']:'')
+  $event("ViewRecord", {
+    _id: modelValue.value?._id as string,
+    label: modelValue.value?.label as string,
+    eventId: randomUUID(),
+    documentName: props.setting.collection,
+    viewer: viewer.value,
+    readonly: true,
+  });
+};
 </script>

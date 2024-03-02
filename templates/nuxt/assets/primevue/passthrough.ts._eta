@@ -35,7 +35,7 @@ const CustomTailwind = usePassThrough(
         selectbutton:{
             root:{class:'flex flex-row gap-1 '},
             button: ({ context }) => ({
-                class: ` focus:outline-none transition duration-150 ease-in-out rounded p-2 m-1 border dark:border-gray-600   ${context.active ? 'bg-primary-600 border-primary-400 text-white' : ''}`
+                class: ` focus:outline-none whitespace-nowrap transition duration-150 ease-in-out rounded p-2 m-1 border dark:border-gray-600   ${context.active ? 'bg-primary-600 border-primary-400 text-white' : ''}`
             }),
             // button: ( context)  => ({
                 
@@ -50,9 +50,10 @@ const CustomTailwind = usePassThrough(
         },
         button:{root:{class: 'focus:outline-none transition duration-150 ease-in-out rounded p-2 m-1 border dark:border-gray-600'}},
         dialog:{
-            root:{class:[' w-full max-h-full max-w-full md:h-3/4 lg:h-1/2 border m-2 rounded-lg']},
-            header:{class: 'p-dialog-header flex items-center  text-2xl justify-between shrink-0 bg-white text-gray-800 border-t-0  rounded-tl-lg rounded-tr-lg p-6 dark:bg-gray-900  dark:text-white/80'},
-            content:{class:'p-dialog-content overflow-y-auto bg-white text-gray-700 px-6 pb-8 pt-0 dark:bg-gray-900  dark:text-white/80 rounded-bl-lg rounded-br-lg h-full'}
+            root:{class:[' w-full max-h-full bodycolorclass max-w-full md:h-3/4 lg:h-1/2 border m-2 rounded-lg']},
+            header:{class: 'p-dialog-header flex items-center  text-2xl justify-between shrink-0 border-t-0  rounded-tl-lg rounded-tr-lg p-6 bodycolorclass'},
+            footer:{class:'p-dialog-footer flex gap-2 shrink-0 justify-end align-center border-t-0 px-6 pb-6 text-right rounded-b-lg bodycolorclass'},
+            content:{class:'p-dialog-content overflow-y-auto  px-6 pb-8 pt-0  rounded-bl-lg rounded-br-lg h-full bodycolorclass'}
         },        
         calendar:{
             root:{class:'border border-grey-900 dark:!border-blue-900/40  rounded-lg flex flex-row p-0'},            
@@ -74,7 +75,7 @@ const CustomTailwind = usePassThrough(
             },
         },
         sidebar:{
-            root:{class:'w-full md:w-2/3  bg-white dark:bg-slate-950  p-0 h-full'},
+            root:{class:'w-full md:w-2/3  bodycolorclass  p-0 h-full'},
             header:{class:'dark:text-white text-2xl p-2'},
             content:{class:'p-0 pt-0 h-full w-full grow overflow-y-auto'}
         },        
