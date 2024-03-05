@@ -29,8 +29,16 @@ export default defineNuxtPlugin( async(nuxtApp) => {
         return  response
       }, 
       (error) => {
-        if(error.code && error.code == 'ERR_BAD_REQUEST'){
-          console.error("axios ERR_BAD_REQUEST, redirect to relogin")
+        // console.log("error catch",error)
+
+        if(error?.code && error.code == 'ERR_BAD_REQUEST'){
+          // console.log("error.code",error.response.status, error)
+          if(error.response && error.response.status==403){
+            console.warn("error status 403, redirect to external link /" )
+            navigateTo('/',{external:true})
+          }else{
+            console.error("axios ERR_BAD_REQUEST",error)
+          }          
         }        
         else if(error.code){        
           throw createError({

@@ -12,6 +12,7 @@
     </div>
     <ListView
       class="p-2 dark:bg-slate-900 bg-slate-200 rounded-lg"
+      
       :list="list"
       #default="{ index, item }"
       @click="showRow"
@@ -27,10 +28,11 @@
           row {{ rowIndex }} define SimpleAppInputs here
         </slot>
       </div>
-      <template #footer>
-        <ButtonDefault @click="showDialog = false">{{
-          t("close")
-        }}</ButtonDefault>
+      <template #footer>        
+        <div v-if="!readOnly" class="flex flex-row gap-2 w-full">
+          <ButtonDanger @click="deleteItem">{{ t("delete") }}</ButtonDanger>
+          <ButtonPrimary @click="updateItem">{{ t("ok") }}</ButtonPrimary>
+        </div>        
       </template>
     </Dialog>
   </div>
@@ -44,11 +46,20 @@
  */
 const showDialog = ref(false);
 const rowIndex = ref(0);
-const emits = defineEmits(["addrow"]);
-const props = defineProps<{ list: T[]; title?: string; readOnly?: boolean}>();
+const emits = defineEmits(["addrow", "deleteitem", "itemupdated"]);
+const props = defineProps<{ list: T[]; title?: string; readOnly?: boolean }>();
 
 const showRow = (index: number, item: T) => {
   showDialog.value = true;
   rowIndex.value = index;
+};
+const deleteItem = () => {
+  showDialog.value = false;
+  props.list.splice(rowIndex.value, 1);
+  emits("deleteitem");
+};
+const updateItem = () => {
+  showDialog.value = false;
+  emits("itemupdated", rowIndex.value);
 };
 </script>

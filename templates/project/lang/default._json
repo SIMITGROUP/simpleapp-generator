@@ -60,5 +60,7 @@
     "deleteRecord":"Delete Record",
     "deleteThisRecord?":"Delete this Record?",
     "ok":"OK",
-    "null":"Null"
+    "null":"Null",
+    "pickYourDatabase":"Pick Your Database",
+    "createNewCompany":"Create New Company"
   }

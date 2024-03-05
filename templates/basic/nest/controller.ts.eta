@@ -53,6 +53,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   <%}else{%>
   @Roles(Role.SuperAdmin,Role.SuperUser,Role.<%= `${it.typename}_search`%>)
   <%}%>
+  @HttpCode(200)
   @ApiResponse({
     status: 200,
     description: 'Found',

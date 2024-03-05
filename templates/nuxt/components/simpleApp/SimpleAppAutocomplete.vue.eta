@@ -11,6 +11,7 @@
     </div>
 
     <AutoComplete
+      v-if="!isMobile()"
       class="w-full"
       v-model="modelValue"
       ref="autocompleteinput"
@@ -52,7 +53,69 @@
         </slot>
       </template>
       <!-- </slot> -->
-    </AutoComplete>    
+    </AutoComplete>
+    <div v-else>
+      <InputGroup class="w-full flex flex-row">
+        <InputText
+          :value="modelValue?.label"
+          @focus="showAutocompleteDialog(false)"
+          :placeholder="placeholdertxt"
+          class="rounded-r-none"
+        ></InputText>
+        <InputGroupAddon
+          @click="showAutocompleteDialog(true)"
+          v-ripple
+          class="bg bg-primary-600 dark:bg-primary-700 rounded-r-lg p-3"
+        >
+          <i :class="`pi ${modelValue ? 'pi-link' : 'pi-angle-down'}`"></i>
+        </InputGroupAddon>
+      </InputGroup>
+
+      <OverlaySideBarCrud
+        v-model="mobileVisible"
+        closeEventName="autocompleteoverlay"
+      >
+      <template  v-if="mobileListMode=='list'">
+        <mobile-toolbar>
+          <template #start>
+            <ButtonText @click="mobileVisible = false">
+              <i class="pi pi-times"></i>
+            </ButtonText>
+          </template>
+          <template #center>
+            <TextTitle>{{ t(docname) }}</TextTitle>
+          </template>
+          <template #end>
+            <div></div>
+            <!-- <ButtonText @click="openViewer(false)">
+            <i class="pi pi-plus"></i>
+            </ButtonText>  -->
+          </template>
+        </mobile-toolbar>
+        <div class="h-16"></div>       
+        <ListView
+          :list="list"
+          :withFilter="true"
+          :defaultFilterValue="defaultFilterValue"
+          idField="_id"
+          titleField="code"
+          subTitleField="label"
+          #default="{ item, index }"
+          @click="onClickInMobile"
+        >
+          <div class="flex flex-row justify-end">
+            <div class="flex-1">{{ item.label }}</div>
+            <div>{{ item.code }}</div>
+          </div>
+        </ListView>
+      </template>
+       <template v-else>        
+        <component
+            :is="defineAsyncComponent(getDocument(setting.fieldsetting['x-foreignkey']).viewer)"
+            @after="async (eventType: FormCrudEvent, data: any, result: any) => await afterRenderMobileForm(eventType,data)"/>
+       </template>
+      </OverlaySideBarCrud>
+    </div>
   </div>
   <div
     v-else
@@ -64,7 +127,7 @@
       tabindex="0"
       @click="openViewer(true)"
       >{{ modelValue && modelValue.label ? modelValue.label : "-" }}</span
-    >    
+    >
   </div>
 </template>
 <script setup lang="ts">
@@ -76,8 +139,18 @@
  */
 import { isNull } from "lodash";
 import jsonpath from "jsonpath";
-import { AutoCompleteDropdownClickEvent, AutoCompleteProps } from "primevue/autocomplete";
-import { autocompletetype, SchemaConfig, SchemaType } from "~/types";
+import {
+  AutoCompleteDropdownClickEvent,
+  AutoCompleteProps,
+} from "primevue/autocomplete";
+import {
+  autocompletetype,
+  ForeignKey,
+  FormCrudEvent,
+  SchemaConfig,
+  SchemaType,
+} from "~/types";
+const mobileVisible = ref(false);
 const autocompleteinput = ref<autocompletetype | undefined>();
 const { $event } = useNuxtApp();
 const list = ref<any[]>([]);
@@ -91,7 +164,7 @@ const props = withDefaults(
     hidelabel?: boolean;
     inputId: string;
     componentProps?: AutoCompleteProps;
-    autocompleteFilter?: any
+    autocompleteFilter?: any;
     pt?: any;
   }>(),
   {
@@ -99,17 +172,18 @@ const props = withDefaults(
     showNull: true,
   },
 );
-
+const mobileListMode=ref('list')
+const defaultFilterValue = ref("");
 const path = "$" + props.setting.instancepath;
 const modifiedpath = path.replaceAll("/", ".");
 const queryresult = jsonpath.query(props.setting.defaultValue, modifiedpath)[0];
 const remotedoc = getDocument(props.setting.fieldsetting["x-foreignkey"]);
-const schema: SchemaType = <SchemaType>remotedoc?.docClass.getSchema();  
+const schema: SchemaType = <SchemaType>remotedoc?.docClass.getSchema();
 const labelfield = schema["x-simpleapp-config"].documentTitle as string;
 const codefield = schema["x-simpleapp-config"].uniqueKey as string;
 const docname = props.setting.fieldsetting["x-foreignkey"];
 const placeholdertxt = computed(() => props.placeholder ?? t(docname));
-const emptyautocomplete = computed((): autocompletetype => queryresult);
+const emptyautocomplete = computed(()=>undefined)//((): autocompletetype => queryresult);
 const cancelShowList = ref(false);
 const autocompleteitem = ref<autocompletetype | undefined>(
   emptyautocomplete.value,
@@ -146,15 +220,29 @@ const onBlurAutocomplete = () => {
   }
 };
 
+const showAutocompleteDialog = (isbutton: boolean) => {
+  if (modelValue.value && isbutton) {
+    openViewer(false);
+  } else {
+    //  if(!modelValue.value && !isbutton ){
+    mobileVisible.value = true;
+    defaultFilterValue.value =
+      modelValue.value && modelValue.value?._id ? modelValue.value.label : "";
+    getListFromAutocompleteApi({ query: "" });
+  }
+};
 //obtain remote data
 const getListFromAutocompleteApi = (event: any) => {
-  const keyword = event.query ?? "";
-  const defaultfilter:any = schema.properties['active'] ? {active:true} : {}
-  const morefilter= props.autocompleteFilter ?? defaultfilter
+  const keyword = event?.query ?? "";
+  const defaultfilter: any = schema.properties["active"]
+    ? { active: true }
+    : {};
+  const morefilter = props.autocompleteFilter ?? defaultfilter;
   const targetDocument = props.setting.fieldsetting["x-foreignkey"];
   getDocumentApi(targetDocument)
-    .autoComplete(keyword,morefilter)
+    .autoComplete(keyword, morefilter)
     .then((res: any) => {
+      console.log("Run autocomplete?");
       list.value = res.data;
 
       if (props.allowAddNew) {
@@ -169,16 +257,21 @@ const getListFromAutocompleteApi = (event: any) => {
 //on select
 const pickAutoComplete = (event: any) => {
   if (event.value._id === "") {
-    modelValue.value = emptyautocomplete.value;
-    autocompleteitem.value = emptyautocomplete.value;
+    modelValue.value = undefined //emptyautocomplete.value;
+    autocompleteitem.value = undefined //emptyautocomplete.value;
   } else if (event.value._id === "new") {
-    modelValue.value = emptyautocomplete.value;
-    autocompleteitem.value = emptyautocomplete.value;
-    openViewer(false);
+    modelValue.value = undefined // emptyautocomplete.value;
+    autocompleteitem.value = undefined //emptyautocomplete.value;
+    if(isMobile()) {
+      mobileListMode.value='form'
+      return
+    }
+    else openViewer(false);
   } else if (typeof event.value.query == "undefined") {
     modelValue.value = event.value;
     autocompleteitem.value = event.value;
   }
+  mobileVisible.value = false;
 };
 
 const emits = defineEmits([
@@ -211,24 +304,58 @@ const openViewer = (readonly: boolean) => {
       documentName: docname,
 
       //after create, auto copy value into auto complete
-      after:  async(eventType: string, data: any) => {
-        autocompleteitem.value = {
-          _id: data._id,
-          code: data[codefield],
-          label: data[labelfield],
-        };
-        if (schema["x-simpleapp-config"].additionalAutoCompleteFields) {
-          const addfields =
-            schema["x-simpleapp-config"].additionalAutoCompleteFields;
-          for (let i = 0; i < addfields.length; i++) {
-            const fieldname = addfields[i] as string;
-            autocompleteitem.value[fieldname] = data[fieldname];
+      after: async (eventType: FormCrudEvent, data: any) => {
+        if(eventType == FormCrudEvent.create || eventType == FormCrudEvent.update){
+
+        
+            autocompleteitem.value = {
+              _id: data._id,
+              code: data[codefield],
+              label: data[labelfield],
+            };
+            if (schema["x-simpleapp-config"].additionalAutoCompleteFields) {
+              const addfields =
+                schema["x-simpleapp-config"].additionalAutoCompleteFields;
+              for (let i = 0; i < addfields.length; i++) {
+                const fieldname = addfields[i] as string;
+                autocompleteitem.value[fieldname] = data[fieldname];
+              }
+            }
+            modelValue.value = { ...autocompleteitem.value };
+            emitChanges();
           }
-        }
-        modelValue.value = { ...autocompleteitem.value };
-        emitChanges();
       },
     });
   }
 };
+
+const onClickInMobile = (id: string, item: ForeignKey) => {
+  pickAutoComplete({ value: item });  
+};
+
+const afterRenderMobileForm = async (eventType: FormCrudEvent, data: any, result: any)=>{
+  console.log("afterRenderMobileForm",eventType)
+  if(eventType == FormCrudEvent.create || eventType == FormCrudEvent.update){        
+      autocompleteitem.value = {
+        _id: data._id,
+        code: data[codefield],
+        label: data[labelfield],
+      };
+      if (schema["x-simpleapp-config"].additionalAutoCompleteFields) {
+        const addfields =
+          schema["x-simpleapp-config"].additionalAutoCompleteFields;
+        for (let i = 0; i < addfields.length; i++) {
+          const fieldname = addfields[i] as string;
+          autocompleteitem.value[fieldname] = data[fieldname];
+        }
+      }
+      modelValue.value = { ...autocompleteitem.value };
+      emitChanges();
+      mobileVisible.value = false;
+      }
+    else if (eventType== FormCrudEvent.exit){
+      mobileVisible.value = false;
+    }
+
+}
 </script>

@@ -1,37 +1,43 @@
-
 <template>
-    
-        <div class="flex flex-row w-full">
-            <InputText 
-                @focus="setFocus"              
-                :readonly="readonly"
-                v-model="modelValue"    
-                :placeholder="placeholder"
-                :pt="pt"
-                :class=" !pt ? 'flex-1 w-full rounded-lg  '+ ( props.readonly?'':'rounded-tr-none rounded-br-none') : ''"
-            />
-            <span class="" v-if="!readonly">
-                <button  type="button" @click="toggle"  tabindex="-1"
-                    class="'btn btn-primary p-3 dark:border-blue-900/40 rounded-lg rounded-tl-none rounded-bl-none">
-                    <i class="pi pi-angle-down"></i>
-                </button>
-                <OverlayPanel ref="op" class="p-4">           
-                    <div class="m-4">
-                        <ul>                      
-                            <li v-for="docno in docFormatlist" class="hover-list-primary p-2" >
-                                <a class="" @click="chooseFormat(docno)">
-                                    <span class="pi pi-hashtag mr-2"></span>
-                                    <span class="">{{docno.docNoFormatName}}</span>
-                                    <span class=" text text-green-600">{{docno.sample}}</span>
-                                </a>
-                            </li>                    
-                        </ul>
-                    </div>         
-                </OverlayPanel>
-            </span>
-            <!-- {{ Object.getOwnPropertyNames(setting) }} -->
+  <div class="flex flex-row w-full">
+    <InputText
+      @focus="setFocus"
+      :readonly="readonly"
+      v-model="modelValue"
+      :placeholder="placeholder"
+      :pt="pt"
+      :class="
+        !pt
+          ? 'flex-1 w-full rounded-lg  ' +
+            (props.readonly ? '' : 'rounded-tr-none rounded-br-none')
+          : ''
+      "
+    />
+    <span class="" v-if="!readonly">
+      <button v-ripple
+        type="button"
+        @click="toggle"
+        tabindex="-1"
+        class="'btn btn-primary p-3 dark:border-blue-900/40 rounded-lg rounded-tl-none rounded-bl-none"
+      >
+        <i class="pi pi-angle-down"></i>
+      </button>
+      <OverlayPanel ref="op" class="p-4">
+        <div class="m-4">
+          <ul>
+            <li v-for="docno in docFormatlist" class="hover-list-primary p-2">
+              <a class="" @click="chooseFormat(docno)">
+                <span class="pi pi-hashtag mr-2"></span>
+                <span class="">{{ docno.docNoFormatName }}</span>
+                <span class="text text-green-600">{{ docno.sample }}</span>
+              </a>
+            </li>
+          </ul>
         </div>
-    
+      </OverlayPanel>
+    </span>
+    <!-- {{ Object.getOwnPropertyNames(setting) }} -->
+  </div>
 </template>
 <script lang="ts" setup>
 /**
@@ -40,52 +46,50 @@
  * last change 2023-10-28
  * Author: Ks Tan
  */
-import {ForeignKey} from '~/types'
-import OverlayPanel from 'primevue/overlaypanel';
-import InputText from 'primevue/inputtext';
-import {DocNoFormat} from "~/types"
+import { ForeignKey } from "~/types";
+import OverlayPanel from "primevue/overlaypanel";
+import InputText from "primevue/inputtext";
+import { DocNoFormat } from "~/types";
 const props = defineProps<{
-    setting:any    
-    readonly?:boolean
-    pt?:any
-}>()
+  setting: any;
+  readonly?: boolean;
+  pt?: any;
+}>();
 const op = ref();
-const placeholder = ref('')
-const docFormatlist = ref()
-const modelValue = defineModel<string>({required:true})
-const docNoFormat = props.setting.document.getReactiveData().value.docNoFormat
-const emits = defineEmits(['update:docNoFormat'])
+const placeholder = ref("");
+const docFormatlist = ref();
+const modelValue = defineModel<string>({ required: true });
+const docNoFormat = props.setting.document.getReactiveData().value.docNoFormat;
+const emits = defineEmits(["update:docNoFormat"]);
 
-const documenttype = props.setting.document.doctype
+const documenttype = props.setting.document.doctype;
 
-const toggle = async (event:any) => {
-    op.value.toggle(event);            
-}
+const toggle = async (event: any) => {
+  op.value.toggle(event);
+};
 
-const chooseFormat =  (item:any) =>{
-    placeholder.value = item.sample    
-    const f = item
-    docNoFormat.value = { _id : f._id, label : f.docNoFormatName}
-    op.value.toggle();
-    emits('update:docNoFormat',item)
-}
+const chooseFormat = (item: any) => {
+  placeholder.value = item.sample;
+  const f = item;
+  docNoFormat.value = { _id: f._id, label: f.docNoFormatName };
+  op.value.toggle();
+  emits("update:docNoFormat", item);
+};
 
-const loadDocFormats = async () =>{
-    docFormatlist.value= await getDocFormats(documenttype)    
-    if(docFormatlist.value.length>0){
-        const f = docFormatlist.value[0]
-        docNoFormat.value = { _id : f._id, label : f.docNoFormatName}
-        placeholder.value = docFormatlist.value[0].sample        
-    }
-}
+const loadDocFormats = async () => {
+  docFormatlist.value = await getDocFormats(documenttype);
+  if (docFormatlist.value.length > 0) {
+    const f = docFormatlist.value[0];
+    docNoFormat.value = { _id: f._id, label: f.docNoFormatName };
+    placeholder.value = docFormatlist.value[0].sample;
+  }
+};
 
+const setFocus = (ev: any) => {
+  if (!isMobile()) ev.target.select();
+};
 
-const setFocus = (ev:any) => {
-    if(!isMobile()) ev.target.select()
-}
-
-onMounted(()=>{
-    loadDocFormats()
-
-})
+onMounted(() => {
+  loadDocFormats();
+});
 </script>

@@ -1,7 +1,6 @@
 <template>
   <Dropdown
     @update:modelValue="change"
-    
     v-model="modelValue"
     :options="options"
     optionLabel="label"
@@ -16,16 +15,18 @@
  * last change 2024-02-26
  * Author: Ks Tan
  */
-import Dropdown from 'primevue/dropdown'
-import { ForeignKey } from "~/types";
+import Dropdown from "primevue/dropdown";
+import { ForeignKey, FormCrudEvent } from "~/types";
 const emits = defineEmits(["change"]);
 const modelValue = defineModel<string>();
-const list = ref<ForeignKey[]>();
+const list = ref<ForeignKey[]>([]);
 
 const props = defineProps<{
   documentName: string;
   placeholder?: string;
   showNull?: boolean;
+  allowAddNew?: boolean;
+  filter?: any
 }>();
 const options = ref<
   {
@@ -34,8 +35,11 @@ const options = ref<
   }[]
 >([]);
 const getListOptions = async () => {
-  const res = await getDocumentApi(props.documentName).autoComplete("", {});
+  const filter = props.filter ?? {}
+  const res = await getDocumentApi(props.documentName).autoComplete("", filter);
   list.value = res.data as ForeignKey[];
+  if (props.allowAddNew)
+    list.value.unshift({ _id: "new", code: "", label: t("addNew") });
   if (props.showNull)
     list.value.unshift({ _id: "", code: "", label: t("null") });
   options.value = list.value.map((item) => ({
@@ -43,10 +47,33 @@ const getListOptions = async () => {
     label: item.label,
   }));
 };
-onMounted(async () => await getListOptions());
-const getItem=(id:string)=>list.value?.find((item) => item._id == id)
-const change = (id:string) => {
-  
-  emits("change",id,getItem(id));
+onMounted(async () => {
+  await getListOptions();
+  if (modelValue.value) change(modelValue.value);
+});
+const getItem = (id: string) => list.value?.find((item) => item._id == id);
+
+const change = (id: string) => {
+  const selectedItem = getItem(id);
+  if (selectedItem?._id == "new") {
+    const doc = getDocument(props.documentName)?.docClass;
+    if (doc) {
+      const tmpdata = doc?.getReactiveData();
+      type DataType = typeof tmpdata.value;
+      onScreenAddDocument<DataType>(
+        props.documentName,
+        undefined,
+        async (eventType: FormCrudEvent, data: DataType) => {
+          if (eventType == FormCrudEvent.create) {
+            await getListOptions();
+            modelValue.value = data._id;
+            emits("change", data._id, getItem(data._id));
+          }
+        },
+      );
+    }
+  } else {
+    emits("change", id, selectedItem);
+  }
 };
 </script>

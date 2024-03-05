@@ -5,6 +5,8 @@
     v-model="modelValue"    
     :placeholder="placeholder"
     :showNull="showNull"
+    :allowAddNew="allowAddNew"
+    :filter ="filter"
   />
 </template>
 <script setup lang="ts">
@@ -15,10 +17,15 @@
  * author: Ks Tan
  */
 import { ForeignKey } from '~/types';
-
+import { <%= it.typename %> } from "~/simpleapp/generate/openapi";
 const emits = defineEmits(["change"]);
 const modelValue = defineModel<string>();
-const props = defineProps<{ placeholder?: string;showNull?:boolean }>()
+const props = defineProps<{ 
+  placeholder?: string;
+  showNull?:boolean;
+  allowAddNew?: boolean;
+  filter?: <%= it.typename %>;
+   }>()
 const change = (id:string,data:ForeignKey) =>{
   emits('change',id,data)
 }

@@ -2,14 +2,14 @@
   <Button
     v-if="isMobile()"
     @click="onActivate"
-    class="border-none dark:text-white active:text-primary-600 click:bg-gray-600"
+    :class="`border-none dark:text-white active:text-primary-600 click:bg-gray-600 ${animate ? 'animate-bounce' :'' }`"
   >
     <slot></slot>
   </Button>
   <Button
     v-else
     @click="onActivate"
-    class="border-none dark:text-white active:text-primary-600 click:bg-gray-600"
+    :class="`border-none dark:text-white active:text-primary-600 click:bg-gray-600 ${animate ? 'animate-bounce' :'' }`"
   >
     <slot></slot>
   </Button>
@@ -22,6 +22,7 @@
  * author: Ks Tan
  */
 const emits = defineEmits(["click"]);
+const props = defineProps<{animate?:boolean}>()
 let stopawhile = false;
 const onActivate = (e: Event) => {
   emits("click", e);

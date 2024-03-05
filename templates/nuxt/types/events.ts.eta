@@ -30,6 +30,7 @@ export type EventType ={
     'InvitationAccepted' :string
     'InvitationRejected' :string
     'RefreshUser' :string
+    'RefreshDocument': string
     'RefreshDocumentList': RefreshDocumentList
     'ViewRecord': ViewRecord
     'SessionExpire': string

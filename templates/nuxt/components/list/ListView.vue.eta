@@ -6,6 +6,7 @@
         v-model="searchvalue"
         class="w-full dark:text-white"
         type="search"
+        ref="listviewfilter"
       />
       <template v-if="withAddNew">
         <ButtonText v-if="isMobile()" @click="emits('add')"
@@ -33,7 +34,9 @@
       <div>
         <div v-for="(item, index) in filterlist">
           <!-- :class="isMobile() ? '' : 'overflow overflow-y-scroll overflow-auto '" -->
-          <div :id="titleField && item[titleField][0]"></div>
+          <div
+            :id="titleField && item[titleField] && item[titleField][0]"
+          ></div>
           <div
             class="w-full bg-gray-400 dark:bg-gray-500 p-1 pl-2 top-0 sticky opacity-90"
             v-if="
@@ -43,13 +46,13 @@
             <span>{{ item[titleField][0] }}</span>
           </div>
           <div
-            @click="onClick(index, item)"            
+            @click="onClick(index, item)"
             :class="`border-l-none border-r-none listview-item dark:border-t-gray-700 ${
               index > 0 ? 'border-t-2' : ''
             }`"
           >
-            <NuxtLink
-              :to="url ? `${url}/${item[idField]}` : undefined"
+            <NuxtLink :to="getUrl(item)"
+            
               class="p-2"
             >
               <slot name="default" :item="item" :index="index">
@@ -87,6 +90,8 @@
  */
 import { ref } from "vue";
 import { ListItem } from "~/types/listview";
+import _ from 'lodash'
+const listviewfilter = ref();
 const props = withDefaults(
   defineProps<{
     list: T[];
@@ -112,6 +117,14 @@ const clickRow = (item: ListItem) => {
   // emit('clickitem',item)
   // selecteditem.value = item.code
 };
+const getUrl = (item:any)=>{
+  if(props.url && props.idField) {
+    if(_.last(props.url)=='/') return `${props.url}${item[props.idField]}`
+    else return `${props.url}/${item[props.idField]}`
+  }
+  else return undefined
+  // :to="url ? `${url}/${item[idField]}` : undefined"
+}
 const filterlist = computed(() => {
   let newlist: T[] = [];
   if (!Array.isArray(props.list)) {
@@ -161,4 +174,8 @@ const showCategoryBar = (letter: string) => {
 const onClick = (index: number, data: T) => {
   emits("click", index, data);
 };
+
+onMounted(() => {
+  // if(props.withFilter) listviewfilter.value.$el.focus()
+});
 </script>

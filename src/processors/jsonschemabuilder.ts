@@ -58,8 +58,8 @@ export const readJsonSchemaBuilder = async (docname: string,orijsondata:JSONSche
   const compulsoryfields = ['_id','tenantId','orgId','branchId','created','createdBy','updated','updatedBy']
   for(let cf=0 ; cf< compulsoryfields.length;cf++){
     if(!orijsondata.properties[compulsoryfields[cf]]){
-      log.error(`Undefine "${compulsoryfields[cf]}"`)
-      throw new Error(`Undefine "${compulsoryfields[cf]}"`)
+      log.error("Undefine "+ compulsoryfields[cf])
+      throw new Error("Undefine "+ compulsoryfields[cf])
     }
   }
 

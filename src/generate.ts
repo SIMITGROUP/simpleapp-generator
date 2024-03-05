@@ -68,8 +68,8 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
     // log.warn(file)
     const fullfilename = `${configs.jsonschemaFolder}/${file}`
     try{
-      const jsoncontent = readFileSync(fullfilename, 'utf-8');      
-      // log.debug(jsoncontent)
+      const jsoncontent = readFileSync(fullfilename, 'utf-8');            
+      console.log("before parse jsoncontent")
       const jsonschema = JSON.parse(jsoncontent)
       await processSchema(file.replace('.json',''),jsonschema)   
     }
@@ -85,6 +85,7 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
   for(let g = 0; g< systemgroups.length;g++){
     const groupfile = systemgroups[g]
     const groupjsonstr = readFileSync(`${groupFolder}/${groupfile}`, 'utf-8');      
+    console.log("before parse groupjsonstr")
     const groupdata = JSON.parse(groupjsonstr);
     const documentname = groupfile.split('.')[0]
     const roles = prepareRoles(groupdata)
@@ -93,7 +94,9 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
   
   if(existsSync(defaultLangFile)){
     const langjsonstr = readFileSync(defaultLangFile, 'utf-8');      
+    console.log("before parse langjsonstr")
       langdata = JSON.parse(langjsonstr);     
+      
   }
 
   
@@ -212,6 +215,7 @@ const generateSchema = ( docname: string,
           const filecategory = arrfilename[0]
           const filetype = arrfilename[1]        
           const autogeneratetypes = ['apischema','controller','jsonschema','model','processor','type','default']
+          log.info("process: ",filename)
           if(autogeneratetypes.includes(filecategory)){
             //multiple files in folder, append s at folder name
             const storein = `${backendTargetFolder}/${filecategory}s`  
@@ -219,8 +223,9 @@ const generateSchema = ( docname: string,
             if(!existsSync(storein)){
               mkdirSync(storein,{recursive:true})
             }                
+            
             const filecontent = eta.render(templatepath, variables)     
-            log.info("process: ",targetfile)
+            
             writeFileSync(targetfile,filecontent);
           }else if(filecategory=='service'){ //service file won't override if exists
 
@@ -391,10 +396,8 @@ const generateSystemFiles=(modules:ModuleObject[],allbpmn)=>{
           let forceoverride=true
           if(filename.includes('._eta') && existsSync(targetfilename)){
             const filecontent = readFileSync(targetfilename, 'utf-8')
-            if(!filecontent.includes('simpleapp')){
-              forceoverride=true
-            }
-            else if(filecontent.includes('--remove-this-line-to-prevent-override--')){
+            
+            if(filecontent.includes('--remove-this-line-to-prevent-override--')){
               forceoverride=true
             }else{
               forceoverride=false

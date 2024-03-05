@@ -5,3 +5,4 @@
  * Author: Ks Tan
  */
 export const refreshDocumentList = (docName:string)=>useNuxtApp().$event('RefreshDocumentList',{documentName:docName})
+export const refreshDocument = (docName:string)=>useNuxtApp().$event('RefreshDocument',docName)
