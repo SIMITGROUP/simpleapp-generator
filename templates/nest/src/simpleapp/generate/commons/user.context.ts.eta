@@ -57,7 +57,7 @@ export class UserContext {
   protected orgName: string = '';
   protected timeZone: string = '';
   protected country: string = '';
-  protected offsetMinute: number =0;
+  protected offsetMinute: number = 0;
   protected currency: string = '';
   protected branches: any[] = [];
   protected lastActivity: string = new Date().toISOString();
@@ -90,8 +90,8 @@ export class UserContext {
   getBranchId = () => this.branchId;
   getEmail = () => this.email;
   getTimeZone = () => this.timeZone;
-  getCountry = () => this.country
-  getOffsetMinute = () => this.offsetMinute
+  getCountry = () => this.country;
+  getOffsetMinute = () => this.offsetMinute;
   getGroup = () => this.group;
   getCurrency = () => this.currency;
   getMoreProps = () => this.moreProps;
@@ -216,8 +216,8 @@ export class UserContext {
           userinfo.orgName = myperm.currentorg[0].orgName;
           userinfo.timeZone = myperm.currentorg[0].timeZone;
           userinfo.currency = myperm.currentorg[0].currency;
-          userinfo.country =  myperm.currentorg[0].country;
-          userinfo.offsetMinute =  myperm.currentorg[0].offsetMinute;
+          userinfo.country = myperm.currentorg[0].country;
+          userinfo.offsetMinute = myperm.currentorg[0].offsetMinute;
         }
       } else {
         userinfo.group = '';
@@ -270,7 +270,7 @@ export class UserContext {
       this.timeZone = userinfo['timeZone'] ?? '';
       this.currency = userinfo['currency'] ?? '';
       this.country = userinfo['country'] ?? '';
-      this.offsetMinute = userinfo['offsetMinute'] ?? '';      
+      this.offsetMinute = userinfo['offsetMinute'] ?? '';
       this.orgRecordId = userinfo['orgRecordId'] ?? '';
       this.branchRecordId = userinfo['branchRecordId'] ?? '';
       this.group = userinfo['group'] ?? '';
@@ -392,8 +392,8 @@ export class UserContext {
       orgName: this.orgName,
       timeZone: this.getTimeZone(),
       currency: this.getCurrency(),
-      country : this.getCountry(),
-      offsetMinute: this.getOffsetMinute(), 
+      country: this.getCountry(),
+      offsetMinute: this.getOffsetMinute(),
       email: this.getEmail(),
       uid: this.getUid(),
       fullName: this.getFullname(),
@@ -506,8 +506,9 @@ export class UserContext {
     const o = this.ssoACL;
     const ssoclient = process.env.OAUTH2_CLIENTID;
     const adminRole = process.env.OAUTH2_ADMINROLE;
+    const adminemails = process.env.ADMIN_EMAIL.split(',')
     // return false
-    if (this.getEmail() === process.env.ADMIN_EMAIL) {
+    if (adminemails.includes(this.getEmail())) {
       return true;
     } else if (
       o[ssoclient] &&
