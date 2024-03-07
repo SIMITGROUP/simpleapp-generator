@@ -11,7 +11,9 @@ export default {
     //auto generate from schema
     <% for(let i=0; i< it.allfields.length; i++){ %>
     <% let f = it.allfields[i] %>
-        '<%= f %>' : '<%= camelCaseToWords(f) %>',
+        <% if(!it.lang[f]){%>        
+            '<%= f %>' : '<%= camelCaseToWords(f) %>',
+        <%}%>
     <%}%>    
 
 }

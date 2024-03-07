@@ -61,6 +61,7 @@
     "deleteThisRecord?":"Delete this Record?",
     "ok":"OK",
     "null":"Null",
-    "pickYourDatabase":"Pick Your Database",
+    "switchDatabase":"Switch Database",
+    "pickYourDatabase" : "Pick Your Database",
     "createNewCompany":"Create New Company"
   }

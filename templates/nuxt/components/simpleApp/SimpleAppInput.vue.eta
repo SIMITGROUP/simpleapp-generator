@@ -20,6 +20,7 @@
       v-model="modelValue"
       :binary="true"
       v-bind="componentProps as CheckboxProps"
+      @change="onChange"
     />
     <InputSwitch
       v-else-if="inputType == SimpleAppInputType.switch"
@@ -30,6 +31,7 @@
       v-model="modelValue as boolean"
       :binary="true"
       v-bind="componentProps as InputSwitchProps"
+      @change="onChange"
     />
     <!--
     <InputText
@@ -48,12 +50,15 @@
     <Calendar
       type="date"
       :pt="pt"
-      class="flex flex-col"
-      v-else-if="SimpleAppInputType.calendar == inputType || inputType == SimpleAppInputType.date"
+      v-else-if="
+        SimpleAppInputType.calendar == inputType ||
+        inputType == SimpleAppInputType.date
+      "
       :inputId="slotprops.uuid"
       :path="setting.instancepath"
       v-model="datevalue"
       @update:modelValue="updateDate"
+      :touchUI="isMobile()"
       showButtonBar
       :readonly="isReadonly"
       :placeholder="placeholder"
@@ -67,7 +72,7 @@
       v-else-if="inputType == SimpleAppInputType.time"
       timeOnly
       showTime
-      hourFormat="12"          
+      hourFormat="12"
       @update:modelValue="updateTime"
       :inputId="slotprops.uuid"
       :path="setting.instancepath"
@@ -92,6 +97,7 @@
       optionValue="value"
       :placeholder="placeholder"
       v-bind="componentProps as ListboxProps"
+      @change="onChange"
     />
 
     <Dropdown
@@ -108,6 +114,7 @@
       optionValue="value"
       :placeholder="placeholder"
       v-bind="componentProps"
+      @change="onChange"
     />
 
     <!-- radio component -->
@@ -120,6 +127,7 @@
           name="smaple"
           :value="item.value"
           :readonly="isReadonly"
+          @change="onChange"
         />
         {{ " " }}
         <label :for="setting.key + '-' + index"> {{ item.label }} </label>
@@ -139,6 +147,7 @@
       :readonly="isReadonly"
       :placeholder="placeholder"
       :autocompleteFilter="autocompleteFilter"
+      @change="onChange"
     />
     <!-- v-bind:attributes="componentProps" -->
     <!--  document no input-->
@@ -152,6 +161,7 @@
       :pt="pt"
       :path="setting.instancepath"
       v-bind="componentProps as any"
+      @change="onChange"
     />
     <!-- use componentProps as any at the moment, no ideal yet, and for compatibility -->
 
@@ -166,6 +176,7 @@
       class="flex flex-col"
       :inputId="slotprops.uuid"
       :path="setting.instancepath"
+      @change="onChange"
       :placeholder="placeholder"
       v-bind="componentProps as PasswordProps"
     />
@@ -179,6 +190,7 @@
       :readonly="isReadonly"
       :inputId="slotprops.uuid"
       :path="setting.instancepath"
+      @change="onChange"
       v-bind="componentProps as RatingProps"
     />
 
@@ -192,6 +204,7 @@
       :inputId="slotprops.uuid"
       :path="setting.instancepath"
       :placeholder="placeholder"
+      @update:modelValue="onChange"
       v-bind="componentProps as ChipsProps"
     />
     <!-- simple component  -->
@@ -205,6 +218,7 @@
       :pt="pt"
       :class="!pt ? 'w-full flex flex-col' : ''"
       :inputId="slotprops.uuid"
+      @update:modelValue="onChange"
       :path="setting.instancepath"
       v-bind="componentProps as InputNumber"
       :placeholder="placeholder"
@@ -221,6 +235,7 @@
       :class="!pt ? 'w-full flex flex-col' : ''"
       :inputId="slotprops.uuid"
       :path="setting.instancepath"
+      @change="onChange"
       v-bind="componentProps as InputNumber"
       :placeholder="placeholder"
     />
@@ -234,6 +249,7 @@
       class="w-full flex flex-col"
       :inputId="slotprops.uuid"
       :path="setting.instancepath"
+      @change="onChange"
       :placeholder="placeholder"
       v-bind="componentProps as TextareaProps"
     />
@@ -247,6 +263,7 @@
       :type="type"
       class="w-full flex flex-col"
       :inputId="slotprops.uuid"
+      @change="onChange"
       :path="setting.instancepath"
       :placeholder="placeholder"
       v-bind="componentProps as InputTextProps"
@@ -285,9 +302,10 @@ import { SimpleAppInputType } from "~/types";
 
 const instancepath = ref("");
 const modelValue = defineModel({ required: true });
+
 const datevalue = ref<Date>();
 const timevalue = ref<Date>();
-
+let watchOnChange=0
 const props = withDefaults(
   defineProps<{
     inputType: SimpleAppInputType;
@@ -318,18 +336,20 @@ const props = withDefaults(
 const pt = ref(props.pt);
 
 if (props.inputType == SimpleAppInputType.date && modelValue.value) {
-  datevalue.value = stringToDate(<string>modelValue.value ) //.format("YYYY-MM-DD");
+  datevalue.value = stringToDate(<string>modelValue.value); //.format("YYYY-MM-DD");
 } else {
   datevalue.value = undefined;
 }
 
-if(props.inputType == SimpleAppInputType.time){
-    if (modelValue.value) {
-      timevalue.value = stringToDate(today()+'T'+modelValue.value as string)//.format("YYYY-MM-DD");
-    }else{
-      timevalue.value=undefined
-    }
+if (props.inputType == SimpleAppInputType.time) {
+  if (modelValue.value) {
+    timevalue.value = stringToDate(
+      (today() + "T" + modelValue.value) as string,
+    ); //.format("YYYY-MM-DD");
+  } else {
+    timevalue.value = undefined;
   }
+}
 
 if (props?.instancepath) instancepath.value = props.instancepath;
 else if (props.setting?.instancepath)
@@ -371,16 +391,18 @@ const isReadonly = computed(() => {
     return false;
   }
 });
-const updateTime = (value:Date) => {  
-  value.setSeconds(0)
-  modelValue.value = dateToTimeString(value)
+const updateTime = (value: Date) => {
+  value.setSeconds(0);
+  modelValue.value = dateToTimeString(value);
+  onChange()
 };
 const updateDate = (value: any) => {
   if (value) {
-    modelValue.value = dateToString(value)
+    modelValue.value = dateToString(value);
   } else {
     modelValue.value = "";
   }
+  onChange()
 };
 
 const setFocus = (ev: any) => {
@@ -408,9 +430,9 @@ const emits = defineEmits([
   "update:docNoFormat",
 ]);
 
-const getDateFormat=()=>{
-  return getPrimevueCalendarDateFormat()
-}
+const getDateFormat = () => {
+  return getPrimevueCalendarDateFormat();
+};
 
 watch(modelValue, (newvalue: any) => {
   if (
@@ -419,20 +441,21 @@ watch(modelValue, (newvalue: any) => {
     )
   ) {
     if (modelValue.value) {
-      datevalue.value = stringToDate(modelValue.value as string)
+      datevalue.value = stringToDate(modelValue.value as string);
     } else {
-      timevalue.value=undefined
+      timevalue.value = undefined;
     }
-  }else if(props.inputType == SimpleAppInputType.time){
+  } else if (props.inputType == SimpleAppInputType.time) {
     if (modelValue.value) {
-      timevalue.value = stringToDate(today()+'T'+modelValue.value as string)
-    }else{
-      timevalue.value=undefined
+      timevalue.value = stringToDate(
+        (today() + "T" + modelValue.value) as string,
+      );
+    } else {
+      timevalue.value = undefined;
     }
   }
-
-  emits("change", modelValue.value);
-  emits("update:modelValue", modelValue.value);
+ 
+  
 });
 onMounted(() => {
   if (
@@ -441,18 +464,25 @@ onMounted(() => {
     )
   ) {
     if (modelValue.value) {
-      datevalue.value = stringToDate(modelValue.value as string)
+      datevalue.value = stringToDate(modelValue.value as string);
     } else {
       datevalue.value = undefined;
     }
-  } else if(props.inputType == SimpleAppInputType.time){
-      if (modelValue.value) {
-        timevalue.value = stringToDate(today()+'T'+modelValue.value as string)
-      }else{
-        timevalue.value=undefined
-      }
+  } else if (props.inputType == SimpleAppInputType.time) {
+    if (modelValue.value) {
+      timevalue.value = stringToDate(
+        (today() + "T" + modelValue.value) as string,
+      );
+    } else {
+      timevalue.value = undefined;
+    }
   }
+  
 });
+
+const onChange=()=>{
+  emits("change",  modelValue.value); 
+}
 
 /************ start autocomplete only ***************/
 

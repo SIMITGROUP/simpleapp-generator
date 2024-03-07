@@ -1,11 +1,13 @@
 <template>
-  <div v-for="o in options">
-    <ButtonPrimary v-if="value == o.value" @click="switchButton(o.value)">{{
-      o.label
-    }}</ButtonPrimary>
-    <ButtonDefault v-else @click="switchButton(o.value)">{{
-      o.label
-    }}</ButtonDefault>
+  <div class="flex flex-row gap-2">
+    <div v-for="o in options" >
+      <ButtonPrimary v-if="value == o.value" @click="switchButton(o.value)">{{
+        o.label
+      }}</ButtonPrimary>
+      <ButtonDefault v-else @click="switchButton(o.value)">{{
+        o.label
+      }}</ButtonDefault>
+    </div>
   </div>
 </template>
 <script setup lang="ts">

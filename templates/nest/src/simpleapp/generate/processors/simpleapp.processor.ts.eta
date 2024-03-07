@@ -456,7 +456,8 @@ export class SimpleAppService<T extends { _id?: string }> {
 
     let dependency;
     try {
-      if (this.hooks.beforeDelete) await this.hooks.beforeDelete(appuser, id);
+      if (this.hooks.beforeDelete)
+        await this.hooks.beforeDelete(appuser, id, deletedata);
       this.logger.debug('delete record', this.documentName, id);
       dependency = await this.getRelatedRecords(appuser, id);
       //console.log('dependency', dependency);
@@ -507,7 +508,7 @@ export class SimpleAppService<T extends { _id?: string }> {
     }
 
     if (this.hooks.beforeUpdate)
-      await this.hooks.beforeUpdate(appuser, id, data);
+      await this.hooks.beforeUpdate(appuser, id, data, existingdata);
 
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
@@ -552,7 +553,7 @@ export class SimpleAppService<T extends { _id?: string }> {
     }
 
     if (this.hooks.beforeUpdate)
-      await this.hooks.beforeUpdate(appuser, id, data);
+      await this.hooks.beforeUpdate(appuser, id, data,existingdata);
 
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
@@ -675,7 +676,8 @@ export class SimpleAppService<T extends { _id?: string }> {
     data['documentStatus'] = docstatus;
     // await this.hook(appuser, HookType.beforeSetStatus, data);
     if (this.hooks.beforeSetStatus)
-      await this.hooks.beforeSetStatus(appuser, docstatus, data);
+      await this.hooks.beforeSetStatus(appuser, docstatus, data, existdata);
+
     if (data && !data['created']) {
       const createresult = await this.create(appuser, data);
       if (this.hooks.afterSetStatus)

@@ -5,14 +5,13 @@
         <TextTitle v-if="title">{{ title }}</TextTitle>
       </div>
       <div class="pr-2">
-        <ButtonDefault v-if="!readOnly" @click="emits('addrow', $event)"
+        <ButtonDefault v-if="!readOnly" @click="addRow"
           ><i class="pi pi-plus"></i
         ></ButtonDefault>
       </div>
     </div>
     <ListView
       class="p-2 dark:bg-slate-900 bg-slate-200 rounded-lg"
-      
       :list="list"
       #default="{ index, item }"
       @click="showRow"
@@ -28,11 +27,11 @@
           row {{ rowIndex }} define SimpleAppInputs here
         </slot>
       </div>
-      <template #footer>        
+      <template #footer>
         <div v-if="!readOnly" class="flex flex-row gap-2 w-full">
           <ButtonDanger @click="deleteItem">{{ t("delete") }}</ButtonDanger>
           <ButtonPrimary @click="updateItem">{{ t("ok") }}</ButtonPrimary>
-        </div>        
+        </div>
       </template>
     </Dialog>
   </div>
@@ -62,4 +61,10 @@ const updateItem = () => {
   showDialog.value = false;
   emits("itemupdated", rowIndex.value);
 };
+const addRow = (event:MouseEvent) =>{
+
+  emits('addrow', MouseEvent)
+  const lineno =  props.list.length -1
+  showRow(lineno, props.list[lineno])
+}
 </script>

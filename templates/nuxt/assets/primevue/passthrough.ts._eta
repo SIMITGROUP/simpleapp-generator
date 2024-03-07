@@ -43,11 +43,10 @@ const CustomTailwind = usePassThrough(
             // }),
             label:{class: 'text-sm dark:text-white'},
         },
-        checkbox:{
-            input:{ class:' flex items-center justify-center border-2 w-6 h-6 text-gray-600  rounded-lg transition-colors duration-200 border-gray-300 bg-white dark:border-blue-900/40 dark:bg-gray-500 hover:border-blue-500 dark:hover:border-blue-400 focus:outline-none focus:outline-offset-0 focus:shadow-[0_0_0_0.2rem_rgba(191,219,254,1)] dark:focus:shadow-[inset_0_0_0_0.2rem_rgba(147,197,253,0.5)]'}
-            // p-checkbox p-component cursor-pointer inline-flex relative select-none align-bottom w-6 h-6
-             
-        },
+        //checkbox:{
+        //    input:{ class:' flex items-center justify-center border-2 w-6 h-6 text-gray-600  rounded-lg transition-colors duration-200 border-gray-300 bg-white dark:border-blue-900/40 dark:bg-gray-500 hover:border-blue-500 dark:hover:border-blue-400 focus:outline-none focus:outline-offset-0 focus:shadow-[0_0_0_0.2rem_rgba(191,219,254,1)] dark:focus:shadow-[inset_0_0_0_0.2rem_rgba(147,197,253,0.5)]'}
+            // p-checkbox p-component cursor-pointer inline-flex relative select-none align-bottom w-6 h-6             
+        //},
         button:{root:{class: 'focus:outline-none transition duration-150 ease-in-out rounded p-2 m-1 border dark:border-gray-600'}},
         dialog:{
             root:{class:[' w-full max-h-full bodycolorclass max-w-full md:h-3/4 lg:h-1/2 border m-2 rounded-lg']},
@@ -56,8 +55,13 @@ const CustomTailwind = usePassThrough(
             content:{class:'p-dialog-content overflow-y-auto  px-6 pb-8 pt-0  rounded-bl-lg rounded-br-lg h-full bodycolorclass'}
         },        
         calendar:{
-            root:{class:'border border-grey-900 dark:!border-blue-900/40  rounded-lg flex flex-row p-0'},            
-            input:{class:'w-full p-inputtext p-component font-sans text-base text-gray-600 dark:text-white/80 bg-white dark:bg-gray-900 p-3 border border-gray-300 dark:border-blue-900/40 transition-colors duration-200 appearance-none hover:border-blue-500 rounded-lg'},
+            panel:{class:'p-datepicker p-component p-datepicker-mobile p-datepicker-touch-ui p-input-filled bg-white dark:bg-gray-900 min-w-[350px] shadow-md border-0 absolute'},
+            // group:{class:'p-datepicker-group flex-1 border-l border-gray-300 pr-0.5 pl-0.5 pt-0 pb-0 first:pl-0 first:border-l-0 w-2/3'},
+            // table:{class:'p-datepicker-calendar border-collapse w-2/3 my-2'},
+            // day:{class:'p-datepicker-other-month p-1'},
+            daylabel:{class:'w-8 h-8md:w-10  md:w-10 rounded-full transition-shadow duration-200 border-transparent border flex items-center justify-center mx-auto overflow-hidden relative focus:outline-none focus:outline-offset-0 focus:shadow-[0_0_0_0.2rem_rgba(191,219,254,1)] dark:focus:shadow-[0_0_0_0.2rem_rgba(147,197,253,0.5)] cursor-pointer text-gray-600 dark:text-gray-400 bg-transparent hover:bg-gray-200 dark:hover:bg-gray-800/80'},
+        //     root:{class:'border border-grey-900 dark:!border-blue-900/40  rounded-lg flex flex-row p-0'},            
+        //     input:{class:'w-full p-inputtext p-component font-sans text-base text-gray-600 dark:text-white/80 bg-white dark:bg-gray-900 p-3 border border-gray-300 dark:border-blue-900/40 transition-colors duration-200 appearance-none hover:border-blue-500 rounded-lg'},
         },
         autocomplete:{
             // root:{class:'border border-gray-400 dark:!border-blue-900/40  rounded-lg flex flex-row'},

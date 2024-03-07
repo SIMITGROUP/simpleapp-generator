@@ -42,16 +42,21 @@ export type DefaultHooks<T> = {
   afterValidation?: (appuser: UserContext, data: T) => Promise<void>;
   beforeCreate?: (appuser: UserContext, data: T) => Promise<void>;
   afterCreate?: (appuser: UserContext, data: T) => Promise<void>;
-  beforeUpdate?: (appuser: UserContext, id: string, data: T) => Promise<void>;
+  beforeUpdate?: (appuser: UserContext, id: string, data: T, existingdata:T) => Promise<void>;
   afterUpdate?: (appuser: UserContext, id: string, data: T) => Promise<void>;
-  beforeDelete?: (appuser: UserContext, id: string) => Promise<void>;
-  afterDelete?: (appuser: UserContext, result: DeleteResultType<T>, id: string) => Promise<void>;
+  beforeDelete?: (appuser: UserContext, id: string,deletedata:T) => Promise<void>;
+  afterDelete?: (
+    appuser: UserContext,
+    result: DeleteResultType<T>,
+    id: string,
+  ) => Promise<void>;
   beforeFetchRecord?: (appuser: UserContext, id: string) => Promise<void>;
   afterFetchRecord?: (appuser: UserContext, data: T) => Promise<void>;
   beforeSetStatus?: (
     appuser: UserContext,
     id: string,
     data: T,
+    existdata: T,
   ) => Promise<void>;
   afterSetStatus?: (appuser: UserContext, id: string, data: T) => Promise<void>;
 };
@@ -75,10 +80,10 @@ export type ApiEvent = {
   errData?: any;
 };
 
-export type DeleteResultType <T> = {
-  data:T
+export type DeleteResultType<T> = {
+  data: T;
   result: {
-    acknowledged: boolean
-    deletedCount:number
-  }
-}
+    acknowledged: boolean;
+    deletedCount: number;
+  };
+};

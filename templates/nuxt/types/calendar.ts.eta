@@ -57,4 +57,6 @@ export type CalViewClickSlotEvent = {
 
 export type CalViewChange = {
   startDate: Date
+  endDate:Date
+  view:string
 }

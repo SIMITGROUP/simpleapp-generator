@@ -18,10 +18,10 @@ const colors = [
   { value: "light", name: t("light") },
   { value: "dark", name: t("dark") },
 ];
-const goTenantPicker = () =>{
-  modelValue.value=false
-  navigateTo('/picktenant')
-}
+const goTenantPicker = () => {
+  modelValue.value = false;
+  navigateTo("/picktenant");
+};
 const toProfile = () => {
   modelValue.value = false;
 
@@ -76,9 +76,11 @@ const saveLocale = async (v: string) => {
           </p>
         </div>
       </div>
-      <div class="pt-2 pb-2 "> 
-        
-          <TextPrimary @click="goTenantPicker">{{ t('pickYourDatabase') }}</TextPrimary>
+      <div class="pt-2 pb-2">
+        <TextTitle>{{ getUserProfile()?.branchName }}</TextTitle>
+        <TextPrimary @click="goTenantPicker">{{
+          t("switchDatabase")
+        }} </TextPrimary>
       </div>
       <div class="col-span-full">
         <label

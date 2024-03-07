@@ -105,6 +105,9 @@ devServer: {
   auth: {
     globalAppMiddleware: false
   },
+  dayjs:{
+    plugins: [ 'utc', 'duration']
+  },
   // security: {
     // corsHandler:{
       //  origin: '*' //| 'null' | (string | RegExp)[] | ((origin: string) => boolean);
