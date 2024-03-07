@@ -2,11 +2,11 @@
   <div>
     <div class="mt-8 md:flex justify-start md:gap-4">
       <form @submit.prevent="true" class="w-full">
-        <div>{{ t('createNewCompany') }}</div>
+        <div>{{ t("createNewCompany") }}</div>
         <div class="p-inputgroup flex flex-row">
           <InputText
             class="flex-1"
-            :placeholder="t('yourCompanyName')"
+            :placeholder="t('enterYourCompanyName')"
             v-model:model-value="data.tenantName"
           />
           <div class="p-inputgroup-addon p p-0">
@@ -21,10 +21,7 @@
           </div>
         </div>
       </form>
-
     </div>
-
-  
   </div>
 </template>
 <script setup lang="ts">
@@ -45,7 +42,6 @@ const onhold = ref(false);
 
 const createTenant = async () => {
   onhold.value = true;
-
 
   getPorfileApi()
     .createTenant(data.value)

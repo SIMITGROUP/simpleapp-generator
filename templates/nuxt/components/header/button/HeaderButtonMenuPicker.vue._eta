@@ -5,52 +5,60 @@
  * last change 2024-02-22
  * author: Ks Tan
  */
- 
-import Dialog from 'primevue/dialog';
-// import {ref} from 'vue'
-import {MenuData} from '~/types'
-const visible = defineModel<boolean>({default:true,required:true})
+
+import { MenuData } from "~/types";
+const visible = defineModel<boolean>({ default: true, required: true });
 
 // const emit = defineEmits(['select'])
-const selectMenu = (menuname:{name:string,children:any}) =>{
-  goTo(menuname.name)
-  visible.value=false  
-}
+const selectMenu = (menuname: { name: string; children: any }) => {
+  goTo(menuname.name);
+  visible.value = false;
+};
 
+const m = getMenustFromPageMeta();
+let treemenu: any[] = [];
 
-const m =  getMenustFromPageMeta()
-let treemenu:any[] = []
-
-getMenustFromPageMeta().reduce((r, item) => {
-    item.split('/').
-    reduce((o, name) => {
-        var temp = (o.children = o.children || []).find(q => q.name === name);
-        if (!temp) o.children.push(temp = { name });
-        return temp;
+getMenustFromPageMeta().reduce(
+  (r, item) => {
+    item.split("/").reduce((o, name) => {
+      var temp = (o.children = o.children || []).find((q) => q.name === name);
+      if (!temp) o.children.push((temp = { name }));
+      return temp;
     }, r);
     return r;
-}, { children: treemenu })
+  },
+  { children: treemenu },
+);
 
-treemenu = treemenu.sort((a,b)=>a.name<b.name ?-1:1)
+treemenu = treemenu.sort((a, b) => (a.name < b.name ? -1 : 1));
 </script>
 <template>
-  
-    <!-- <button class="text-center border-none  cursor-pointer pi pi-bars dark:text-white" v-if="getCurrentXorg()" @click="visible=true">      -->
-      <Dialog v-model:visible="visible" modal :header="t('pickDocument')" :pt="{dialog:{ class:' bg-primary-800 ' }}">
-      <div class="">
-        
-          <div v-for="m in treemenu.sort()" class="m-4">
-            
-            <h3>{{ t(m.name) }}</h3>
-            <div class="grid md:grid-cols-2 lg:grid-cols-6 gap-4">              
-              <ButtonPrimary v-for="submenu in m.children.sort((a:any,b:any)=>a.name<b.name ?-1:1)" class="border rounded-lg p-2" @click="selectMenu(submenu)">              
-                {{ t(submenu.name) }}
-              </ButtonPrimary>
-            </div>
-            
-          </div>
-          
+  <!-- <button class="text-center border-none  cursor-pointer pi pi-bars dark:text-white" v-if="getCurrentXorg()" @click="visible=true">      -->
+  <Dialog
+    v-model:visible="visible"
+    modal
+    dismissableMask
+    position="top"
+    :header="t('pickDocument')"    
+    :pt="{root:{class:'h-6/7',},}"
+    :pt-options="{mergeProps:true,mergeSections:true}"
+  >
+    <div class="">
+      <div v-for="(m,index) in treemenu.sort()" class="m-4" :key="index">
+        <h3>{{ t(m.name) }}</h3>
+        <div class="grid md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <ButtonPrimary
+            v-for="(submenu,menuindex) in m.children.sort((a: any, b: any) =>
+              a.name < b.name ? -1 : 1,
+            )"
+            class="border rounded-lg p-2"
+            :key="menuindex"
+            @click="selectMenu(submenu)"
+          >
+            {{ t(submenu.name) }}
+          </ButtonPrimary>
         </div>
-    </Dialog>           
-    
+      </div>
+    </div>
+  </Dialog>
 </template>

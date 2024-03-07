@@ -1,47 +1,69 @@
 <template>
-  <title>{{ t("organization") }}</title>
-  <div class="w-full flex-col flex">     
-      <MobileToolbar>
-        <template #center>{{ t('organization') }}</template>
-        <template #end>
-          <ButtonText @click="showEditOrg=true"><i class="pi pi-pencil"></i></ButtonText>
-        </template>
-      </MobileToolbar>
-      <div class="w-full flex flex-row p-2">        
-        <div class="p-4">
-            <div class="border w-12 h-12 md:w-24 md:h24"></div>
-        </div>
-        <div class="flex flex-col flex-1 ">
-            <TextTitle>{{ data.orgName }} / {{ data.orgCode }}</TextTitle>            
-            <div class="text-gray-600 dark:text-gray-400 text-sm">{{ data.description }}</div>
-            <div class="text-gray-600 dark:text-gray-400 text-sm">
-              {{ data.country }}/{{ data.currency }}/{{ data.timeZone }}//{{ data.offsetMinute }}
-            </div>
-            
-        </div>
+  
+  <div class="w-full flex-col flex">
+    <title>{{ t("organization") }}</title>
+    <MobileToolbar class="bg-gray-600">
+      <template #center><TextTitle class="text-white">{{ t("organization") }}</TextTitle></template>
+      <template #end>
+        <ButtonText @click="showEditOrg = true" class="text-white"
+          ><i class="pi pi-pencil"></i
+        ></ButtonText>
+      </template>
+    </MobileToolbar>
+    
+    <div class="w-full flex flex-row p-2 border-b border-gray-300 ">
+      <div class="p-4">
+        <div class="border w-12 h-12 md:w-24 md:h24"></div>
       </div>
-
-
-      <div class="w-full p-2">
-          <h1>Branches</h1>
-          <ButtonText @click="goBranch('new')">{{ t('addBranch') }}</ButtonText>
-          <ListView
-            :list="branchlist"
-            title-field="branchName"
-            sub-title-field="branchCode"
-            :url="getDocumentUrl('organization', id)"
-          >            
-          </ListView>          
+      <div class="flex flex-col flex-1 ">
+        <TextTitle>{{ data.orgName }} / {{ data.orgCode }}</TextTitle>
+        <TextSubtitle>
+          {{ data.description }}
+        </TextSubtitle>        
       </div>
-          
+    </div>
+
+    <div class="w-full p-2 flex flex-col ">
       
-      <OverlaySideBarCrud v-model="showEditOrg" close-event-name="organization">
-        <FormOrganization :_id="getUserProfile()?.orgRecordId" @after="afterOrganization"></FormOrganization> 
-      </OverlaySideBarCrud>
+      <div class="flex flex-row justify-end">
+        <TextTitle class="flex-1 p-2">{{ t('branches') }}</TextTitle>
+        <div>
+          <ButtonPrimary @click="goBranch('new')">
+            <i class="pi pi-plus"></i> <span>{{ t("addBranches") }}</span>
+          </ButtonPrimary>
+        </div>
+      </div>
+      <ListView class="border rounded-lg border-gray-400 dark:border-gray-600"        
+        :list="branchlist"
+        title-field="branchName"
+        sub-title-field="branchCode"
+        :url="getDocumentUrl('organization', id)"
+        #default="{item}"
+      >
+        <div class="flex flex-row">
+          <div class="flex-col flex flex-1">
+            <TextPrimary>{{ item.branchName }}</TextPrimary>
+            <TextSubtitle>{{ item.description }}</TextSubtitle>
+          </div>
+          <div class="flex-col flex text-right">
+            <div>{{ item.branchCode }}</div>
+            <renderer-boolean v-model="item.active"></renderer-boolean>
+          </div>
+        </div>
+      
+      </ListView>
+    </div>
 
-      <OverlaySideBarCrud v-model="showEditBranch" close-event-name="branch">
-        <NuxtPage :_id="id"></NuxtPage> 
-      </OverlaySideBarCrud>
+    <OverlaySideBarCrud v-model="showEditOrg" close-event-name="organization">
+      <FormOrganization
+        :_id="getUserProfile()?.orgRecordId"
+        @after="afterOrganization"
+      ></FormOrganization>
+    </OverlaySideBarCrud>
+
+    <OverlaySideBarCrud v-model="showEditBranch" close-event-name="branch">
+      <NuxtPage :_id="id"></NuxtPage>
+    </OverlaySideBarCrud>
   </div>
 </template>
 
@@ -56,12 +78,12 @@ import { FormCrudEvent, SimpleAppInputType } from "~/types";
 import ConfirmPopup from "primevue/confirmpopup";
 import { useConfirm } from "primevue/useconfirm";
 const confirm = useConfirm();
-const showEditOrg = ref<boolean>(false)
-const showEditBranch = ref<boolean>(false)
+const showEditOrg = ref<boolean>(false);
+const showEditBranch = ref<boolean>(false);
 
 const { $OrganizationDoc, $BranchDoc, $event, $listen } = useNuxtApp();
 
-const orgId = computed(()=><string>getUserProfile()?.orgRecordId)
+const orgId = computed(() => <string>getUserProfile()?.orgRecordId);
 const doc = $OrganizationDoc();
 const brancdoc = $BranchDoc();
 const data = doc.getReactiveData();
@@ -69,7 +91,7 @@ const branchlist = ref([]);
 const isReadOnly = ref(true);
 const getCurrentOrg = async () => {
   await doc.getById(orgId.value);
-  await fetchRecord()
+  await fetchRecord();
 };
 const fetchRecord = async () => {
   //fetch org
@@ -79,11 +101,10 @@ const fetchRecord = async () => {
     filter: { orgId: data.value.orgId },
   });
 
-  console.log("reload data",branchlist)
+  console.log("reload data", branchlist);
 };
 
 const id = computed((): string => String(useRoute().params.id ?? ""));
-
 
 definePageMeta({
   menuPath: "setting/organization",
@@ -91,29 +112,27 @@ definePageMeta({
 
 //branch record update then reload
 $listen("RefreshDocumentList", async (data) => {
-  console.log("trigger RefreshDocumentList",data)
+  console.log("trigger RefreshDocumentList", data);
   if (data.documentName == "branch" || data.documentName == "organization") {
     await fetchRecord();
   }
 });
 
+const showBranchDialogIfRequired = () => {
+  if (useRoute().path.includes("/new") || id.value) showEditBranch.value = true;
+};
 
-
-const showBranchDialogIfRequired = () =>{
-  if(useRoute().path.includes('/new') || id.value) showEditBranch.value=true
-}
-
-const afterOrganization = (actionName:FormCrudEvent)=>{
-  if(actionName==FormCrudEvent.update){
-    showEditOrg.value=false
-    getCurrentOrg()
+const afterOrganization = (actionName: FormCrudEvent) => {
+  if (actionName == FormCrudEvent.update) {
+    showEditOrg.value = false;
+    getCurrentOrg();
   }
-}
+};
 
-watch(()=>useRoute().path,()=>showBranchDialogIfRequired())
-onMounted(()=>showBranchDialogIfRequired())
+watch(
+  () => useRoute().path,
+  () => showBranchDialogIfRequired(),
+);
+onMounted(() => showBranchDialogIfRequired());
 getCurrentOrg();
-
-
-
 </script>

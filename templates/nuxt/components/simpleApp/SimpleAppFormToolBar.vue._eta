@@ -32,8 +32,7 @@
         </slot>
         <ContextMenu ref="menu" :model="menus as MenuItem[]" />
       </template>
-    </MobileToolbar>
-    <div class="h-14"></div>
+    </MobileToolbar>    
     <ConfirmDialog></ConfirmDialog>
   </div>
   <div v-else class="simpleapp-tool-bar">
@@ -121,9 +120,7 @@ const title = computed(() =>
 
 const menu = ref();
 const menus = computed(() =>
-  [...getActions(),  ...getDocActions()].filter((item) =>
-    showMenuButton(item),
-  ),
+  [...getActions(), ...getDocActions()].filter((item) => showMenuButton(item)),
 );
 
 const isShow = computed(

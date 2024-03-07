@@ -19,7 +19,7 @@
           <slot name="headerRight"></slot>
         </template>
       </MobileToolbar>
-      <div class="mt-14">
+      <div >
         <slot name="default"></slot>
       </div>
     </div>

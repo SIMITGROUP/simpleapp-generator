@@ -165,7 +165,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   <%}%>  
   async <%=capitalizeFirstLetter(api.action) %>(
     @AppUser() appuser: UserContext,
-    <%if(['post','put','patch'].includes(api.method.toLowerCase())){%>
+    <%if(['post','put','patch'].includes(api.method.toLowerCase())){%> 
       @Body() data:<%= api.schema 
       ?  (api.schema.includes('[') ?  'types.'+api.schema.replace('[','').replace(']','') + '[]' : 'types.'+api.schema  )
       : 'Object'%>,

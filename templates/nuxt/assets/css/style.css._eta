@@ -13,16 +13,16 @@
     @apply bg-gray-300 dark:bg-gray-600
 }
 
-[aria-selected=true]{
+/* [aria-selected=true]{
     @apply bg-primary-100
-}
-
+} */
+/* 
 [data-pc-group-section=pagebutton]{
     @apply p-2 m-0 rounded-none border
 }
 [data-pc-section=pagebutton]{
     @apply p-3 m-0 border
-}
+} */
 html {
     overflow: hidden;
     overscroll-behavior: none;

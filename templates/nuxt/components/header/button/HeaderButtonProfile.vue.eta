@@ -43,6 +43,8 @@ const saveLocale = async (v: string) => {
   <!-- </div> -->
 
   <Dialog
+    modal
+    dismissableMask
     appendTo="body"
     ref="userprofileoverlay"
     v-model:visible="modelValue"

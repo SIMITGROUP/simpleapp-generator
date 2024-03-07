@@ -10,6 +10,7 @@
     :instancepath="instancepath"
     :error="error"
     #default="slotprops"
+    :resetcount="resetcount"
   >
     <Checkbox
       v-if="inputType == SimpleAppInputType.checkbox"
@@ -299,13 +300,13 @@ import Rating, { RatingProps } from "primevue/rating";
 import Slider, { SliderProps } from "primevue/slider";
 import Textarea, { TextareaProps } from "primevue/textarea";
 import { SimpleAppInputType } from "~/types";
-
+const resetcount = ref(0)
 const instancepath = ref("");
 const modelValue = defineModel({ required: true });
 
 const datevalue = ref<Date>();
 const timevalue = ref<Date>();
-let watchOnChange=0
+let watchOnChange = 0;
 const props = withDefaults(
   defineProps<{
     inputType: SimpleAppInputType;
@@ -367,7 +368,7 @@ watch(props.setting.errors, (newvalue, oldvalue) => {
     errmsg = "";
   }
   if (errmsg != "") {
-    const errorstyle = { style: "border-color: lightcoral; color:white " };
+    const errorstyle = { style: "border-color: lightcoral; color:lightcoral " };
     if (!pt.value) pt.value = {};
 
     if (props.inputType == SimpleAppInputType.text)
@@ -394,7 +395,7 @@ const isReadonly = computed(() => {
 const updateTime = (value: Date) => {
   value.setSeconds(0);
   modelValue.value = dateToTimeString(value);
-  onChange()
+  onChange();
 };
 const updateDate = (value: any) => {
   if (value) {
@@ -402,7 +403,7 @@ const updateDate = (value: any) => {
   } else {
     modelValue.value = "";
   }
-  onChange()
+  onChange();
 };
 
 const setFocus = (ev: any) => {
@@ -454,8 +455,6 @@ watch(modelValue, (newvalue: any) => {
       timevalue.value = undefined;
     }
   }
- 
-  
 });
 onMounted(() => {
   if (
@@ -477,12 +476,13 @@ onMounted(() => {
       timevalue.value = undefined;
     }
   }
-  
 });
 
-const onChange=()=>{
-  emits("change",  modelValue.value); 
-}
+const onChange = () => {
+  pt.value=undefined
+  resetcount.value++
+  emits("change", modelValue.value);
+};
 
 /************ start autocomplete only ***************/
 

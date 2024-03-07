@@ -15,16 +15,21 @@
     <!-- <div :uuid="uuid" >{{ modelValue }}</div> -->
     <!-- <div v-if="typeof modelValue =='object' && typeof modelValue['_id']!='undefined' && typeof modelValue['label']!='undefined' &&  readonly ==true " :uuid="uuid" class="simpleapp-value-readonly">{{ modelValue['label'] }}</div> -->
     <!-- <div v-else-if="readonly==true" :uuid="uuid" class="simpleapp-value-readonly">{{ modelValue }}</div> -->
-    <!-- <slot v-else name="default" :uuid="uuid" :error="error"></slot> -->    
-    <slot name="default" :uuid="uuid" :error="error"></slot>    
-    
+    <!-- <slot v-else name="default" :uuid="uuid" :error="error"></slot> -->
+    <slot name="default" :uuid="uuid" :error="error"></slot>
 
-    <small v-if="error" class="text-danger-600 dark:text-danger-400">{{ error }}</small>
+    <small v-if="error" class="text-danger-600 dark:text-danger-400">{{
+      error
+    }}</small>
     <small v-else class="input-desc">{{ fielddesc }}</small>
   </div>
   <div v-else :class="defaultcssclass">
-    <label class="etext-danger-600 dark:text-danger-400">wrong path in getField()</label>
-    <div class="text-danger-600 dark:text-danger-400">{{ props.setting.path }}</div>
+    <label class="etext-danger-600 dark:text-danger-400"
+      >wrong path in getField()</label
+    >
+    <div class="text-danger-600 dark:text-danger-400">
+      {{ props.setting.path }}
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -55,6 +60,7 @@ const props = defineProps<{
   readonly?: boolean;
   // error?:string,
   setting: any;
+  resetcount: number;
 }>();
 
 const readonly = computed(() => {
@@ -85,7 +91,7 @@ const getLabelClass = () => {
     class1 += "-mb-4 ml-1 z-10 text-xs dark:text-gray-100";
   else if (modelValue.value !== undefined)
     class1 += "-mb-4 ml-1 z-10 text-xs dark:text-gray-100";
-  else class1 += "-mb-4 ml-1 z-10 text-xs dark:text-gray-100 hidden";
+  else class1 += "-mb-4 ml-1 z-10 text-xs dark:text-gray-100 ";
   return class1;
 };
 
@@ -137,4 +143,11 @@ watch(props.setting.errors, (newvalue, oldvalue) => {
   // console.log("validation result",props.setting.instancepath,)
   // error.value = newvalue[props.setting.instancepath].message
 });
+
+watch(
+  () => props.resetcount,
+  () => {
+    error.value = "";
+  },
+);
 </script>
