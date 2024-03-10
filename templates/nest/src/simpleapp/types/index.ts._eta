@@ -10,3 +10,11 @@ export type ForeignKey = {
     label: string
     [key:string]:any
   };
+
+export type UserPermission = {
+  permId: string;
+  branchId: number
+  branch: ForeignKey
+  groups: string[]
+  userId : string
+}

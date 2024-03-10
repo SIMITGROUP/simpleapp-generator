@@ -91,8 +91,7 @@
             <i class="pi pi-plus"></i>
             </ButtonText>  -->
             </template>
-          </mobile-toolbar>
-          <div class="h-16"></div>
+          </mobile-toolbar>          
           <ListView
             :list="list"
             :withFilter="true"
@@ -229,7 +228,7 @@ const onBlurAutocomplete = () => {
 };
 
 const showAutocompleteDialog = (isbutton: boolean) => {
-  mobileListMode.value='list'
+  mobileListMode.value = "list";
   if (modelValue.value && isbutton) {
     openViewer(false);
   } else {
@@ -300,7 +299,7 @@ const setFocus = (ev: any) => {
 
 //pop up records
 const openViewer = (readonly: boolean) => {
-  if (remotedoc) {    
+  if (remotedoc) {
     $event("ViewRecord", {
       _id: modelValue.value?._id as string,
       eventId: randomUUID(),

@@ -270,7 +270,9 @@ const generateSchema = ( docname: string,
         
           const validateWritePage = (targetfile:string,isexists:boolean)=>{
             if(!jsonschemas[docname][X_SIMPLEAPP_CONFIG]['pageType'] ){
-              return false
+              //still create viewer and form
+              if(targetfile.includes('Viewer') || targetfile.includes('Form')) return true
+              else return false
             }else if(!isexists){
               return true              
             }else if(!existsSync(targetfile) || readFileSync(targetfile, 'utf-8').includes('--remove-this-line-to-prevent-override--')

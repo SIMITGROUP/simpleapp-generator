@@ -166,7 +166,7 @@ export class ProfileService {
       branchId: branchResult.branchId,
       uid: appuser.getUid(),
       userId: userRecordId,
-      group: 'admin',
+      groups: ['admin'],
     };
     this.logger.log(permdata, 'create Permission data');
     const permResult = await this.permsvc.create(appuser, permdata);

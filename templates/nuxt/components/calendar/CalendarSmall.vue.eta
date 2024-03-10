@@ -1,5 +1,5 @@
 <template>
-  <vue-cal
+  <VueCal
     :id="id"
     class="w-full"
     hide-view-selector
@@ -20,7 +20,7 @@
       <div @click="chooseDate(new Date(), true)">{{ t("today") }}</div>
     </template>
     <template #cell-content="{ cell, events }">
-      <div @contextmenu="(mouseevent) => onRightclickDate(mouseevent, cell)">
+      <div>
         <div>
           <s
             v-if="dateExists(new Date(cell.formattedDate), alloffdays)"
@@ -42,7 +42,7 @@
         </div>
       </div>
     </template>
-  </vue-cal>
+  </VueCal>
 </template>
 <script lang="ts" setup generic="T">
 /**
@@ -51,7 +51,9 @@
  * last change 2024-02-22
  * author: Ks Tan
  */
-import VueCal, { Event, SplitDaysAttributes } from "vue-cal";
+//, { Event, SplitDaysAttributes }
+import VueCal from "vue-cal";
+import "vue-cal/dist/vuecal.css";
 import {
   CalEventType,
   CalRightClickEvent,
@@ -82,9 +84,9 @@ const allevents = computed(() => {
 const viewChange = (event: CalViewChange) => {
   viewStatus.value = event;
 };
-const chooseDate = (date1: Date, force?: boolean) => {  
+const chooseDate = (date1: Date, force?: boolean) => {
   if (force || !viewStatus.value || viewStatus.value.view == "month") {
-    selectedDate.value = date1;    
+    selectedDate.value = date1;
     emits("chooseDate", date1);
   }
 };

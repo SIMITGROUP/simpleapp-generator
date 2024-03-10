@@ -10,7 +10,7 @@ export type RegTenant = {
   export type ProfileUserBranch = {
     _id: string  
     branch: any  
-    group: string
+    groups: string[]
     xOrg: string
   };
   export type ProfileUserInvites = {

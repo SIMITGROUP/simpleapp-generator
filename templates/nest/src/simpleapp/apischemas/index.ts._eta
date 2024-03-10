@@ -13,3 +13,32 @@ export class ForeignKey {
     @ApiProperty({ type: 'string', required: false,  default: '' })
     label: string;
 }
+
+
+export class UserAllPermissionsBranches {
+  @ApiProperty({ type: 'string', required: true, default: '',})
+  permId: string;
+  @ApiProperty({ type: Number, required: true, default: 0 })
+  branchId: number;
+  @ApiProperty({ type: () => ForeignKey, required: true })
+  branch: ForeignKey;
+
+  groups: string[];
+  @ApiProperty({ type: 'string', required: true, default: '',})
+  userId: string;
+};
+
+
+export class UserPermission {
+  @ApiProperty({ type: 'string', required: true, format: 'uuid', default: '' })
+  permId: string;
+  @ApiProperty({ type: Number, required: true, default: 0 })
+  branchId: number;
+  @ApiProperty({ type: () => ForeignKey, required: true })
+  branch: ForeignKey;
+
+  @ApiProperty({ type: [String], required: true, default: '' })
+  groups: string[];
+  @ApiProperty({ type: 'string', required: true, format: 'uuid', default: '' })
+  userId: string;
+}

@@ -54,9 +54,13 @@ export class <%= it.typename %>Service extends <%= it.typename %>Processor {
               <%=qp%>: string,
             <%}%>
         <%}%>
-        <%if(['post','put','patch'].includes(api.method.toLowerCase())){%>
-            data:<%= api.schema? 'types.'+api.schema: 'any'%>,
-        <%}%>
+            
+        <%if(['post','put','patch'].includes(api.method.toLowerCase())){%> 
+              data:<%= api.schema 
+              ?  (api.schema.includes('[') ?  'types.'+api.schema.replace('[','').replace(']','') + '[]' : 'types.'+api.schema  )
+              : 'any'%>,
+            <%}%>
+
          ){
     <%if (api.workflowSetting && api.workflowSetting.bpmn){ %>      
       return this.startWorkflow(appuser,'<%=api.workflowSetting.bpmn%>',data)

@@ -11,8 +11,24 @@ export const user:SchemaType ={
         uniqueKey:'email',        
         documentTitle:'fullname',
         requiredRoles:["SuperUser"],    
-        additionalAutoCompleteFields:['uid']      
-    },
+        additionalAutoCompleteFields:['uid'],
+        additionalApis:[
+            {"action":"getPermission",
+            "entryPoint":":id/permission",
+            "requiredRole":[],
+            "method":RESTMethods.get,
+            "responseType":"[UserPermission]",
+            "description":"Get user permissoin"
+            },
+            {"action":"updatePermission",
+            "entryPoint":":id/permission",
+            "requiredRole":[],
+            "method":RESTMethods.put,
+            "schema":"[UserPermission]",
+            "description":"set user permissoin"
+            }
+        ]
+      },
     properties: {
         _id:{type:'string'},
         created:{type:'string'},
@@ -22,7 +38,11 @@ export const user:SchemaType ={
         tenantId: {type:'integer',default:1,minimum:0 },
         orgId: {type:'integer',default:1,minimum:0 },
         branchId: {type:'integer',default:1,minimum:0 },
-        uid: {type: "string",},
+        uid: {
+          type: "string", 
+          oneOf:[{"format":"uuid"},{const:""}],
+          description:"sso unique id, such as keycloak sub id, empty during invitation",
+        },
         fullName: {type: "string",minLength:3},
         email: {type: "string",minLength:10,format: "email"},
         active: {type: "boolean",default:true},

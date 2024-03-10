@@ -81,7 +81,8 @@ export type UserProfile = {
     created: string;
   }[]
   roles: string[]
-  group: string
+  groups: string[]
+  currentGroup:string
   time: string
   moreProps: any  
 }

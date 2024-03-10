@@ -6,13 +6,13 @@ export const permission:SchemaType ={
         documentType:'perm',
         documentName:'permission',        
         isolationType:IsolationType.org,
-        additionalApis:[{
-            action:"listUser",
+        additionalApis:[{action:"listUser",
             entryPoint:"listuser",
             requiredRole:["SuperAdmin"],
             method:RESTMethods.get,
             description:"Get current permissionlist lookup user info"
-          }]
+          },
+        ]                  
     },
     properties: {
         _id:{type:'string'},
@@ -23,8 +23,12 @@ export const permission:SchemaType ={
         tenantId: {type:'integer',default:1,minimum:0},
         orgId: {type:'integer',default:1,minimum:0 },
         branchId: {type:'integer',default:1,minimum:0 },
-        group: {"type": "string"},
-        uid: {"type": "string",},
-        userId : {"type":"string","x-foreignkey":"user", minLength:10 }
+        groups: {
+          type: "array",
+          minItems:1,
+          items:{type: "string"}
+        },
+        uid: {type: "string",description:"sso unique identity, which is keycloak sub"},
+        userId : {type:"string","x-foreignkey":"user", format:"uuid",description:"primary key from user" }
       }
 }

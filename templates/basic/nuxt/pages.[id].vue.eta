@@ -17,8 +17,8 @@ const props = defineProps<{_id:string}>();
 const after = (actionName: string, data: <%= it.typename %>) => {    
   console.log("<%= it.typename %> capture after emits ", actionName)
   switch (actionName) {
-    case "new":
-      goTo(doc.getDocName(), "new");
+    case "exit":
+      goTo(doc.getDocName());
       break;
     case "create":
       goTo(doc.getDocName(), data._id);      

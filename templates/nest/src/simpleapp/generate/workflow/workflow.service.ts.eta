@@ -67,7 +67,7 @@ export class WorkflowService {
       $or: [
         { 'items.assignee': appuser.getUname() },
         { 'items.candidateUsers': appuser.getUname() },
-        { 'items.candidateGroups': appuser.getGroup() },
+        { 'items.candidateGroups': appuser.getGroups() },
       ],
     });
     const result: UserTaskType[] = tmp.map((proc) => {

@@ -120,6 +120,8 @@ export type DocumentApi = {
   queryPara?:string[]   //what query parameter wish to accept, example:  ['description','date']
   requiredRole?: string[]   // what special user role wish to allow for this api, example: ['SuperUser']
   method:RESTMethods  
+  responseType ?:string
+  schema ?:string
   description:string //description of api
 }
 export enum IsolationType {"none"="none" , "tenant"="tenant","org"="org", "branch"="branch"}
@@ -141,7 +143,7 @@ export type SchemaConfig = {
   documentDate?:string
   allStatus?:DocumentStatus[]
   additionalApis?:DocumentApi[]      
-  additionalAutoCompleteFields ?: string[]
+  additionalAutoCompleteFields ?: string[]  
   // libs?:ImportLibs[]   // both process class and frontend client class will import same lib
   formulas?: Formula[]  
   documentType: string

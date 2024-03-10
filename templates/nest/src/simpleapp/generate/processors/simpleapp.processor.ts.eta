@@ -273,6 +273,31 @@ export class SimpleAppService<T extends { _id?: string }> {
     }
   }
 
+  /**
+   * create many from array, for performance reason it submit all item in 1 go, so it won't implement hooks
+   * @param appuser 
+   * @param datas 
+   */
+  async createMany (appuser: UserContext, datas: T[]){
+    if(Array.isArray(datas)){
+      for(let i=0 ; i< datas.length; i++){
+        const data = datas[i]
+        let isolationFilter: any = { ...appuser.getCreateFilter() };
+        isolationFilter = this.polishIsolationFilter(isolationFilter, data);
+        
+        Object.assign(data, isolationFilter);
+        this.reCalculateValue(data);
+        await this.validateData(appuser, data);
+        this.applyNestedDateTime(appuser, data, 'create');        
+      }
+      const result = await this.doc.insertMany(datas)
+      return result
+
+    }else{
+      throw new BadRequestException(this.getDocumentType() +': create many only support array')
+    }
+  }
+  
   async create(appuser: UserContext, data: T) {
     let result;
     if (!data._id) {
@@ -553,7 +578,7 @@ export class SimpleAppService<T extends { _id?: string }> {
     }
 
     if (this.hooks.beforeUpdate)
-      await this.hooks.beforeUpdate(appuser, id, data,existingdata);
+      await this.hooks.beforeUpdate(appuser, id, data, existingdata);
 
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {

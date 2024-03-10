@@ -11,7 +11,7 @@ export enum SimpleAppInputType  {
     'date'='date',
     'time'='time',
     'calendar'='calendar',
-
+    'datetime'='datetime',
 
     'autocomplete'='autocomplete',
     'autocompletemultiple'='autocompletemultiple',
@@ -67,3 +67,4 @@ export type FormMenu = {
     event?:FormCrudEvent
     [key:string] : any
 }
+

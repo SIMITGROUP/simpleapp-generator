@@ -3,6 +3,9 @@
  * MODIFICATION OVERRIDE BY GENERATEOR
  * last change 2024-01-01
  * Author: Ks Tan
+ * permission design
+ * 1. during sign in, user can pick run as what group user
+ * 2.
  */
 import {
   Injectable,
@@ -50,7 +53,7 @@ export class UserContext {
   protected ssoACL: any = {};
   protected token: string = '';
   protected refreshtoken: string = '';
-  protected group: string = '';
+  protected groups: string[] = [];
   protected branchCode: string = '';
   protected branchName: string = '';
   protected orgCode: string = '';
@@ -92,7 +95,7 @@ export class UserContext {
   getTimeZone = () => this.timeZone;
   getCountry = () => this.country;
   getOffsetMinute = () => this.offsetMinute;
-  getGroup = () => this.group;
+  getGroups = () => this.groups;
   getCurrency = () => this.currency;
   getMoreProps = () => this.moreProps;
   getRoles = () => this.roles;
@@ -107,7 +110,7 @@ export class UserContext {
         data.push({
           _id: b._id,
           branch: b.branch[0],
-          group: b.group,
+          groups: b.groups,
           xOrg: this.generateXorg(b.tenantId, b.orgId, b.branchId),
         });
       }
@@ -204,9 +207,16 @@ export class UserContext {
       if (this.tenantId > 0) {
         const myperm = userinfo.permissions[0];
 
-        if (myperm && myperm.group) {
-          userinfo.group = myperm.group;
-          userinfo.roles = rolegroups[userinfo.group]();
+        if (myperm && myperm.groups) {
+          userinfo.groups = myperm.groups;
+          userinfo.roles = [] as Role[];
+          for (let g = 0; g < userinfo.groups.length; g++) {
+            const roles: Role[] = rolegroups[userinfo.groups[g]]();
+            for (let r = 0; r < roles.length; r++) {
+              if (!userinfo.roles.includes(roles[r]))
+                userinfo.roles.push(roles[r]);
+            }
+          }
 
           userinfo.branchRecordId = myperm.currentbranch[0].branchRecordId;
           userinfo.branchCode = myperm.currentbranch[0].branchCode;
@@ -220,7 +230,7 @@ export class UserContext {
           userinfo.offsetMinute = myperm.currentorg[0].offsetMinute;
         }
       } else {
-        userinfo.group = '';
+        userinfo.groups = [];
       }
 
       const currentitme = new Date(this.lastActivity).getTime();
@@ -273,7 +283,7 @@ export class UserContext {
       this.offsetMinute = userinfo['offsetMinute'] ?? '';
       this.orgRecordId = userinfo['orgRecordId'] ?? '';
       this.branchRecordId = userinfo['branchRecordId'] ?? '';
-      this.group = userinfo['group'] ?? '';
+      this.groups = userinfo['groups'] ?? [];
       this.roles = userinfo['roles'] ?? [Role.Everyone, Role.User];
       this.moreProps = this.setMoreProps(userinfo);
     } else {
@@ -286,7 +296,7 @@ export class UserContext {
     }
     this.logger.debug(
       `${this.uid} have _id (${this.getId()}), group (${
-        this.group
+        this.groups
       }) and role (${this.getRoles()})`,
     );
 
@@ -397,7 +407,7 @@ export class UserContext {
       email: this.getEmail(),
       uid: this.getUid(),
       fullName: this.getFullname(),
-      group: this.group,
+      groups: this.groups,
       roles: this.getRoles(),
       branches: this.getBranches(),
       invites: await this.getInvites(),
@@ -506,7 +516,7 @@ export class UserContext {
     const o = this.ssoACL;
     const ssoclient = process.env.OAUTH2_CLIENTID;
     const adminRole = process.env.OAUTH2_ADMINROLE;
-    const adminemails = process.env.ADMIN_EMAIL.split(',')
+    const adminemails = process.env.ADMIN_EMAIL.split(',');
     // return false
     if (adminemails.includes(this.getEmail())) {
       return true;
@@ -631,7 +641,7 @@ export class UserContext {
                 _id: item._id,
                 orgId: item.orgId,
                 branchId: item.branchId,
-                group: item.group,
+                groups: item.groups,
                 orgCode: item.org[0].orgCode,
                 orgName: item.org[0].orgName,
                 branchCode: item.branch[0].branchCode,

@@ -2,12 +2,11 @@
   <span
     v-if="setting?.collection"
     @click="viewRecord"
-    class="text-primary-700 hover:text-primary-500  dark:text-primary-400 cursor-pointer"
+    class="text-primary-700 hover:text-primary-500 dark:text-primary-400 cursor-pointer"
   >
     <slot>
       {{ displayText }}
     </slot>
-    
   </span>
   <span v-else>{{ displayText }}</span>
 </template>
@@ -18,10 +17,11 @@
  * last change 2024-02-04
  * author: Ks Tan
  */
-import { ForeignKey } from "~/types";
+import { ForeignKey, FormCrudEvent } from "~/types";
 
 type SettingProp = { collection: string; displayField?: string };
 const modelValue = defineModel<ForeignKey>();
+const emits = defineEmits(['after'])
 const props = defineProps<{ setting: SettingProp }>();
 const displayText = computed(() => {
   const s = props.setting;
@@ -44,6 +44,9 @@ const viewRecord = () => {
     documentName: props.setting.collection,
     viewer: viewer.value,
     readonly: true,
+    after: async(actionName:FormCrudEvent,data)=>{
+      emits('after',actionName,data)
+    }
   });
 };
 </script>

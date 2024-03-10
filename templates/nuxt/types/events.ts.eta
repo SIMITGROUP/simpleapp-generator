@@ -35,4 +35,5 @@ export type EventType ={
     'ViewRecord': ViewRecord
     'SessionExpire': string
     'CloseDialog': string
+    'pickGroup':string
 }

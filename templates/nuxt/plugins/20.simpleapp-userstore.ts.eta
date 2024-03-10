@@ -9,6 +9,7 @@ import {PROFILEApi} from '../simpleapp/generate/openapi'
 import {UserProfile} from '~/types'
 import axios, { Axios, AxiosResponse } from 'axios'
 import _ from 'lodash'
+import { group } from "console";
 
 
 export default defineNuxtPlugin( async(nuxtApp) => {
@@ -33,7 +34,8 @@ export default defineNuxtPlugin( async(nuxtApp) => {
           email: ref(''),
           fullName: ref(''),
           roles:ref<string[]>([]),
-          group:ref(''),
+          groups:ref<string[]>([]),
+          currentGroup:ref(''),
           branches:ref([]),
           invites : ref([]),
           time:ref(''),
@@ -78,11 +80,19 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               this.email = res.data.email
               this.fullName = res.data.fullName              
               this.branches = res.data.branches
-              this.group = res.data.group
+              this.groups = res.data.groups                            
               this.roles = res.data.roles
               this.time = res.data.time              
               this.invites = res.data.invites
               this.moreProps = res.data.moreProps
+
+              let cachegroup = useCookie('currentGroup').value  ?? ''                            
+              if(!this.groups || !this.groups.includes(cachegroup)){
+                cachegroup=''                
+              }
+              this.currentGroup = cachegroup
+              useNuxtApp().$event('pickGroup',cachegroup)
+
               return Promise.resolve(true)
                 // return true
             }).catch((err:any)=>{            
@@ -183,7 +193,8 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               branches:this.branches??[],
               invites: this.invites ?? [],
               roles:this.roles,
-              group:this.group,
+              groups:this.groups,
+              currentGroup:this.currentGroup,
               time:this.time,
               moreProps: this.moreProps
               

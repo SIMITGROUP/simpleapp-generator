@@ -27,12 +27,12 @@
           <dt
             class="text-sm font-medium leading-6 text-gray-900 dark:text-gray-400"
           >
-            {{ t("group") }}
+            {{ t("groups") }}
           </dt>
           <dd
             class="mt-1 text-sm leading-6 text-gray-700 dark:text-gray-300 sm:col-span-2 sm:mt-0"
           >
-            {{ getUserProfile().group }}
+            {{ getUserProfile()?.groups }}
           </dd>
         </div>
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
@@ -88,7 +88,6 @@
             </ul>
           </dd>
         </div>
-     
 
         <div
           v-if="useRuntimeConfig().public.DEBUGDATA == '1'"
@@ -105,14 +104,15 @@
             class="mt-1 text-sm leading-6 text-gray-700 dark:text-gray-300 sm:col-span-2 sm:mt-0"
           >
             <div>
-              <p>{{t('accessRights')}}</p>
+              <p>{{ t("accessRights") }}</p>
               {{ getUserProfile().roles }}
             </div>
             <div>
-              <p>{{ t('others') }}</p>
-              {{ getUserProfile()?.country }} / {{ getUserProfile()?.currency }} / {{ getUserProfile()?.offsetMinute }}
+              <p>{{ t("others") }}</p>
+              {{ getUserProfile()?.country }} /
+              {{ getUserProfile()?.currency }} /
+              {{ getUserProfile()?.offsetMinute }}
             </div>
-            
           </dd>
         </div>
       </dl>

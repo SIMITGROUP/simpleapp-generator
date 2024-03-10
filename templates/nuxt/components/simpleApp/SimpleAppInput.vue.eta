@@ -83,6 +83,22 @@
       v-bind="componentProps as CalendarProps"
     />
 
+    <Calendar
+      :pt="pt"
+      v-else-if="inputType == SimpleAppInputType.datetime"
+      :inputId="slotprops.uuid"
+      :path="setting.instancepath"
+      v-model="datetimevalue"
+      @update:modelValue="updateDateTime"
+      :touchUI="isMobile()"
+      showButtonBar
+      :readonly="isReadonly"
+      :placeholder="placeholder"
+      :date-format="getDateFormat()"
+      showTime 
+      hourFormat="12"
+      v-bind="componentProps as CalendarProps"
+    />
     <!-- select/list component -->
     <Listbox
       v-model="modelValue"
@@ -300,11 +316,12 @@ import Rating, { RatingProps } from "primevue/rating";
 import Slider, { SliderProps } from "primevue/slider";
 import Textarea, { TextareaProps } from "primevue/textarea";
 import { SimpleAppInputType } from "~/types";
-const resetcount = ref(0)
+const resetcount = ref(0);
 const instancepath = ref("");
 const modelValue = defineModel({ required: true });
 
 const datevalue = ref<Date>();
+const datetimevalue = ref<Date>();
 const timevalue = ref<Date>();
 let watchOnChange = 0;
 const props = withDefaults(
@@ -340,6 +357,11 @@ if (props.inputType == SimpleAppInputType.date && modelValue.value) {
   datevalue.value = stringToDate(<string>modelValue.value); //.format("YYYY-MM-DD");
 } else {
   datevalue.value = undefined;
+}
+if (props.inputType == SimpleAppInputType.datetime && modelValue.value) {
+  datetimevalue.value = stringToDate(<string>modelValue.value); 
+} else {
+  datetimevalue.value = undefined;
 }
 
 if (props.inputType == SimpleAppInputType.time) {
@@ -405,6 +427,14 @@ const updateDate = (value: any) => {
   }
   onChange();
 };
+const updateDateTime = (value:any)=>{
+  if (value) {
+    modelValue.value = dateToISOString(value);
+  } else {
+    modelValue.value = "";
+  }
+  onChange();
+}
 
 const setFocus = (ev: any) => {
   if (!isMobile()) ev.target.select();
@@ -446,7 +476,15 @@ watch(modelValue, (newvalue: any) => {
     } else {
       timevalue.value = undefined;
     }
-  } else if (props.inputType == SimpleAppInputType.time) {
+  
+  } else if (props.inputType == SimpleAppInputType.datetime) {
+    if (modelValue.value) {
+      datetimevalue.value = stringToDate(modelValue.value as string);
+    } else {
+      timevalue.value = undefined;
+    }
+  }
+   else if (props.inputType == SimpleAppInputType.time) {
     if (modelValue.value) {
       timevalue.value = stringToDate(
         (today() + "T" + modelValue.value) as string,
@@ -467,6 +505,12 @@ onMounted(() => {
     } else {
       datevalue.value = undefined;
     }
+  } else  if (props.inputType == SimpleAppInputType.datetime) {
+    if (modelValue.value) {
+      datetimevalue.value = stringToDate(modelValue.value as string);
+    } else {
+      datetimevalue.value = undefined;
+    }
   } else if (props.inputType == SimpleAppInputType.time) {
     if (modelValue.value) {
       timevalue.value = stringToDate(
@@ -479,8 +523,8 @@ onMounted(() => {
 });
 
 const onChange = () => {
-  pt.value=undefined
-  resetcount.value++
+  pt.value = undefined;
+  resetcount.value++;
   emits("change", modelValue.value);
 };
 

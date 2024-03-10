@@ -6,22 +6,19 @@
  */
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, PipelineStage } from 'mongoose';
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PermissionProcessor } from '../generate/processors/perm.processor';
-import { Permission,PermissionHooks } from '../generate/types';
+import * as types from '../generate/types';
 import { UserContext } from '../generate/commons/user.context';
 export { Permission } from '../generate/types';
 
 @Injectable()
 export class PermissionService extends PermissionProcessor {
   protected strictIsolation = false;
-  protected hooks : PermissionHooks = {};
-  constructor(
-    @InjectModel('Permission') mydoc: Model<Permission>,    
-    ) {
+  protected hooks: types.PermissionHooks = {};
+  constructor(@InjectModel('Permission') mydoc: Model<types.Permission>) {
     super(mydoc);
   }
-
 
   async runListUser(appuser: UserContext) {
     const getallrecords: PipelineStage = { $match: {} };
@@ -55,4 +52,5 @@ export class PermissionService extends PermissionProcessor {
     // delete result['users'][0]
     return finalresult;
   }
+
 }
