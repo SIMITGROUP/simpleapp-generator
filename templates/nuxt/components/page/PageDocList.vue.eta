@@ -154,10 +154,12 @@ watch(showDialog, () => {
 watch(
   () => useRoute().path,
   async () => {
-    if (getPathPara("id")) {
-      showDialog.value = true;
-    } else {
-      showDialog.value = false;
+    if(!isMobile()){
+      if (getPathPara("id")) {
+        showDialog.value = true;
+      } else {
+        showDialog.value = false;
+      }
     }
   },
 );

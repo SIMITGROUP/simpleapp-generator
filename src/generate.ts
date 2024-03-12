@@ -288,11 +288,7 @@ const generateSchema = ( docname: string,
               as: `Form${_.upperFirst(docname)}.vue`,
               validate: validateWritePage
             },
-            'pages.[id].vue.eta': { 
-              to:`pages/[xorg]/${docname}`, 
-              as:'[id].vue',
-              validate: validateWritePage
-            },
+          
             'component.select.vue.eta': { 
               to:'components/select', 
               as: `Select${_.upperFirst(docname)}.vue`,
@@ -303,9 +299,24 @@ const generateSchema = ( docname: string,
               as: `Viewer${_.upperFirst(docname)}.vue`,
               validate: validateWritePage
             },
+            'pages.[id].vue.eta': { 
+              to:`pages/[xorg]/${docname}`, 
+              as:'[id].vue',
+              validate: validateWritePage
+            },
             'pages.landing.vue.eta': { 
               to:`pages/[xorg]/${docname}`, 
               as:`../${docname}.vue`,
+              validate: validateWritePage
+            }, 
+            'pages.mobile.[id].vue.eta': { 
+              to:`pages/[xorg]/mobile/${docname}`, 
+              as:'[id].vue',
+              validate: validateWritePage
+            },
+            'pages.mobile.landing.vue.eta': { 
+              to:`pages/[xorg]/mobile/${docname}`, 
+              as:`index.vue`,
               validate: validateWritePage
             },            
             'simpleapp.doc.ts.eta': { 

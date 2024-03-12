@@ -4,7 +4,7 @@
     <EventDocumentViewer></EventDocumentViewer>      
     <EventDecision/>
     <EventNotification/>
-    <NuxtPage />
+    <NuxtPage/>
   </NuxtLayout>
 </template>
 
@@ -17,8 +17,9 @@
  */
 watch(()=>useRoute().params['xorg'],async (newval,oldvalue)=>{
   await reloadUserStore()  
-  if(!getUserProfile()?.currentGroup) goTo('pickgroup')
-  
+  if(getPathPara('xorg','')!=''){
+    if(!getUserProfile()?.currentGroup) goTo('pickgroup')
+  }  
 })
 
 const getLayout = ()=>{
@@ -33,7 +34,6 @@ const getLayout = ()=>{
 
 onMounted(()=>{
   const currentgroup = useCookie('currentGroup').value
-
   //if no xorg, no enforce pick group
   if(getCurrentXorg() &&  !currentgroup)  goTo('pickgroup')
 })
