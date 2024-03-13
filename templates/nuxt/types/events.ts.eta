@@ -36,4 +36,5 @@ export type EventType ={
     'SessionExpire': string
     'CloseDialog': string
     'pickGroup':string
+    'HoldScreen':boolean
 }

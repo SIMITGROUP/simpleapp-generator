@@ -95,7 +95,7 @@
       :readonly="isReadonly"
       :placeholder="placeholder"
       :date-format="getDateFormat()"
-      showTime 
+      showTime
       hourFormat="12"
       v-bind="componentProps as CalendarProps"
     />
@@ -229,17 +229,19 @@
     <InputNumber
       v-else-if="inputType == SimpleAppInputType.number"
       :type="type"
-      v-model="modelValue as number"
+      v-model="modelValue"
       @focus="setFocus"
       :readonly="isReadonly"
       :pt="pt"
       :class="!pt ? 'w-full flex flex-col' : ''"
       :inputId="slotprops.uuid"
       @update:modelValue="onChange"
+      
       :path="setting.instancepath"
       v-bind="componentProps as InputNumber"
       :placeholder="placeholder"
     />
+    <!-- // // -->
     <InputNumber
       v-else-if="inputType == SimpleAppInputType.money"
       :type="type"
@@ -252,7 +254,7 @@
       :class="!pt ? 'w-full flex flex-col' : ''"
       :inputId="slotprops.uuid"
       :path="setting.instancepath"
-      @change="onChange"
+      @update:modelValue="onChange"
       v-bind="componentProps as InputNumber"
       :placeholder="placeholder"
     />
@@ -359,7 +361,7 @@ if (props.inputType == SimpleAppInputType.date && modelValue.value) {
   datevalue.value = undefined;
 }
 if (props.inputType == SimpleAppInputType.datetime && modelValue.value) {
-  datetimevalue.value = stringToDate(<string>modelValue.value); 
+  datetimevalue.value = stringToDate(<string>modelValue.value);
 } else {
   datetimevalue.value = undefined;
 }
@@ -427,14 +429,14 @@ const updateDate = (value: any) => {
   }
   onChange();
 };
-const updateDateTime = (value:any)=>{
+const updateDateTime = (value: any) => {
   if (value) {
     modelValue.value = dateToISOString(value);
   } else {
     modelValue.value = "";
   }
   onChange();
-}
+};
 
 const setFocus = (ev: any) => {
   if (!isMobile()) ev.target.select();
@@ -476,15 +478,13 @@ watch(modelValue, (newvalue: any) => {
     } else {
       timevalue.value = undefined;
     }
-  
   } else if (props.inputType == SimpleAppInputType.datetime) {
     if (modelValue.value) {
       datetimevalue.value = stringToDate(modelValue.value as string);
     } else {
       timevalue.value = undefined;
     }
-  }
-   else if (props.inputType == SimpleAppInputType.time) {
+  } else if (props.inputType == SimpleAppInputType.time) {
     if (modelValue.value) {
       timevalue.value = stringToDate(
         (today() + "T" + modelValue.value) as string,
@@ -505,7 +505,7 @@ onMounted(() => {
     } else {
       datevalue.value = undefined;
     }
-  } else  if (props.inputType == SimpleAppInputType.datetime) {
+  } else if (props.inputType == SimpleAppInputType.datetime) {
     if (modelValue.value) {
       datetimevalue.value = stringToDate(modelValue.value as string);
     } else {
@@ -523,6 +523,7 @@ onMounted(() => {
 });
 
 const onChange = () => {
+  console.log("On change ", props.inputType)
   pt.value = undefined;
   resetcount.value++;
   emits("change", modelValue.value);

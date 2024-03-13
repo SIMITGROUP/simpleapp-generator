@@ -76,7 +76,7 @@ export class SimpleAppClient<
     });
   }
 
-  async create() {
+  async create() {    
     const errors = this.validateFailed();
     const {$event} =useNuxtApp()
     if (errors) {
@@ -85,10 +85,11 @@ export class SimpleAppClient<
         summary:'Record create failed',
         status:NotificationStatus.error,
         data:errors
-      })
+      })      
       // this.event('error:create',errors)
       return await Promise.reject(errors);
     } else {
+      holdScreenStart()
       return await this.docapi
         .runCreate(this.data.value,this.axios)
         .then((res: AxiosResponse) => {
@@ -100,6 +101,7 @@ export class SimpleAppClient<
           //   status:NotificationStatus.success
           // })
           this.data.value = { ...res.data };
+          holdScreenEnd()
           return res.data;
         }).catch((errors:any)=>{             
             $event('Notification',{
@@ -109,6 +111,7 @@ export class SimpleAppClient<
               data:errors.response.data
             })
             console.error('error:create',errors.response.data)
+            holdScreenEnd()
           return Promise.reject(errors)
         });
     }
@@ -129,6 +132,7 @@ export class SimpleAppClient<
       console.error('update errors',errors)
       return await Promise.reject(errors);
     } else {
+      holdScreenStart()
       return await this.docapi
         .runUpdate(recordid, this.data.value,this.axios)
         .then((res: AxiosResponse) => {
@@ -139,7 +143,8 @@ export class SimpleAppClient<
           //   status:NotificationStatus.success,
           //   data:errors
           // })        
-          this.data.value = res.data          
+          this.data.value = res.data     
+          holdScreenEnd()     
           return res.data;
         }).catch((errors:any)=>{
           $event('Notification',{
@@ -152,6 +157,7 @@ export class SimpleAppClient<
           // if(this.event){
           // this.event('error:update',errors.response.data.data)}
           console.error('error:update',errors.response.data)
+          holdScreenEnd()
           return Promise.reject(errors)
         });
     }
@@ -160,6 +166,7 @@ export class SimpleAppClient<
   async patch() {
     const {$event} =useNuxtApp()
     const recordid: string = this.data.value._id ?? '';
+    holdScreenStart()
       return await this.docapi
         .runPatch(recordid, this.data.value,this.axios)
         .then((res: AxiosResponse) => {
@@ -171,6 +178,7 @@ export class SimpleAppClient<
           //   data:errors
           // })        
           this.data.value = res.data          
+          holdScreenEnd()
           return res.data;
         }).catch((errors:any)=>{
           $event('Notification',{
@@ -183,6 +191,7 @@ export class SimpleAppClient<
           // if(this.event){
           // this.event('error:update',errors.response.data.data)}
           console.error('error:patch',errors.response.data)
+          holdScreenEnd()
           return Promise.reject(errors)
         
     })
@@ -192,6 +201,7 @@ export class SimpleAppClient<
       id = this.data.value._id ?? ''
     }
     const {$event} =useNuxtApp()
+    holdScreenStart()
     return await this.docapi.runDelete(id,this.axios)
       .then((res:AxiosResponse)=>{
         // if(this.event){this.event('success:delete',res.data)}
@@ -201,6 +211,7 @@ export class SimpleAppClient<
         //   status:NotificationStatus.success,
         //   data:res.data
         // })
+        holdScreenEnd()
         return Promise.resolve(res.data)
       }).catch((errors:any)=>{
         // if(this.event){this.event('error:delete',errors.response.data.data)}
@@ -211,6 +222,7 @@ export class SimpleAppClient<
           data:errors.response.data
         })
         console.error(errors.response.data)
+        holdScreenEnd()
         return Promise.reject(errors)
       });
   }

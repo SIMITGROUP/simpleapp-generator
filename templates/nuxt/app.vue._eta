@@ -1,6 +1,7 @@
 <template>
   <NuxtLayout :name="getLayout()">      
     <SessionBlock/>
+    <OverlayHoldscreen/>
     <EventDocumentViewer></EventDocumentViewer>      
     <EventDecision/>
     <EventNotification/>
