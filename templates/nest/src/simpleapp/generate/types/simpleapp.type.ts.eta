@@ -4,7 +4,8 @@
  * last change 2024-01-25
  * Author: Ks Tan
  */
-import { UserContext } from 'src/simpleapp/generate/commons/user.context';
+import { UserContext } from '../commons/user.context'
+
 
 export type ModifiedCollection = {
   [key: string]: string[];
