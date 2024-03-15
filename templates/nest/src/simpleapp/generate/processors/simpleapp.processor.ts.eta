@@ -275,29 +275,30 @@ export class SimpleAppService<T extends { _id?: string }> {
 
   /**
    * create many from array, for performance reason it submit all item in 1 go, so it won't implement hooks
-   * @param appuser 
-   * @param datas 
+   * @param appuser
+   * @param datas
    */
-  async createMany (appuser: UserContext, datas: T[]){
-    if(Array.isArray(datas)){
-      for(let i=0 ; i< datas.length; i++){
-        const data = datas[i]
+  async createMany(appuser: UserContext, datas: T[]) {
+    if (Array.isArray(datas)) {
+      for (let i = 0; i < datas.length; i++) {
+        const data = datas[i];
         let isolationFilter: any = { ...appuser.getCreateFilter() };
         isolationFilter = this.polishIsolationFilter(isolationFilter, data);
-        
+
         Object.assign(data, isolationFilter);
         this.reCalculateValue(data);
         await this.validateData(appuser, data);
-        this.applyNestedDateTime(appuser, data, 'create');        
+        this.applyNestedDateTime(appuser, data, 'create');
       }
-      const result = await this.doc.insertMany(datas)
-      return result
-
-    }else{
-      throw new BadRequestException(this.getDocumentType() +': create many only support array')
+      const result = await this.doc.insertMany(datas);
+      return result;
+    } else {
+      throw new BadRequestException(
+        this.getDocumentType() + ': create many only support array',
+      );
     }
   }
-  
+
   async create(appuser: UserContext, data: T) {
     let result;
     if (!data._id) {
@@ -353,7 +354,7 @@ export class SimpleAppService<T extends { _id?: string }> {
       return result as T;
     } catch (err) {
       throw new InternalServerErrorException(
-        `createHook ${this.documentType} error: ${err}`,
+        `createHook ${this.documentType} error: ${JSON.stringify(err)}`,
         `${this.documentType} createHook error`,
       );
     }
@@ -554,7 +555,7 @@ export class SimpleAppService<T extends { _id?: string }> {
     this.applyNestedDateTime(appuser, data, 'update');
     try {
       const result = await this.doc.findOneAndReplace(isolationFilter, data, {
-        session: dbsession,
+        session: dbsession,new:true
       });
       appuser.addUpdatedRecordId(this.documentName, data._id);
       if (this.hooks.afterUpdate)
@@ -604,7 +605,7 @@ export class SimpleAppService<T extends { _id?: string }> {
 
     try {
       const result = await this.doc.findOneAndUpdate(isolationFilter, data, {
-        session: dbsession,
+        session: dbsession,new:true
       });
 
       appuser.addUpdatedRecordId(this.documentName, data._id);

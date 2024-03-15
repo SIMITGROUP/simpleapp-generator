@@ -35,17 +35,19 @@
  * last change 2023-09-09
  * author: Ks Tan
  */
+import { <%= it.typename %> } from '~/simpleapp/generate/openapi';
 
   
   const {$<%= it.typename %>Doc,$listen } = useNuxtApp();
   const doc = $<%= it.typename %>Doc()
   const docdata = doc.getReactiveData();
-  
+  type <%= it.typename %>Key = keyof <%= it.typename %> 
+
   definePageMeta({
     menuPath:'nocategory/<%= it.name %>'    
   });
 
-  const columns= [<%Object.keys(it.jsonschema.properties).forEach(function(key) { %>
+  const columns:<%= it.typename %>Key[] = [<%Object.keys(it.jsonschema.properties).forEach(function(key) { %>
         <%let obj=it.jsonschema.properties[key] %>
         <%let config=it.jsonschema['x-simpleapp-config'] %>
         <%if(skipcolumns.indexOf(key)>=0){%>

@@ -1,5 +1,5 @@
 <template>
-  <span v-if="modelValue">{{ toLocalDate(modelValue) }}</span>
+  <span v-if="modelValue">{{ toUTCDate(modelValue) }}</span>
   <span v-else>-</span>
 </template>
 <script lang="ts" setup>

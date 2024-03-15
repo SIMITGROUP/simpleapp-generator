@@ -4,13 +4,18 @@
  * last change 2024-02-23
  * Author: Ks Tan
  */
-import { ForeignKey } from "./others"
-export type OffDay={
+  import { ForeignKey } from "./others"
+  export type OffDay={
     _id:string
     date:Date
     title:string
   }
-  
+  export type DurationType  = keyof  {
+    'hour':'hour',
+    'month':'month',
+    'day':'day',
+    'minute':'minute'
+  }  
   export type CalRightClickEvent = {
       class: string //"vuecal__cell--day5"
       content: number //16

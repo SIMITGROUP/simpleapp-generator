@@ -4,3 +4,15 @@
  * last change 2024-02-23
  * Author: Ks Tan
  */
+
+
+export type SimpleAppDocuments = {
+   <%for(let i=0; i<it.modules.length;i++){ %>
+      <% const d = it.modules[i] %>            
+      <%= d['docname'].toLowerCase() %>:any,
+    <%}%>
+}
+
+export type SimpleAppDocumentType = keyof SimpleAppDocuments
+
+

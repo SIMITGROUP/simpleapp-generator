@@ -4,6 +4,8 @@
  * last change 2024-04-13
  * Author: Ks Tan
  */
+import { DurationType } from "~/types"
+
 export const setDateLocale = (localename:string) =>  useDayjs().locale(localename)
 export const dateExists = (date:Date,listDate:Date[]) => {
     const existsrecord = listDate.find(item=>{
@@ -18,9 +20,10 @@ export const dateToString = (date:Date) => useDayjs()(date).format('YYYY-MM-DD')
 export const dateToISOString = (date:Date) => useDayjs()(date).toISOString()
 export const dateToTimeString = (date:Date) => useDayjs()(date).format('HH:mm:ss')
 export const stringToDate = (datestr:string) => new Date(datestr)
-export const dateToDateTimeString = (date:Date)=> useDayjs()(date).format('YYYY-MM-DD HH:mm:ss')
-export const toLocalDate = (date:string | Date)=> useDayjs()(date).format(getDateFormat())
-export const toLocalDateTime = (date:string | Date)=> useDayjs()(date).format(getDateTimeFormat())
+export const dateToDateTimeString = (date:Date)=> useDayjs().utc(date).format('YYYY-MM-DD HH:mm:ss')
+export const toUTCDate = (date:string | Date)=> useDayjs().utc(date).format(getDateFormat())
+export const toUTCDateTime = (date:string | Date)=> useDayjs().utc(date).format(getDateTimeFormat())
+export const toUTCTime = (date:string | Date)=> useDayjs().utc(date).format('HH:mm')
 export const getDateFormat = ():string=> 'DD-MM-YYYY'
 export const getDateTimeFormat = ():string=> 'DD-MM-YYYY HH:mm'
 export const calculateHourDifferent = (date1:Date, date2:Date) => (date1.getTime() - date2.getTime())/60/60/1000
@@ -29,3 +32,4 @@ export const getPrimevueCalendarDateFormat = () => {
   return 'dd/mm/yy'
 }
 export const getDayNameInWeek = (date:Date|string) => useDayjs()(date).format('ddd').toLowerCase();
+export const addTime = (date:Date|string,duration:number,unit:DurationType) => getDayJs()(date).add(duration, 'hour').toDate()

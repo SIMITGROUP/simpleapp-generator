@@ -5,7 +5,7 @@
     :disable-views="['years', 'year', 'month', 'week']"
     :time-from="8 * 60"
     :time-to="22 * 60"
-    :time-step="60"
+    :time-step="30"
     active-view="day"
     :snap-to-time="15"
     hide-view-selector
