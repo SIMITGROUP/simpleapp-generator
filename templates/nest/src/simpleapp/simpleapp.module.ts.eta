@@ -13,7 +13,7 @@ import { AuditTrail } from './generate/commons/audittrail.service';
 <% for(let i=0;i<it.modules.length; i++){ %>
 <% let obj = it.modules[i]%>
 import { <%= obj.docname %>Service } from './services/<%= obj.doctype %>.service';    
-import { <%= obj.docname %>Resolver } from './resolvers/<%= obj.doctype %>.resolver';    
+import { <%= obj.docname %>Resolver } from './generate/resolvers/<%= obj.doctype %>.resolver';    
 import { <%= obj.docname %>Controller } from './generate/controllers/<%= obj.doctype %>.controller';    
 import { <%= obj.docname %>MongoSchema } from './generate/models/<%= obj.doctype %>.model';
 <%}%>

@@ -215,7 +215,7 @@ const generateSchema = ( docname: string,
           const arrfilename:string[] = filename.split('.')
           const filecategory = arrfilename[0]
           const filetype = arrfilename[1]        
-          const autogeneratetypes = ['apischema','controller','jsonschema','model','processor','type','default']
+          const autogeneratetypes = ['apischema','controller','jsonschema','model','resolver','processor','type','default']
           log.info("process: ",filename)
           if(autogeneratetypes.includes(filecategory)){
             //multiple files in folder, append s at folder name
@@ -228,7 +228,7 @@ const generateSchema = ( docname: string,
             const filecontent = eta.render(templatepath, variables)     
             
             writeFileSync(targetfile,filecontent);
-          }else if(filecategory=='service' || filecategory=='resolver'){ //service file won't override if exists
+          }else if(filecategory=='service' ){ //service file won't override if exists
             const targetfolder = `${simpleappTargetFolder}/${filecategory}s`
             const targetfile = `${targetfolder}/${doctype}.${filecategory}.${filetype}`
             if(!existsSync(targetfolder)){

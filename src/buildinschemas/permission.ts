@@ -5,14 +5,7 @@ export const permission:SchemaType ={
     "x-simpleapp-config":{
         documentType:'perm',
         documentName:'permission',        
-        isolationType:IsolationType.org,
-        additionalApis:[{action:"listUser",
-            entryPoint:"listuser",
-            requiredRole:["SuperAdmin"],
-            method:RESTMethods.get,
-            description:"Get current permissionlist lookup user info"
-          },
-        ]                  
+        isolationType:IsolationType.org               
     },
     properties: {
         _id:{type:'string'},

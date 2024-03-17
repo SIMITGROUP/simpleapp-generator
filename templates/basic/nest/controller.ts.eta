@@ -34,6 +34,25 @@ import { Response } from 'express';
 import {AppUser} from '../commons/decorators/appuser.decorator'
 import {UserContext} from '../commons/user.context'
 
+<% const getFieldType =(proptype, typename)=>{
+  const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
+  let tmptypename = typename.replace('[','').replace(']','')
+  
+  if(systemtypes.includes(tmptypename)){
+    
+  }else if(proptype=='schema'){
+    tmptypename= 'schemas.'+tmptypename    
+  }else{ //type
+    tmptypename= 'types.'+tmptypename
+  }
+
+  if(typename.includes('[')){
+    return  proptype=='schema' ?  `[${tmptypename}]` : `${tmptypename}[]`
+  }else{
+    return tmptypename
+  }
+}
+%>
 <% let superadmindoctype = ['tenant','globaluser'] %>
 const doctype = '<%= it.doctype %>'.toUpperCase();
 @ApiTags(doctype)
@@ -149,19 +168,21 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   <%}%>
   <% if(['post','put','patch'].includes(api.method)){ %>
     @ApiBody({ description: 'Request Body', 
-        type: <%= api.schema
+        type: 
+        <%= api.schema
         ?  (api.schema.includes('[') ?  '[schemas.'+api.schema.replace('[','').replace(']','') + ']' : 'schemas.'+api.schema  )
-        : 'Object'%> })
+        : 'Object'
+        %> 
+        })
   <%}%>  
   @ApiResponse({status: 200,description: '<%=api.description%>' 
-      ,type: <%= api.responseType
-          ?  (api.responseType.includes('[') ?  '[schemas.'+api.responseType.replace('[','').replace(']','') + ']' : 'schemas.'+api.responseType  )
-          : 'Object'%>  })  
+      ,type: <%= getFieldType('schema',api.responseType)%>
+        })  
   @ApiOperation({ operationId: 'run<%=capitalizeFirstLetter(api.action)%>' })
   <% if(api.queryPara && api.queryPara.length>0) {%>
       <%for(let q=0;q<api.queryPara.length; q++){%>
         @ApiQuery({name: "<%=api['queryPara'][q]%>",required: false,type: String})
-      <%}%>
+      <%}%> 
   <%}%>  
   async <%=capitalizeFirstLetter(api.action) %>(
     @AppUser() appuser: UserContext,
@@ -303,8 +324,5 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   async delete(@AppUser() appuser: UserContext,@Param('id') id: string) {
     return this._delete(appuser,id);
   }
- 
-
-   
- 
+  
 }

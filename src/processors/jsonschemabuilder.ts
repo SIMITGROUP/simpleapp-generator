@@ -53,6 +53,16 @@ export const readJsonSchemaBuilder = async (docname: string,orijsondata:JSONSche
   if(schemaconfigs.allStatus && schemaconfigs.allStatus.length>0){    
     orijsondata.properties["documentStatus"] = {type:'string', default:'draft'}
   }
+
+  if(schemaconfigs.additionalApis && schemaconfigs.additionalApis.length>0){
+    const apis = schemaconfigs.additionalApis
+    for(let i =0 ; i< apis.length; i++ ){
+      if(!apis[i].responseType){
+        log.error("Undefine responseType in api  "+ apis[i].action)
+        throw new Error("Undefine responseType in api  "+ apis[i].action)
+      }
+    }
+  }
   
   //ensure all important field exists
   const compulsoryfields = ['_id','tenantId','orgId','branchId','created','createdBy','updated','updatedBy']

@@ -12,6 +12,7 @@ export const autoincreament:SchemaType = {
         entryPoint:"gennextno/:collection/:field",
         requiredRole:["User"],
         method:RESTMethods.get,         
+        responseType:"Autoincreament",
         description:"Get next no and trigger increase nextno"
       }],
     },        
