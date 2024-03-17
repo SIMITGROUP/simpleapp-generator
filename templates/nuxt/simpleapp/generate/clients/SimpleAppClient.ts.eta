@@ -68,6 +68,7 @@ export class SimpleAppClient<
     return await this.docapi.runFindOne(id,this.axios)
     .then((res: AxiosResponse) => {
       // if(this.event){this.event('info:getById',res.data)}
+      this.data.value={} as TData
       Object.assign(this.data.value, res.data);
       return res;
     }).catch((res:any)=>{
@@ -100,6 +101,7 @@ export class SimpleAppClient<
           //   summary:'Record create successfully',
           //   status:NotificationStatus.success
           // })
+          this.data.value = {} as TData
           this.data.value = { ...res.data };
           holdScreenEnd()
           return res.data;

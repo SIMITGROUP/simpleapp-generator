@@ -70,9 +70,10 @@ export const prepareNest = (callback:Function)=>{
     log.info(`creating backend project ${targetfolder}`)
     if(!fs.existsSync(`${targetfolder}/.env`)){
         
-
-    
-        exec(`cd ${targetfolder};pnpm install --save @nestjs/event-emitter dayjs bpmn-server@2.0.8-alpha2 @casl/ability jsonpath yaml lodash @types/lodash nest-keycloak-connect keycloak-connect bpmn-client @nestjs/serve-static jsonwebtoken axios @darkwolf/base64url json-schema @wearenova/mongoose-tenant @nestjs/swagger @nestjs/mongoose mongoose  ajv ajv-formats ajv-errors @nestjs/config`,async (error, stdout, stderr)=>{
+        
+        //@nestjs/graphql @nestjs/apollo graphql apollo-server-express apollo-server-core
+        //@nestjs/graphql graphql-tools graphql apollo-server-express 
+        exec(`cd ${targetfolder};pnpm install --save @nestjs/graphql @nestjs/apollo @apollo/server graphql @nestjs/event-emitter dayjs bpmn-server@2.1.5 @casl/ability jsonpath yaml lodash @types/lodash nest-keycloak-connect keycloak-connect bpmn-client @nestjs/serve-static jsonwebtoken axios @darkwolf/base64url json-schema @wearenova/mongoose-tenant @nestjs/swagger @nestjs/mongoose mongoose  ajv ajv-formats ajv-errors @nestjs/config`,async (error, stdout, stderr)=>{
             // log.info(`dependency installed`)
             if(!error){
                 // fs.mkdirSync(`${targetfolder}/public_html`,{recursive:true})
@@ -160,7 +161,7 @@ export const prepareNuxt = (callback:Function)=>{
     const targetfolder = config.frontendFolder
     if(!fs.existsSync(`${targetfolder}/.env`)){
         //asume no environment. prepare now
-        exec(`cd ${targetfolder};pnpm install;pnpm install -D dayjs-nuxt @nuxtjs/device @nuxtjs/color-mode @types/json-schema @nuxtjs/i18n@next nuxt-primevue @nuxtjs/tailwindcss @types/jsonpath @sidebase/nuxt-auth @types/node @vueuse/nuxt @sidebase/nuxt-auth @vueuse/core  prettier `, (error, stdout, stderr)=>{                
+        exec(`cd ${targetfolder};pnpm install;pnpm install -D @nuxtjs/apollo@next dayjs-nuxt @nuxtjs/device @nuxtjs/color-mode @types/json-schema @nuxtjs/i18n@next nuxt-primevue @nuxtjs/tailwindcss @types/jsonpath @sidebase/nuxt-auth @types/node @vueuse/nuxt @sidebase/nuxt-auth @vueuse/core  prettier `, (error, stdout, stderr)=>{                
             //;pnpm install    
             console.log(error, stdout, stderr)
                 exec(`cd ${targetfolder};pnpm install --save dayjs country-code-dateformat chart.js tailwind-merge @iconify-json/heroicons  json-schema @vueuse/core ts-md5 primeicons memory-cache jsonpath pinia @pinia/nuxt @nuxt/kit lodash @types/lodash @darkwolf/base64url next-auth@4.21.1 @darkwolf/base64url @nuxt/ui ajv ajv-formats ajv-errors dotenv @fullcalendar/core @fullcalendar/vue3 quill prettier axios json-schema mitt `, (error, stdout, stderr)=>{                

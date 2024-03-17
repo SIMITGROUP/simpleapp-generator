@@ -16,7 +16,7 @@ export const  generateWorkflows = async (configs,genFor:string[]) =>{
     const bpmnFolder = configs.bpmnFolder
     const filelist = readdirSync(bpmnFolder)
     
-    console.log("filelist",filelist)
+    console.log("bpmn filelist",filelist)
     const generateTemplatefolder = `${constants.templatedir}/workflow`        
     let workflows:string[] = []
 
@@ -32,12 +32,12 @@ export const  generateWorkflows = async (configs,genFor:string[]) =>{
 
     for(let w = 0; w< filelist.length;w++){
       const bpmnfile = filelist[w]      
-      if(bpmnfile=='.'){
+      if(!bpmnfile.includes('.bpmn')){
         continue
       }
       const bpmnfilepath = `${bpmnFolder}/${bpmnfile}`
       const processName = bpmnfile.split('.')[0]
-    
+      console.log("processNameprocessName",processName)
     const xmlstring = readFileSync(`${bpmnfilepath}`, 'utf-8');      
 
       const xmlobj = await moddle.fromXML(xmlstring);
@@ -45,17 +45,22 @@ export const  generateWorkflows = async (configs,genFor:string[]) =>{
       let elements:any[]=[]
       for(let i=0; i<flowElements.length;i++){
         const e = flowElements[i]
-        console.log("-------element = ",e)
+        // console.log("-------element = ",e)
         if(['bpmn:UserTask','bpmn:ServiceTask'].includes(e.$type)){
           if(invalidElementId.test(e.id)){
                   log.error(`bpmn File : ${bpmnfile} -> Task(${e.name} defined invalid symbol in id:"${e.id}"`)
                   throw "quite"
             }
+            // console.log("eeee",e)
+            let documentation :string= ''
+            if(e.documentation && e.documentation[0] && e.documentation[0].text){
+              documentation=e.documentation[0].text
+            }
           const setting={
             type: e.$type,
             id: e.id,
             name: e.name,
-            documentation: (e.documentation[0] && e.documentation[0].text?e.documentation[0].text:'').replace("\n","\n *")
+            documentation: documentation.replace("\n","\n *")
           }
           elements.push(setting)   
         }

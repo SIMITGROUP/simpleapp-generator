@@ -23,9 +23,9 @@
                 
                 <HeaderButtonMenuPicker v-model="showMenu"></HeaderButtonMenuPicker>
                 <HeaderButtonProfile v-model="showProfile"/>
-                <UserInvitation/>
+                
         </div> 
-        
+        <UserInvitation/>
         <!-- <HeaderBar class="border flex flex-row h-10 fixed left-0 w-full  justify justify-between top-0 z-50 bg-white  dark:bg-gray-800"/> -->
      
     </div>

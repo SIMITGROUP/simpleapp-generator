@@ -50,6 +50,7 @@ devServer: {
     'dayjs-nuxt',
     '@sidebase/nuxt-auth',
     'nuxt-primevue',
+    '@nuxtjs/apollo',
     // '@nuxtjs/pwa', //cannot turn on, will cause nuxt cant start
     // "nuxt-security",     //temporary avoid nuxt-security cause cors
     '@vueuse/nuxt',     
@@ -88,6 +89,13 @@ devServer: {
       },
     ],
     defaultLocale: "en",    
+  },
+  apollo: {
+    clients: {
+      default: {
+        httpEndpoint: process.env.API_URL
+      }
+    },
   },
   primevue: {
     

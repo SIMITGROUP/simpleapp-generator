@@ -13,6 +13,7 @@ import { AuditTrail } from './generate/commons/audittrail.service';
 <% for(let i=0;i<it.modules.length; i++){ %>
 <% let obj = it.modules[i]%>
 import { <%= obj.docname %>Service } from './services/<%= obj.doctype %>.service';    
+import { <%= obj.docname %>Resolver } from './resolvers/<%= obj.doctype %>.resolver';    
 import { <%= obj.docname %>Controller } from './generate/controllers/<%= obj.doctype %>.controller';    
 import { <%= obj.docname %>MongoSchema } from './generate/models/<%= obj.doctype %>.model';
 <%}%>
@@ -45,12 +46,18 @@ import { <%=capitalizeFirstLetter(bpmn)%>ListenerService } from 'src/simpleapp/w
   ],
   controllers: [<% for(let i=0;i<it.modules.length; i++){ %><%= it.modules[i].docname %>Controller,<%}%> ProfileController,WorkflowController],
   providers: [
-    AuditTrail,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %><%= it.modules[i].docname %>Service,<%}%> ProfileService,WorkflowDelegate,WorkflowConfig,WorkflowService,WorkflowUserService,
+    AuditTrail,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %>
+      <%= it.modules[i].docname %>Service,
+      <%= it.modules[i].docname %>Resolver,
+      <%}%> ProfileService,WorkflowDelegate,WorkflowConfig,WorkflowService,WorkflowUserService,
      <%for(let i=0; i<it.allbpmn.length;i++){%>
         <%let bpmn = it.allbpmn[i]%>
         <%=capitalizeFirstLetter(bpmn)%>ListenerService,
     <%}%>
   ],
-  exports:[AuditTrail,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %><%= it.modules[i].docname %>Service,<%}%> ProfileService,WorkflowDelegate,WorkflowConfig,WorkflowService,WorkflowUserService,]
+  exports:[AuditTrail,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %>
+    <%= it.modules[i].docname %>Service,
+    <%= it.modules[i].docname %>Resolver,
+    <%}%> ProfileService,WorkflowDelegate,WorkflowConfig,WorkflowService,WorkflowUserService,]
 })
 export class GenerateModule {}

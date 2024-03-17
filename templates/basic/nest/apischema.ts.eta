@@ -5,21 +5,26 @@
  * Author: Ks Tan
  */
 import { ApiProperty } from '@nestjs/swagger';
+import { Field, ObjectType } from '@nestjs/graphql';
 
 <%Object.keys(it.models).forEach(function(name) { %>
     <% let schema = it.models[name].model %>        
+        @ObjectType()
         export class <%= name %>{            
 
             <% Object.keys(schema).forEach(function(key){%>
                 <% let obj = schema[key] %>
                 <% if(typeof obj == 'string') {%>
+                    @Field()
                     @ApiProperty({type: ()=><%=obj%>})
                     <%= key %>:  <%= obj %>;                
                 <% }else if( Array.isArray( obj)){%>
+                    @Field(type=>[<%=initType(obj[0]) %>])
                     @ApiProperty({type: ()=>[<%=initType(obj[0]) %>] })                    
                     <%= key %>:  <%= obj[0] %>[];
                 
                 <% }else{%>
+                    @Field()                
                     @ApiProperty(<%~ JSON.stringify(obj)%> )
                     <%= key %>:  <%= obj.type %>;
                 <% } %>

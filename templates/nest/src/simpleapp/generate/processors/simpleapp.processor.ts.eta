@@ -37,6 +37,7 @@ import {
   DefaultHooks,
   MoreProjectionType,
   DeleteResultType,
+  WorkflowName,
 } from '../types';
 @Injectable()
 export class SimpleAppService<T extends { _id?: string }> {
@@ -555,12 +556,13 @@ export class SimpleAppService<T extends { _id?: string }> {
     this.applyNestedDateTime(appuser, data, 'update');
     try {
       const result = await this.doc.findOneAndReplace(isolationFilter, data, {
-        session: dbsession,new:true
+        session: dbsession,
+        new: true,
       });
       appuser.addUpdatedRecordId(this.documentName, data._id);
       if (this.hooks.afterUpdate)
         await this.hooks.afterUpdate(appuser, id, result);
-      return await this.findById(appuser, id);
+      return  result // await this.findById(appuser, id);
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerErrorException(err.message);
@@ -605,14 +607,15 @@ export class SimpleAppService<T extends { _id?: string }> {
 
     try {
       const result = await this.doc.findOneAndUpdate(isolationFilter, data, {
-        session: dbsession,new:true
+        session: dbsession,
+        new: true,
       });
 
       appuser.addUpdatedRecordId(this.documentName, data._id);
 
       if (this.hooks.afterUpdate)
         await this.hooks.afterUpdate(appuser, id, result);
-      return await this.findById(appuser, id);
+      return result //await this.findById(appuser, id);
     } catch (err) {
       throw new InternalServerErrorException(err.message);
     }
@@ -719,7 +722,11 @@ export class SimpleAppService<T extends { _id?: string }> {
     }
   }
 
-  startWorkflow(appuser: UserContext, processName: string, workflowData: any) {
+  startWorkflow(
+    appuser: UserContext,
+    processName: WorkflowName,
+    workflowData: any,
+  ) {
     return this.eventEmitter.emit(
       'workflow.start',
       appuser,

@@ -16,4 +16,13 @@
  * author: Ks Tan
  */
 useNuxtApp().$event('SetTitle',t('home'))
+
+onMounted(()=>{
+  if(!getUserStore()?.currency || !getUserStore()?.country){
+    const id=getUserStore().orgRecordId
+    onScreenEditDocument<Organization>('organization',id, async (actionName:FormCrudEvent,data:Organization)=>{
+      
+    })
+  }
+})
 </script>

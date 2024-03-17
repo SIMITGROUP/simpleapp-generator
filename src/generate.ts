@@ -192,6 +192,7 @@ const generateSchema = ( docname: string,
     });
     
     const backendTargetFolder = `${backendFolder}/src/simpleapp/generate`
+    const simpleappTargetFolder = `${backendFolder}/src/simpleapp`
     const backendServiceFolder = `${backendFolder}/src/simpleapp/services`    
     
     
@@ -227,11 +228,11 @@ const generateSchema = ( docname: string,
             const filecontent = eta.render(templatepath, variables)     
             
             writeFileSync(targetfile,filecontent);
-          }else if(filecategory=='service'){ //service file won't override if exists
-
-            const targetfile = `${backendServiceFolder}/${doctype}.${filecategory}.${filetype}`
-            if(!existsSync(backendServiceFolder)){
-              mkdirSync(backendServiceFolder,{recursive:true})
+          }else if(filecategory=='service' || filecategory=='resolver'){ //service file won't override if exists
+            const targetfolder = `${simpleappTargetFolder}/${filecategory}s`
+            const targetfile = `${targetfolder}/${doctype}.${filecategory}.${filetype}`
+            if(!existsSync(targetfolder)){
+              mkdirSync(targetfolder,{recursive:true})
             }         
 
             if(!existsSync(targetfile) || readFileSync(targetfile, 'utf-8').includes('--remove-this-line-to-prevent-override--')){
