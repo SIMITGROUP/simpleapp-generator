@@ -4,5 +4,4 @@ export * from './<%= d['doctype']%>.type'
 <%}%>
 export * from './simpleapp.type'
 export * from './workflow.type'
-
 export * from '../../types';

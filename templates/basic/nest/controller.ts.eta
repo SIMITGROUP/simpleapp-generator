@@ -210,7 +210,8 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
         <%}%>
          ){
     
-      return await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser,<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
+
+      const res:<%= getFieldType('type',api.responseType)%>  = await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser,<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
           <%let subpath = api.entryPoint.split('/')%>
           <% for(let a=0;a<subpath.length;a++){%>
             <%const partstr = subpath[a]%>
@@ -229,7 +230,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
           data,
         <%}%>
         )
-      
+    return res
    
   } 
 <%}%>

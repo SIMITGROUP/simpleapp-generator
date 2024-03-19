@@ -11,6 +11,12 @@ export type ForeignKey = {
     [key:string]:any
   };
 
+export type CodeLabelValue = {
+  _id: string
+  code: string
+  label: string
+  value: number
+}
 export type UserPermission = {
   permId: string;
   branchId: number

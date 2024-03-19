@@ -21,7 +21,7 @@ const CustomTailwind = usePassThrough(
             // buttonContainer:{class:'hidden'},
         },
         card:{
-            root:{class:'bg-white dark:bg-gray-800  shadow p-4 rounded-2xl'},
+            root:{class:'bg-white dark:bg-gray-800  shadow p-2 rounded-2xl'},
             // title:{class:''},
             // header:{class:''}
         },       

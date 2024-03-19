@@ -14,7 +14,21 @@ export class ForeignKey {
     label: string;
 }
 
-
+@ObjectType()
+export class CodeLabelValue {
+  @ApiProperty({ type: 'string'})
+  @Field()
+  _id: string;
+  @ApiProperty({ type: 'string' })
+  @Field()
+  code: string
+  @ApiProperty({ type: 'string' })
+  @Field()
+  label: string
+  @ApiProperty({ type: Number, required: false, default: 0 })
+  @Field()
+  value: number
+}
 export class UserAllPermissionsBranches {
   @ApiProperty({ type: 'string', required: true, default: '',})
   permId: string;

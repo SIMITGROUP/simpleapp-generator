@@ -44,7 +44,7 @@ export class UserContext {
   protected uname: string = '';
   protected email: string = '';
   protected fullname: string = '';
-  protected xOrg: string = '';
+  protected xOrg: string = '';  
   protected tenantId: number = 0;
   protected orgId: number = 0;
   protected orgRecordId: string = '';
@@ -252,6 +252,7 @@ export class UserContext {
       return undefined;
     }
   };
+  getUserToken = () => this.token
   setUserToken = async (tokenstr: string) => {
     //define token info
     const tokeninfo = jwt.decode(tokenstr);
@@ -363,7 +364,9 @@ export class UserContext {
     this.orgId = orgId;
     this.branchId = branchId;
   }
+  getXorg = () =>this.xOrg
   setXorg = (xorg) => {
+    this.xOrg = xorg
     try {
       const decodedText: string = Base64URL.decodeText(xorg);
       const x = decodedText.includes('/')

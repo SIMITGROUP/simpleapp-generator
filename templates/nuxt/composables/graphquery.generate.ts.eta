@@ -13,14 +13,14 @@ export const setGraphqlServer=()=>{
         uri: `${useRuntimeConfig().public.API_URL}/${getCurrentXorg()}/graphql`,
       })
       apolloclient.setLink(newlink)
-    //   apolloclient.defaultOptions={
+      apolloclient.defaultOptions={
        
-    //     query:{
-    //      fetchPolicy: 'no-cache',
-    //      errorPolicy: 'all'
-    //     }
-    //   }
+        query:{
+         fetchPolicy: 'no-cache',
+         errorPolicy: 'all'
+        }
+      }
 
   }
   
-export const graphquery=async(qqlstr: typeof gql) =>(await useAsyncQuery(qqlstr)).data
+export const graphquery=async<T>(qqlstr: typeof gql) =>(await useAsyncQuery<T>(qqlstr)).data

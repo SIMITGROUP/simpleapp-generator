@@ -5,7 +5,7 @@
  * Author: Ks Tan
  */
 import { ApiProperty } from '@nestjs/swagger';
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType,ID } from '@nestjs/graphql';
 
 <%Object.keys(it.models).forEach(function(name) { %>
     <% let schema = it.models[name].model %>        

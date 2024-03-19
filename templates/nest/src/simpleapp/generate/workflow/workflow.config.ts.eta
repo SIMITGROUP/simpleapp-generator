@@ -20,7 +20,7 @@ let _this: WorkflowConfig; //we need another variable to access WorkflowConfig
 class MyDataStore extends DataStore {
   constructor(bpmnserver) {
     super(bpmnserver);
-    console.log('this.dbConfiguration ', this.db);
+    //console.log('this.dbConfiguration ', this.db);
   }
 }
 
