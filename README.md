@@ -13,7 +13,7 @@ SimpleApp generator is a typescript code generator for convert jsonschemas becom
   e. formulas of specific fields
   f. data types and validations
 7. build in enterprise functionality included:
-  a. document numbering [60%]
+  a. document numbering [x]
   b. authentication and authorization [x]
   c. data modification audit trail []
   d. SSO [x]
@@ -26,6 +26,7 @@ SimpleApp generator is a typescript code generator for convert jsonschemas becom
   c. fill in minimal source code in generated listener to run whole bpmn process
   d. build in integrate between both frontend and backend
   e. declare workflow in jsonschema
+9. graphql 
 
 # Documentation
 1. [jsonschemas](./docs/jsonschema.md)
@@ -39,6 +40,7 @@ SimpleApp generator is a typescript code generator for convert jsonschemas becom
 9. Additional Api & define api schema
 10.SimpleAppInputs
 11.Role Base Access Control
+12.graphql
 
 
 # Quick start
