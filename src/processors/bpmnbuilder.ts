@@ -45,13 +45,44 @@ export const  generateWorkflows = async (configs,genFor:string[]) =>{
       let elements:any[]=[]
       for(let i=0; i<flowElements.length;i++){
         const e = flowElements[i]
-        // console.log("-------element = ",e)
         if(['bpmn:UserTask','bpmn:ServiceTask'].includes(e.$type)){
           if(invalidElementId.test(e.id)){
                   log.error(`bpmn File : ${bpmnfile} -> Task(${e.name} defined invalid symbol in id:"${e.id}"`)
                   throw "quite"
             }
-            // console.log("eeee",e)
+            /*
+            read current process user task
+            1. create type and apischemas for process task.such as updatescheduleacknowledgeteacher, with content same with inputsetting
+              read input setting
+              create file if not exists
+                backend/src/simpleapp/workflows/types
+                backend/src/simpleapp/workflows/apischemas
+                
+
+            2. create workflow controller with input body updatescheduleacknowledgeteacher
+                import types and apischemas
+
+            3. create formkey .vue at frontend
+                enum = select, text = text, number =input number
+
+            4. submit workflow shall define presentation properties also, possible form key
+            5. onclick workflow prompt out dialog, complete dialog refresh task list
+
+
+            =====================
+            messaging service
+
+            */
+
+
+
+
+
+
+
+
+
+
             let documentation :string= ''
             if(e.documentation && e.documentation[0] && e.documentation[0].text){
               documentation=e.documentation[0].text
@@ -64,42 +95,7 @@ export const  generateWorkflows = async (configs,genFor:string[]) =>{
           }
           elements.push(setting)   
         }
-        // switch(e.$type){
-        //     case 'bpmn:UserTask':             
-        //         const usertasksetting = e.get('extensionElements')  
-                
-        //         // if(setting && setting.values){
-        //         //     for(let j=0;j<setting.values.length;j++){
-        //         //         const s = setting.values[j]
-        //         //         if(s.$type=='camunda:taskListener'){
-        //         //             if(!invalidDelegate.test(s.delegateExpression)){
-        //         //                 delegates.push(s.delegateExpression)
-        //         //             }else{
-        //         //                 log.error(`bpmn File : ${bpmnfile} -> UserTask(${s.name}/${s.id}) defined invalid symbol in delegate Expression: "${s.delegateExpression}"`);
-        //         //                 throw "quite"
-        //         //             }
-                            
-        //         //         }
-                        
-        //         //     }
-                    
-        //         // }
-                
-        //         console.log("Element user task type", e.$type, ", id:",e.id)
-        //     break;
-        //     case 'bpmn:ServiceTask':                
-        //         console.log("Element service type", e.$type, ", id:",e.id)    
-        //         const servicetasksetting = e.get('extensionElements')  
-        //         elements.push(servicetasksetting)     
-        //         // if(!invalidDelegate.test(e.delegateExpression)){
-        //         //         delegates.push(e.delegateExpression)
-        //         // }else{
-        //         //     log.error(`bpmn File : ${bpmnfile} -> ServiceTask(${e.name}/${e.id}) defined invalid symbol in delegate Expression: "${e.delegateExpression}"`);
-        //         //     throw "quite"
-        //         // }
-                
-        //     break;
-        // }
+        
       }
       
       // delegates = _.uniq(delegates)

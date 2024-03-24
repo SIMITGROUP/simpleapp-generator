@@ -4,6 +4,7 @@
  * last change 2024-02-22
  * author: Ks Tan
  */
+import { Field, ObjectType } from '@nestjs/graphql';
 import { ApiProperty } from '@nestjs/swagger';
 export class ForeignKey {
     @ApiProperty({ type: 'string', required: false, format: 'uuid', default: '' })

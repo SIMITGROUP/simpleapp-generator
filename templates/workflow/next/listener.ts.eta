@@ -42,10 +42,11 @@ export class <%=it.processName%>ListenerService extends SimpleAppListenerService
       * Execute while user task <%= e.name%> invoked (triggered by actor to next step)
       * bpmn: <%=it.name%>, elementId: <%= e.id%>, taskName: <%= e.name%>, event: invoke
       * documentation: <%~e.documentation%> 
+      * @param appuser:UserContext
       * @param props
       */
       @OnEvent('<%=it.name%>.<%= e.id%>.invoke')
-      async <%=`watch_${e.id}_invoke`%>(props:<%=datatype%>){
+      async <%=`watch_${e.id}_invoke`%>(appuser:UserContext,props:<%=datatype%>){
         console.log("Running listener  <%=it.name%>.<%= e.id%>.invoke",props)
       }
 
@@ -53,10 +54,11 @@ export class <%=it.processName%>ListenerService extends SimpleAppListenerService
       * Execute while user task <%= e.name%> reach wait stage (pending actor input)
       * bpmn: <%=it.name%>, elementId: <%= e.id%>, taskName: <%= e.name%>, event: wait 
       * documentation: <%= e.documentation %> 
+      * @param appuser:UserContext
       * @param props
       */
       @OnEvent('<%=it.name%>.<%= e.id%>.wait')
-      async <%=`watch_${e.id}_wait`%>(props:<%=datatype%>){
+      async <%=`watch_${e.id}_wait`%>(appuser:UserContext,props:<%=datatype%>){
         console.log("Running listener  <%=it.name%>.<%= e.id%>.wait",props)
       }
       <%}else if( datatype=='ServiceTaskData'){ %>
@@ -65,10 +67,11 @@ export class <%=it.processName%>ListenerService extends SimpleAppListenerService
       * Execute ServiceTask event <%= e.name%> (start)
       * bpmn: <%=it.name%>, elementId: <%= e.id%>, taskName: <%= e.name%>, event: start
       * documentation: <%=e.documentation%> 
+      * @param appuser:UserContext
       * @param props
       */
       @OnEvent('<%=it.name%>.<%= e.id%>.start')
-      async <%=`watch_${e.id}_start`%>(props:<%=datatype%>){
+      async <%=`watch_${e.id}_start`%>(appuser:UserContext,props:<%=datatype%>){
         console.log("Running listener  <%=it.name%>.<%= e.id%>.start",props)
       }
       <%}%>

@@ -1,5 +1,6 @@
 {
     "Autoincreament": [
+      "access",
       "create",
       "update",
       "delete",
@@ -7,31 +8,35 @@
       "generateNextNo"
     ],
     "Branch": [
+      "access",
       "create",
       "update",
       "delete",
       "search"
     ],    
     "Organization": [
+      "access",
       "create",
       "update",
       "search",
       "delete"
     ],
     "Permission": [
-      "listUser",
+      "access",
       "search",
       "delete",
       "update",
       "create"
     ],
     "Tenant": [
+      "access",
       "create",
       "update",
       "delete",
       "search"
     ],
     "User": [
+      "access",
       "create",
       "update",
       "search",

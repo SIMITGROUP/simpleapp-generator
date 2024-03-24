@@ -9,6 +9,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import {DocNumberFormatGenerator} from './generate/commons/docnogenerator.service'
 import { AuditTrail } from './generate/commons/audittrail.service';
 import { CloudApiModule } from 'src/cloudapi/cloudapi.module';
+import { UserResolverService } from './services/userresolver.service';
 // auto import modules
 <% for(let i=0;i<it.modules.length; i++){ %>
 <% let obj = it.modules[i]%>
@@ -56,11 +57,11 @@ import { <%=capitalizeFirstLetter(bpmn)%>ListenerService } from 'src/simpleapp/w
      <%for(let i=0; i<it.allbpmn.length;i++){%>
         <%let bpmn = it.allbpmn[i]%>
         <%=capitalizeFirstLetter(bpmn)%>ListenerService,
-    <%}%>
+    <%}%> UserResolverService,
   ],
   exports:[SimpleAppRobotUserService,AuditTrail,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %>
     <%= it.modules[i].docname %>Service,
     <%= it.modules[i].docname %>Resolver,
-    <%}%> ProfileService,WorkflowDelegate,WorkflowConfig,WorkflowService,WorkflowUserService,]
+    <%}%> ProfileService,WorkflowDelegate,WorkflowConfig,WorkflowService,WorkflowUserService,UserResolverService,]
 })
 export class GenerateModule {}

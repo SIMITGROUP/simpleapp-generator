@@ -9,9 +9,9 @@ import { UserContext } from '../commons/user.context';
 export type WorkflowSettingApiSchema = {
   userServiceUrl: string;
   callBackUrl?: string;
-  assignee?: string;
-  candidateUsers?: string[];
-  candidategroups?: string[];
+  assignee?: string|string[];
+  candidateGroups?: string | string[];
+  candidateUsers?: string | string[];
 };
 
 export type WorkflowDataApiSchema = {
@@ -70,7 +70,7 @@ export type UserTaskData = {
   vars:any
   elementProps: {
     startedAt: string;
-    assignee?: string;
+    assignee?: string|string[];
     candidateGroups?: string | string[];
     candidateUsers?: string | string[];
     dueDate?: string;

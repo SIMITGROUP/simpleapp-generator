@@ -13,6 +13,8 @@ export enum Role {
     User = 'user',
     <% for(let i=0;i<it.modules.length; i++){ %>
         <% const m = it.modules[i] %>
+        <%=m.docname%>_access='<%=m.docname%>:access',
+
         <%=m.docname%>_create='<%=m.docname%>:create',
 
         <%=m.docname%>_update='<%=m.docname%>:update',

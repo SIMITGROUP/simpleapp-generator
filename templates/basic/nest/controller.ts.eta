@@ -68,20 +68,19 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   
   @Get()
   <%if(superadmindoctype.includes(it.doctype)){%>
-  @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_search`%>)
+  @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_access`%>)
   <%}else{%>
-  @Roles(Role.SuperAdmin,Role.SuperUser,Role.<%= `${it.typename}_search`%>)
+  @Roles(Role.SuperAdmin,Role.SuperUser,Role.<%= `${it.typename}_access`%>)
   <%}%>
   @HttpCode(200)
   @ApiResponse({
     status: 200,
-    description: 'Found',
-    type: String 
+    description: 'Found',    
   })
   @ApiResponse({ status: 500, description: 'Internal error' })
-  @ApiOperation({ operationId: 'runHello', description:"Say hello only" })
-  async hello(@AppUser() appuser: UserContext) {
-    return `Hello, welcome to ${ this.service.getDocumentName()}`//this._list(appuser);
+  @ApiOperation({ operationId: 'runDefault', description:"Run default behavior like say hello" })
+  async runDefault(@AppUser() appuser: UserContext) {
+    return await this.service.runDefault(appuser)
   }
   //autocomplete shall above :id
   @Post('/autocomplete')

@@ -31,6 +31,7 @@ import {
   HttpExceptionOptions,
 } from '@nestjs/common/exceptions';
 import { UserContext } from '../commons/user.context';
+import {CloudApiService} from 'src/cloudapi/cloudapi.service'
 import { DocNumberFormatGenerator } from '../commons/docnogenerator.service';
 import {
   IsolationType,
@@ -43,6 +44,8 @@ import {
 export class SimpleAppService<T extends { _id?: string }> {
   @Inject(EventEmitter2)
   protected eventEmitter: EventEmitter2;
+  @Inject(CloudApiService)
+  protected cloudapi: CloudApiService;
   protected hooks: DefaultHooks<T> = {};
   protected logger = new Logger();
   protected strictIsolation = true;
@@ -79,6 +82,7 @@ export class SimpleAppService<T extends { _id?: string }> {
     this.documentType = doctype.toUpperCase();
     this.documentName = docname;
     this.doc = newdoc;
+
     this.isolationtype = isolationtype;
     if (this.hooks.init) this.hooks.init();
     // this.tenantdoc = tenantdoc
@@ -188,12 +192,15 @@ export class SimpleAppService<T extends { _id?: string }> {
    * @param filters
    * @returns
    */
-  private async searchNoIsolation(appuser: UserContext, filters: Object) {
+  private async searchNoIsolation(
+    appuser: UserContext,
+    filters: FilterQuery<T>,
+  ) {
     try {
       if (this.hooks.beforeSearch)
         await this.hooks.beforeSearch(appuser, filters);
       const products = await this.doc.find(filters);
-      const productlist = products.map((p: T) => {
+      const productlist = products.map((p) => {
         return p;
       });
       if (this.hooks.afterSearch)
@@ -235,7 +242,7 @@ export class SimpleAppService<T extends { _id?: string }> {
       this.polishIsolationFilter(isolationFilter);
 
       // console.log("initial search",filters)
-      const newfilters = { ...filters, ...isolationFilter };
+      const newfilters: FilterQuery<T> = { ...filters, ...isolationFilter };
 
       if (this.hooks.beforeSearch)
         await this.hooks.beforeSearch(appuser, newfilters);
@@ -262,7 +269,8 @@ export class SimpleAppService<T extends { _id?: string }> {
   async findById(appuser: UserContext, id: string) {
     if (this.hooks.beforeFetchRecord)
       await this.hooks.beforeFetchRecord(appuser, id);
-    const data = await this.search(appuser, { _id: id });
+
+    const data = await this.search(appuser, { _id: id as any });
     if (this.hooks.afterFetchRecord)
       await this.hooks.afterFetchRecord(appuser, data[0]);
 
@@ -561,8 +569,8 @@ export class SimpleAppService<T extends { _id?: string }> {
       });
       appuser.addUpdatedRecordId(this.documentName, data._id);
       if (this.hooks.afterUpdate)
-        await this.hooks.afterUpdate(appuser, id, result);
-      return  result // await this.findById(appuser, id);
+        await this.hooks.afterUpdate(appuser, id, existingdata, result);
+      return result; // await this.findById(appuser, id);
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerErrorException(err.message);
@@ -614,8 +622,8 @@ export class SimpleAppService<T extends { _id?: string }> {
       appuser.addUpdatedRecordId(this.documentName, data._id);
 
       if (this.hooks.afterUpdate)
-        await this.hooks.afterUpdate(appuser, id, result);
-      return result //await this.findById(appuser, id);
+        await this.hooks.afterUpdate(appuser, id, existingdata, result);
+      return result; //await this.findById(appuser, id);
     } catch (err) {
       throw new InternalServerErrorException(err.message);
     }
@@ -745,7 +753,11 @@ export class SimpleAppService<T extends { _id?: string }> {
     this.logger.debug(result, 'genNewDocNo');
     data[this.documentIdentityCode] = result;
   }
-
+  async runDefault(appuser: UserContext): Promise<unknown> {
+    return (
+      'Hello this is ' + this.getDocumentType() + ': ' + this.getDocumentName()
+    );
+  }
   async identifyForeignKeys(appuser: UserContext, data: T) {
     /**
      * 1. looping schemas identify what foreign key exists
