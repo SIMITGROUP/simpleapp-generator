@@ -149,9 +149,15 @@ export type SchemaConfig = {
   documentType: string
   documentName: string
   collectionName?: string
-  foreignKeys?:MyForeignKey,
+  foreignKeys?:MyForeignKey
+  printFormats?: SchemaPrintFormat[]
 }
 
+export type SchemaPrintFormat = {
+  formatName: string
+  formatId: string
+  description?: string
+}
 
 export type SchemaFields = {
   _id: SimpleAppJSONSchema7 

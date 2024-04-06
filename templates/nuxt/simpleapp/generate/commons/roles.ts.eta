@@ -13,7 +13,9 @@ const allroles:roletype[] = [
         {resource: '<%=m.docname%>', action:'update'},
         {resource: '<%=m.docname%>', action:'delete'},
         {resource: '<%=m.docname%>', action:'search'},
-       
+        <%if(m.schema['x-simpleapp-config']['printFormats']){%>
+            {resource: '<%=m.docname%>', action:'print'},
+        <%}%>,
 
         <% if(m.api && m.api.length >0) {%>
 

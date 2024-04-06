@@ -33,6 +33,16 @@ export const branch:SchemaType ={
         },
         branchCode: {type: "string",minLength:1},
         branchName: {type: "string",minLength:1},
+        street1: {type: "string"},
+        street2: {type: "string"},
+        street3: {type: "string"},
+        street4: {type: "string"},
+        city: {type: "string"},
+        region: {type: "string"},
+        postcode: {type: "string"},
+        country: {type: "string"},
+        tel: {type: "string"},
+        email: {type: "string"},
         active: {type: "boolean",default:true},
         description: {type: "string",}
       }

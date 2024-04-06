@@ -22,7 +22,8 @@ type crudType = {
   runUpdate: Function;  
   runPatch: Function;  
   runDelete: Function;
-  runSearch: Function
+  runSearch: Function;
+  runDefault:Function;
 };
 export class SimpleAppClient<
   TData extends { _id?: string,created?:string },
@@ -77,6 +78,11 @@ export class SimpleAppClient<
     });
   }
 
+
+  async runDefault(){
+    const res = await this.docapi.runDefault() 
+    return res.data
+  }
   async create() {    
     const errors = this.validateFailed();
     const {$event} =useNuxtApp()

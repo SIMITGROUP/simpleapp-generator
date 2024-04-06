@@ -7,7 +7,7 @@
 <template>    
     <div>
         <% if(it.autocompletename){%> 
-            <title v-if="id">{{ data.<%=it.autocompletename%> ??  data.<%=it.autocompletecode%>}}</title>
+            <title v-if="id">{{ data.<%=it.autocompletename%> }}</title>
         <%}else{%> 
             <title v-if="id">{{ t(doc.getDocName())}}</title>
         <%}%> 

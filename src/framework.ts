@@ -17,6 +17,7 @@ let config = {
     "mongoDbName":'simpleapp',
     "frontendFolder":"./frontend",
     "frontendPort":"8080",
+    "printFormatDir":"./printformats",
     "oauthSetting":{
         "oauthBaseUrl":"https://keycloak-server-url/",
         "oauthRealm":"realm-name",
@@ -164,7 +165,7 @@ export const prepareNuxt = (callback:Function)=>{
         exec(`cd ${targetfolder};pnpm install;pnpm install -D @nuxtjs/apollo@next dayjs-nuxt @nuxtjs/device @nuxtjs/color-mode @types/json-schema @nuxtjs/i18n@next nuxt-primevue @nuxtjs/tailwindcss @types/jsonpath @sidebase/nuxt-auth @types/node @vueuse/nuxt @sidebase/nuxt-auth @vueuse/core  prettier `, (error, stdout, stderr)=>{                
             //;pnpm install    
             console.log(error, stdout, stderr)
-                exec(`cd ${targetfolder};pnpm install --save dayjs pusher-js country-code-dateformat chart.js tailwind-merge @iconify-json/heroicons  json-schema @vueuse/core ts-md5 primeicons memory-cache jsonpath pinia @pinia/nuxt @nuxt/kit lodash @types/lodash @darkwolf/base64url next-auth@4.21.1 @darkwolf/base64url @nuxt/ui ajv ajv-formats ajv-errors dotenv @fullcalendar/core @fullcalendar/vue3 quill prettier axios json-schema mitt `, (error, stdout, stderr)=>{                
+                exec(`cd ${targetfolder};pnpm install --save  vue-pdf-embed dayjs pusher-js country-code-dateformat chart.js tailwind-merge @iconify-json/heroicons  json-schema @vueuse/core ts-md5 primeicons memory-cache jsonpath pinia @pinia/nuxt @nuxt/kit lodash @types/lodash @darkwolf/base64url next-auth@4.21.1 @darkwolf/base64url @nuxt/ui ajv ajv-formats ajv-errors dotenv @fullcalendar/core @fullcalendar/vue3 quill prettier axios json-schema mitt `, (error, stdout, stderr)=>{                
                 console.log(error, stdout, stderr)
                 
                 // fs.mkdirSync(`${targetfolder}/assets/css/`,{recursive:true})

@@ -19,7 +19,7 @@ import { Request } from '@nestjs/common';
     let tmptypename = typename.replace('[','').replace(']','')
     
     if(systemtypes.includes(tmptypename)){
-      
+      if(proptype=='type' ) tmptypename =tmptypename.toLowerCase();
     }else if(proptype=='schema'){
       tmptypename= 'schemas.'+tmptypename    
     }else{ //type

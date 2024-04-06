@@ -2,8 +2,9 @@ import * as constants from './constant'
 import {readJsonSchemaBuilder} from './processors/jsonschemabuilder'
 import {generateWorkflows} from './processors/bpmnbuilder'
 import {allforeignkeys,allfields} from './storage'
-import {TypeGenerateDocumentVariable,ChildModels,ModuleObject, SchemaType, SchemaConfig } from './type'
+import {TypeGenerateDocumentVariable,ChildModels,ModuleObject, SchemaType, SchemaConfig,SchemaPrintFormat } from './type'
 import { Logger, ILogObj } from "tslog";
+
 const log: Logger<ILogObj> = new Logger();
 const clc = require("cli-color");
 const path = require('path');
@@ -11,6 +12,7 @@ import {mkdirSync, readdir,readFileSync,writeFileSync,existsSync,copyFileSync, r
 import _ from 'lodash'
 import * as buildinschemas from './buildinschemas'
 import { JSONSchema7 } from 'json-schema';
+import { generatePrintformat } from './processors/jrxmlbuilder'
 const { Eta } = require('eta');
 const { capitalizeFirstLetter }= require('./libs');
 // const X_DOCUMENT_TYPE='x-document-type'
@@ -38,7 +40,7 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
   configs = paraconfigs
   frontendFolder=configs.frontendFolder
   backendFolder=configs.backendFolder
-  
+  const printformats:SchemaPrintFormat[] = []
   const groupFolder = configs.groupFolder
   const defaultLangFile = configs.defaultLangFile ??  frontendFolder +'/../lang/default.json'
   if(genFor.includes('nest')){
@@ -60,6 +62,8 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
     // console.log("=====>>>>>",schemaname,cloneschema)
     await processSchema(schemaname,cloneschema)
   }
+
+  //printformats
   const files = readdirSync(configs.jsonschemaFolder)
   for(let j = 0; j< files.length;j++){
     const file = files[j]
@@ -69,8 +73,16 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
     const fullfilename = `${configs.jsonschemaFolder}/${file}`
     try{
       const jsoncontent = readFileSync(fullfilename, 'utf-8');            
-    
+      log.info("Process ",fullfilename)
       const jsonschema = JSON.parse(jsoncontent)
+      const schemaconfig = jsonschema["x-simpleapp-config"]
+      if(schemaconfig['printFormats']){
+        const formats:SchemaPrintFormat[] = schemaconfig['printFormats']
+        for(let formatno=0;formatno< formats.length; formatno++ ){
+          log.warn("Format ",formatno,formats[formatno].formatId)
+          printformats.push(formats[formatno])
+        }
+      }
       await processSchema(file.replace('.json',''),jsonschema)   
     }
     catch(e:any){
@@ -83,7 +95,9 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
   //prepare group/roles
   const systemgroups = readdirSync(`${groupFolder}`)
   for(let g = 0; g< systemgroups.length;g++){
+    
     const groupfile = systemgroups[g]
+    log.info("Process group ",groupfile)
     const groupjsonstr = readFileSync(`${groupFolder}/${groupfile}`, 'utf-8');      
     
     const groupdata = JSON.parse(groupjsonstr);
@@ -93,6 +107,7 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
   }
   
   if(existsSync(defaultLangFile)){
+    log.info("Process lang file ",defaultLangFile)
     const langjsonstr = readFileSync(defaultLangFile, 'utf-8');      
     
       langdata = JSON.parse(langjsonstr);     
@@ -101,10 +116,13 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
 
   
   if(configs.bpmnFolder){
+    log.info("Process bpmn folder ",configs.bpmnFolder)
     allbpmn = await generateWorkflows(configs,genFor)
   }
   
   generateSystemFiles(activatemodules,allbpmn)
+
+  generatePrintformat(configs,printformats)
   
   callback()
 }
@@ -122,13 +140,21 @@ const processSchema= async (schemaname:string,jsondata:JSONSchema7)=>{
       const copyofjsonschema = {...jsondata}
       const allmodels:ChildModels =  await readJsonSchemaBuilder(docname, jsondata);
       generateSchema(docname, doctype, rendertype, allmodels);        
-      activatemodules.push({
-        doctype:doctype,
-        docname:capitalizeFirstLetter(docname),
-        pagetype: config.pageType??'',
-        api:config.additionalApis,
-        schema : copyofjsonschema
-      })
+      const moduleindex = activatemodules.findIndex(item=>item.doctype == doctype)
+      if(moduleindex<0){          
+          activatemodules.push({
+            doctype:doctype,
+            docname:capitalizeFirstLetter(docname),
+            pagetype: config.pageType??'',
+            api:config.additionalApis,
+            schema : copyofjsonschema
+          })
+        }
+        else{
+          activatemodules[moduleindex].pagetype = config.pageType??''
+          activatemodules[moduleindex].api = config.additionalApis
+          activatemodules[moduleindex].schema = copyofjsonschema
+        }
     // } else {
       // log.warn(`Load `+clc.yellow(file) + ` but it is not supported`)
     // }      
@@ -216,7 +242,7 @@ const generateSchema = ( docname: string,
           const filecategory = arrfilename[0]
           const filetype = arrfilename[1]        
           const autogeneratetypes = ['apischema','controller','jsonschema','model','resolver','processor','type','default']
-          log.info("process: ",filename)
+          log.info("process nest: ",doctype," :",filename)
           if(autogeneratetypes.includes(filecategory)){
             //multiple files in folder, append s at folder name
             const storein = `${backendTargetFolder}/${filecategory}s`  
@@ -226,8 +252,8 @@ const generateSchema = ( docname: string,
             }                
             
             const filecontent = eta.render(templatepath, variables)     
-            
             writeFileSync(targetfile,filecontent);
+            console.log("Write complete")
           }else if(filecategory=='service' ){ //service file won't override if exists
             const targetfolder = `${simpleappTargetFolder}/${filecategory}s`
             const targetfile = `${targetfolder}/${doctype}.${filecategory}.${filetype}`
@@ -267,6 +293,7 @@ const generateSchema = ( docname: string,
           }
                
         }else if(foldertype=='nuxt'){
+          console.log("Process nuxt: ",docname)
           const capname = capitalizeFirstLetter(docname)
         
           const validateWritePage = (targetfile:string,isexists:boolean)=>{
@@ -367,7 +394,7 @@ const generateSchema = ( docname: string,
       
 
     })
-    
+    console.log("Complete generate schema")
    
 
 }
@@ -395,6 +422,7 @@ const generateSystemFiles=(modules:ModuleObject[],allbpmn)=>{
       
       //generate code for framework
       for(let index=0; index<frameworkfiles.length; index++){
+        log.info("Process systemfiles ",frameworkfiles[index])
         const longfilename:string = String(frameworkfiles[index])
         const patharr = longfilename.split('/')
         const filename = _.last(patharr)

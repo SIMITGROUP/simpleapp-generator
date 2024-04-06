@@ -30,6 +30,16 @@ export class CodeLabelValue {
   @Field()
   value: number
 }
+@ObjectType()
+export class KeyValue {
+  @ApiProperty({ type: 'string' })
+  @Field()
+  key: string;
+  @ApiProperty({ type: 'string' })
+  @Field()
+  value: string;  
+}
+
 export class UserAllPermissionsBranches {
   @ApiProperty({ type: 'string', required: true, default: '',})
   permId: string;

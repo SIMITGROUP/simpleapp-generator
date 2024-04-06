@@ -32,6 +32,7 @@ import {
 } from '@nestjs/common/exceptions';
 import { UserContext } from '../commons/user.context';
 import {CloudApiService} from 'src/cloudapi/cloudapi.service'
+import { PrintApiService } from 'src/printapi/printapi.service';
 import { DocNumberFormatGenerator } from '../commons/docnogenerator.service';
 import {
   IsolationType,
@@ -46,6 +47,8 @@ export class SimpleAppService<T extends { _id?: string }> {
   protected eventEmitter: EventEmitter2;
   @Inject(CloudApiService)
   protected cloudapi: CloudApiService;
+  @Inject(PrintApiService)
+  protected printapi: PrintApiService;
   protected hooks: DefaultHooks<T> = {};
   protected logger = new Logger();
   protected strictIsolation = true;
@@ -862,5 +865,10 @@ export class SimpleAppService<T extends { _id?: string }> {
         }
       }
     }
+  }
+
+  async print(appuser: UserContext, id: string, formatid: string) {    
+    const pdfresult = await this.printapi.getBase64Pdf(appuser, formatid, id);    
+    return pdfresult;
   }
 }

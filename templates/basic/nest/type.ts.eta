@@ -15,9 +15,9 @@ import {DefaultHooks} from  "../types"
         <% if(typeof obj == 'string') {%>
           <%= key %> <%if(obj.required){%>?<%}%>: <%= obj  %>; //child object
         <% }else if( Array.isArray( obj)){%>
-          <%= key %><%if(obj.required){%>?<%}%>: <%= obj[0] %>[]; //array 
+          <%= key %>?: <%= obj[0] %>[]; //array 1
         <% }else if( obj.type == 'array'){%>
-          <%= key %><%if(obj.required){%>?<%}%>: <%= obj.items.type %>[]; //array 
+          <%= key %><%if(obj.required){%>?<%}%>: <%= obj.items.type %>[]; //array 2
         <% }else{%>
           <%= key %> <% if(!obj.required || obj.required==false){%>?<%}%>: <%= obj.type %>;   // <%~ JSON.stringify(obj) %>
         <% } %>

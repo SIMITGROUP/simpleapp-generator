@@ -10,7 +10,23 @@ export const organization:SchemaType ={
         uniqueKey:'orgCode',
         uniqueKeys:[ ['orgId'] ],
         documentTitle:'orgName',
-        additionalAutoCompleteFields: ['orgId']
+        additionalAutoCompleteFields: ['orgId'],
+        additionalApis:[{
+            "action":"getlogo",
+            "entryPoint":"logo",
+            "requiredRole":[],
+            "method":RESTMethods.get,
+            "responseType":"String",
+            "description":"obtain avatar base64 jpg image"
+          },{
+            "action":"uploadlogo",
+            "entryPoint":"logo",
+            "requiredRole":[],
+            "method":RESTMethods.post,
+            "schema":"KeyValue",
+            "responseType":"String",
+            "description":"post avatar in base64 jpg image"
+          }]
     },    
     required:["orgId","orgCode","orgName"],
     "properties": {
@@ -24,6 +40,7 @@ export const organization:SchemaType ={
         branchId: {type:'integer',default:1,minimum:0 },
         orgCode: {"type": "string",  "minLength":1,},
         orgName: {type: "string",},
+        registrationNo:{type:"string"},
         active: {type: "boolean","default":true,},
         description: {type: "string",format:"text",},
         timeZone: {"type": "string","examples": ["Asia/Kuala_Lumpur"]},

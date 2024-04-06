@@ -44,7 +44,7 @@ export class UserContext {
   protected uname: string = '';
   protected email: string = '';
   protected fullname: string = '';
-  protected xOrg: string = '';  
+  protected xOrg: string = '';
   protected tenantId: number = 0;
   protected orgId: number = 0;
   protected orgRecordId: string = '';
@@ -252,16 +252,16 @@ export class UserContext {
       return undefined;
     }
   };
-  getUserToken = () => this.token
+  getUserToken = () => this.token;
   setUserToken = async (tokenstr: string) => {
     //define token info
     const tokeninfo = jwt.decode(tokenstr);
     this.token = tokenstr;
-    this.uid = tokeninfo.sub;
-    this.email = tokeninfo.email;
-    this.uname = tokeninfo.preferred_username;
-    this.fullname = tokeninfo.name;
-    this.ssoACL = tokeninfo.resource_access;
+    this.uid = tokeninfo?.sub ?? '';
+    this.email = tokeninfo?.email ??'';
+    this.uname = tokeninfo?.preferred_username ?? '';
+    this.fullname = tokeninfo?.name ?? [];
+    this.ssoACL = tokeninfo?.resource_access ?? [];
     this.logger.verbose(`set token ${this.uid}`);
     //read current user from db
     // console.log("await this.obtainProfileFromDb()")
@@ -364,9 +364,9 @@ export class UserContext {
     this.orgId = orgId;
     this.branchId = branchId;
   }
-  getXorg = () =>this.xOrg
+  getXorg = () => this.xOrg;
   setXorg = (xorg) => {
-    this.xOrg = xorg
+    this.xOrg = xorg;
     try {
       const decodedText: string = Base64URL.decodeText(xorg);
       const x = decodedText.includes('/')

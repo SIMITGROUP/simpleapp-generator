@@ -46,7 +46,7 @@
       </template>
       <template #option="{ index, option }">
         <slot name="option" :index="index" :option="option">
-          <div class="flex flex-row dark:text-white">
+          <div class="flex flex-row text-white">
             <div class="w w-1/3">{{ option.code }}</div>
             <div class="w w-2/3">{{ option.label }}</div>
           </div>

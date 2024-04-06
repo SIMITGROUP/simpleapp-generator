@@ -13,14 +13,32 @@ import { <%= it.typename %>Processor } from '../generate/processors/<%= it.docty
 //import { <%= it.typename %>,<%= it.typename %>Hooks} from '../generate/types';
 import * as types from '../generate/types';
 export { <%= it.typename %>} from '../generate/types';
+<% const getFieldType =(proptype, typename)=>{
+  const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
+  let tmptypename = typename.replace('[','').replace(']','')
+  
+  if(systemtypes.includes(tmptypename)){
+    if(proptype=='type' ) tmptypename =tmptypename.toLowerCase();
+  }else if(proptype=='schema'){
+    tmptypename= 'schemas.'+tmptypename    
+  }else{ //type
+    tmptypename= 'types.'+tmptypename
+  }
 
+  if(typename.includes('[')){
+    return  proptype=='schema' ?  `[${tmptypename}]` : `${tmptypename}[]`
+  }else{
+    return tmptypename
+  }
+}
+%>
 
 @Injectable()
 export class <%= it.typename %>Service extends <%= it.typename %>Processor {
   <% const config = it.jsonschema['x-simpleapp-config']%>   
   <%if(config['loseDataIsolation']){%>protected strictIsolation = false;<%}%> 
       
-  public hooks: types.<%= it.typename %>Hooks = {}
+   //protected hooks: types.<%= it.typename %>Hooks = {}
     constructor(
         @InjectModel('<%= it.typename %>')  mydoc: Model<types.<%= it.typename %>>
         ){
@@ -28,6 +46,7 @@ export class <%= it.typename %>Service extends <%= it.typename %>Processor {
     }
 
 /***************************** begin x-document-api definitions *****************************************/
+/*
 <% for(let i=0;i<it.apiSettings.length;i++){%>
 <% let api = it.apiSettings[i] %>
   async run<%= capitalizeFirstLetter(api.action) %>(
@@ -50,9 +69,7 @@ export class <%= it.typename %>Service extends <%= it.typename %>Processor {
         <%}%>
             
         <%if(['post','put','patch'].includes(api.method.toLowerCase())){%> 
-              data:<%= api.schema 
-              ?  (api.schema.includes('[') ?  'types.'+api.schema.replace('[','').replace(']','') + '[]' : 'types.'+api.schema  )
-              : 'any'%>,
+              data:<%= getFieldType('schema',api.schema)%>,
             <%}%>
 
          ){
@@ -63,6 +80,7 @@ export class <%= it.typename %>Service extends <%= it.typename %>Processor {
     <%}%>
   } 
 <%}%>
+*/
 
 /***************************** end x-document-api definitions *****************************************/
 }

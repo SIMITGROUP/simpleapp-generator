@@ -1,44 +1,47 @@
 <template>
-  
   <div class="w-full flex-col flex">
     <title>{{ t("organization") }}</title>
     <MobileToolbar class="bg-gray-600">
-      <template #center><TextTitle class="text-white">{{ t("organization") }}</TextTitle></template>
+      <template #center
+        ><TextTitle class="text-white">{{
+          t("organization")
+        }}</TextTitle></template
+      >
       <template #end>
         <ButtonText @click="showEditOrg = true" class="text-white"
           ><i class="pi pi-pencil"></i
         ></ButtonText>
       </template>
     </MobileToolbar>
-    
-    <div class="w-full flex flex-row p-2 border-b border-gray-300 ">
+
+    <div class="w-full flex flex-row p-2 border-b border-gray-300">
       <div class="p-4">
         <div class="border w-12 h-12 md:w-24 md:h24"></div>
       </div>
-      <div class="flex flex-col flex-1 ">
+      <div class="flex flex-col flex-1">
         <TextTitle>{{ data.orgName }} / {{ data.orgCode }}</TextTitle>
         <TextSubtitle>
           {{ data.description }}
-        </TextSubtitle>        
+        </TextSubtitle>
       </div>
     </div>
 
-    <div class="w-full p-2 flex flex-col ">
-      
+    <div class="w-full p-2 flex flex-col">
       <div class="flex flex-row justify-end">
-        <TextTitle class="flex-1 p-2">{{ t('branches') }}</TextTitle>
+        <TextTitle class="flex-1 p-2">{{ t("branches") }}</TextTitle>
         <div>
           <ButtonPrimary @click="goBranch('new')">
             <i class="pi pi-plus"></i> <span>{{ t("addBranches") }}</span>
           </ButtonPrimary>
         </div>
       </div>
-      <ListView class="border rounded-lg border-gray-400 dark:border-gray-600"        
+      <ListView
+        class="border rounded-lg border-gray-400 dark:border-gray-600"
         :list="branchlist"
         title-field="branchName"
         sub-title-field="branchCode"
         :url="getDocumentUrl('organization', id)"
-        #default="{item}"
+        #default="{ item }"
       >
         <div class="flex flex-row">
           <div class="flex-col flex flex-1">
@@ -50,7 +53,6 @@
             <renderer-boolean v-model="item.active"></renderer-boolean>
           </div>
         </div>
-      
       </ListView>
     </div>
 
@@ -75,6 +77,7 @@
  * Author: Ks Tan
  */
 import { FormCrudEvent, SimpleAppInputType } from "~/types";
+import { Branch } from "~/simpleapp/generate/openapi";
 import ConfirmPopup from "primevue/confirmpopup";
 import { useConfirm } from "primevue/useconfirm";
 const confirm = useConfirm();
@@ -87,7 +90,7 @@ const orgId = computed(() => <string>getUserProfile()?.orgRecordId);
 const doc = $OrganizationDoc();
 const brancdoc = $BranchDoc();
 const data = doc.getReactiveData();
-const branchlist = ref([]);
+const branchlist = ref<Branch[]>([]);
 const isReadOnly = ref(true);
 const getCurrentOrg = async () => {
   await doc.getById(orgId.value);

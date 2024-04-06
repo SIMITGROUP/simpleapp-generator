@@ -58,13 +58,11 @@ export type FormActions = {
     [key:string]:string[]    
 }
 
-
 export type FormMenu = {
-    type:string
-    action:string    
-    label:string
+    type?:string
+    action?:string    
+    label?: string | ((...args: any) => string) | undefined
     command? : Function
     event?:FormCrudEvent
     [key:string] : any
 }
-

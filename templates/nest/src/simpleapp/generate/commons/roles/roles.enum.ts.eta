@@ -23,6 +23,11 @@ export enum Role {
 
         <%=m.docname%>_search='<%=m.docname%>:search',
 
+        <%if(m.schema['x-simpleapp-config']['printFormats']){%>
+            <%=m.docname%>_print='<%=m.docname%>:print',
+        <%}%>
+
+
         <% if(m.api && m.api.length >0) {%>
 
             <% for(let j=0;j<m.api.length; j++){ %>

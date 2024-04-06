@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with simpleapp generator  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="<%=it.formatName%>" pageWidth="595" pageHeight="420" orientation="Landscape" columnWidth="380" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="d0a16255-a928-4987-a618-d8b2c6a4728a">
+	<property name="com.jaspersoft.studio.report.description" value="<%=it.description%>"/>
+
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<detail><band splitType="Stretch"/></detail>
+	<noData>
+		<band height="380" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="555" height="380" uuid="0fd432f8-6d4b-49cc-ac6c-1de5b660275b"/>
+				<box>
+					<pen lineWidth="0.75"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="29"/>
+				</textElement>
+				<text><![CDATA[this is <%=it.formatName%> (<%=it.formatId%>) printformat, please change it]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>
