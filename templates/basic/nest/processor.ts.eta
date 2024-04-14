@@ -64,6 +64,7 @@ export class <%= it.typename %>Processor extends SimpleAppService<<%= it.typenam
 
    reCalculateValue(data:<%= it.typename %>){
     //console.log('trigger new recalculate')    
+    const $data = data;
     const jsopbj= new jsonpath['JSONPath']()
     <% if(it.jsonschema['x-simpleapp-config']['formulas']){ %>
         <%Object.keys(it.jsonschema['x-simpleapp-config']['formulas']).forEach(function(index) { %>
@@ -71,7 +72,7 @@ export class <%= it.typename %>Processor extends SimpleAppService<<%= it.typenam
           // <%~ JSON.stringify(fml) %>
           //const tmp = jsopbj.query(vdata,fieldpath).filter((item:string)=>item!='')
           
-          jsopbj.apply(data, '<%~ fml.jsonPath %>', function(value:any) { return <%~fml.formula %> });
+          jsopbj.apply($data, '<%~ fml.jsonPath %>', function($item:any) { return <%~fml.formula %> });
 
         <%}) %>
       <%} %>

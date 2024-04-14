@@ -1,12 +1,36 @@
 <template>
-  <Dropdown
-    @update:modelValue="change"
-    v-model="modelValue"
-    :options="options"
-    optionLabel="label"
-    optionValue="value"
-    :placeholder="placeholder"
-  />
+  <div>
+    <div class="flex flex-row ">
+      <label v-if="!hideLabel" :for="fieldid" class="pt-2">
+      {{t(documentName)}}
+      </label>
+      <ButtonText v-if="allowAddNew" @click="addnew" class="text-xs text-blue-600">
+        <span>{{t('new')}}</span>
+      </ButtonText>
+    </div>
+    <MultiSelect
+      :input-id="fieldid"
+      v-if="multiple"
+      display="chip"
+      @update:modelValue="change"
+      v-model="modelValue"
+      :options="options"
+      optionLabel="label"
+      optionValue="value"
+      :placeholder="placeholder"
+    />
+    <Dropdown
+
+      :input-id="fieldid"
+      v-else
+      @update:modelValue="change"
+      v-model="modelValue"
+      :options="options"
+      optionLabel="label"
+      optionValue="value"
+      :placeholder="placeholder"
+    />
+  </div>
 </template>
 <script setup lang="ts">
 /**
@@ -18,15 +42,17 @@
 import Dropdown from "primevue/dropdown";
 import { ForeignKey, FormCrudEvent } from "~/types";
 const emits = defineEmits(["change"]);
-const modelValue = defineModel<string>();
+const modelValue = defineModel<string | string[]>();
 const list = ref<ForeignKey[]>([]);
-
+const fieldid = randomUUID()
 const props = defineProps<{
   documentName: string;
   placeholder?: string;
   showNull?: boolean;
   allowAddNew?: boolean;
-  filter?: any
+  filter?: any;
+  multiple?: boolean;
+  hideLabel?:boolean
 }>();
 const options = ref<
   {
@@ -35,12 +61,12 @@ const options = ref<
   }[]
 >([]);
 const getListOptions = async () => {
-  const filter = props.filter ?? {}
+  const filter = props.filter ?? {};
   const res = await getDocumentApi(props.documentName).autoComplete("", filter);
   list.value = res.data as ForeignKey[];
-  if (props.allowAddNew)
-    list.value.unshift({ _id: "new", code: "", label: t("addNew") });
-  if (props.showNull)
+  // if (!props.multiple && props.allowAddNew)
+  //   list.value.unshift({ _id: "new", code: "", label: t("addNew") });
+  if (!props.multiple && props.showNull)
     list.value.unshift({ _id: "", code: "", label: t("null") });
   options.value = list.value.map((item) => ({
     value: item._id,
@@ -55,7 +81,12 @@ const getItem = (id: string) => list.value?.find((item) => item._id == id);
 
 const change = (id: string) => {
   const selectedItem = getItem(id);
-  if (selectedItem?._id == "new") {
+  emits("change", id, selectedItem);
+  
+};
+
+const addnew=()=>{
+  
     const doc = getDocument(props.documentName)?.docClass;
     if (doc) {
       const tmpdata = doc?.getReactiveData();
@@ -71,9 +102,7 @@ const change = (id: string) => {
           }
         },
       );
-    }
-  } else {
-    emits("change", id, selectedItem);
+   
   }
-};
+}
 </script>

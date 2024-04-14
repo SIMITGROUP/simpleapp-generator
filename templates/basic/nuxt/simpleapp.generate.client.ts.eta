@@ -53,25 +53,23 @@ export class <%= it.typename%>Client extends SimpleAppClient<openapi.<%= it.type
     const apiobj = getDocumentApi('<%=it.name %>')
     super(apiobj,'<%= it.doctype %>','<%=it.name %>')
     this.event=$event
-    this.listen=$listen
-    
-    this.setNew();    
-    watch(this.getData(),(newvalue)=>{
-      //console.log("Something change",this.completeformula)
+    this.listen=$listen    
+    this.setNew();        
+  }
+
+  setWatchChange = ()=>{
+    this.unwantchobj = watch(this.getData(),(newvalue)=>{
       if(this.completeformula==true){
-         // console.log("Trigger caclculate")
           this.completeformula=false
           this.reCalculateValue()
           this.completeformula=true
-      }else{
-          //console.log("avoid unlimited loop")
-      }                    
-    })    
-
+      }               
+    },{deep:true})    
   }
   setNew = ()=>{         
       const newdata = Default<%= it.typename%>(randomUUID())
       this.setData(newdata)
+      this.setWatchChange()
       return true
     }
   <%if(it.jsonschema.properties['readOnly'] || it.jsonschema.properties['documentStatus']){%>
@@ -176,7 +174,7 @@ export class <%= it.typename%>Client extends SimpleAppClient<openapi.<%= it.type
   
   reCalculateValue(){
     //console.log('trigger new recalculate')
-    const data = this.getData()
+    const $data = this.getData()
     
     <% if(it.jsonschema['x-simpleapp-config']['formulas']){ %>
       <%Object.keys(it.jsonschema['x-simpleapp-config']['formulas']).forEach(function(index) { %>
@@ -184,7 +182,7 @@ export class <%= it.typename%>Client extends SimpleAppClient<openapi.<%= it.type
         // <%~ JSON.stringify(fml) %>
         //const tmp = jsonpath.query(vdata,fieldpath).filter((item:string)=>item!='')
         
-        jsonpath.apply(data, '<%~ fml.jsonPath %>', function(value) { return <%~fml.formula %> });
+        jsonpath.apply($data, '<%~ fml.jsonPath %>', function($item) { return <%~fml.formula %> });
 
       <%}) %>
     <%} %>

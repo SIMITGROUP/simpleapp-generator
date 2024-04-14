@@ -39,8 +39,8 @@ export type DefaultHooks<T> = {
   init?: () => Promise<void>;
   beforeSearch?: (appuser: UserContext, filter: any) => Promise<void>;
   afterSearch?: (appuser: UserContext, data: T[]) => Promise<void>;
-  beforeValidation?: (appuser: UserContext, data: T) => Promise<boolean>;
-  afterValidation?: (appuser: UserContext, data: T) => Promise<void>;
+  beforeValidation?: (appuser: UserContext, data: T,_id?:string) => Promise<boolean>;
+  afterValidation?: (appuser: UserContext, data: T,_id?:string) => Promise<void>;
   beforeCreate?: (appuser: UserContext, data: T) => Promise<void>;
   afterCreate?: (appuser: UserContext, data: T) => Promise<void>;
   beforeUpdate?: (

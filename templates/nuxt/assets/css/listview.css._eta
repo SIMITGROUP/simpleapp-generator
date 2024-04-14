@@ -8,10 +8,10 @@
     @apply block
 }
 /* :hover.listview-item  a  */
-.listview-item:active  a{
+.listview-item:active  .listlink{
     @apply dark:bg-primary-950 bg-primary-300
 }
 
-.listview-item  a.router-link-exact-active{
+.listview-item  .listlink.router-link-exact-active{
     @apply   dark:bg-gray-700 bg-primary-200
 }

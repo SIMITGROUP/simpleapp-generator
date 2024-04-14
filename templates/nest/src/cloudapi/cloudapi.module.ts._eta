@@ -12,4 +12,4 @@ import { CloudApiService } from './cloudapi.service';
   providers: [CloudApiService],
   exports: [CloudApiService],
 })
-export class CloudApiModule {}
+export class CloudapiModule {}

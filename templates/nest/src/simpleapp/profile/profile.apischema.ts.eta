@@ -14,6 +14,21 @@ export class RegTenantApiSchema {
     default: '',
   })
   tenantName: string;
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    examples: ['Asia/Kuala_Lumpur'],
+    default: '',
+  })
+  timeZone: string;
+  @ApiProperty({
+    type: Number,
+    required: true,
+    examples: [0,-460],
+    
+  })
+  utcOffset: number;
+  
 }
 export class MyProfileApiSchemaBranches{
   @ApiProperty({type: 'string'})

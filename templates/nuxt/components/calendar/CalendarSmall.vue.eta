@@ -13,11 +13,13 @@
     @view-change="viewChange"
     :events="allevents"
     @cell-focus="chooseDate"
+
     xsmall
   >
     <template #today-button>
       <!-- Using Vuetify (but we prefer Wave UI 🤘) -->
-      <div @click="chooseDate(new Date(), true)">{{ t("today") }}</div>
+      <div      
+       @click="chooseDate(new Date(), true)">{{ t("today") }}</div>
     </template>
     <template #cell-content="{ cell, events }">
       <div>
@@ -31,7 +33,7 @@
           <span v-else>{{ cell.content }} </span>
         </div>
         <div>
-          <slot name="default" :cell="cell" events="events">
+          <slot name="default" :cell="cell" :events="events">
             <Badge
               v-if="events.length > 0"
               @contextmenu="(mouseevent) => onRightClickDate(mouseevent, cell)"
@@ -75,8 +77,14 @@ const allevents = computed(() => {
   const list = props.items.map((item) => {
     if (item.start instanceof Date)
       item.start = item.start.format("YYYY-MM-DD HH:mm");
+    else if (typeof item.start == 'string' ){
+      item.start = item.start.substring(0,16).replace('T',' ');
+    }
     if (item.end instanceof Date)
       item.end = item.end.format("YYYY-MM-DD HH:mm");
+    else if (typeof item.end == 'string' ){
+      item.end = item.end.substring(0,16).replace('T',' ');
+    }
     return item;
   });
   return list;
@@ -84,6 +92,7 @@ const allevents = computed(() => {
 const viewChange = (event: CalViewChange) => {
   viewStatus.value = event;
 };
+
 const chooseDate = (date1: Date, force?: boolean) => {
   if (force || !viewStatus.value || viewStatus.value.view == "month") {
     selectedDate.value = date1;

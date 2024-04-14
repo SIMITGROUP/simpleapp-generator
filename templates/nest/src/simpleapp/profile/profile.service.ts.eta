@@ -5,6 +5,8 @@
  * Author: Ks Tan
  */
 import { UserService, User } from './../services/user.service';
+import countrytimezone from 'countries-and-timezones'
+import countryToCurrency, { Currencies, Countries } from "country-to-currency";
 import {
   Injectable,
   Scope,
@@ -85,8 +87,18 @@ export class ProfileService {
     return userinfo;
   }
 
-  async createTenant(appuser: UserContext, tenantName: string) {
+  async createTenant(
+    appuser: UserContext,
+    tenantName: string,
+    timeZone: string,
+    utcOffset: number
+  ) {
     // try{
+    const timezonedata = countrytimezone.getCountriesForTimezone(timeZone)[0]
+    const countryCode  = timezonedata['id']
+    const countryName  = timezonedata['name']
+    const currencyCode = countryToCurrency[countryCode]
+    
     appuser.getDBSession().startTransaction();
     const tenantdata: Tenant = {
       tenantId: 1,
@@ -112,6 +124,10 @@ export class ProfileService {
       orgName: tenantName,
       active: true,
       orgCode: 'HQ',
+      timeZone: timeZone,
+      offsetMinute: utcOffset,
+      currency: currencyCode,
+      country: countryCode,
       orgId: 1,
     };
 
@@ -127,6 +143,7 @@ export class ProfileService {
       branchId: 1,
       branchCode: 'HQ',
       branchName: tenantName,
+      country: countryName,
       active: true,
       orgId: orgResult.orgId,
       tenantId: tenantResult.tenantId,
@@ -225,7 +242,7 @@ export class ProfileService {
     return await appuser.getAllTenants();
   }
 
-  async getSession(appuser:UserContext){
-    return 'OK'
+  async getSession(appuser: UserContext) {
+    return 'OK';
   }
 }

@@ -25,13 +25,14 @@ import addFormats from 'ajv-formats';
 import addErrors from 'ajv-errors';
 import {
   NotFoundException,
+  HttpException,
   BadRequestException,
   ForbiddenException,
   InternalServerErrorException,
   HttpExceptionOptions,
 } from '@nestjs/common/exceptions';
 import { UserContext } from '../commons/user.context';
-import {CloudApiService} from 'src/cloudapi/cloudapi.service'
+import { CloudApiService } from 'src/cloudapi/cloudapi.service';
 import { PrintApiService } from 'src/printapi/printapi.service';
 import { DocNumberFormatGenerator } from '../commons/docnogenerator.service';
 import {
@@ -406,7 +407,7 @@ export class SimpleAppService<T extends { _id?: string }> {
       }
     }
   };
-  async validateData(appuser: UserContext, data: T) {
+  async validateData(appuser: UserContext, data: T, _id?: string) {
     const ajv = new Ajv({ allErrors: true, useDefaults: true });
     addFormats(ajv);
     addErrors(ajv);
@@ -421,7 +422,7 @@ export class SimpleAppService<T extends { _id?: string }> {
     this.logger.debug('run hook during validation');
     let issuccess = true;
     if (this.hooks.beforeValidation) {
-      issuccess = await this.hooks.beforeValidation(appuser, data);
+      issuccess = await this.hooks.beforeValidation(appuser, data, _id);
     }
     // const issuccess = await this.hook(appuser, HookType.beforeValidation, data);
     if (!issuccess) {
@@ -452,7 +453,7 @@ export class SimpleAppService<T extends { _id?: string }> {
       );
     }
     if (this.hooks.afterValidation)
-      await this.hooks.afterValidation(appuser, data);
+      await this.hooks.afterValidation(appuser, data, _id);
   }
 
   polishIsolationFilter = (filterIsolation: any, data: any = {}) => {
@@ -555,11 +556,12 @@ export class SimpleAppService<T extends { _id?: string }> {
     // try {
     Object.assign(data, appuser.getUpdateFilter());
     // Object.assign(existingdata, data);
+
     delete data['_id'];
     this.reCalculateValue(data);
 
     // existingdata['_id']=''
-    await this.validateData(appuser, data);
+    await this.validateData(appuser, data, id);
 
     const isolationFilter = { ...this.getIsolationFilter(appuser) };
     this.polishIsolationFilter(isolationFilter);
@@ -733,6 +735,48 @@ export class SimpleAppService<T extends { _id?: string }> {
     }
   }
 
+  /**
+   * similar like runWorker, but it is syncronizely add event into queue and return.
+   * No result will return from this method,  it also lose appuser db's transaction
+   * due out of request flow
+   *
+   * @param      {UserContext}  appuser    The appuser
+   * @param      {string}       eventName  The event name
+   * @param      {any}          data       The data
+   */
+  runBackgroundWorker(appuser: UserContext, eventName: string, payloads:any) {
+    this.eventEmitter.emit(eventName, appuser, payloads);
+  }
+
+  /**
+   * runWorker design with 2 purpose
+   *   1. we wish developer develop complex programming flow in worker class instead
+   *      of service class. We wish service class remain simple and easy to understand
+   *      it wish to do hook and api only
+   *      complex task service class may pass to worker class.
+   *   2. it not cause circulate injection hell, which is useful in complex dependency
+   * this run foreground event which can async/await to obtain execution result,
+   * the appuser dbtransaction remain usable. however, the execution may delay response
+   *
+   *
+   * @param      {UserContext}  appuser    The appuser
+   * @param      {string}       eventName  The event name
+   * @param      {any}          data       The data
+   * @return     {Promise}      { description_of_the_return_value }
+   */
+  async runWorker(appuser: UserContext, eventName: string, payloads:any) {
+    const res = await this.eventEmitter.emitAsync(eventName, appuser, payloads);
+    if (!this.eventEmitter.hasListeners(eventName)) {
+      throw new InternalServerErrorException(`${eventName} seems no listener`);
+    }
+    if (!res) {
+      throw new InternalServerErrorException(`${eventName} is invalid worker`);
+    }
+
+    const result = res[0];
+    if (result?.name && result?.name.includes('Exception')) throw result;
+    return result;
+  }
   startWorkflow(
     appuser: UserContext,
     processName: WorkflowName,
@@ -867,8 +911,8 @@ export class SimpleAppService<T extends { _id?: string }> {
     }
   }
 
-  async print(appuser: UserContext, id: string, formatid: string) {    
-    const pdfresult = await this.printapi.getBase64Pdf(appuser, formatid, id);    
+  async print(appuser: UserContext, id: string, formatid: string) {
+    const pdfresult = await this.printapi.getBase64Pdf(appuser, formatid, id);
     return pdfresult;
   }
 }

@@ -66,5 +66,6 @@
     "createNewCompany":"Create New Company",
     "printFormats":"Print Formats",
     "print":"Print",
+    "printPreview": "Print Preview",
     "messages":"Messages"
   }

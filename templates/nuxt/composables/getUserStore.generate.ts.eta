@@ -14,7 +14,7 @@ export const reloadUserStore = async () =>{
     const {$userstore} = useNuxtApp()
     await $userstore.loadRemoteUserInfo()
 }
-
+export const getCurrency = () =>getUserStore()?.currency ?? '$$'
 export const getUserProfile =  () =>{    
     const userstore = getUserStore()
     

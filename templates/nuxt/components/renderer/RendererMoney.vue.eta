@@ -1,10 +1,8 @@
 <template>
-  <span v-if="typeof modelValue=='undefined' || typeof modelValue=='string' ">-</span>
-  <span v-else-if="showCurrency">
-    {{
-      currenyValue
-    }}</span
+  <span v-if="typeof modelValue == 'undefined' || typeof modelValue == 'string'"
+    >-</span
   >
+  <span v-else-if="showCurrency"> {{ currenyValue }}</span>
   <span v-else>
     {{ modelValue.toLocaleString(useI18n().defaultLocale, options) }}</span
   >
@@ -16,14 +14,14 @@
  * last change 2024-02-04
  * author: Ks Tan
  */
-const currenyValue = computed(()=>{
-  if(modelValue.value === undefined) return '-'
+const currenyValue = computed(() => {
+  if (modelValue.value === undefined) return "-";
   return Intl.NumberFormat(useI18n().defaultLocale, {
-        // style: "currency",
-        // currency: getUserProfile()?.currency ?? '',
-        // currencyDisplay: "symbol",
-      }).format(modelValue.value)
-})
+    // style: "currency",
+    // currency: getUserProfile()?.currency ?? '',
+    // currencyDisplay: "symbol",
+  }).format(modelValue.value);
+});
 const options = {
   style: "decimal", // Other options: 'currency', 'percent', etc.
   minimumFractionDigits: 2,
@@ -31,4 +29,5 @@ const options = {
 };
 const modelValue = defineModel<number>({ required: true });
 const props = defineProps<{ showCurrency?: boolean }>();
+
 </script>

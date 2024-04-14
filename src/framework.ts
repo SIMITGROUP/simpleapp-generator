@@ -18,6 +18,7 @@ let config = {
     "frontendFolder":"./frontend",
     "frontendPort":"8080",
     "printFormatDir":"./printformats",
+    "additionalNestModules":["cloudapi","printapi"],
     "oauthSetting":{
         "oauthBaseUrl":"https://keycloak-server-url/",
         "oauthRealm":"realm-name",
@@ -74,7 +75,7 @@ export const prepareNest = (callback:Function)=>{
         
         //@nestjs/graphql @nestjs/apollo graphql apollo-server-express apollo-server-core
         //@nestjs/graphql graphql-tools graphql apollo-server-express 
-        exec(`cd ${targetfolder};pnpm install --save @nestjs/graphql @nestjs/apollo @apollo/server graphql @nestjs/event-emitter dayjs bpmn-server@2.1.7 @casl/ability jsonpath yaml lodash @types/lodash nest-keycloak-connect keycloak-connect bpmn-client @nestjs/serve-static jsonwebtoken axios @darkwolf/base64url json-schema @wearenova/mongoose-tenant @nestjs/swagger @nestjs/mongoose mongoose  ajv ajv-formats ajv-errors @nestjs/config`,async (error, stdout, stderr)=>{
+        exec(`cd ${targetfolder};pnpm install --save @nestjs/graphql country-to-currency countries-and-timezones @nestjs/apollo @apollo/server graphql @nestjs/event-emitter dayjs bpmn-server@2.1.7 @casl/ability jsonpath yaml lodash @types/lodash nest-keycloak-connect keycloak-connect bpmn-client @nestjs/serve-static jsonwebtoken axios @darkwolf/base64url json-schema @wearenova/mongoose-tenant @nestjs/swagger @nestjs/mongoose mongoose  ajv ajv-formats ajv-errors @nestjs/config`,async (error, stdout, stderr)=>{
             // log.info(`dependency installed`)
             if(!error){
                 // fs.mkdirSync(`${targetfolder}/public_html`,{recursive:true})

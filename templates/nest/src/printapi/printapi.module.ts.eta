@@ -12,4 +12,4 @@ import { PrintApiService } from './printapi.service';
   providers: [PrintApiService],
   exports: [PrintApiService],
 })
-export class PrintApiModule {}
+export class PrintapiModule {}

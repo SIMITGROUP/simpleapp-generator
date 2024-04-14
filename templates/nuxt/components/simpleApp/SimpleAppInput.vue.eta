@@ -134,6 +134,23 @@
       @change="onChange"
     />
 
+
+    <MultiSelect
+      v-model="modelValue"
+      :pt="pt"
+      v-else-if="SimpleAppInputType.selectmultiple == inputType"
+      :inputId="slotprops.uuid"
+      :path="setting.instancepath"
+      :readonly="isReadonly"
+      class="w w-full lg:w-full"
+      :disabled="isReadonly"
+      :options="getListOptions()"
+      optionLabel="label"
+      optionValue="value"
+      :placeholder="placeholder"
+      v-bind="componentProps"
+      @change="onChange"
+    />
     <!-- radio component -->
     <div v-else-if="inputType == SimpleAppInputType.radio">
       <div v-for="(item, index) in getListOptions()">
@@ -236,7 +253,6 @@
       :class="!pt ? 'w-full flex flex-col' : ''"
       :inputId="slotprops.uuid"
       @update:modelValue="onChange"
-      
       :path="setting.instancepath"
       v-bind="componentProps as InputNumber"
       :placeholder="placeholder"
@@ -288,6 +304,8 @@
       v-bind="componentProps as InputTextProps"
     />
     <!-- component require special treatment -->
+
+    <slot name="footer"></slot>
   </SimpleAppFieldContainer>
 </template>
 
@@ -443,10 +461,16 @@ const setFocus = (ev: any) => {
 };
 
 const getListOptions = () => {
-  const options = [];
-  if (props.setting.fieldsetting.enum) {
-    for (let i = 0; i < props.setting.fieldsetting.enum.length; i++) {
-      const v = props.setting.fieldsetting.enum[i];
+  const options = [];  
+  const enumlist = props.setting.fieldsetting.type == 'array' 
+      ? props.setting.fieldsetting.items.enum 
+      : props.setting.fieldsetting.enum 
+
+  
+
+  if (enumlist) {
+    for (let i = 0; i < enumlist.length; i++) {
+      const v = enumlist[i];
       if (typeof v == "string") {
         options.push({ value: v, label: t(v) });
       } else {
@@ -523,7 +547,6 @@ onMounted(() => {
 });
 
 const onChange = () => {
-  console.log("On change ", props.inputType)
   pt.value = undefined;
   resetcount.value++;
   emits("change", modelValue.value);

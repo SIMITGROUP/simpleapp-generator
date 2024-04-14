@@ -66,7 +66,7 @@
     <ConfirmPopup></ConfirmPopup>
   </div>
   <Dialog v-model:visible="visiblePrintFormats" :header="t('printFormats')">
-    <div>      
+    <div>
       <ListView
         :list="printformats"
         #default="{ item, index }"
@@ -84,16 +84,16 @@
     :header="t('printPreview')"
     position="bottom"
   >
-  
     <TextDanger v-if="printservererror || !printstr">
       {{ t("printServerError") }}
     </TextDanger>
-    <vue-pdf-embed v-else-if="isMobile()" 
-        :source="printstr" 
-        :disableTextLayer="true" 
-        />
+    <vue-pdf-embed
+      class="w-11/12"
+      v-else-if="isMobile()"
+      :source="printstr"
+      :disableTextLayer="true"
+    />
     <iframe v-else width="100%" height="100%" :src="printstr"></iframe>
-    
   </Sidebar>
 </template>
 <script setup lang="ts">
@@ -103,7 +103,7 @@
  * last change 2024-04-02
  * author: Ks Tan
  */
- import VuePdfEmbed from 'vue-pdf-embed'
+import VuePdfEmbed from "vue-pdf-embed";
 
 // import VuePdfKit from 'vue-pdf-kit'
 // import 'vue-pdf-kit/dist/style.css'
@@ -190,9 +190,7 @@ const printPdf = async (index: number, format: any) => {
     const tmp: any = await doc
       .getApi()
       .runPrint(data.value._id ?? "", formatid);
-    printstr.value = 
-        "data:application/pdf;base64," + 
-        tmp.data;
+    printstr.value = "data:application/pdf;base64," + tmp.data;
   } catch (e) {
     printservererror.value = true;
     printstr.value = "";
@@ -245,7 +243,7 @@ const emitEvent = async (menu: FormMenu, clickEvent: Event | MouseEvent) => {
       message: `${t("deleteThisRecord?")}`,
 
       // icon: "pi pi-exclamation-triangle gap-4",
-      acceptClass: "p-button-danger",
+      acceptClass: "bg-danger-600 text-white",
       accept: async () => {
         if (await deleteData()) emits("on", FormCrudEvent.delete);
       },
@@ -339,12 +337,12 @@ const getActionIcon = (actionName: string) => {
 };
 </script>
 <style>
-  .vue-pdf-embed {
-    @apply p-4
-  }
-  .vue-pdf-embed > div {
-    @apply mb-4;
-    /* margin-bottom: 8px;
+.vue-pdf-embed {
+  @apply p-4;
+}
+.vue-pdf-embed > div {
+  @apply mb-4;
+  /* margin-bottom: 8px;
     box-shadow: 0 2px 8px 4px rgba(0, 0, 0, 0.1); */
-  }
+}
 </style>

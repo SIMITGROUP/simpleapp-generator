@@ -22,7 +22,7 @@ import { DefaultPermission } from '../defaults/perm.default';
 export class PermissionProcessor extends SimpleAppService<Permission> {
   protected documentIdentityCode = '';
   protected documentIdentityLabel = '';
-
+  protected strictIsolation = false;
   protected foreignkeys = { user: ['$.userId'] };
   constructor(mydoc: Model<Permission>) {
     super('PERM', 'permission', mydoc, IsolationType.org);

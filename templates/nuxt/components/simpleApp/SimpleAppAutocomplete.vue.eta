@@ -83,7 +83,7 @@
               </ButtonText>
             </template>
             <template #center>
-              <TextTitle>{{ t(docname) }}</TextTitle>
+              <TextTitle class="text-white">{{ t(docname) }}</TextTitle>
             </template>
             <template #end>
               <div></div>

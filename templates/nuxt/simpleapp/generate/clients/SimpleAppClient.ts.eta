@@ -30,6 +30,7 @@ export class SimpleAppClient<
   TApi extends crudType,
 > {
   // protected defaultTimeOut=5000
+  protected unwantchobj;
   protected docapi;
   public event:Function|null=null;
   public listen:Function|null=null;
@@ -66,18 +67,20 @@ export class SimpleAppClient<
   };
   
   async getById(id?: string) {
+    if(this.unwantchobj)this.unwantchobj()
     return await this.docapi.runFindOne(id,this.axios)
     .then((res: AxiosResponse) => {
       // if(this.event){this.event('info:getById',res.data)}
       this.data.value={} as TData
       Object.assign(this.data.value, res.data);
+      this.setWatchChange()
       return res;
     }).catch((res:any)=>{
       // if(this.event){this.event('error:getById',res)}
       return Promise.reject(res)
     });
   }
-
+  setWatchChange(){}
 
   async runDefault(){
     const res = await this.docapi.runDefault() 

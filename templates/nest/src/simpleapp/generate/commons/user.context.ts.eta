@@ -535,6 +535,7 @@ export class UserContext {
   };
 
   searchInsertedRecordId(collection: string, _id: string) {
+    if(!this.modifiedRecords.createds[collection]) return undefined
     return this.modifiedRecords.createds[collection].find(
       (item) => item === _id,
     );

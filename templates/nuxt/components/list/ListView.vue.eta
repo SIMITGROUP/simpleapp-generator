@@ -51,10 +51,7 @@
               index > 0 ? 'border-t-2' : ''
             }`"
           >
-            <NuxtLink :to="getUrl(item)"
-            
-              class="p-2"
-            >
+            <NuxtLink :to="getUrl(item)" :class="`p-2 ${showClickEffect ? 'listlink' :''}`">
               <slot name="default" :item="item" :index="index">
                 <div class="flex flex-row">
                   <div class="flex-1 mr-2 dark:text-white">
@@ -90,7 +87,7 @@
  */
 import { ref } from "vue";
 import { ListItem } from "~/types/listview";
-import _ from 'lodash'
+import _ from "lodash";
 const listviewfilter = ref();
 const props = withDefaults(
   defineProps<{
@@ -102,6 +99,7 @@ const props = withDefaults(
     withFilter?: boolean;
     withAddNew?: boolean;
     showIndex?: boolean;
+    showClickEffect?:boolean
   }>(),
   {
     idField: "_id",
@@ -117,14 +115,13 @@ const clickRow = (item: ListItem) => {
   // emit('clickitem',item)
   // selecteditem.value = item.code
 };
-const getUrl = (item:any)=>{
-  if(props.url && props.idField) {
-    if(_.last(props.url)=='/') return `${props.url}${item[props.idField]}`
-    else return `${props.url}/${item[props.idField]}`
-  }
-  else return undefined
+const getUrl = (item: any) => {
+  if (props.url && props.idField) {
+    if (_.last(props.url) == "/") return `${props.url}${item[props.idField]}`;
+    else return `${props.url}/${item[props.idField]}`;
+  } else return undefined;
   // :to="url ? `${url}/${item[idField]}` : undefined"
-}
+};
 const filterlist = computed(() => {
   let newlist: T[] = [];
   if (!Array.isArray(props.list)) {

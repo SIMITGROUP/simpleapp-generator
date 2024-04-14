@@ -81,10 +81,11 @@ export class SimpleAppRobotUserService {
     const nextrefresh = tokens.expires_in * 0.8;
     const appuser = this.prepareAppUser(undefined);
     
-    
-    setTimeout(async () => {
-      await this.refreshSystemToken();
-    }, nextrefresh * 1000);
+    if(tokens.access_token){
+      setTimeout(async () => {
+        await this.refreshSystemToken();
+      }, nextrefresh * 1000);
+    }
   }
 
   prepareAppUser(data: any) {

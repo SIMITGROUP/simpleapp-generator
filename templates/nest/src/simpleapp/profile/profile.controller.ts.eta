@@ -126,8 +126,10 @@ export class ProfileController {
   async createTenant(
     @AppUser() appuser: UserContext,
     @Body('tenantName') tenantName: string,
+    @Body('timeZone') timeZone: string,
+    @Body('utcOffset') utcOffset:number
   ) {
-    const result = await this.profileservice.createTenant(appuser, tenantName);
+    const result = await this.profileservice.createTenant(appuser, tenantName,timeZone,utcOffset);
     if (result) {
       return result;
     } else {

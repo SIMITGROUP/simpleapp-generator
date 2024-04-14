@@ -33,8 +33,15 @@
  */
 import { ref } from "vue";
 import { AxiosResponse } from "axios";
+import {EventType,NotificationStatus} from "~/types"
 const visible = ref(false);
-const data = ref({ tenantName: "" });
+const data = ref({
+  tenantName: "",
+  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  utcOffset: new Date().getTimezoneOffset()
+});
+
+
 
 const createtitle = ref("Create My Company");
 const errCreateTenant = ref();
@@ -55,7 +62,16 @@ const createTenant = async () => {
     })
     .catch((err) => {
       errCreateTenant.value = err["message"];
-      console.error("errCreateTenant", err);
+      console.error("errCreateTenant", err.response.data.data);
+
+      useNuxtApp().$event('Notification',{
+        documentName:'tenant',
+        status: NotificationStatus.error,
+        summary:t('createError'),
+        data:err.response?.data?.data
+
+      })
+
     })
     .finally(() => {
       onhold.value = false;

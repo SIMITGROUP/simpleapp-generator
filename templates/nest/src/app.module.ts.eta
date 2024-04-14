@@ -9,7 +9,12 @@ import { Module, MiddlewareConsumer, NestModule, Provider } from '@nestjs/common
 import { MongooseModule,MongooseModuleOptions } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-
+import {GenerateModule} from './simpleapp/simpleapp.module'
+<% const nestmodules = it.configs.additionalNestModules%>
+<% for(let i=0; i<nestmodules.length;i++){ %>
+<%    const modulename = capitalizeFirstLetter(nestmodules[i]) %>
+  import {<%= modulename %>Module } from  './<%=nestmodules[i]%>/<%=nestmodules[i]%>.module';
+<%}%>
 import { APP_GUARD,APP_INTERCEPTOR,APP_FILTER } from '@nestjs/core';
 import { ResponseInterceptor } from './simpleapp/generate/commons/interceptors/response.interceptor'
 import {
@@ -28,8 +33,6 @@ import { AppResolver } from './app.resolver';
 import { TenantMiddleware } from './simpleapp/generate/commons/middlewares/tenant.middleware';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import {GenerateModule} from './simpleapp/simpleapp.module'
-import { CloudApiModule } from './cloudapi/cloudapi.module';
 import { UserMongoSchema } from './simpleapp/generate/models/user.model';
 import { PermissionMongoSchema } from './simpleapp/generate/models/perm.model';
 import { ApiEventMongoSchema } from './simpleapp/generate/models/apievent.model';
@@ -76,7 +79,12 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       tokenValidation: TokenValidation.ONLINE,
     }),
     GenerateModule,    
-    CloudApiModule,
+    
+    <% for(let i=0; i<nestmodules.length;i++){ %>
+    <%    const modulename = capitalizeFirstLetter(nestmodules[i]) %>
+      <%= modulename %>Module,
+    <%}%> 
+    
     MongooseModule.forFeature([
       { name: 'User', schema: UserMongoSchema },
       { name: 'Permission', schema: PermissionMongoSchema },

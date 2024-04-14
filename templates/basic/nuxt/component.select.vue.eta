@@ -7,6 +7,8 @@
     :showNull="showNull"
     :allowAddNew="allowAddNew"
     :filter ="filter"
+    :multiple="multiple"
+    :hideLabel="hideLabel"
   />
 </template>
 <script setup lang="ts">
@@ -19,12 +21,14 @@
 import { ForeignKey } from '~/types';
 import { <%= it.typename %> } from "~/simpleapp/generate/openapi";
 const emits = defineEmits(["change"]);
-const modelValue = defineModel<string>();
+const modelValue = defineModel<string|string[]>();
 const props = defineProps<{ 
   placeholder?: string;
   showNull?:boolean;
   allowAddNew?: boolean;
   filter?: <%= it.typename %>;
+  multiple?:boolean;
+  hideLabel?:boolean;
    }>()
 const change = (id:string,data:ForeignKey) =>{
   emits('change',id,data)
