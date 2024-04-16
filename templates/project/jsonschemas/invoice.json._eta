@@ -8,18 +8,26 @@
     "documentTitle": "invoiceTitle",
     "documentDate": "invoiceDate",
     "generateDocumentNumber": true,
-    "pageType": "crud",    
+    "pageType": "crud",
     "formulas": [
-      { "jsonPath": "$.details[*]", "formula": "sharelibs.getSubtotal(value)" },
+      { "jsonPath": "$.details[*]", "formula": "sharelibs.getSubtotal($item)" },
       {
         "jsonPath": "$.invoiceTotal",
-        "formula": "sharelibs.getTotal(data.details)"
+        "formula": "sharelibs.getTotal($data.details)"
       }
     ],
-    "printFormats":[
-      {"formatName":"invoice A4","formatId":"invoice-a4","description":""},
-      {"formatName":"invoice A5","formatId":"invoice-a5","description":""}
-    ],
+    "printFormats": [
+      {
+        "formatName": "invoice A4",
+        "formatId": "invoice-a4",
+        "description": ""
+      },
+      {
+        "formatName": "invoice A5",
+        "formatId": "invoice-a5",
+        "description": ""
+      }
+    ]
   },
   "properties": {
     "_id": { "type": "string" },

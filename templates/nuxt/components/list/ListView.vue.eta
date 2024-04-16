@@ -1,21 +1,29 @@
 <template>
   <div class="relative">
-    <div v-if="withFilter" class="flex flex-row">
-      <InputText
-        :placeholder="t('searchKeyword')"
-        v-model="searchvalue"
-        class="w-full dark:text-white"
-        type="search"
-        ref="listviewfilter"
-      />
-      <template v-if="withAddNew">
-        <ButtonText v-if="isMobile()" @click="emits('add')"
-          ><i class="pi pi-plus"></i
-        ></ButtonText>
-        <ButtonPrimary v-else @click="emits('add')"
-          ><i class="pi pi-plus"></i
-        ></ButtonPrimary>
-      </template>
+    <div v-if="withFilter" class="flex flex-row p-2">
+      <InputGroup>
+          <InputGroupAddon v-if="filter">
+
+             <ButtonDefault @click="showMoreFilter" v-if="Object.keys(filter)==0">
+              <i class="pi pi-filter"></i>
+            </ButtonDefault>
+            <ButtonWarning @click="showMoreFilter" v-else>
+              <i class="pi pi-filter"></i>
+            </ButtonWarning>
+          </InputGroupAddon>
+          <InputText
+              :placeholder="t('searchKeyword')"
+              v-model="searchvalue"
+              class="w-full dark:text-white text-sm "
+              type="search"
+              ref="listviewfilter"
+            />
+          <InputGroupAddon v-if="withAddNew">            
+            <ButtonPrimary @click="emits('add')">
+              <i class="pi pi-plus"></i>
+            </ButtonPrimary>
+          </InputGroupAddon>
+      </InputGroup>
     </div>
 
     <div
@@ -51,7 +59,10 @@
               index > 0 ? 'border-t-2' : ''
             }`"
           >
-            <NuxtLink :to="getUrl(item)" :class="`p-2 ${showClickEffect ? 'listlink' :''}`">
+            <NuxtLink
+              :to="getUrl(item)"
+              :class="`p-2 ${showClickEffect ? 'listlink' : ''}`"
+            >
               <slot name="default" :item="item" :index="index">
                 <div class="flex flex-row">
                   <div class="flex-1 mr-2 dark:text-white">
@@ -76,6 +87,23 @@
         </slot>
       </div>
     </div>
+
+
+    <Dialog v-model:visible="visibleMoreFilter" :header="t('filter')">
+      <slot name="filter">
+        define filter in #filter
+      </slot>
+      <template #footer>
+        <div class="flex flex-row">
+          <ButtonDefault @click="clearFilter" class="flex flex-row p-2">
+            <i class="pi pi-times mr-1"/> <span class="mr-1">{{t('clear')}}</span>
+          </ButtonDefault>
+          <ButtonPrimary  @click="runFilter" class="flex flex-row p-2">
+            <i class="pi pi-filter mr-1"/> <span class="mr-1">{{t('ok')}}</span>
+          </ButtonPrimary>
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
 <script setup lang="ts" generic="T extends { [key: string]: any }">
@@ -88,6 +116,7 @@
 import { ref } from "vue";
 import { ListItem } from "~/types/listview";
 import _ from "lodash";
+const visibleMoreFilter = ref(false)
 const listviewfilter = ref();
 const props = withDefaults(
   defineProps<{
@@ -97,9 +126,10 @@ const props = withDefaults(
     idField?: string;
     subTitleField?: string;
     withFilter?: boolean;
+    filter?:Object;
     withAddNew?: boolean;
     showIndex?: boolean;
-    showClickEffect?:boolean
+    showClickEffect?: boolean;
   }>(),
   {
     idField: "_id",
@@ -108,7 +138,7 @@ const props = withDefaults(
 const letters = ref<string[]>([]);
 let lastchar = "";
 
-const emits = defineEmits(["add", "click"]);
+const emits = defineEmits(["add", "runFilter", "clearFilter","click"]);
 const searchvalue = ref("");
 const selecteditem = ref("");
 const clickRow = (item: ListItem) => {
@@ -172,6 +202,17 @@ const onClick = (index: number, data: T) => {
   emits("click", index, data);
 };
 
+const showMoreFilter = ()=>{
+  visibleMoreFilter.value=true
+}
+const clearFilter = () =>{  
+  visibleMoreFilter.value = false
+  emits('clearFilter')
+}
+const runFilter = () => {
+  visibleMoreFilter.value = false
+  emits('runFilter')
+}
 onMounted(() => {
   // if(props.withFilter) listviewfilter.value.$el.focus()
 });

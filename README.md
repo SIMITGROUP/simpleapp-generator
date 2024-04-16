@@ -104,7 +104,7 @@ simpleapp-generator -g init
 
 5. prepare backend
 ```sh
-sh build.sh backend
+bash build.sh backend
 ```
 6. update backend configurations file by modify `~/project1/backend/.env`, change mongodb, keycloak settings according your requirements
 7. start backend:
@@ -118,6 +118,14 @@ pnpm start:dev
 sh build.sh frontend
 ```
 9. modify frontend configuration by modify `~/project1/frontend/.env`, change keycloak settings
+```sh
+OAUTH2_BASEURL=https://server-url    #keycloak server url
+OAUTH2_CONFIGURL=https://server-url/realms/testingrealm
+OAUTH2_REALM=testingrealm
+OAUTH2_CLIENTID=client1
+OAUTH2_CLIENTSECRET=aaaa-xxxxx-yyyy-zzzzz-www
+ADMIN_EMAIL=your@ykeycloakemail.com    #if you have multiple, separate by ','
+```
 10. start frontend:
 ```sh
 cd ~/project1/frontend
