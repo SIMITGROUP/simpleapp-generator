@@ -13,8 +13,8 @@
         <%}%> 
     <SimpleAppForm #default="o" :document="doc">                    
         <SimpleAppFormToolBar  :document="doc" @on="actionListener"></SimpleAppFormToolBar>        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-2">
-    <% let isautofocus='' %>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-2">
+          <% let isautofocus='' %>
      <%Object.keys(it.jsonschema.properties).forEach(function(key) { %>
       
         <% let obj=it.jsonschema.properties[key] %>

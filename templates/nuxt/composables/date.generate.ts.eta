@@ -22,6 +22,7 @@ export const dateToTimeString = (date:Date) => useDayjs()(date).format('HH:mm:ss
 export const stringToDate = (datestr:string) => new Date(datestr)
 export const dateToDateTimeString = (date:Date)=> useDayjs().utc(date).format('YYYY-MM-DD HH:mm:ss')
 export const toLocalDate = (date:string | Date)=> useDayjs().utc(date).format(getDateFormat())
+export const toLocalDateTime = (date:string | Date)=> useDayjs().utc(date).format(getDateTimeFormat())
 export const toUTCDate = (date:string | Date)=> useDayjs().utc(date).format(getDateFormat())
 export const toUTCDateTime = (date:string | Date)=> useDayjs().utc(date).format(getDateTimeFormat())
 export const toUTCTime = (date:string | Date)=> useDayjs().utc(date).format('HH:mm')

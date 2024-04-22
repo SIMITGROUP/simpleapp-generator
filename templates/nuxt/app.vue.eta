@@ -1,5 +1,7 @@
 <template>
-  <NuxtLayout :name="getLayout()">      
+  <NuxtLayout :name="getLayout()">     
+    <ConfirmDialog></ConfirmDialog>         
+    <DynamicDialog />
     <SessionBlock/>
     <OverlayHoldscreen/>
     <EventDocumentViewer></EventDocumentViewer>      

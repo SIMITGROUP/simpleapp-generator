@@ -1,7 +1,41 @@
 <template>
-  <div v-if="!readonly" class="relative">
+  <div
+    v-if="readonly"
+    class="p-3 border rounded-lg border-gray-300 dark:border-blue-900/40"
+  >
+    <button
+      :readonly="readonly"
+      class="cursor-pointer text-primary-600 dark:text-primary-400"
+      tabindex="0"
+      @click="openViewer(true)"
+      >{{ modelValue && modelValue.label ? modelValue.label : "-" }}</button
+    >
+  </div>
+  <div
+    v-else-if="modelValue !== undefined"
+    class="p-3 border rounded-lg border-gray-300 dark:border-blue-900/40 relative"
+  >
+    <button
+      ref="autocompleteinput"
+      readonly
+      class="cursor-pointer text-primary-600 dark:text-primary-400"
+      
+      @click="openViewer(true)"
+      >{{ modelValue && modelValue.label ? modelValue.label : "-" }}</button>
+
     <div
-      class="absolute h-full top-0 right-10 text-right dark:text-white z-10 align-middle p-3"
+      class="absolute h-full top-0 right-0 text-right text-white z-10 align-middle p-3"
+    >
+      <button
+        class="pi pi-times rounded-full bg-slate-500 p-1 cursor-pointer text-xs"
+        @click="clear" tabindex="0"
+
+      ></button>
+    </div>
+  </div>
+  <div v-else class="relative">
+    <div
+      class="absolute h-full top-0 right-10 text-right text-white z-10 align-middle p-3"
       v-if="modelValue?._id"
     >
       <span
@@ -24,14 +58,15 @@
       :dropdown="true"
       @clear="clear"
       :dropdown-mode="'current'"
+      :readonly="readonly"
       :pt="pt"
       :delay="500"
       :disabled="readonly"
+      @click="clickAutocomplete"
       :suggestions="list"
       @blur="onBlurAutocomplete"
       :inputId="inputId"
       :path="setting.instancepath"
-      :readonly="readonly"
     >
       <template #header>
         <slot name="header">
@@ -46,7 +81,7 @@
       </template>
       <template #option="{ index, option }">
         <slot name="option" :index="index" :option="option">
-          <div class="flex flex-row text-white">
+          <div class="flex flex-row dark:text-white">
             <div class="w w-1/3">{{ option.code }}</div>
             <div class="w w-2/3">{{ option.label }}</div>
           </div>
@@ -91,7 +126,7 @@
             <i class="pi pi-plus"></i>
             </ButtonText>  -->
             </template>
-          </mobile-toolbar>          
+          </mobile-toolbar>
           <ListView
             :list="list"
             :withFilter="true"
@@ -123,18 +158,6 @@
         </template>
       </OverlaySideBarCrud>
     </div>
-  </div>
-  <div
-    v-else
-    class="p-3 border rounded-lg border-gray-300 dark:border-blue-900/40"
-  >
-    <span
-      :readonly="readonly"
-      class="cursor-pointer text-primary-600 dark:text-primary-400"
-      tabindex="0"
-      @click="openViewer(true)"
-      >{{ modelValue && modelValue.label ? modelValue.label : "-" }}</span
-    >
   </div>
 </template>
 <script setup lang="ts">
@@ -367,5 +390,10 @@ const afterRenderMobileForm = async (
   } else if (eventType == FormCrudEvent.exit) {
     mobileVisible.value = false;
   }
+};
+
+const clickAutocomplete = (a, b) => {
+  console.log("clickAutocomplete", a, b);
+  return false;
 };
 </script>

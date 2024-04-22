@@ -1,11 +1,15 @@
 <template>
   <div>
-    <div class="flex flex-row ">
+    <div class="flex flex-row">
       <label v-if="!hideLabel" :for="fieldid" class="pt-2">
-      {{t(documentName)}}
+        {{ t(documentName) }}
       </label>
-      <ButtonText v-if="allowAddNew" @click="addnew" class="text-xs text-blue-600">
-        <span>{{t('new')}}</span>
+      <ButtonText
+        v-if="allowAddNew"
+        @click="addnew"
+        class="text-xs text-blue-600"
+      >
+        <span>{{ t("new") }}</span>
       </ButtonText>
     </div>
     <MultiSelect
@@ -20,7 +24,6 @@
       :placeholder="placeholder"
     />
     <Dropdown
-
       :input-id="fieldid"
       v-else
       @update:modelValue="change"
@@ -40,20 +43,25 @@
  * Author: Ks Tan
  */
 import Dropdown from "primevue/dropdown";
-import { ForeignKey, FormCrudEvent } from "~/types";
+
+import { ForeignKey,SimpleAppDocuments, FormCrudEvent } from "~/types";
 const emits = defineEmits(["change"]);
-const modelValue = defineModel<string | string[]>();
-const list = ref<ForeignKey[]>([]);
-const fieldid = randomUUID()
+
 const props = defineProps<{
-  documentName: string;
+  documentName: SimpleAppDocuments;
   placeholder?: string;
   showNull?: boolean;
   allowAddNew?: boolean;
   filter?: any;
   multiple?: boolean;
-  hideLabel?:boolean
+  hideLabel?: boolean;
 }>();
+// const initvalue = props.multiple==true ? [] : ''
+const modelValue = defineModel<string | string[]>();
+
+const list = ref<ForeignKey[]>([]);
+const fieldid = randomUUID();
+
 const options = ref<
   {
     value: string;
@@ -79,30 +87,34 @@ onMounted(async () => {
 });
 const getItem = (id: string) => list.value?.find((item) => item._id == id);
 
-const change = (id: string) => {
+const change = (id: string|string[]) => {
   const selectedItem = getItem(id);
   emits("change", id, selectedItem);
-  
 };
 
-const addnew=()=>{
-  
-    const doc = getDocument(props.documentName)?.docClass;
-    if (doc) {
-      const tmpdata = doc?.getReactiveData();
-      type DataType = typeof tmpdata.value;
-      onScreenAddDocument<DataType>(
-        props.documentName,
-        undefined,
-        async (eventType: FormCrudEvent, data: DataType) => {
-          if (eventType == FormCrudEvent.create) {
-            await getListOptions();
-            modelValue.value = data._id;
-            emits("change", data._id, getItem(data._id));
+const addnew = () => {
+  const doc = getDocument(props.documentName )?.docClass;
+  if (doc) {
+    const tmpdata = doc?.getReactiveData();
+    type DataType = typeof tmpdata.value;
+    onScreenAddDocument<DataType>(
+      props.documentName ,
+      undefined,
+      async (eventType: FormCrudEvent, data: DataType) => {
+        if (eventType == FormCrudEvent.create) {
+          await getListOptions();
+          if(props.multiple) {
+            if(modelValue.value===undefined) modelValue.value=[data._id]
+            else if(Array.isArray(modelValue.value))
+                modelValue.value.push(data._id);
+
+
           }
-        },
-      );
-   
+          else modelValue.value = data._id;
+          emits("change", data._id, getItem(data._id));
+        }
+      },
+    );
   }
-}
+};
 </script>

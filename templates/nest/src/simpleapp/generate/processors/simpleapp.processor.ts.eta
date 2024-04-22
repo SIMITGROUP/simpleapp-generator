@@ -43,7 +43,7 @@ import {
   WorkflowName,
 } from '../types';
 @Injectable()
-export class SimpleAppService<T extends { _id?: string }> {
+export class SimpleAppService<T extends { _id?: string, __v?:number }> {
   @Inject(EventEmitter2)
   protected eventEmitter: EventEmitter2;
   @Inject(CloudApiService)
@@ -542,6 +542,13 @@ export class SimpleAppService<T extends { _id?: string }> {
 
   findIdThenUpdate = async (appuser: UserContext, id: string, data: T) => {
     const existingdata = await this.findById(appuser, id);
+
+    //version exists, need ensure different only 1
+    if(typeof data.__v=='number' && data.__v != existingdata.__v ){
+      throw new BadRequestException(`You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`)
+    }
+
+    data.__v = existingdata.__v+1
     if (!existingdata) {
       throw new NotFoundException(`${id} not found`, 'not found');
     }
@@ -592,6 +599,12 @@ export class SimpleAppService<T extends { _id?: string }> {
     if (!existingdata) {
       throw new NotFoundException(`${id} not found`, 'not found');
     }
+    if(typeof data.__v=='number' && data.__v != existingdata.__v ){
+      throw new BadRequestException(`You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`)
+    }
+
+    data.__v = existingdata.__v+1
+
 
     if (this.hooks.beforeUpdate)
       await this.hooks.beforeUpdate(appuser, id, data, existingdata);
@@ -744,7 +757,7 @@ export class SimpleAppService<T extends { _id?: string }> {
    * @param      {string}       eventName  The event name
    * @param      {any}          data       The data
    */
-  runBackgroundWorker(appuser: UserContext, eventName: string, payloads:any) {
+  runBackgroundWorker(appuser: UserContext, eventName: string, payloads: any) {
     this.eventEmitter.emit(eventName, appuser, payloads);
   }
 
@@ -764,7 +777,7 @@ export class SimpleAppService<T extends { _id?: string }> {
    * @param      {any}          data       The data
    * @return     {Promise}      { description_of_the_return_value }
    */
-  async runWorker(appuser: UserContext, eventName: string, payloads:any) {
+  async runWorker(appuser: UserContext, eventName: string, payloads: any) {
     const res = await this.eventEmitter.emitAsync(eventName, appuser, payloads);
     if (!this.eventEmitter.hasListeners(eventName)) {
       throw new InternalServerErrorException(`${eventName} seems no listener`);

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Sidebar v-model:visible="messagesvisible" :header="t('messages')">
+    <Sidebar v-model:visible="messagesvisible" position="right" :header="t('messages')">
       <ListView :list="list" #default="{ item, index }" @click="openMessage">
         <div class="flex flex-col">
           <TextBold v-if="!item.read">{{ item.messageTitle }}</TextBold>

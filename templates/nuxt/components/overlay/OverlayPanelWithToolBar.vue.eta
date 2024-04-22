@@ -1,13 +1,14 @@
 <template>
   <Sidebar
-    position="right"
+    :position="position??'right'"
     v-if="showDialog"
     v-model:visible="showDialog"
     modal
     :show-close-icon="false"
+    :dismissable="dismissable"
     #container
   >
-    <div class="overflow-y-scroll">
+    <div class="overflow-y-scroll border-l-2">
       <MobileToolbar class="bg-gray-800 text-white">
         <template #start>
           <slot name="headerLeft"></slot>
@@ -19,7 +20,7 @@
           <slot name="headerRight"></slot>
         </template>
       </MobileToolbar>
-      <div >
+      <div class="p-2">
         <slot name="default"></slot>
       </div>
     </div>
@@ -33,7 +34,12 @@
  * Author: Ks Tan
  */
 const showDialog = defineModel<boolean>({ required: true });
-const props = defineProps<{ closeEventName: string }>();
+const props = defineProps<{
+  closeEventName: string;
+  dismissable?: boolean;
+  position?:string
+}>();
+// const position = ref(props?.position ?? 'right')
 useNuxtApp().$listen("CloseDialog", (closeEventName: string) => {
   if (props.closeEventName == closeEventName) {
     showDialog.value = false;

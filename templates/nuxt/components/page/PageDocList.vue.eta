@@ -1,9 +1,10 @@
 <template>
   <title v-if="!id">{{ t(doc.getDocName()) }}</title>
+
   <div v-if="isMobile()" class="w-full">
     <div class="p-2 flex flex-row justify-end place-items-center h-14">
       <div class="flex-1">
-        <TextTitle>{{ t(doc.getDocName()) }}</TextTitle>
+        <TextMain>{{ t(doc.getDocName()) }}</TextMain>
       </div>
       <div>
         <ButtonText
@@ -45,37 +46,82 @@
       </template>
       <template #default>
         <slot name="dataTableColumns">
-          <Column
-            v-for="col in columns.filter((item, index) => index < 6)"
-            :header="t(col)"
-            class="min-w-[5rem]"
-            #body="{ index, data }"
+          <!-- :sortable="schemacols[col] && schemacols[col].type!='object'" -->
+          <template
+            v-for="col in columns.filter((item, index) => index < maxcolumns)"
           >
-            <RendererLink
-              v-if="uniqueKey === col || documentTitle === col"
-              :value="data"
-              :setting="{ path: resourcename.toLocaleLowerCase() }"
-              :fields="[col]"
+            <Column
+              v-if="schemacols[col]"
+              :header="t(col)"
+              sortable
+              :field="schemacols[col]['x-foreignkey'] ? col + '.label' : col"
+              :class="`min-w-[5rem] ${getCssClass(col)}`"
+              #body="{ index, data }"
             >
-              {{ data[col] }}
-            </RendererLink>
-            <span v-else-if="data[col]?.label !== undefined">{{
-              data[col].label
-            }}</span>
-            <span v-else>{{ data[col] }}</span>
-          </Column>
+              <RendererLink
+                v-if="uniqueKey === col || documentTitle === col"
+                :value="data"
+                :setting="{ path: resourcename.toLocaleLowerCase() }"
+                :fields="[col]"
+              >
+              </RendererLink>
+              <span v-else-if="typeof schemacols[col].enum != 'undefined'">
+                {{ t(data[col]) }}
+              </span>
+              <span v-else-if="schemacols[col].type == 'boolean'">
+                <RendererBoolean v-model="data[col]" />
+              </span>
+              <RendererForeignKey
+                v-else-if="schemacols[col]['x-foreignkey']"
+                v-model="data[col]"
+                :setting="{ collection: schemacols[col]['x-foreignkey'] }"
+              >
+                {{ data[col]?.label ?? data[col]?.code ?? data[col] }}
+              </RendererForeignKey>
+              <span v-else-if="data[col]?.label !== undefined">{{
+                data[col].label
+              }}</span>
+              <span v-else>{{ data[col] }}</span>
+            </Column>
+          </template>
         </slot>
       </template>
     </ListDocumentTable>
   </div>
-  <OverlaySideBarCrud
+  <OverlayPanelWithToolBar
     v-model="showDialog"
     :closeEventName="doc.getDocName()"
-    #default
-    ><slot name="default">
-      <NuxtPage :_id="id"></NuxtPage>
-    </slot>
-  </OverlaySideBarCrud>
+    :dismissable="false"
+    :position="sidebarposition"
+  >
+    <template #headerLeft>
+      <ButtonText @click="showDialog = false">
+        <i class="pi pi-times"></i>
+      </ButtonText>
+    </template>
+    <template #headerCenter>
+      <TextTitle class="text-center text-white">{{
+        t(doc.getDocName())
+      }}</TextTitle>
+    </template>
+    <template #headerRight>
+
+
+      
+
+      <ButtonText @click="sidebarposition = sidebarposition == 'right' ? sidebarposition='full': 'right'">
+        <i v-if="sidebarposition=='right'" class="pi pi-window-maximize"/>
+        <i v-if="sidebarposition=='full'" class="pi pi-window-minimize"/>
+      </ButtonText>
+        
+    </template>
+
+    <div class="p-2">
+      <slot name="default">
+        <NuxtPage :_id="id"></NuxtPage>
+      </slot>
+    </div>
+  </OverlayPanelWithToolBar>
 </template>
 
 <script setup lang="ts" generic="T extends { [key: string]: any }">
@@ -89,14 +135,16 @@ import { ref } from "vue";
 import _ from "lodash";
 import { SearchBody } from "~/types";
 import { SimpleAppClient } from "~/simpleapp/generate/clients/SimpleAppClient";
+const sidebarposition = ref('right')
 const props = defineProps<{
   document: SimpleAppClient<any, any>;
   data: T;
+  dismissable?: boolean;
   columns: string[];
   mobileColumns?: string[];
   sorts?: string[][];
 }>();
-
+const maxcolumns = 16;
 const emits = defineEmits(["selectRow"]);
 const id = computed(() => getPathPara("id"));
 const resourcename = ref(_.upperFirst(props.document.getDocName()));
@@ -115,7 +163,13 @@ const { $event, $listen } = useNuxtApp();
 const recordlist = ref<T[]>();
 const uniqueKey = doc.getSchema()["x-simpleapp-config"].uniqueKey;
 const documentTitle = doc.getSchema()["x-simpleapp-config"].documentTitle;
-
+const schemacols = doc.getSchema().properties;
+const getCssClass = (col: string) => {
+  if (schemacols[col]?.type == "number") return "text-right";
+  else if (schemacols[col]?.type == "boolean")
+    return "text-center place-items-center";
+  else return "text-left";
+};
 const refresh = () => {
   const searchbody: SearchBody = {
     fields: props.columns,
@@ -154,7 +208,7 @@ watch(showDialog, () => {
 watch(
   () => useRoute().path,
   async () => {
-    if(!isMobile()){
+    if (!isMobile()) {
       if (getPathPara("id")) {
         showDialog.value = true;
       } else {

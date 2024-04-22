@@ -104,7 +104,7 @@ simpleapp-generator -g init
 
 5. prepare backend
 ```sh
-bash build.sh backend
+./build.sh backend
 ```
 6. update backend configurations file by modify `~/project1/backend/.env`, change mongodb, keycloak settings according your requirements
 7. start backend:
@@ -115,7 +115,7 @@ pnpm start:dev
 
 8. prepare frontend (i use pnpm cause faster)
 ```sh
-sh build.sh frontend
+./build.sh frontend
 ```
 9. modify frontend configuration by modify `~/project1/frontend/.env`, change keycloak settings
 ```sh
@@ -141,8 +141,8 @@ nuxi preview
 1. add some schemas at `~/project1/schemas`
 2. then run 
 ```sh
-sh build.sh updatebackend
-sh build.sh updatefrontend
+./build.sh updatebackend
+./build.sh updatefrontend
 ```
 3. to add different user group permission, you may change `project1/groups`
 

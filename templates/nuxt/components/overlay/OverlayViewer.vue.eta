@@ -1,16 +1,25 @@
 <template>
-  <Sidebar
-    position="bottom"
+  <Dialog
     v-if="showDialog"
     v-model:visible="showDialog"
-    modal
+    
+    maximizable
+    :dismissable="false"
     :show-close-icon="false"
-    #container
+    :closeOnEscape="false"
+    :modal="true"
+    :pt="{root:{class:'w-11/12 border top-0'}, mask: {
+            style: 'backdrop-filter: blur(2px);background-color: red;'
+        }}"   
+
   >
-    <div class="overflow-y-scroll">
+    <template #header>
+      <slot name="header">{{t(title)}}</slot>
+    </template>
+    <div class="overflow-y-scroll bg-white">
       <slot name="default"></slot>
     </div>
-  </Sidebar>
+  </Dialog>
 </template>
 <script lang="ts" setup>
 /**
@@ -23,4 +32,5 @@ const showDialog = defineModel<boolean>({ required: true });
 useNuxtApp().$listen("CloseDialog", (closeEventName: string) => {
   if (closeEventName == "viewer") showDialog.value = false;
 });
+
 </script>

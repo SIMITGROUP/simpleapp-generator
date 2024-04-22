@@ -30,11 +30,11 @@
           </slot>
         </div>
         <span class="p-input-icon-left flex-1">
-          <i class="pi pi-search mt-4 ml-2 text-gray-400 absolute" />
+          
           <InputText
             type="search"
             v-model="filters['global'].value"
-            class="text-right"
+            class="w-full dark:text-white text-sm"
             placeholder="Keyword Search"
           />
         </span>

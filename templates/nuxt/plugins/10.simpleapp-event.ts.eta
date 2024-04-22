@@ -10,6 +10,8 @@ import axios, { Axios, AxiosResponse } from 'axios'
 import {Notification,EventType} from '~/types'
 // import PrimeVue from "primevue/config";
 import mitt from 'mitt'
+import { useConfirm } from "primevue/useconfirm";
+import { useDialog } from 'primevue/usedialog';
 
 // import ToastService from 'primevue/toastservice';
 // import ConfirmationService from 'primevue/confirmationservice';
@@ -73,6 +75,8 @@ export default defineNuxtPlugin( async(nuxtApp) => {
           event: emitter.emit, // Will emit an event
           listen: emitter.on, // Will register a listener for an event
           axios: myaxios,
+          confirm: useConfirm(),
+          dialog: useDialog
         } 
     }
     //other components that you need

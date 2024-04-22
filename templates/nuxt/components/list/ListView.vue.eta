@@ -2,27 +2,29 @@
   <div class="relative">
     <div v-if="withFilter" class="flex flex-row p-2">
       <InputGroup>
-          <InputGroupAddon v-if="filter">
-
-             <ButtonDefault @click="showMoreFilter" v-if="Object.keys(filter)==0">
-              <i class="pi pi-filter"></i>
-            </ButtonDefault>
-            <ButtonWarning @click="showMoreFilter" v-else>
-              <i class="pi pi-filter"></i>
-            </ButtonWarning>
-          </InputGroupAddon>
-          <InputText
-              :placeholder="t('searchKeyword')"
-              v-model="searchvalue"
-              class="w-full dark:text-white text-sm "
-              type="search"
-              ref="listviewfilter"
-            />
-          <InputGroupAddon v-if="withAddNew">            
-            <ButtonPrimary @click="emits('add')">
-              <i class="pi pi-plus"></i>
-            </ButtonPrimary>
-          </InputGroupAddon>
+        <InputGroupAddon v-if="filter">
+          <ButtonText
+            @click="showMoreFilter"
+            v-if="Object.keys(filter) == 0"
+          >
+            <i class="pi pi-filter"></i>
+          </ButtonText>
+          <ButtonWarning @click="showMoreFilter" v-else>
+            <i class="pi pi-filter"></i>
+          </ButtonWarning>
+        </InputGroupAddon>
+        <InputText
+          :placeholder="t('searchKeyword')"
+          v-model="searchvalue"
+          class="w-full dark:text-white text-sm"
+          type="search"
+          ref="listviewfilter"
+        />
+        <InputGroupAddon v-if="withAddNew">
+          <ButtonPrimary @click="emits('add')">
+            <i class="pi pi-plus"></i>
+          </ButtonPrimary>
+        </InputGroupAddon>
       </InputGroup>
     </div>
 
@@ -54,7 +56,7 @@
             <span>{{ item[titleField][0] }}</span>
           </div>
           <div
-            @click="onClick(index, item)"
+            @click="onClick(index, item, $event)"
             :class="`border-l-none border-r-none listview-item dark:border-t-gray-700 ${
               index > 0 ? 'border-t-2' : ''
             }`"
@@ -88,18 +90,17 @@
       </div>
     </div>
 
-
     <Dialog v-model:visible="visibleMoreFilter" :header="t('filter')">
-      <slot name="filter">
-        define filter in #filter
-      </slot>
+      <slot name="filter"> define filter in #filter </slot>
       <template #footer>
         <div class="flex flex-row">
           <ButtonDefault @click="clearFilter" class="flex flex-row p-2">
-            <i class="pi pi-times mr-1"/> <span class="mr-1">{{t('clear')}}</span>
+            <i class="pi pi-times mr-1" />
+            <span class="mr-1">{{ t("clear") }}</span>
           </ButtonDefault>
-          <ButtonPrimary  @click="runFilter" class="flex flex-row p-2">
-            <i class="pi pi-filter mr-1"/> <span class="mr-1">{{t('ok')}}</span>
+          <ButtonPrimary @click="runFilter" class="flex flex-row p-2">
+            <i class="pi pi-filter mr-1" />
+            <span class="mr-1">{{ t("ok") }}</span>
           </ButtonPrimary>
         </div>
       </template>
@@ -116,7 +117,7 @@
 import { ref } from "vue";
 import { ListItem } from "~/types/listview";
 import _ from "lodash";
-const visibleMoreFilter = ref(false)
+const visibleMoreFilter = ref(false);
 const listviewfilter = ref();
 const props = withDefaults(
   defineProps<{
@@ -126,7 +127,7 @@ const props = withDefaults(
     idField?: string;
     subTitleField?: string;
     withFilter?: boolean;
-    filter?:Object;
+    filter?: Object;
     withAddNew?: boolean;
     showIndex?: boolean;
     showClickEffect?: boolean;
@@ -138,7 +139,7 @@ const props = withDefaults(
 const letters = ref<string[]>([]);
 let lastchar = "";
 
-const emits = defineEmits(["add", "runFilter", "clearFilter","click"]);
+const emits = defineEmits(["add", "runFilter", "clearFilter", "click"]);
 const searchvalue = ref("");
 const selecteditem = ref("");
 const clickRow = (item: ListItem) => {
@@ -158,15 +159,23 @@ const filterlist = computed(() => {
     return [];
   }
   if (props.list !== undefined) {
+    const searchstr = searchvalue.value.toLowerCase()
+    
     newlist = props.list.filter((item: T) => {
-      return (
-        String(item[props.titleField ?? ""])
-          .toLowerCase()
-          .includes(searchvalue.value.toLowerCase()) ||
-        String(item[props.subTitleField ?? ""])
-          .toLowerCase()
-          .includes(searchvalue.value.toLowerCase())
-      );
+      let res = false
+      if(searchstr.length==0) return true
+      if(props.titleField && item[props.titleField]){
+          res = item[props.titleField].toLowerCase()
+                .includes(searchstr)
+              }
+      if(res) return true
+
+      if(props.subTitleField && item[props.subTitleField])
+      res = item[props.subTitleField].toLowerCase()
+        .includes(searchstr)
+      if(res) return true
+      
+      return false;
     });
   }
 
@@ -198,21 +207,21 @@ const showCategoryBar = (letter: string) => {
   }
 };
 
-const onClick = (index: number, data: T) => {
-  emits("click", index, data);
+const onClick = (index: number, data: T, event: Event | MouseEvent) => {
+  emits("click", index, data, event);
 };
 
-const showMoreFilter = ()=>{
-  visibleMoreFilter.value=true
-}
-const clearFilter = () =>{  
-  visibleMoreFilter.value = false
-  emits('clearFilter')
-}
+const showMoreFilter = () => {
+  visibleMoreFilter.value = true;
+};
+const clearFilter = () => {
+  visibleMoreFilter.value = false;
+  emits("clearFilter");
+};
 const runFilter = () => {
-  visibleMoreFilter.value = false
-  emits('runFilter')
-}
+  visibleMoreFilter.value = false;
+  emits("runFilter");
+};
 onMounted(() => {
   // if(props.withFilter) listviewfilter.value.$el.focus()
 });

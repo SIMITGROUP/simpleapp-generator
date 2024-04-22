@@ -226,6 +226,6 @@ onMounted(async () => {
 });
 
 definePageMeta({
-  menuPath: "setting/user",
+  menuPath: "systemconfig/setting/user",
 });
 </script>

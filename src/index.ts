@@ -2,6 +2,7 @@
 import { error } from "console"
 import * as fw from  './framework'
 import * as generate from './generate'
+import { chmod } from "fs"
 const program =  require("commander") // add this line
 const Fieldtypes= require( './type')
 // const generate= require( './generate')
@@ -33,9 +34,13 @@ console.log(figlet.textSync(`${version}`));
 let continueexecute = true
 if(options.generateType && options.generateType=='init'){
   continueexecute=false
-  fw.prepareProject(()=>{
-    process.exit(1)
-  })  
+  
+    fw.prepareProject(()=>{
+      chmod(process.cwd()+'/build.sh',0o755,()=>{
+        process.exit(1)
+    })  
+  })
+  
   
 }
 else if(!options.configFile){

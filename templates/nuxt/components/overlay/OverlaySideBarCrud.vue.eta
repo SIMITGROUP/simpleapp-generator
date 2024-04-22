@@ -3,12 +3,18 @@
     position="right"
     v-if="showDialog"
     v-model:visible="showDialog"
-    modal
-    :show-close-icon="false"
+    :dismissable="dismissable"
+    modal    
     #container
-  >
-    <div class="overflow-y-scroll">
-      <slot name="default"></slot>
+  > 
+    <div class="border-l-2 pl-2">
+      <div class="flex flex-row justify-end p-2" v-if="title">
+        <TextTitle class="dark:text-white line-clamp-2 flex-1">{{title}}</TextTitle>
+        <ButtonText @click="showDialog=false"><i class="pi pi-times" /></ButtonText>
+      </div>
+      <div class="overflow-y-scroll">
+        <slot name="default"></slot>
+      </div>
     </div>
   </Sidebar>
 </template>
@@ -20,7 +26,12 @@
  * Author: Ks Tan
  */
 const showDialog = defineModel<boolean>({ required: true });
-const props = defineProps<{ closeEventName: string }>();
+const props = defineProps<{ 
+  closeEventName: string   
+  title?:string
+  dismissable?:boolean
+
+}>();
 useNuxtApp().$listen("CloseDialog", (closeEventName: string) => {
   if (props.closeEventName == closeEventName) {
     showDialog.value = false;

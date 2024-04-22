@@ -41,7 +41,7 @@ const doc = useNuxtApp().$DocnoformatDoc()
 const docdata = doc.getReactiveData();
 
 definePageMeta({
-  menuPath: "setting/docnoformat",
+  menuPath: "systemconfig/setting/docnoformat",
 });
 
 const columns = [

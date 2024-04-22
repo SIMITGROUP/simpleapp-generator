@@ -1,18 +1,16 @@
 <template>
   <OverlayViewer v-model="visible">
-    <!-- <template #header>
-      
-    </template> -->
+    <template #header>
+      <div class="flex flex-row gap-4">
+        <Chip
+          v-for="(v, k) in allview"
+          :label="v.label"
+          @remove="deleteTab"
+          :removable="lastDocumentName == v.documentName"
+        />
+      </div>
+    </template>
     <div class="w-full h-full">
-      <!-- <div class="flex flex-row gap-4" v-if="allview.length>0">
-            <Chip              
-              v-for="(v, k) in allview"
-              :label="v.label"
-              @remove="deleteTab"
-              :removable="true"
-            />
-          </div> -->
-
       <div
         v-for="(v, k) in allview"
         v-memo="[k]"
@@ -44,10 +42,19 @@
 import { onKeyStroke } from "@vueuse/core";
 import { useDialog } from "primevue/usedialog";
 import { defineAsyncComponent } from "vue";
+
 import { ViewRecord, FormCrudEvent } from "~/types";
 // import TabView from 'primevue/tabview';
 import Chip from "primevue/chip";
+const lastDocumentName = computed(() => {
+  const keys = Object.keys(allview.value);
 
+  if (keys.length == 0) return "";
+
+  const keyname = keys[keys.length - 1];
+
+  return allview.value[keyname].documentName;
+});
 const { $listen } = useNuxtApp();
 const visible = ref(false);
 const allview = ref<{ [key: string]: ViewRecord }>({});
@@ -59,7 +66,7 @@ const after = (
 ) => {
   if (v.after) {
     v.after(eventType, data);
-    
+
     //only after mount consider no remove tab
     if (eventType != "mount") deleteTab();
   }
@@ -104,6 +111,16 @@ $listen("CloseDialog", (documentName: string) => {
 //   visible.value = true;
 //   allview.value[setting.eventId] = setting;
 // });
+//
+const clearView = () => {
+  allview.value = {};
+};
+
+watch(visible, () => {
+  if (visible.value == false) {
+    clearView();
+  }
+});
 </script>
 
 <style scoped>

@@ -113,7 +113,7 @@ const fetchRecord = async () => {
 const id = computed((): string => String(useRoute().params.id ?? ""));
 
 definePageMeta({
-  menuPath: "setting/organization",
+  menuPath: "systemconfig/setting/organization",
 });
 
 //branch record update then reload

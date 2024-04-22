@@ -7,39 +7,39 @@
 import { UserContext } from './user.context';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import {DocNumberFormatResult} from '../types'
-import { Docnoformat } from '../types/docno.type'
-import { Injectable, InternalServerErrorException,BadRequestException } from '@nestjs/common';
-import moment from 'moment';
-import {ForeignKey} from '../types'
+import { DocNumberFormatResult } from '../types';
+import { Docnoformat } from '../types/docno.type';
+import {  Injectable, InternalServerErrorException, BadRequestException} from '@nestjs/common';
+// import moment from 'moment';
+import dayjs from 'dayjs'
+import { ForeignKey } from '../types';
 
-export class DocNumberFormatGenerator{
-  constructor(@InjectModel('Docnoformat') private docformat: Model<Docnoformat>) {}
+export class DocNumberFormatGenerator {
+  constructor(@InjectModel('Docnoformat') private docformat: Model<Docnoformat>,) {}
 
 
-  async generateNextNumberFromDocument(appuser:UserContext,docType:string,data:any){
-    let formatId = ''
-    if(data.docNoFormat && data.docNoFormat._id){
-      formatId=data.docNoFormat._id
+  async generateNextNumberFromDocument( appuser: UserContext, docType: string, data: any,) {
+    let formatId = '';
+    if (data.docNoFormat && data.docNoFormat._id) {
+      formatId = data.docNoFormat._id;
     }
-    const docnoobj = await this.generateNextNo(appuser,docType,formatId)        
-    const result:ForeignKey = {
-      _id : String(docnoobj.formatId),
-      label: docnoobj.formatName
-    }
-    data.docNoFormat = result
-    return docnoobj.result
+    const docnoobj = await this.generateNextNo(appuser, docType, formatId);
+    const result: ForeignKey = {
+      _id: String(docnoobj.formatId),
+      label: docnoobj.formatName,
+    };
+    data.docNoFormat = result;
+    return docnoobj.result;
   }
 
-
-  generateNextNo = async (appuser: UserContext,doctype: string,id: string = '') => {
+  generateNextNo = async ( appuser: UserContext,doctype: string, id: string = '',) => {
     doctype = doctype.toUpperCase();
     let filter = { docNoType: doctype };
     if (id) {
       filter['_id'] = id;
     }
-    Object.assign(filter,appuser.getBranchFilter())
-    const result = await this.docformat.find(filter)
+    Object.assign(filter, appuser.getBranchFilter());
+    const result = await this.docformat.find(filter);
     //search(appuser, filter);
     if (result && result.length > 0) {
       const d: Docnoformat = result[0];
@@ -47,11 +47,17 @@ export class DocNumberFormatGenerator{
       const newdocno = DocNumberFormatGenerator.previewDocNo(d);
       const newnextnumber = d.nextNumber + 1;
       const updatedata = { nextNumber: newnextnumber } as Docnoformat;
-      const updateresult = await this.docformat.findByIdAndUpdate(recordId,updatedata).session(appuser.getDBSession())
-      
-      if (updateresult) {         
-        const result:DocNumberFormatResult = {formatId:d._id,formatName:d.docNoFormatName,result: newdocno }
-        return result 
+      const updateresult = await this.docformat
+        .findByIdAndUpdate(recordId, updatedata)
+        .session(appuser.getDBSession());
+
+      if (updateresult) {
+        const result: DocNumberFormatResult = {
+          formatId: d._id,
+          formatName: d.docNoFormatName,
+          result: newdocno,
+        };
+        return result;
         //;
       } else {
         throw new InternalServerErrorException(
@@ -86,13 +92,13 @@ export class DocNumberFormatGenerator{
           nextnumber = '0' + nextnumber;
         }
         newvalue = newvalue.replace(numberpattern[0], nextnumber);
-      }      
+      }
 
       if (datepattern && datepattern.length > 0) {
         for (let d = 0; d < datepattern.length; d++) {
           const dpattern = datepattern[d];
           const date = new Date();
-          const formatteddate = moment().format(
+          const formatteddate =dayjs().format(
             dpattern.replace('{', '').replace('}', ''),
           );
           newvalue = newvalue.replace(dpattern, formatteddate);

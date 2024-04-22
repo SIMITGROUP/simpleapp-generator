@@ -44,7 +44,7 @@ import { <%= it.typename %> } from '~/simpleapp/generate/openapi';
   type <%= it.typename %>Key = keyof <%= it.typename %> 
 
   definePageMeta({
-    menuPath:'nocategory/<%= it.name %>'    
+    menuPath:'general/nocategory/<%= it.name %>'    
   });
 
   const columns:<%= it.typename %>Key[] = [<%Object.keys(it.jsonschema.properties).forEach(function(key) { %>

@@ -1,16 +1,15 @@
 <template>
   <div class="flex flex-col">
     <div class="flex flex-row gap-2">
-      
-        <TextTitle v-if="title" class="flex-1">{{ title }}</TextTitle>
-      
-        <div class="flex flex-row"><slot name="buttons"></slot></div>
-      
-        <div>
-          <ButtonDefault v-if="!readOnly" @click="addRow">
-            <i class="pi pi-plus"></i>
-          </ButtonDefault>
-        </div>
+      <TextTitle v-if="title" class="flex-1">{{ title }}</TextTitle>
+
+      <div class="flex flex-row"><slot name="buttons"></slot></div>
+
+      <div>
+        <ButtonDefault v-if="addNew" @click="addRow">
+          <i class="pi pi-plus"></i>
+        </ButtonDefault>
+      </div>
     </div>
     <ListView
       class="p-2 dark:bg-slate-900 bg-slate-200 rounded-lg"
@@ -48,7 +47,11 @@
 const showDialog = ref(false);
 const rowIndex = ref(0);
 const emits = defineEmits(["addrow", "deleteitem", "itemupdated"]);
-const props = defineProps<{ list: T[]; title?: string; readOnly?: boolean }>();
+const props = defineProps<{ 
+  list: T[]; 
+  title?: string; 
+  addNew?: boolean 
+}>();
 
 const showRow = (index: number, item: T) => {
   showDialog.value = true;
@@ -67,5 +70,6 @@ const addRow = (event: MouseEvent) => {
   emits("addrow", MouseEvent);
   const lineno = props.list.length - 1;
   showRow(lineno, props.list[lineno]);
+  
 };
 </script>

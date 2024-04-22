@@ -10,7 +10,7 @@
       </template>
       <template #center>
         <slot name="center" :menu="menu">
-          <TextTitle class="text-white line-clamp-2">{{ title }}</TextTitle>
+          <TextMain class="text-white line-clamp-2">{{ title }}</TextMain>
         </slot>
       </template>
       <template #end>
@@ -33,11 +33,17 @@
         <ContextMenu ref="menu" :model="menus as MenuItem[]" />
       </template>
     </MobileToolbar>
-    <ConfirmDialog></ConfirmDialog>
   </div>
   <div v-else class="simpleapp-tool-bar">
-    <Toolbar>
-      <template #start>
+   <!--  <div class="flex flex-row justify-end p-2">
+      <TextTitle class="dark:text-white line-clamp-2 flex-1">{{
+        title
+      }}</TextTitle>
+      <ButtonText @click="callClose"><i class="pi pi-times" /></ButtonText>
+    </div> -->
+    <div class="flex flex-row gap-2 p-0 justify-between">
+      <!-- left -->
+      <div class="flex flex-row">
         <div v-for="(menu, index) in menus" :key="index">
           <div v-if="menu.label && menu.type == 'crud'">
             <ButtonAction
@@ -47,11 +53,12 @@
             >
           </div>
         </div>
-      </template>
-      <template #center>
-        <TextTitle class="text-white line-clamp-2">{{ title }}</TextTitle>
-      </template>
-      <template #end>
+      </div>
+
+      <!-- center -->
+      <div class="flex flex-row "></div>
+      <!-- right -->
+      <div class="flex flex-row">
         <div v-for="(menu, index) in menus" :key="index">
           <div v-if="menu.label && menu.type == 'docstatus'">
             <ButtonAction
@@ -61,8 +68,8 @@
             >
           </div>
         </div>
-      </template>
-    </Toolbar>
+      </div>
+    </div>
     <ConfirmPopup></ConfirmPopup>
   </div>
   <Dialog v-model:visible="visiblePrintFormats" :header="t('printFormats')">
@@ -73,28 +80,53 @@
         @click="printPdf"
       >
         <div class="flex flex-col">
-          <TextBold>{{ item.formatName }}</TextBold>
+          <TextBold>{{ t(item.formatName) }}</TextBold>
           <TextSubtitle>{{ item.description }}</TextSubtitle>
         </div>
       </ListView>
     </div>
   </Dialog>
-  <Sidebar
-    v-model:visible="visiblePrintPreview"
-    :header="t('printPreview')"
-    position="bottom"
+  <OverlayPanelWithToolBar
+    v-if="visiblePrintPreview"
+    v-model="visiblePrintPreview"
+    close-event-name="closePrintPreview"
   >
+    <template #headerLeft>
+      <ButtonText @click="visiblePrintPreview = false"
+        ><i class="pi pi-times"
+      /></ButtonText>
+    </template>
+    <template #headerCenter>{{ t("printPreview") }}</template>
+    <template #headerRight>
+
+      <div v-if="isMobile()">
+        <ButtonText class="text-xl" @click="sendToPrint" >
+          <i class="pi pi-print"></i>
+        </ButtonText>
+        <ButtonText class="text-xl" v-if="sharable" @click="togglePdfMenu">
+          <i class="pi pi-ellipsis-v"></i>
+        </ButtonText>
+      </div>
+      <div v-else></div>
+    </template>
+    <!-- :header="t('printPreview')"
+    position="bottom" -->
     <TextDanger v-if="printservererror || !printstr">
       {{ t("printServerError") }}
     </TextDanger>
     <vue-pdf-embed
+      ref="pdfrenderer"
       class="w-11/12"
       v-else-if="isMobile()"
       :source="printstr"
       :disableTextLayer="true"
+      @loading-failed="console.log"
+      @rendering-failed="console.log"
     />
-    <iframe v-else width="100%" height="100%" :src="printstr"></iframe>
-  </Sidebar>
+    <div class="p-0 w-full h-screen" v-else>
+      <iframe width="100%" height="100%" :src="printstr"></iframe>
+    </div>
+  </OverlayPanelWithToolBar>
 </template>
 <script setup lang="ts">
 /**
@@ -113,6 +145,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { FormActions, FormCrudEvent, FormMenu } from "~/types";
 import { MenuItem } from "primevue/menuitem";
 import { MenuItemCommandEvent } from "primevue/menuitem";
+const pdfrenderer = ref();
 const confirm = useConfirm();
 const emits = defineEmits(["on", "close"]);
 const visiblePrintFormats = ref(false);
@@ -182,6 +215,7 @@ const emitMobileEvent = (itemevent: MenuItemCommandEvent) => {
 };
 
 const printPdf = async (index: number, format: any) => {
+  console.log("printPdf");
   printservererror.value = false;
   const formatid: string = format.formatId;
   visiblePrintPreview.value = true;
@@ -219,9 +253,9 @@ const getActions = () => {
   if (printformats && printformats.length > 0) {
     crudmenus.push({
       action: "print",
-      label: t("print"),
+      label: t("preview"),
       type: "crud",
-      icon: "pi pi-print",
+      icon: "pi pi-file-pdf",
       command: showPrintFormats,
     });
   }
@@ -334,6 +368,23 @@ const getActionIcon = (actionName: string) => {
       break;
   }
   return `pi ${icon}`;
+};
+
+const sendToPrint = () => {
+  // window.print()
+  pdfrenderer.value.print();
+};
+
+const sharable = computed(() => typeof navigator.share != "undefined");
+const togglePdfMenu = async () => {
+  const blob = await (await fetch(printstr.value)).blob();
+  const file = new File([blob], "fileName.pdf", { type: blob.type });
+
+  navigator.share({
+    title: "Title to be shared",
+    text: "Text to be shared",
+    files: [file],
+  });
 };
 </script>
 <style>

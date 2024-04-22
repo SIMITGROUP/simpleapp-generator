@@ -10,6 +10,6 @@
  */
 import profile from "../profile.vue";
 definePageMeta({
-  menuPath:'setting/profile'
+//  menuPath:'setting/profile'
 })
 </script>
