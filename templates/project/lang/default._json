@@ -36,6 +36,7 @@
     "suspendcustomer": "Suspend Customer",
     "formKeyNotFound": "Formkey not found \"{formKey}\"",
     "selectAll": "Select All",
+    "clear": "Clear",
     "branches":"Branches",
     "accessRights": "Access Rights",
     "fullName":"Full Name",
@@ -69,6 +70,6 @@
     "printPreview": "Print Preview",
     "messages":"Messages",
     "systemconfig": "System Config",
-    "preview": "Preview"
-
+    "preview": "Preview",
+    "docnoformat":"Document Numbering Formats"
   }

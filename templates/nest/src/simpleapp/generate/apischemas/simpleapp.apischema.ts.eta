@@ -17,4 +17,6 @@ export class ApiSearchBody{
     fields:  [Object];
     @ApiProperty({"type":()=>[Object],"required":true,"examples":['[[ "field1", "asc" ]]'],"default":[[ 'field1', 'asc' ]]} )
     sorts:  [Object];
+    @ApiProperty({type: () => Object,required: false,})
+    lookup: Object
 }

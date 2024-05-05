@@ -43,7 +43,7 @@ import {
   WorkflowName,
 } from '../types';
 @Injectable()
-export class SimpleAppService<T extends { _id?: string, __v?:number }> {
+export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   @Inject(EventEmitter2)
   protected eventEmitter: EventEmitter2;
   @Inject(CloudApiService)
@@ -53,7 +53,12 @@ export class SimpleAppService<T extends { _id?: string, __v?:number }> {
   protected hooks: DefaultHooks<T> = {};
   protected logger = new Logger();
   protected strictIsolation = true;
-  protected jsonschema = { type: 'object', properties: {}, required: [] };
+  protected jsonschema: any = {
+    type: 'object',
+    'x-simpleapp-config': {},
+    properties: {},
+    required: [],
+  };
   protected documentIdentityCode = 'code';
   protected documentIdentityLabel = 'label';
   protected documentName = '-unknowndocname-';
@@ -97,6 +102,7 @@ export class SimpleAppService<T extends { _id?: string, __v?:number }> {
   getRecordId = (): string => this.data._id;
   setSchema = (newschema) => (this.jsonschema = newschema);
   getSchema = () => this.doc.schema.obj;
+  getJsonSchema = () => this.jsonschema;
   getHooks = () => this.hooks;
   getData = () => {
     //console.log('thisdata', this.data);
@@ -225,7 +231,7 @@ export class SimpleAppService<T extends { _id?: string, __v?:number }> {
 
         Object.assign(pipeline[0]['$match'], isolationFilter);
         //console.log("final agg",pipeline)
-        return await this.doc.aggregate(pipeline);
+        return await this.doc.aggregate(pipeline,{session:appuser.getDBSession()});
       } catch (err) {
         throw new InternalServerErrorException(err);
       }
@@ -238,8 +244,9 @@ export class SimpleAppService<T extends { _id?: string, __v?:number }> {
   async search(
     appuser: UserContext,
     filters: FilterQuery<T>,
-    projection: ProjectionType<T> = undefined,
+    projection: string[] = undefined,
     sort: any = undefined,
+    lookup:{[key:string]:string}=undefined
   ) {
     try {
       const isolationFilter = { ...this.getIsolationFilter(appuser) };
@@ -252,19 +259,32 @@ export class SimpleAppService<T extends { _id?: string, __v?:number }> {
         await this.hooks.beforeSearch(appuser, newfilters);
       // console.log("before _find",newfilters)
       // console.log("this.doc",this.doc)
-      const products = await this.doc
-        .find(newfilters, projection, { session: appuser.getDBSession() })
-        .sort(sort);
-      // console.log("after search",products)
-      const productlist = products.map((p: T) => {
+      let searchResults:T[] = []
+      if(lookup===undefined){
+        searchResults = await this.doc
+          .find(newfilters, projection, { session: appuser.getDBSession() })
+          .sort(sort);
+      }
+      else{
+
+       const pipelines =  this.searchToAggregate(filters,projection,sort,lookup)  
+       console.log("after aggregate",pipelines);
+
+       searchResults=await this.aggregate(appuser,pipelines)
+      }
+      
+
+      
+      
+      const list:T[] = searchResults.map((p: T) => {
         return p;
       });
       // console.log("after map",productlist)
       if (this.hooks.afterSearch)
-        await this.hooks.afterSearch(appuser, productlist);
+        await this.hooks.afterSearch(appuser, list);
 
       //   console.log(products);
-      return productlist;
+      return list;
     } catch (err) {
       throw new BadRequestException(err.message);
     }
@@ -416,6 +436,7 @@ export class SimpleAppService<T extends { _id?: string, __v?:number }> {
     ajv.addFormat('text', /.*$/);
     ajv.addFormat('html', /.*$/);
     ajv.addFormat('documentno', /.*$/);
+    ajv.addFormat('money', /.*$/);
 
     ajv.addKeyword({ keyword: 'x-foreignkey', schemaType: 'string' });
     ajv.addKeyword({ keyword: 'x-simpleapp-config', schemaType: 'object' });
@@ -544,11 +565,13 @@ export class SimpleAppService<T extends { _id?: string, __v?:number }> {
     const existingdata = await this.findById(appuser, id);
 
     //version exists, need ensure different only 1
-    if(typeof data.__v=='number' && data.__v != existingdata.__v ){
-      throw new BadRequestException(`You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`)
+    if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
+      throw new BadRequestException(
+        `You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`,
+      );
     }
 
-    data.__v = existingdata.__v+1
+    data.__v = existingdata.__v + 1;
     if (!existingdata) {
       throw new NotFoundException(`${id} not found`, 'not found');
     }
@@ -599,12 +622,13 @@ export class SimpleAppService<T extends { _id?: string, __v?:number }> {
     if (!existingdata) {
       throw new NotFoundException(`${id} not found`, 'not found');
     }
-    if(typeof data.__v=='number' && data.__v != existingdata.__v ){
-      throw new BadRequestException(`You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`)
+    if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
+      throw new BadRequestException(
+        `You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`,
+      );
     }
 
-    data.__v = existingdata.__v+1
-
+    data.__v = existingdata.__v + 1;
 
     if (this.hooks.beforeUpdate)
       await this.hooks.beforeUpdate(appuser, id, data, existingdata);
@@ -927,5 +951,47 @@ export class SimpleAppService<T extends { _id?: string, __v?:number }> {
   async print(appuser: UserContext, id: string, formatid: string) {
     const pdfresult = await this.printapi.getBase64Pdf(appuser, formatid, id);
     return pdfresult;
+  }
+
+
+  searchToAggregate(filter:FilterQuery<T>,columns:string[],sort:string[][],
+    lookup:{[key:string]:string}){
+    const pipelines:PipelineStage[]=[]
+    const projection={}
+
+    pipelines.push({$match:filter})
+    if(Array.isArray(columns)&&columns.length>0){
+      columns.forEach(col=>{
+        projection[col]=1
+      })
+    }
+
+
+    const collections = Object.keys(lookup)
+    collections.forEach(to=>{
+      pipelines.push({$lookup:{
+        from:to,
+        as:'_'+to,
+        localField:lookup[to],
+        foreignField:'_id'
+      }})
+      pipelines.push({$unwind:'$_'+to})
+
+      if(Object.keys(projection).length>0)projection['_'+to]=1
+    })
+
+    if(Object.keys(projection).length>0) pipelines.push({$project:projection})
+    
+    if(Array.isArray(sort) && sort.length>0){
+      const sortobj={}
+      sort.forEach(item=>{
+        sortobj[item[0]]=item[1]
+      })
+      pipelines.push({$sort: sortobj})
+    }
+
+    console.log("pipelinespipelinespipelines",pipelines)
+
+    return pipelines;
   }
 }

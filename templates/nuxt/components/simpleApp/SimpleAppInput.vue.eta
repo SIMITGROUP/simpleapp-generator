@@ -134,7 +134,6 @@
       @change="onChange"
     />
 
-
     <MultiSelect
       v-model="modelValue"
       :pt="pt"
@@ -168,6 +167,31 @@
       </div>
     </div>
 
+    <SimpleAppUserPicker
+      v-else-if="inputType == SimpleAppInputType.user"
+      v-model="modelValue as autocompletetype"
+      :hidelabel="hidelabel"
+      :pt="pt"
+      :setting="setting"
+      :disabled="isReadonly"
+      :inputId="slotprops.uuid"
+      :path="setting.instancepath"
+      :readonly="isReadonly"
+      :placeholder="placeholder"
+      :autocompleteFilter="autocompleteFilter"
+      @change="onChange"
+    >
+      <template #header>
+        <slot name="header"></slot>
+      </template>
+      <template #content>
+        <slot name="content"></slot>
+      </template>
+      <template #option="{ index, option }">
+        <slot name="option" :index="index" :option="option"></slot>
+      </template>
+    </SimpleAppUserPicker>
+    
     <!-- autocomplete, need do more enterprise grade component-->
     <SimpleAppAutocomplete
       v-else-if="inputType == SimpleAppInputType.autocomplete"
@@ -182,7 +206,17 @@
       :placeholder="placeholder"
       :autocompleteFilter="autocompleteFilter"
       @change="onChange"
-    />
+    >
+      <template #header>
+        <slot name="header"></slot>
+      </template>
+      <template #content>
+        <slot name="content"></slot>
+      </template>
+      <template #option="{ index, option }">
+        <slot name="option" :index="index" :option="option"></slot>
+      </template>
+    </SimpleAppAutocomplete>
     <!-- v-bind:attributes="componentProps" -->
     <!--  document no input-->
     <SimpleAppDocumentNo
@@ -343,7 +377,7 @@ const modelValue = defineModel({ required: true });
 const datevalue = ref<Date>();
 const datetimevalue = ref<Date>();
 const timevalue = ref<Date>();
-let watchOnChange = 0;
+const watchOnChange = ref(false);
 const props = withDefaults(
   defineProps<{
     inputType: SimpleAppInputType;
@@ -353,6 +387,7 @@ const props = withDefaults(
     setting: any;
     type?: string;
     instancepath?: string;
+    options?: string[];
     hidelabel?: boolean;
     readonly?: boolean;
     autofocus?: boolean;
@@ -424,6 +459,8 @@ watch(props.setting.errors, (newvalue, oldvalue) => {
   } else {
     pt.value = props.pt;
   }
+
+  watchOnChange.value = true;
 });
 const isReadonly = computed(() => {
   if (props.readonly) {
@@ -461,12 +498,12 @@ const setFocus = (ev: any) => {
 };
 
 const getListOptions = () => {
-  const options = [];  
-  const enumlist = props.setting.fieldsetting.type == 'array' 
-      ? props.setting.fieldsetting.items.enum 
-      : props.setting.fieldsetting.enum 
-
-  
+  const options = [];
+  const enumlist =
+    props.options ??
+    (props.setting.fieldsetting.type == "array"
+      ? props.setting.fieldsetting.items.enum
+      : props.setting.fieldsetting.enum);
 
   if (enumlist) {
     for (let i = 0; i < enumlist.length; i++) {
@@ -547,9 +584,11 @@ onMounted(() => {
 });
 
 const onChange = () => {
-  pt.value = undefined;
-  resetcount.value++;
-  emits("change", modelValue.value);
+  if (props.setting.document.isReady()) {
+    pt.value = undefined;
+    resetcount.value++;
+    emits("change", modelValue.value);
+  }
 };
 
 /************ start autocomplete only ***************/

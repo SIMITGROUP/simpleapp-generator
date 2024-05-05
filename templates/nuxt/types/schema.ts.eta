@@ -30,13 +30,14 @@ export type DocumentStatus = {
     formula:string  //example "jslib.getDocumentSubTotal(@F{$.details})"
   } 
 export type SchemaConfig = {
-    isolationType: IsolationType  
+    isolationType: string  
     requiredRoles?:string[]
     pageType?: string  
     uniqueKey?:string  
     uniqueKeys?:string[][]
     documentTitle?:string 
     generateDocumentNumber?:boolean
+    docNoPattern?:string
     documentDate?:string
     allStatus?:DocumentStatus[]
     additionalApis?:DocumentApi[]      

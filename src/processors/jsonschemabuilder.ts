@@ -42,6 +42,10 @@ export const readJsonSchemaBuilder = async (docname: string,orijsondata:JSONSche
   }
 
   if(schemaconfigs.generateDocumentNumber){
+    if(!schemaconfigs.docNoPattern){
+      log.error(docname+" generateDocumentNumber=true but undefine docNoPattern")
+      throw new Error(docname+" generateDocumentNumber=true but undefine docNoPattern")
+    }
     const tmp = {
         type: "object",       
         "x-foreignkey":"docnoformat", 
@@ -58,8 +62,12 @@ export const readJsonSchemaBuilder = async (docname: string,orijsondata:JSONSche
     const apis = schemaconfigs.additionalApis
     for(let i =0 ; i< apis.length; i++ ){
       if(!apis[i].responseType){
-        log.error("Undefine responseType in api  "+ apis[i].action)
-        throw new Error("Undefine responseType in api  "+ apis[i].action)
+        log.error(docname +" undefine responseType in api  "+ apis[i].action)
+        throw new Error(docname+ " undefine responseType in api  "+ apis[i].action)
+      }
+      if(!Array.isArray(apis[i].requiredRole) || apis[i].requiredRole.length==0 ){
+        log.error(docname+ " undefine requiredRole in api  "+ apis[i].action)
+        throw new Error(docname +" undefine requiredRole in api  "+ apis[i].action)
       }
     }
   }

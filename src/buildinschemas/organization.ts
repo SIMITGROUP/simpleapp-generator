@@ -14,14 +14,14 @@ export const organization:SchemaType ={
         additionalApis:[{
             "action":"getlogo",
             "entryPoint":"logo",
-            "requiredRole":[],
+            "requiredRole":["User"],
             "method":RESTMethods.get,
             "responseType":"String",
             "description":"obtain avatar base64 jpg image"
           },{
             "action":"uploadlogo",
             "entryPoint":"logo",
-            "requiredRole":[],
+            "requiredRole":["Admin"],
             "method":RESTMethods.post,
             "schema":"KeyValue",
             "responseType":"String",

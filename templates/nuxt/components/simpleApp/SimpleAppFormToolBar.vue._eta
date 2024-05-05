@@ -35,7 +35,7 @@
     </MobileToolbar>
   </div>
   <div v-else class="simpleapp-tool-bar">
-   <!--  <div class="flex flex-row justify-end p-2">
+    <!--  <div class="flex flex-row justify-end p-2">
       <TextTitle class="dark:text-white line-clamp-2 flex-1">{{
         title
       }}</TextTitle>
@@ -56,7 +56,7 @@
       </div>
 
       <!-- center -->
-      <div class="flex flex-row "></div>
+      <div class="flex flex-row"></div>
       <!-- right -->
       <div class="flex flex-row">
         <div v-for="(menu, index) in menus" :key="index">
@@ -98,9 +98,8 @@
     </template>
     <template #headerCenter>{{ t("printPreview") }}</template>
     <template #headerRight>
-
       <div v-if="isMobile()">
-        <ButtonText class="text-xl" @click="sendToPrint" >
+        <ButtonText class="text-xl" @click="sendToPrint">
           <i class="pi pi-print"></i>
         </ButtonText>
         <ButtonText class="text-xl" v-if="sharable" @click="togglePdfMenu">
@@ -321,7 +320,7 @@ const getDocActions = () => {
 const showMenuButton = (menu: FormMenu) => {
   if (menu.separator) return true;
 
-  if (menu.action == "print") return true;
+  if (menu.action == "print" && !doc.isNew()) return true;
   //all document status cannot direct apply regardless new or draft
   if (menu.type == "docstatus") return true;
 

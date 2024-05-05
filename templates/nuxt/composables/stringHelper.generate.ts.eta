@@ -24,3 +24,16 @@ export const getAvatarLink = (email:string, size:number):string=>{
 
 export const t = (txt:string,options?:any):string => !txt || txt.trim()=='' ? '' : useNuxtApp().$i18n.t(txt,options)
 export const upperFirst = (str:string) => _.upperFirst(str)
+export const labelSorter = (a,b)=>{
+   const nameA = a.label.toUpperCase(); // ignore upper and lowercase
+   const nameB = b.label.toUpperCase(); // ignore upper and lowercase
+    if (nameA < nameB) {
+      return -1;
+    }
+    if (nameA > nameB) {
+      return 1;
+    }
+
+  // names must be equal
+  return 0;
+}

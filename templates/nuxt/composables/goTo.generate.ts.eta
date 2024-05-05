@@ -38,5 +38,12 @@ export const getPathPara = (paraname:string,emptyvalue:string=''):string=>{
     return emptyvalue
    }
 }
-
+export const getPathQuery = (paraname:string,emptyvalue:string=''):string=>{
+    const paravalue = useRoute().query[paraname]
+    if(paravalue){
+     return paravalue.toString()
+    }else{
+     return emptyvalue
+    }
+ }
 export const setCurrentUrl = (path:string)=>useRouter().push({path:path})

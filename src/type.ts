@@ -140,6 +140,7 @@ export type SchemaConfig = {
   documentTitle?:string 
   loseDataIsolation?:boolean
   generateDocumentNumber?:boolean
+  docNoPattern?:string
   documentDate?:string
   allStatus?:DocumentStatus[]
   additionalApis?:DocumentApi[]      

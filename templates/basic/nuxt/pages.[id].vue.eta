@@ -11,25 +11,25 @@
  */
 
 import {<%= it.typename %>} from '~/simpleapp/generate/types'
+import {FormCrudEvent} from "~/types"
 const doc = useNuxtApp().$<%= it.typename %>Doc()
 const _id = getPathPara('id','')
 
-const after = (actionName: string, data: <%= it.typename %>) => {    
-  console.log("<%= it.typename %> capture after emits ", actionName)
+const after = (actionName: FormCrudEvent, data: <%= it.typename %>) => {    
   switch (actionName) {
-    case "exit":
+    case FormCrudEvent.exit:
       goTo(doc.getDocName());
       break;
-    case "create":
+    case FormCrudEvent.create:
       goTo(doc.getDocName(), data._id);      
       refreshDocumentList(doc.getDocName())
       useNuxtApp().$event('CloseDialog',doc.getDocName().toLowerCase())
       break;
-    case "update":
+    case FormCrudEvent.update:
       refreshDocumentList(doc.getDocName());
-      useNuxtApp().$event('CloseDialog',doc.getDocName().toLowerCase())
+      //useNuxtApp().$event('CloseDialog',doc.getDocName().toLowerCase())
       break;
-    case "delete":
+    case FormCrudEvent.delete:
       goTo(doc.getDocName(), "new");
       refreshDocumentList(doc.getDocName())
       useNuxtApp().$event('CloseDialog',doc.getDocName().toLowerCase())

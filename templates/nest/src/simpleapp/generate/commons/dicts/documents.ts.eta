@@ -8,7 +8,14 @@ export const alldocuments:any[] = [
     <%for(let i=0; i<it.modules.length;i++){ %>
       <% const d = it.modules[i] %>      
       <% const conf =  d.schema["x-simpleapp-config"] %>
-      {docName:'<%= d['docname'] %>',docType:'<%= d['doctype'].toUpperCase()%>',page: '<%=d['pagetype']%>', isolationType:'<%=conf['isolationType']%>', 
-            documentDate:'<%=conf['documentDate']??""%>', docNumber:<%=conf['generateDocumentNumber']??false%>},
+      {
+        docName:'<%= d['docname'] %>',
+        docType:'<%= d['doctype'].toUpperCase()%>',
+        page: '<%=d['pagetype']%>', 
+        isolationType:'<%=conf['isolationType']%>', 
+        documentDate:'<%=conf['documentDate']??""%>', 
+        docNumber:<%=conf['generateDocumentNumber']??false%>,
+        docNoPattern: '<%=conf['docNoPattern']%>'
+        },
     <%}%>
   ]

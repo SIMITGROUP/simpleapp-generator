@@ -8,6 +8,7 @@
     "documentTitle": "invoiceTitle",
     "documentDate": "invoiceDate",
     "generateDocumentNumber": true,
+    "docNoPattern":"INV/@BranchCode/[00000]",
     "pageType": "crud",
     "formulas": [
       { "jsonPath": "$.details[*]", "formula": "sharelibs.getSubtotal($item)" },
@@ -57,7 +58,7 @@
       "examples": ["Sales to XYZ"],
       "minLength": 3
     },
-    "invoiceTotal": { "type": "number", "default": 0 },
+    "invoiceTotal": { "type": "number", "default": 0.00,"format":"money"  },
     "details": {
       "type": "array",
       "items": {
@@ -73,8 +74,8 @@
             }
           },
           "quantity": { "type": "integer", "default": 1 },
-          "unitPrice": { "type": "number", "default": 0 },
-          "subTotal": { "type": "number", "default": 0 }
+          "unitPrice": { "type": "number", "default": 0.00,"format":"money"  },
+          "subTotal": { "type": "number", "default": 0.00,"format":"money"  }
         }
       }
     },

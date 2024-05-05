@@ -16,6 +16,7 @@ export type ViewRecord = {
     documentName: SimpleAppDocumentType
     viewer?: any 
     readonly?:boolean    
+    autoclose?:boolean
     paras?:any
     after?: (eventType:FormCrudEvent,data:any )=>void
     document?:SimpleAppClient<any,any>

@@ -8,13 +8,21 @@
         @on="actionListener"
       ></SimpleAppFormToolBar>
       <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-2"
+        class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-2"
       >
         <SimpleAppInput
           :input-type="SimpleAppInputType.autocomplete"
           :setting="o.getField('#/properties/branch')"
           v-model="data.branch"
         />
+        <SimpleAppInput
+          :readonly="!doc.isNew()"
+          :input-type="SimpleAppInputType.select"
+          :setting="o.getField('#/properties/docNoType')"
+          :options="getAllDocFormats().map((item) => item.docType)"
+          v-model="data.docNoType"
+        />
+
 
         <SimpleAppInput
           :input-type="SimpleAppInputType.text"
@@ -39,14 +47,7 @@
           v-model="data.default"
         />
 
-        <SimpleAppInput
-          :readonly="!doc.isNew()"
-          :input-type="SimpleAppInputType.select"
-          :setting="o.getField('#/properties/docNoType')"
-          :options="getAllDocFormats().map((item) => item.docType)"
-          v-model="data.docNoType"
-        />
-
+        
         <SimpleAppInput
           :input-type="SimpleAppInputType.text"
           :setting="o.getField('#/properties/docNoPattern')"
@@ -91,7 +92,10 @@ const id = computed(() => props._id ?? "");
 
 /************ start default methods ****************/
 
-const newData = () => doc.setNew();
+const newData = () => {
+  doc.setNew()
+  delete data.value.branch
+}
 
 const getRecord = async () => {
   if (id.value && id.value != "new") {

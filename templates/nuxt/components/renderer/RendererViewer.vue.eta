@@ -1,12 +1,17 @@
 <template>
-  <a
+  <div v-if="!value"></div>
+  <a v-else
     @click="openViewer"
     class="text-primary-700 dark:text-primary-400 hover:text-primary-500 cursor-pointer"
   >
     <slot name="default">
-      <div v-if="fields">{{ value[fields[0]] }}</div>
+      
+      <TextDanger v-if="!value">{{t('undefined')}}</TextDanger>
+      <TextDanger v-else-if="!Array.isArray(fields) || !fields[0]">{{t('undefinedFields')}}</TextDanger>
+      <div v-else-if="value[fields[0]]">{{ value[fields[0]] }}</div>
+      <div v-else></div>
     </slot>
-  </a>
+  </a> 
 </template>
 <script setup lang="ts">
 /**
@@ -21,18 +26,23 @@ const props = defineProps<{
   setting: RendererSetting;
   value: any;
 }>();
-
+const viewervalue = computed(()=>{
+  return props.value ?? {}
+})
 const openViewer = () => {
   useNuxtApp().$event("ViewRecord", {
     _id: props.value._id,
     documentName: props.setting.documentName,
     viewer: getDocument(props.setting.documentName)?.viewer,
-    label: props.fields !== undefined ? props.value[props.fields[0]] : props.setting.documentName,
+    label:
+      props.fields !== undefined
+        ? props.value[props.fields[0]]
+        : props.setting.documentName,
     document: getDocument(props.setting.documentName)?.docClass,
-    eventId: randomUUID(),    
-    after:()=>{
-      useNuxtApp().$event('CloseDialog',props.setting.documentName)
-    }
+    eventId: randomUUID(),
+    after: () => {
+      useNuxtApp().$event("CloseDialog", props.setting.documentName);
+    },
   });
 };
 </script>

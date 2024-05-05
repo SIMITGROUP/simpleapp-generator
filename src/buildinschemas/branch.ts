@@ -12,6 +12,7 @@ export const branch:SchemaType ={
         documentTitle:'branchName',
         additionalAutoCompleteFields: ['branchId']
     },
+    "required":["branchCode","branchName","organization"],
     "properties": {
         _id:{type:'string'},
         created:{type:'string'},

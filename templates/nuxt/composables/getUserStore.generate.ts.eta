@@ -36,6 +36,11 @@ export const getPageBaseUrl = (resourcename:string) =>{
 export const canPerform = (resource:string,action:string):boolean =>{
     return getUserStore().canPerform(resource,action)
 }
+export const haveAccess = (resource:string):boolean =>{
+    return getUserStore().haveAccess(resource)
+}
+
+
 
 export const getProfileEmail = () => getUserProfile()?.email
 export const getProfileFullName = () => getUserProfile()?.fullName
@@ -46,3 +51,16 @@ export const refreshOrgLogo = async () => {
 }
 export const getOrgLogo = ()=> orgLogo
 export const setOrgLogo = (str:string) => orgLogo = str
+export const getCurrentBranch = ()=>{
+    const branchId= getUserStore().branchId
+    const branchinfo = getUserStore().branches.find(item=>item.branch.branchId==branchId)
+    return branchinfo
+}
+
+export const getMySimpleAppUserPicker=()=>{
+    return {
+        _id: getUserProfile()?._id,
+        uid:getUserProfile()?.uid,
+        fullName:getUserProfile()?.fullName
+    }
+}

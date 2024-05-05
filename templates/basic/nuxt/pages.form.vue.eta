@@ -161,9 +161,7 @@ const newData = () =>  doc.setNew()
 const getRecord = async () => {
   if(id.value && id.value != 'new'){
     await doc.getById(id.value)
-  }else{
-      newData()
-    } 
+  }
 }
 
 getRecord()

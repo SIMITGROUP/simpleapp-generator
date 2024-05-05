@@ -9,6 +9,7 @@ import {Role} from './roles.enum'
 <% Object.getOwnPropertyNames(it.allroles).forEach((key)=>{ %>
 export const <%=key%>=()=>[
     Role.User,
+    Role.<%=capitalizeFirstLetter(key)%>,
     <%for(let i=0; i <it.allroles[key].length; i++){%>
     Role.<%=it.allroles[key][i]%>,
     <%}%>

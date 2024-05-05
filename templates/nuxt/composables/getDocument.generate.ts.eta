@@ -27,11 +27,13 @@ export const onScreenAddDocument = <T>(docname:SimpleAppDocumentType,paras?:T,af
         
           })
     }
-    export const onScreenEditDocument = <T>(docname:SimpleAppDocumentType,_id:string,after?:(eventType:FormCrudEvent, data:T)=>Promise<void>)=>{
+    export const onScreenEditDocument = <T>(docname:SimpleAppDocumentType,_id:string,after?:(eventType:FormCrudEvent, data:T)=>Promise<void>,autoclose:boolean=true)=>{
+        
         useNuxtApp().$event('ViewRecord',{
             documentName: docname,
             eventId:randomUUID(),
             _id:_id,
+            autoclose:autoclose,
             document: getDocument(docname)?.docClass,
             viewer: getDocument(docname)?.viewer,    
             after: async (eventType:FormCrudEvent, data: any) => {

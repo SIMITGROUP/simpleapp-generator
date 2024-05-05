@@ -24,7 +24,12 @@ const CustomTailwind = usePassThrough(
             root:{class:'bg-white dark:bg-gray-800  shadow p-2 rounded-2xl'},
             // title:{class:''},
             // header:{class:''}
-        },       
+        },     
+        fieldset:{
+            root:{class:'border p-2 mt-1'},
+            legend:{class:''},
+            content:{class:'p-2'}
+        },  
         // tabview:{
             // tabpanel:{
             //     headeraction:{class:'p-tabview-nav-link p-tabview-header-action items-center cursor-pointer flex overflow-hidden relative select-none text-decoration-none select-none border-b-2 p-5 font-bold rounded-t-md transition-shadow duration-200 m-0 transition-colors duration-200  bg-white border-blue-500 text-blue-500 dark:bg-gray-600 dark:border-blue-300 dark:text-blue-300'}

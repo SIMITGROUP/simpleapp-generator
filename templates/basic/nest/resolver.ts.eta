@@ -77,13 +77,13 @@ export class <%= it.typename %>Resolver {
     <% let api = it.apiSettings[i] %>
     <% if(api.method!='get') continue %>
     <%if(superadmindoctype.includes(it.doctype)){%>
-    @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_${api.action}`%>,
+    @Roles(Role.SuperAdmin,
     <%if(api.requiredRole && api.requiredRole.length>0) { %>
         <% for(let r=0;r<api.requiredRole.length;r++){%>Role.<%=api.requiredRole[r]%>,<%}%>
         <%}%>
     )
     <%}else{%>
-    @Roles(Role.SuperAdmin,Role.SuperUser,Role.<%= `${it.typename}_${api.action}`%>,
+    @Roles(Role.SuperAdmin,Role.SuperUser,
         <%if(api.requiredRole && api.requiredRole.length>0) { %>
         <% for(let r=0;r<api.requiredRole.length;r++){%>Role.<%=api.requiredRole[r]%>,<%}%>
         <%}%>

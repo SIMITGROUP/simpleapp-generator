@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="w-full">
     <div class="flex flex-row">
-      <label v-if="!hideLabel" :for="fieldid" class="pt-2">
+      <label v-if="!hideLabel" :for="fieldid" >
         {{ t(documentName) }}
       </label>
       <ButtonText
@@ -12,7 +12,7 @@
         <span>{{ t("new") }}</span>
       </ButtonText>
     </div>
-    <MultiSelect
+    <MultiSelect class="w-full md:w-full"
       :input-id="fieldid"
       v-if="multiple"
       display="chip"
@@ -23,7 +23,7 @@
       optionValue="value"
       :placeholder="placeholder"
     />
-    <Dropdown
+    <Dropdown class="w-full md:w-full"
       :input-id="fieldid"
       v-else
       @update:modelValue="change"
@@ -44,11 +44,11 @@
  */
 import Dropdown from "primevue/dropdown";
 
-import { ForeignKey,SimpleAppDocuments, FormCrudEvent } from "~/types";
+import { ForeignKey, SimpleAppDocuments, FormCrudEvent } from "~/types";
 const emits = defineEmits(["change"]);
 
 const props = defineProps<{
-  documentName: SimpleAppDocuments;
+  documentName: keyof SimpleAppDocuments;
   placeholder?: string;
   showNull?: boolean;
   allowAddNew?: boolean;
@@ -87,30 +87,28 @@ onMounted(async () => {
 });
 const getItem = (id: string) => list.value?.find((item) => item._id == id);
 
-const change = (id: string|string[]) => {
+const change = (id: string | string[]) => {
   const selectedItem = getItem(id);
   emits("change", id, selectedItem);
 };
 
 const addnew = () => {
-  const doc = getDocument(props.documentName )?.docClass;
+  const doc = getDocument(props.documentName)?.docClass;
   if (doc) {
     const tmpdata = doc?.getReactiveData();
     type DataType = typeof tmpdata.value;
     onScreenAddDocument<DataType>(
-      props.documentName ,
+      props.documentName,
       undefined,
       async (eventType: FormCrudEvent, data: DataType) => {
         if (eventType == FormCrudEvent.create) {
           await getListOptions();
-          if(props.multiple) {
-            if(modelValue.value===undefined) modelValue.value=[data._id]
-            else if(Array.isArray(modelValue.value))
-                modelValue.value.push(data._id);
-
-
-          }
-          else modelValue.value = data._id;
+          if (props.multiple) {
+            if (modelValue.value === undefined) modelValue.value = [data._id];
+            else if (Array.isArray(modelValue.value))
+              modelValue.value.push(data._id);
+          } else modelValue.value = data._id;
+          refreshDocumentList(props.documentName)
           emits("change", data._id, getItem(data._id));
         }
       },

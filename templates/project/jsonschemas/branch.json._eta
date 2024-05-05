@@ -15,6 +15,7 @@
       "branchId"
     ]
   },
+  "required":["branchCode","branchName","organization"],
   "properties": {
     "_id": {
       "type": "string"

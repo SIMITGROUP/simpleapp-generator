@@ -27,6 +27,7 @@ export type SearchBody = {
   fields?: any[];
 
   sorts?: any[];
+  lookup?:Object;
 };
 
 export enum IsolationType {

@@ -1,56 +1,91 @@
 <template>
-    
-  <div>        
-        <button class="" @click="previewPermission">
-            <i class="pi pi-question-circle" ></i>
-        </button>
-        <Sidebar
-                v-model:visible="showpermissioninfo"
-                modal                
-                :header="permissiontitle"
-                position="right"
-            >
-            <SelectButton v-model="selectedgroup"  @change="selectGroup" :options="grouplist" option-label="label" option-value="value"></SelectButton>                                          
-            <div v-if="selectedgroup">
-                    <div  v-if="useRuntimeConfig().public.DEBUGDATA" class="flex flex-row gap-2 p-2 ">
-                        <div class="flex align-items-center">
-                            <RadioButton v-model="mode" inputId="modepreview" name="pizza" value="preview" />
-                            <label for="modepreview" class="ml-2">Preview</label>
-                        </div>
-                        <div class="flex align-items-center">
-                            <RadioButton v-model="mode" inputId="modeedit" name="edit" value="edit" />
-                            <label for="modeedit" class="ml-2">Edit</label>
-                        </div>
-                        <div class="flex align-items-center">
-                            <RadioButton v-model="mode" inputId="modejson" name="json" value="json" />
-                            <label for="modejson" class="ml-2">JSON</label>
-                        </div>
-                        
-                    </div>
-                    <div v-if="mode=='json'">
-                        <div class="flex-row">
-                            <div><Button @click="copyText">copy</Button> </div>
-                            <div class="text text-gray-400">{{ copied }}</div>
-                        </div>
-                        <pre id="permissionstr">
+  <div>
+    <button class="" @click="previewPermission">
+      <i class="pi pi-question-circle"></i>
+    </button>
+    <Sidebar
+      v-model:visible="showpermissioninfo"
+      modal
+      :header="permissiontitle"
+      position="right"
+    >
+      <SelectButton
+        v-model="selectedgroup"
+        @change="selectGroup"
+        :options="grouplist"
+        option-label="label"
+        option-value="value"
+      ></SelectButton>
+      <div v-if="selectedgroup">
+        <div
+          v-if="useRuntimeConfig().public.DEBUGDATA"
+          class="flex flex-row gap-2 p-2"
+        >
+          <div class="flex align-items-center">
+            <RadioButton
+              v-model="mode"
+              inputId="modepreview"
+              name="pizza"
+              value="preview"
+            />
+            <label for="modepreview" class="ml-2">Preview</label>
+          </div>
+          <div class="flex align-items-center">
+            <RadioButton
+              v-model="mode"
+              inputId="modeedit"
+              name="edit"
+              value="edit"
+            />
+            <label for="modeedit" class="ml-2">Edit</label>
+          </div>
+          <div class="flex align-items-center">
+            <RadioButton
+              v-model="mode"
+              inputId="modejson"
+              name="json"
+              value="json"
+            />
+            <label for="modejson" class="ml-2">JSON</label>
+          </div>
+        </div>
+        <div v-if="mode == 'json'">
+          <div class="flex-row">
+            <div><Button @click="copyText">copy</Button></div>
+            <div class="text text-gray-400">{{ copied }}</div>
+          </div>
+          <pre id="permissionstr">
                             {{ permissions }}
-                        </pre>
-                    </div>
-                    <div class="permission-block flex flex-col m mt-4" v-for="res in allresources" v-else="showjson">
-                    <div class="m mr-3 ">{{ res }}</div>
-                    <div class="gap-4" v-if="allactions">                
-                            <SelectButton v-if="mode=='edit'" multiple :options="allactions[res]" v-model="permissions[res]"></SelectButton>
-                            
-                            <span v-else v-for="actionname in allactions[res]" class="m m-1">
-                                <Chip class="bg-primary" v-if="canPerformAction(selectedgroup,res,actionname)" severity="success" :label="actionname" ></Chip>
-                                <Chip v-else :label="actionname" ></Chip>
-                            </span>
-                        
-                        
-                    </div>
-                    </div>
-            </div>
-        </Sidebar>
+                        </pre
+          >
+        </div>
+        <div
+          class="permission-block flex flex-col m mt-4"
+          v-for="res in allresources"
+          v-else="showjson"
+        >
+          <div class="m mr-3">{{ res }}</div>
+          <div class="gap-4" v-if="allactions">
+            <SelectButton
+              v-if="mode == 'edit'"
+              multiple
+              :options="allactions[res]"
+              v-model="permissions[res]"
+            ></SelectButton>
+
+            <span v-else v-for="actionname in allactions[res]" class="m m-1">
+              <Chip
+                class="bg-primary"
+                v-if="canPerformAction(selectedgroup, res, actionname)"
+                severity="success"
+                :label="actionname"
+              ></Chip>
+              <Chip v-else :label="actionname"></Chip>
+            </span>
+          </div>
+        </div>
+      </div>
+    </Sidebar>
   </div>
 </template>
 <script setup lang="ts">
@@ -61,54 +96,53 @@
  * Author: Ks Tan
  */
 import _ from "lodash";
-import Chip from 'primevue/chip';
-import RadioButton from 'primevue/radiobutton';
-import {ref} from 'vue'
-
-
-const showpermissioninfo = ref(false)
+import Chip from "primevue/chip";
+import RadioButton from "primevue/radiobutton";
+import { ref } from "vue";
+const isdebug = ref(useRuntimeConfig().public.DEBUGDATA);
+const showpermissioninfo = ref(false);
 const permissiontitle = "Permission Information";
-const selectedgroup = ref('')
-const grouplist = getAllGroups().map((item)=>{return {value:item,label:_.capitalize(item)}})
-const mode = ref('preview')
+const selectedgroup = ref("");
+const grouplist = getAllGroups().map((item) => {
+  return { value: item, label: _.capitalize(item) };
+});
+const mode = ref("preview");
 
-const allresources = getUniqueResource()
-const allactions = ref()
-const permissions=ref()
+const allresources = getUniqueResource();
+const allactions = ref();
+const permissions = ref();
 
-const activeroles = ref()
-const copied = ref('')
+const activeroles = ref();
+const copied = ref("");
 
 const previewPermission = () => {
   showpermissioninfo.value = true;
 };
 
-
 const copyText = () => {
-    copied.value="copied!"
-    const storage = document.createElement('textarea');
-    storage.value = String(document.getElementById('permissionstr')?.innerHTML)
-    document.body.appendChild(storage);
-    storage.select();
-    storage.setSelectionRange(0, 99999);
-    document.execCommand('copy');
-    document.body.removeChild(storage);
-    
-
-
-}
-const selectGroup = (selectedgroup:any) => {
-    const groupname = selectedgroup.value
-    activeroles.value= getGroupRoles(groupname)
-    allactions.value={}
-    permissions.value={}
-    for(let i=0; i< allresources.length; i++){
-        const r = allresources[i]
-        console.log(r)
-        const actions = getActionFromResource(r)
-        allactions.value[r]=actions
-        permissions.value[r]=getGroupResourcePermission(groupname,r).map(item=>item.action)
-    }
-    console.log(allactions.value,permissions.value)
-}
+  copied.value = "copied!";
+  const storage = document.createElement("textarea");
+  storage.value = String(document.getElementById("permissionstr")?.innerHTML);
+  document.body.appendChild(storage);
+  storage.select();
+  storage.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  document.body.removeChild(storage);
+};
+const selectGroup = (selectedgroup: any) => {
+  const groupname = selectedgroup.value;
+  activeroles.value = getGroupRoles(groupname);
+  allactions.value = {};
+  permissions.value = {};
+  for (let i = 0; i < allresources.length; i++) {
+    const r = allresources[i];
+    console.log(r);
+    const actions = getActionFromResource(r);
+    allactions.value[r] = actions;
+    permissions.value[r] = getGroupResourcePermission(groupname, r).map(
+      (item) => item.action,
+    );
+  }
+  console.log(allactions.value, permissions.value);
+};
 </script>

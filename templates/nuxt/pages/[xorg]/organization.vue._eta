@@ -1,7 +1,7 @@
 <template>
   <div class="w-full flex-col flex">
     <title>{{ t("organization") }}</title>
-    <MobileToolbar class="bg-gray-600">
+    <MobileToolbar class="bg-gray-600" v-if="isMobile()">
       <template #center
         ><TextTitle class="text-white">{{
           t("organization")
@@ -18,14 +18,22 @@
       <div class="">
         <!--  -->
         <!-- <div class="border w-12 h-12 md:w-24 md:h24"> -->
-        <ImageOrganization :changable="!doc.isReadOnly()"></ImageOrganization>
+        <ImageOrganization></ImageOrganization>
         <!-- </div> -->
       </div>
       <div class="flex flex-col flex-1">
-        <TextTitle>{{ data.orgName }} / {{ data.orgCode }}</TextTitle>
+        <TextTitle>
+           {{ data.orgName }} / {{ data.orgCode }}
+           
+         </TextTitle>
         <TextSubtitle>
           {{ data.description }}
         </TextSubtitle>
+        <div>
+          <ButtonDefault @click="showEditOrg = true" class="text-sm">
+                <i class="pi pi-pencil mr-1"/> <span>{{t('edit')}}</span>
+          </ButtonDefault>
+        </div>
       </div>
     </div>
 
@@ -41,7 +49,7 @@
       <ListView
         class="border rounded-lg border-gray-400 dark:border-gray-600"
         :list="branchlist"
-        title-field="branchName"
+        title-field="branchName"        
         sub-title-field="branchCode"
         :url="getDocumentUrl('organization', id)"
         #default="{ item }"
@@ -49,7 +57,9 @@
         <div class="flex flex-row">
           <div class="flex-col flex flex-1">
             <TextPrimary>{{ item.branchName }}</TextPrimary>
-            <TextSubtitle>{{ item.description }}</TextSubtitle>
+            <TextSubsubtitle>{{ item.street1 }}</TextSubsubtitle>
+            <TextSubsubtitle>{{ item.street2 }}</TextSubsubtitle>
+            <TextSubsubtitle>{{ item.description }}</TextSubsubtitle>
           </div>
           <div class="flex-col flex text-right">
             <div>{{ item.branchCode }}</div>
@@ -59,16 +69,31 @@
       </ListView>
     </div>
 
-    <OverlaySideBarCrud v-model="showEditOrg" close-event-name="organization">
+    <OverlayPanelWithToolBar v-model="showEditOrg" close-event-name="organization">
+      <template #headerLeft>
+        <ButtonText @click="showEditOrg = false">
+          <i class="pi pi-times"></i>
+        </ButtonText>
+      </template>
+      <template #headerCenter>{{data.orgName}}</template>
+      <template #headerRight></template>
       <FormOrganization
         :_id="getUserProfile()?.orgRecordId"
         @after="afterOrganization"
       ></FormOrganization>
-    </OverlaySideBarCrud>
+    </OverlayPanelWithToolBar>
 
-    <OverlaySideBarCrud v-model="showEditBranch" close-event-name="branch">
+    <OverlayPanelWithToolBar v-model="showEditBranch" close-event-name="branch">
+      <template #headerLeft>
+        <ButtonText @click="closeBranch">
+          <i class="pi pi-times"></i>
+        </ButtonText>
+      </template>
+      <template #headerCenter>{{t('branch')}}</template>
+      <template #headerRight></template>
+
       <NuxtPage :_id="id"></NuxtPage>
-    </OverlaySideBarCrud>
+    </OverlayPanelWithToolBar>
   </div>
 </template>
 
@@ -124,6 +149,10 @@ $listen("RefreshDocumentList", async (data) => {
   }
 });
 
+const closeBranch = ()=>{
+  showEditBranch.value=false
+  goTo('organization')
+}
 const showBranchDialogIfRequired = () => {
   if (useRoute().path.includes("/new") || id.value) showEditBranch.value = true;
 };

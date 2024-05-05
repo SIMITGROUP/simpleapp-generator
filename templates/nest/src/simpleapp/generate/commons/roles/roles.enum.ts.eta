@@ -11,6 +11,11 @@ export enum Role {
     SuperUser = 'suerpuser',     //reserved, plan use by support 
     TenantOwner = 'tenantowner', //tenant owner/creator 
     User = 'user',
+    //role generated from groups
+    <% Object.getOwnPropertyNames(it.allroles).forEach((key)=>{%>
+        <%=  capitalizeFirstLetter(key) %> = '<%=key%>', 
+    <%})%>
+    //role generate from schema
     <% for(let i=0;i<it.modules.length; i++){ %>
         <% const m = it.modules[i] %>
         <%=m.docname%>_access='<%=m.docname%>:access',
@@ -26,17 +31,7 @@ export enum Role {
         <%if(m.schema['x-simpleapp-config']['printFormats']){%>
             <%=m.docname%>_print='<%=m.docname%>:print',
         <%}%>
-
-
-        <% if(m.api && m.api.length >0) {%>
-
-            <% for(let j=0;j<m.api.length; j++){ %>
-                <%let api = m.api[j]%>
         
-        <%=m.docname%>_<%=api.action%>='<%=m.docname%>:<%=api.action%>',
-        
-            <%}%>
-        <%}%>
         <% if(m.schema['x-simpleapp-config']['allStatus'] && m.schema['x-simpleapp-config']['allStatus'].length >0) {%>
             <%let allstatus = m.schema['x-simpleapp-config']['allStatus']%>
             <% for(let j=0;j<allstatus.length; j++){ %>

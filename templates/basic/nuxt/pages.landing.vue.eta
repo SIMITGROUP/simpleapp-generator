@@ -4,26 +4,7 @@
    <PageDocList :document="doc" :columns="columns" :data="docdata" :sorts="sorts">
    <template #mobileList="{index,item}">
    </template>
-   <template #dataTableColumns>
-    <%Object.keys(it.jsonschema.properties).forEach(function(key) { %>
-          <%let obj=it.jsonschema.properties[key] %>
-          <%let config=it.jsonschema['x-simpleapp-config'] %>
-          <%if(skipcolumns.indexOf(key)>=0){%>
-          <%} else if(config['uniqueKey'] && (config['uniqueKey']==key || config['documentTitle']==key)  ){%>
-          <Column #body="{index,data}" :header="t('<%=key%>')">
-            <RendererLink :value="data" :setting="{path:'<%=it.name%>'}" :fields="['<%=key%>']">{{ data.<%=key%> }}</RendererLink>
-          </Column>
-
-          <%} else if(['string','number','integer','boolean'].indexOf(obj.type)>=0){%>
-            <Column #body="{index,data}" :header="t('<%=key%>')">
-              {{data.<%=key%>}}
-            </Column>          
-          <%} else if(obj.type =='object' && obj['x-foreignkey'] ){%>
-            <Column #body="{index,data}" :header="t('<%=key%>')">
-              <RendererViewer :value="data.<%=key%>" :setting="{documentName:'<%=obj["x-foreignkey"]%>'}" :fields="['<%=key%>']">{{ data.label }}</RendererViewer>
-            </Column>            
-          <%}%>
-      <%})%>
+   <template #dataTableColumns>    
    </template>
    <template #default><div><NuxtPage :_id="id ?? 'new'"/></div></template>    
   </PageDocList>

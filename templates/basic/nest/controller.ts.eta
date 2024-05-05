@@ -155,13 +155,13 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
 <% let api = it.apiSettings[i] %>
 <%~ `@${capitalizeFirstLetter(api.method)}('${api.entryPoint}')`%>
   <%if(superadmindoctype.includes(it.doctype)){%>
-  @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_${api.action}`%>,
+  @Roles(Role.SuperAdmin,
     <%if(api.requiredRole && api.requiredRole.length>0) { %>
         <% for(let r=0;r<api.requiredRole.length;r++){%>Role.<%=api.requiredRole[r]%>,<%}%>
       <%}%>
   )
   <%}else{%>
-  @Roles(Role.SuperAdmin,Role.SuperUser,Role.<%= `${it.typename}_${api.action}`%>,
+  @Roles(Role.SuperAdmin,Role.SuperUser,
       <%if(api.requiredRole && api.requiredRole.length>0) { %>
         <% for(let r=0;r<api.requiredRole.length;r++){%>Role.<%=api.requiredRole[r]%>,<%}%>
       <%}%>

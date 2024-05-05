@@ -6,7 +6,11 @@
  */
 import { UserContext } from '../commons/user.context';
 import * as sharelibs from '../sharelibs';
-import { Injectable, Inject,InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as jsonpath from 'jsonpath';
 import { Model } from 'mongoose';
@@ -17,7 +21,7 @@ import { DocNumberFormatGenerator } from '../commons/docnogenerator.service';
 import { AutoincreamentService } from '../../services/autoinc.service';
 import { alldocuments } from '../commons/dicts/documents';
 import { Docnoformat, DocnoformatService } from '../../services/docno.service';
-import { BranchOrganization, Branch,BranchHooks } from '../types/branch.type';
+import { BranchOrganization, Branch, BranchHooks } from '../types/branch.type';
 import {
   DefaultBranchOrganization,
   DefaultBranch,
@@ -32,9 +36,11 @@ export class BranchProcessor extends SimpleAppService<Branch> {
   protected strictIsolation = false;
   protected documentIdentityCode = 'branchCode';
   protected documentIdentityLabel = 'branchName';
-  protected hooks: BranchHooks = {        
-    beforeCreate: async (appuser: UserContext, data: Branch) => await this.branchBeforeCreate(appuser,data),
-    afterCreate: async (appuser: UserContext, data: Branch) => await this.branchAfterCreate(appuser,data),
+  protected hooks: BranchHooks = {
+    beforeCreate: async (appuser: UserContext, data: Branch) =>
+      await this.branchBeforeCreate(appuser, data),
+    afterCreate: async (appuser: UserContext, data: Branch) =>
+      await this.branchAfterCreate(appuser, data),
   };
   protected foreignkeys = { organization: ['$.organization._id'] };
   constructor(mydoc: Model<Branch>) {
@@ -74,7 +80,7 @@ export class BranchProcessor extends SimpleAppService<Branch> {
     const docformats = alldocuments.filter((item) => item.docNumber);
     for (let i = 0; i < docformats.length; i++) {
       const doc = docformats[i];
-      const pattern = `${doc.docType}-${branchCode}-[00000]`;
+      const pattern = doc.docNoPattern.replace('@BranchCode',branchCode);
       const formatdata: Docnoformat = {
         _id: crypto.randomUUID(),
         docNoFormatNo: `${doc.docType}-${branchCode}`,

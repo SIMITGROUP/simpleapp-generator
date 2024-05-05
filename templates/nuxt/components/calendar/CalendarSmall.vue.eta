@@ -13,25 +13,24 @@
     @view-change="viewChange"
     :events="allevents"
     @cell-focus="chooseDate"
-
     xsmall
   >
     <template #today-button>
       <!-- Using Vuetify (but we prefer Wave UI 🤘) -->
-      <div      
-       @click="chooseDate(new Date(), true)">{{ t("today") }}</div>
+      <div @click="chooseDate(new Date(), true)">{{ t("today") }}</div>
     </template>
     <template #cell-content="{ cell, events }">
       <div>
         <div>
-          <s
-            v-if="dateExists(new Date(cell.formattedDate), alloffdays)"
-            v-tooltip="getHolidayName(new Date(cell.formattedDate))"
-            class="text text-red-400 font-bold"
-            >{{ cell.content }}</s
-          >
+          <s v-if="isHoliday(cell.formattedDate)"  v-tooltip="getHolidayName(new Date(cell.formattedDate))"
+            class="text text-red-400 dark:text-red-400 font-bold"
+            >{{ cell.content }}</s>
+          <div v-else-if="isOffDay(cell)" class="text-gray-400">
+            <s v-tooltip="t('offDay')">{{ cell.content }}</s>
+          </div>          
           <span v-else>{{ cell.content }} </span>
         </div>
+
         <div>
           <slot name="default" :cell="cell" :events="events">
             <Badge
@@ -66,24 +65,25 @@ const viewStatus = ref<CalViewChange>();
 const props = defineProps<{
   id: string;
   items: CalEventType<T>[];
-  offdays: OffDay[];
+  holidays: OffDay[];
 }>();
+const offdays = ref<string[]>([]);
 const emits = defineEmits(["chooseDate", "rightClick"]);
-const alloffdays = computed(() => props.offdays.map((item) => item.date));
+// const allholidays = computed(() => props.holidays.map((item) => item.date));
 const selectedDate = defineModel<Date>({ required: true });
 const getHolidayName = (date: Date) =>
-  props.offdays.find((item) => item.date.getTime() == date.getTime())?.title;
+  props.holidays.find((item) => item.date.getTime() == date.getTime())?.title;
 const allevents = computed(() => {
   const list = props.items.map((item) => {
     if (item.start instanceof Date)
       item.start = item.start.format("YYYY-MM-DD HH:mm");
-    else if (typeof item.start == 'string' ){
-      item.start = item.start.substring(0,16).replace('T',' ');
+    else if (typeof item.start == "string") {
+      item.start = item.start.substring(0, 16).replace("T", " ");
     }
     if (item.end instanceof Date)
       item.end = item.end.format("YYYY-MM-DD HH:mm");
-    else if (typeof item.end == 'string' ){
-      item.end = item.end.substring(0,16).replace('T',' ');
+    else if (typeof item.end == "string") {
+      item.end = item.end.substring(0, 16).replace("T", " ");
     }
     return item;
   });
@@ -93,6 +93,17 @@ const viewChange = (event: CalViewChange) => {
   viewStatus.value = event;
 };
 
+const isHoliday = (datestr: string) => {
+  return props.holidays.find(
+    (item) => item.date.format("YYYY-MM-DD") == datestr,
+  );
+};
+const isOffDay = (cell: any) => {
+  
+  const dayname: string = new Date(cell.formattedDate) .toLocaleString("en", { weekday: "short" }).toLowerCase();
+  if (offdays.value.includes(dayname)) return true;
+  else return false;
+};
 const chooseDate = (date1: Date, force?: boolean) => {
   if (force || !viewStatus.value || viewStatus.value.view == "month") {
     selectedDate.value = date1;
@@ -102,4 +113,8 @@ const chooseDate = (date1: Date, force?: boolean) => {
 const onRightClickDate = (e: MouseEvent, cell: CalRightClickEvent) => {
   emits("rightClick", e, cell);
 };
+
+onMounted(() => {
+  offdays.value = getCurrentBranch()?.branch.offdays ?? [];
+});
 </script>

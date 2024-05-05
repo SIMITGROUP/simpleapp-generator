@@ -16,6 +16,7 @@ let config = {
     "mongoConnectStr":'mongodb://127.0.0.1:27017/simpleapp',
     "mongoDbName":'simpleapp',
     "frontendFolder":"./frontend",
+    "splitMobilePage":false,
     "frontendPort":"8080",
     "printFormatDir":"./printformats",
     "additionalNestModules":["cloudapi","printapi"],

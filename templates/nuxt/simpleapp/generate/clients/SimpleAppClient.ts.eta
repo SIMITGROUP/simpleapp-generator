@@ -30,6 +30,8 @@ export class SimpleAppClient<
   TApi extends crudType,
 > {
   // protected defaultTimeOut=5000
+  protected ready = true;
+  protected delayAfterGetId = 0.5*1000;
   protected unwantchobj;
   protected docapi;
   public event:Function|null=null;
@@ -48,7 +50,7 @@ export class SimpleAppClient<
     this.docname = docname
     this.axios = useNuxtApp().$axios
   }
-
+  isReady = ()=>this.ready
   getDocType = () => this.doctype;
   getDocName = (capFirst:boolean=false) => capFirst ? upperFirst(this.docname) :this.docname;
   setNew = ()=>{}
@@ -67,6 +69,7 @@ export class SimpleAppClient<
   };
   
   async getById(id?: string) {
+    this.ready=false
     if(this.unwantchobj)this.unwantchobj()
     return await this.docapi.runFindOne(id,this.axios)
     .then((res: AxiosResponse) => {
@@ -74,9 +77,16 @@ export class SimpleAppClient<
       this.data.value={} as TData
       Object.assign(this.data.value, res.data);
       this.setWatchChange()
+      setTimeout(()=>{
+        this.ready=true
+      },this.delayAfterGetId)
+      
       return res;
     }).catch((res:any)=>{
       // if(this.event){this.event('error:getById',res)}
+      setTimeout(()=>{
+        this.ready=true
+      },this,delayAfterGetId)
       return Promise.reject(res)
     });
   }
@@ -89,6 +99,7 @@ export class SimpleAppClient<
   async create() {    
     const errors = this.validateFailed();
     const {$event} =useNuxtApp()
+
     if (errors) {
       $event('Notification',{
         documentName:this.getDocName(),
@@ -100,6 +111,7 @@ export class SimpleAppClient<
       return await Promise.reject(errors);
     } else {
       holdScreenStart()
+      this.ready=false
       return await this.docapi
         .runCreate(this.data.value,this.axios)
         .then((res: AxiosResponse) => {
@@ -112,6 +124,9 @@ export class SimpleAppClient<
           // })
           this.data.value = {} as TData
           this.data.value = { ...res.data };
+          setTimeout(()=>{
+            this.ready=true
+          },this.delayAfterGetId)
           holdScreenEnd()
           return res.data;
         }).catch((errors:any)=>{             
@@ -122,6 +137,9 @@ export class SimpleAppClient<
               data:errors.response.data
             })
             console.error('error:create',errors.response.data)
+            setTimeout(()=>{
+              this.ready=true
+            },this.delayAfterGetId)
             holdScreenEnd()
           return Promise.reject(errors)
         });
@@ -144,6 +162,7 @@ export class SimpleAppClient<
       return await Promise.reject(errors);
     } else {
       holdScreenStart()
+      this.ready=false
       return await this.docapi
         .runUpdate(recordid, this.data.value,this.axios)
         .then((res: AxiosResponse) => {
@@ -155,6 +174,9 @@ export class SimpleAppClient<
           //   data:errors
           // })        
           this.data.value = res.data     
+          setTimeout(()=>{
+            this.ready=true
+          },this.delayAfterGetId)
           holdScreenEnd()     
           return res.data;
         }).catch((errors:any)=>{
@@ -168,6 +190,9 @@ export class SimpleAppClient<
           // if(this.event){
           // this.event('error:update',errors.response.data.data)}
           console.error('error:update',errors.response.data)
+          setTimeout(()=>{
+            this.ready=true
+          },this.delayAfterGetId)
           holdScreenEnd()
           return Promise.reject(errors)
         });
@@ -178,6 +203,7 @@ export class SimpleAppClient<
     const {$event} =useNuxtApp()
     const recordid: string = this.data.value._id ?? '';
     holdScreenStart()
+    this.ready=false
       return await this.docapi
         .runPatch(recordid, this.data.value,this.axios)
         .then((res: AxiosResponse) => {
@@ -188,7 +214,10 @@ export class SimpleAppClient<
           //   status:NotificationStatus.success,
           //   data:errors
           // })        
-          this.data.value = res.data          
+          this.data.value = res.data    
+          setTimeout(()=>{
+            this.ready=true
+          },this.delayAfterGetId)      
           holdScreenEnd()
           return res.data;
         }).catch((errors:any)=>{
@@ -202,6 +231,9 @@ export class SimpleAppClient<
           // if(this.event){
           // this.event('error:update',errors.response.data.data)}
           console.error('error:patch',errors.response.data)
+          setTimeout(()=>{
+            this.ready=true
+          },this.delayAfterGetId)
           holdScreenEnd()
           return Promise.reject(errors)
         
@@ -213,6 +245,7 @@ export class SimpleAppClient<
     }
     const {$event} =useNuxtApp()
     holdScreenStart()
+    this.ready=false
     return await this.docapi.runDelete(id,this.axios)
       .then((res:AxiosResponse)=>{
         // if(this.event){this.event('success:delete',res.data)}
@@ -222,7 +255,11 @@ export class SimpleAppClient<
         //   status:NotificationStatus.success,
         //   data:res.data
         // })
+        setTimeout(()=>{
+            this.ready=true
+          },this.delayAfterGetId)
         holdScreenEnd()
+
         return Promise.resolve(res.data)
       }).catch((errors:any)=>{
         // if(this.event){this.event('error:delete',errors.response.data.data)}
@@ -233,6 +270,9 @@ export class SimpleAppClient<
           data:errors.response.data
         })
         console.error(errors.response.data)
+        setTimeout(()=>{
+            this.ready=true
+          },this.delayAfterGetId)
         holdScreenEnd()
         return Promise.reject(errors)
       });
@@ -261,6 +301,7 @@ export class SimpleAppClient<
     ajv.addFormat('text',/.*$/)
     ajv.addFormat('html',/.*$/)
     ajv.addFormat('documentno',/.*$/)
+    ajv.addFormat('money',/.*$/)
     
     ajv.addKeyword({ keyword: 'x-foreignkey', schemaType: 'string' });
     ajv.addKeyword({ keyword: 'x-simpleapp-config', schemaType: 'object' });

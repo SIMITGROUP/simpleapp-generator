@@ -65,6 +65,10 @@
                 :fields="[col]"
               >
               </RendererLink>
+              <TextMain v-else-if="col=='documentStatus'">{{t(data[col])}}</TextMain>
+              <RendererMoney v-else-if="schemacols[col]['format'] == 'money'"
+                v-model="data[col]">
+              </RendererMoney>
               <span v-else-if="typeof schemacols[col].enum != 'undefined'">
                 {{ t(data[col]) }}
               </span>
@@ -105,15 +109,15 @@
       }}</TextTitle>
     </template>
     <template #headerRight>
-
-
-      
-
-      <ButtonText @click="sidebarposition = sidebarposition == 'right' ? sidebarposition='full': 'right'">
-        <i v-if="sidebarposition=='right'" class="pi pi-window-maximize"/>
-        <i v-if="sidebarposition=='full'" class="pi pi-window-minimize"/>
+      <ButtonText
+        @click="
+          sidebarposition =
+            sidebarposition == 'right' ? (sidebarposition = 'full') : 'right'
+        "
+      >
+        <i v-if="sidebarposition == 'right'" class="pi pi-window-maximize" />
+        <i v-if="sidebarposition == 'full'" class="pi pi-window-minimize" />
       </ButtonText>
-        
     </template>
 
     <div class="p-2">
@@ -135,7 +139,7 @@ import { ref } from "vue";
 import _ from "lodash";
 import { SearchBody } from "~/types";
 import { SimpleAppClient } from "~/simpleapp/generate/clients/SimpleAppClient";
-const sidebarposition = ref('right')
+const sidebarposition = ref("right");
 const props = defineProps<{
   document: SimpleAppClient<any, any>;
   data: T;

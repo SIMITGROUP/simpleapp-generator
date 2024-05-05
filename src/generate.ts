@@ -237,6 +237,9 @@ const generateSchema = ( docname: string,
           // log.warn("skip file: ",filename)
           continue;
         }
+      
+        // no turn on split mobile url, skip create mobile page
+        if(!configs?.splitMobilePage && filename.includes('mobile.')) continue
         if(foldertype=='nest'){
           const arrfilename:string[] = filename.split('.')
           const filecategory = arrfilename[0]
@@ -315,7 +318,16 @@ const generateSchema = ( docname: string,
               as: `Form${_.upperFirst(docname)}.vue`,
               validate: validateWritePage
             },
-          
+            'pages.mobile.[id].vue.eta': { 
+              to:`pages/[xorg]/mobile/${docname}`, 
+              as:'[id].vue',
+              validate: validateWritePage
+            },
+            'pages.mobile.landing.vue.eta':{ 
+              to:`pages/[xorg]/mobile/${docname}`, 
+              as:`index.vue`,
+              validate: validateWritePage
+            },
             'component.select.vue.eta': { 
               to:'components/select', 
               as: `Select${_.upperFirst(docname)}.vue`,
@@ -336,16 +348,7 @@ const generateSchema = ( docname: string,
               as:`../${docname}.vue`,
               validate: validateWritePage
             }, 
-            'pages.mobile.[id].vue.eta': { 
-              to:`pages/[xorg]/mobile/${docname}`, 
-              as:'[id].vue',
-              validate: validateWritePage
-            },
-            'pages.mobile.landing.vue.eta': { 
-              to:`pages/[xorg]/mobile/${docname}`, 
-              as:`index.vue`,
-              validate: validateWritePage
-            },            
+                     
             'simpleapp.doc.ts.eta': { 
               to:`simpleapp/docs`, 
               as:`${capname}Doc.ts`,
@@ -367,25 +370,42 @@ const generateSchema = ( docname: string,
               }
             },
           }
+
+
+            // if(configs?.splitMobilePage){
+            //   mapfiles['pages.mobile.[id].vue.eta'] = { 
+            //     to:`pages/[xorg]/mobile/${docname}`, 
+            //     as:'[id].vue',
+            //     validate: validateWritePage
+            //   }
+            //   mapfiles['pages.mobile.landing.vue.eta'] =  { 
+            //     to:`pages/[xorg]/mobile/${docname}`, 
+            //     as:`index.vue`,
+            //     validate: validateWritePage
+            //   }
+            // }
             
-            const target = mapfiles[filename]            
+            const target = mapfiles[filename]   
+            console.log(target);
             const targetfolder = `${generateTypes[foldertype]}/${target.to}`
             const targetfile = `${targetfolder}/${target.as}`
-
+            
+            console.log("targetfile",targetfile);
             if(jsonschemas[docname][X_SIMPLEAPP_CONFIG]['pageType'] && !existsSync(targetfolder)){
+              console.log("Mkdir",targetfolder)
               mkdirSync(targetfolder,{recursive:true})              
             }
 
 
             const isexists = existsSync(targetfile)
             const iswrite:boolean = target.validate(targetfile,isexists)
-            log.info("process: ",targetfile)
+            log.info("iswrite: ",iswrite)
             
             if(iswrite){
               const filecontent = eta.render(templatepath, variables)     
               writeFileSync(targetfile,filecontent);
             }
-            
+            console.log("complete, go to next file")
             
             
 

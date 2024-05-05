@@ -1,5 +1,6 @@
 <template>
   <DataTable
+    ref="documentlisttable" 
     v-bind="$attrs"
     stripedRows
     dataKey="_id"
@@ -29,15 +30,17 @@
             </h1>
           </slot>
         </div>
-        <span class="p-input-icon-left flex-1">
-          
+        <div class="p-input-icon-left gap-2 flex flex-row">
+          <ButtonPrimary @click="exportData">
+            <i class="pi pi-external-link"/>
+          </ButtonPrimary>
           <InputText
             type="search"
             v-model="filters['global'].value"
             class="w-full dark:text-white text-sm"
             placeholder="Keyword Search"
           />
-        </span>
+        </div>
       </div>
     </template>
     <!-- no data found -->
@@ -46,10 +49,10 @@
         <div class="text-3xl text-gray-400 pi pi-exclamation-circle"></div>
         <div class="text-3xl text-gray-400">{{ t("noDataFound") }}</div>
       </div>
-    </template>    
-      <slot name="default">
-        <Column header="undefineColumns"></Column>
-      </slot>    
+    </template>
+    <slot name="default">
+      <Column header="undefineColumns"></Column>
+    </slot>
   </DataTable>
 </template>
 <script setup lang="ts" generic="T">
@@ -65,18 +68,23 @@ import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import renderComponent from "~/components/renderer";
 import { emit } from "process";
+import ButtonPrimary from "../button/ButtonPrimary.vue";
+const documentlisttable = ref()
 const props = defineProps<{
-  value: T[]
-  title: string
-  columns: string[]
-  uniqueKey: string
-  documentTitle: string
+  value: T[];
+  title: string;
+  columns: string[];
+  uniqueKey: string;
+  documentTitle: string;
 }>();
 const emits = defineEmits(["selectRow"]);
 const clickRow = (eventdata: any) => {
   emits("selectRow", eventdata.data);
 };
 
+const exportData = ()=>{
+  documentlisttable.value.exportCSV()
+}
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });

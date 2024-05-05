@@ -10,23 +10,18 @@ type roletype = {resource:string, action:string}
 type grouptype = {[key:string]:roletype[]}            
 
 const allroles:roletype[] = [
-<% for(let i=0;i<it.modules.length; i++){ %>
+    <% for(let i=0;i<it.modules.length; i++){ %>
         <% const m = it.modules[i] %>
+        <% const appconfig = m.schema["x-simpleapp-config"] %>                
         {resource: '<%=m.docname%>', action:'create'},
         {resource: '<%=m.docname%>', action:'update'},
         {resource: '<%=m.docname%>', action:'delete'},
-        {resource: '<%=m.docname%>', action:'search'},
-       
-
-        <% if(m.api && m.api.length >0) {%>
-
-            <% for(let j=0;j<m.api.length; j++){ %>
-                <%let api = m.api[j]%>
-        {resource: '<%=m.docname%>', action:'<%=api.action%>'},
-        
-        
-            <%}%>
-        <%}%>
+        {resource: '<%=m.docname%>', action:'search'},       
+        <% if(Array.isArray(appconfig?.allStatus) && appconfig.allStatus.length>0){%> 
+        <% for(let sindex=0;sindex<appconfig.allStatus.length;sindex++){%> 
+         {resource: '<%=m.docname%>', action:'<%=appconfig.allStatus[sindex].status%>'},       
+        <%}%> 
+        <%}%> 
     <%}%>
 ]
 
