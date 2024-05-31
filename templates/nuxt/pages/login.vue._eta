@@ -1,6 +1,9 @@
 <template>
   <div class="p-10 m-10 text-3xl border text-center dark:text-white">
-    {{ t('redirectToLoginPage') }}
+    <div class="flex flex-col justify-center">
+      <div class="pi pi-spin pi-spinner" style="font-size: 8rem"></div>
+      <div>{{ t("login")+'...' }}</div>
+    </div>
     <!-- <NuxtPage /> -->
   </div>
 </template>

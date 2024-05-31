@@ -9,28 +9,28 @@
       :class="
         !pt
           ? 'flex-1 w-full rounded-lg  ' +
-            (props.readonly ? '' : 'rounded-tr-none rounded-br-none')
+            (props.readonly || !props.setting.document.isNew() ? '' : 'rounded-tr-none rounded-br-none')
           : ''
       "
     />
-    <span class="" v-if="!readonly">
-      <button v-ripple
+    <span class="" v-if="!readonly && props.setting.document.isNew()">
+      <button
+        v-ripple
         type="button"
         @click="toggle"
         tabindex="-1"
-        class="'btn btn-primary p-3 dark:border-blue-900/40 rounded-lg rounded-tl-none rounded-bl-none"
+        class="'btn bg-primary-500 dark:text-black text-white p-3 dark:border-blue-900/40 rounded-lg rounded-tl-none rounded-bl-none"
       >
         <i class="pi pi-angle-down"></i>
       </button>
-      <OverlayPanel ref="op" class="p-4">
+      <OverlayPanel ref="op">
         <div class="m-4">
           <ul>
             <li v-for="docno in docFormatlist" class="hover-list-primary p-2">
-              <a class="" @click="chooseFormat(docno)">
-                <span class="pi pi-hashtag mr-2"></span>
+              <div class="flex flex-row gap-2 cursor-pointer" @click="chooseFormat(docno)">                
                 <span class="">{{ docno.docNoFormatName }}</span>
                 <span class="text text-green-600">{{ docno.sample }}</span>
-              </a>
+              </div>
             </li>
           </ul>
         </div>

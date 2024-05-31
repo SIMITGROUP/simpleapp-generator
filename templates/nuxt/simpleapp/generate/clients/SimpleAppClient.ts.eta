@@ -32,7 +32,7 @@ export class SimpleAppClient<
   // protected defaultTimeOut=5000
   protected ready = true;
   protected delayAfterGetId = 0.5*1000;
-  protected unwantchobj;
+  protected unwantchobj:any;
   protected docapi;
   public event:Function|null=null;
   public listen:Function|null=null;
@@ -86,7 +86,7 @@ export class SimpleAppClient<
       // if(this.event){this.event('error:getById',res)}
       setTimeout(()=>{
         this.ready=true
-      },this,delayAfterGetId)
+      },this.delayAfterGetId)
       return Promise.reject(res)
     });
   }

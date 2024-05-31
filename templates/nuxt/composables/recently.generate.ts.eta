@@ -1,0 +1,16 @@
+import {RecentlyValue} from "~/types"
+export const getRecently = ()=>useNuxtApp().$recently
+export const setRecentDocument = (key:string, value:RecentlyValue)=>{
+    const recent = getRecently()
+    recent.set(key,value)
+    const tmp:{[key:string]:RecentlyValue}={}
+    recent.forEach((value,key)=>{
+        tmp[key]=value
+    })
+    console.log("JSON.stringify(tmp)",tmp)
+    localStorage.setItem('recently', JSON.stringify(tmp)); // Store keys as an array
+
+}
+export const getRecentDocument = (key:string)=>{
+    getRecently().get(key)
+}

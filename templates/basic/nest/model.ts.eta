@@ -46,7 +46,7 @@ export const <%= capitalizeFirstLetter(it.name) %>MongoSchema = new Schema(schem
     <%}%>  
   <%}%>
 
-  <% if(config['uniqueKeys']) {%>
+  <% if(config['uniqueKeys']!==undefined) {%>
     <% for(let i=0; i< config['uniqueKeys'].length; i++ ){ %>
       <% const keys = config['uniqueKeys'][i] %>
       .index({ 
@@ -59,6 +59,14 @@ export const <%= capitalizeFirstLetter(it.name) %>MongoSchema = new Schema(schem
     <% } %>
   <%}%>
 
+<% if(config['search']) {%>
+.index({ 
+  <% for(let i=0; i< config['search'].length; i++ ){ %>
+      <% const key = config['search'][i] %>            
+          '<%= key %>' : 'text',             
+    <% } %>
+  },{name:"<%= it.typename %>TextIndex"})
+<%}%>
 
 
 <% if(it.foreignkeys){%>

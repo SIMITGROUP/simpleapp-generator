@@ -102,28 +102,43 @@ export default defineNuxtPlugin( async(nuxtApp) => {
           getCurrentXorg(){
             return  (useRoute().params.xorg) ? <String>useRoute().params.xorg : undefined           
           },
-          async pingSession(){
+          async pingSession():Promise<string>{
             let xorg = this.getCurrentXorg() 
             let apiurl=''
+            
             if(!xorg){
               apiurl = `${useRuntimeConfig().public.APP_URL}/api`
             }else{
-            apiurl = `${useRuntimeConfig().public.APP_URL}/api/${xorg}`
+              const xorgdecode = atob(<string>xorg)
+              if(xorgdecode.includes('-')){
+                apiurl = `${useRuntimeConfig().public.APP_URL}/api/${xorg}`
+              }else{                 
+                return Promise.reject('wrongxorg')
+              }
+            
             }
             const {$axios} = useNuxtApp()
-            const pingresult = await new PROFILEApi(undefined,apiurl,$axios).getSession()
-            return pingresult
+            try{
+              const pingresult = await new PROFILEApi(undefined,apiurl).getSession()
+              if(pingresult.status<300)
+                return Promise.resolve('ok')
+              else
+                return Promise.reject('relogin')  
+            }catch(e){
+              return Promise.reject('catch go relogin')  
+            }
+            
           },
           async decideInvitation(id:string,decision:string){
             const apiurl = `${useRuntimeConfig().public.APP_URL}/api`
             const {$axios} = useNuxtApp()
-            console.log("decideInvitation",id,decision)
+            // console.log("decideInvitation",id,decision)
             const result = await new PROFILEApi(undefined,apiurl,$axios).decideInvitation(id,decision)
             
             if(result){
-              console.log(result)
+              // console.log(result)
             }else{
-              console.log(result)
+              // console.log(result)
             }
             //().then((res:AxiosResponse)=>{ }
           },
@@ -206,28 +221,32 @@ export default defineNuxtPlugin( async(nuxtApp) => {
     
     
     if( useRoute().meta.auth !==false){
+      console.log("pingsessionres starat")
+
+      try{
+        const pingsessionres = await useUserStore().pingSession()
+        console.log("pingsessionres",pingsessionres)
+        if(pingsessionres == 'wrongxorg'){
+          navigateTo('/')
+        }
+        else if(pingsessionres){
+          await useUserStore().loadRemoteUserInfo()        
+        }
+        return {        
+            provide: {
+                userstore:useUserStore()
+              // base64url: Base64URL
+            }
+        }
+      }catch(e){
+
+         await useUserStore().logout(useRoute().path)    
+      }
       
-      if(await useUserStore().pingSession()){
-        await useUserStore().loadRemoteUserInfo()
-        
-      }else{
-        await useUserStore().logout(useRoute().path)        
-      }    
     }else{
-      // if(await useUserStore().pingSession()){
-
-      // }else{
-
-      // }
+      
     }
     
-    return {
-
-        
-        provide: {
-            userstore:useUserStore()
-          // base64url: Base64URL
-        }
-    }
+    
     
 });

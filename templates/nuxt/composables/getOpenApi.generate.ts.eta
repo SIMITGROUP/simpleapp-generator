@@ -9,8 +9,11 @@ import * as o from "../simpleapp/generate/openapi";
 import axios from 'axios'
 
 
-const getAxiosConfig = () => {
-  const suffix = getCurrentXorg() ?  '/'+getCurrentXorg() : ''
+export const getAxiosConfig = () => {
+  const xorg = getCurrentXorg()
+  const xorgdecode = xorg!==undefined ? atob(<string>xorg) :''
+
+  const suffix = xorgdecode.includes('-') ?  '/'+getCurrentXorg() : ''
   const config: o.Configuration = {
     basePath: `${useRuntimeConfig().public.APP_URL}/api${suffix}`,
     isJsonMime: () => true,
@@ -18,10 +21,14 @@ const getAxiosConfig = () => {
   return config
 }
 
-
+//get apisession exclude from shared axios to separate handle session
 export const getApiSession = async ()=> {
-  const res = await (new o.PROFILEApi(getAxiosConfig(),undefined,useNuxtApp().$axios)).getSession()
-  return res
+  console.log("getApiSession from computable")
+  return getUserStore().pingSession()
+  //,useNuxtApp().$axios)
+  // const  profileapi = new o.PROFILEApi(getAxiosConfig(),undefined)
+  // const res = await profileapi.getSession()
+  // return res
 }
 
 export const getDocumentApi = (documentName: string): any => {
@@ -31,10 +38,51 @@ export const getDocumentApi = (documentName: string): any => {
 
   const config = getAxiosConfig()
   const docsOpenapi: any = {
-   <%for(let i=0; i<it.modules.length;i++){ %>
-    <% const d = it.modules[i] %>
-    '<%= d['docname'].toLowerCase() %>': new o.<%= d['doctype'].toUpperCase() %>Api(config),
-    <%}%>              
+           'tenant': new o.TENANTApi(config),
+            'organization': new o.ORGApi(config),
+            'branch': new o.BRANCHApi(config),
+            'permission': new o.PERMApi(config),
+            'autoincreament': new o.AUTOINCApi(config),
+            'docnoformat': new o.DOCNOApi(config),
+            'systemmessage': new o.SYSMSGApi(config),
+            'keyvaluepair': new o.KVPAIRApi(config),
+            'webhook': new o.WEBHOOKApi(config),
+            'academysession': new o.ACADEMYSESSIONApi(config),
+            'accounttransaction': new o.ACCTRANSApi(config),
+            'agent': new o.AGENTApi(config),
+            'area': new o.AREAApi(config),
+            'attendance': new o.ATTApi(config),
+            'category': new o.CATApi(config),
+            'creditnote': new o.CNApi(config),
+            'enrollment': new o.ENROLLApi(config),
+            'enrollmenttransaction': new o.ENROLLTRANSApi(config),
+            'holiday': new o.HOLIDAYApi(config),
+            'invoice': new o.INVApi(config),
+            'level': new o.LVLApi(config),
+            'parent': new o.PARENTApi(config),
+            'payment': new o.PAYApi(config),
+            'paymentmethod': new o.PAYMETHODApi(config),
+            'product': new o.PRDApi(config),
+            'productpackage': new o.PRDPKGApi(config),
+            'race': new o.RACEApi(config),
+            'refund': new o.REFUNDApi(config),
+            'refundtype': new o.REFUNDTYPEApi(config),
+            'religion': new o.RELIGIONApi(config),
+            'room': new o.ROOMApi(config),
+            'roomtype': new o.ROOMTYPEApi(config),
+            'schedule': new o.SCHEDULEApi(config),
+            'school': new o.SCHOOLApi(config),
+            'stopenrollment': new o.STOPENROLLApi(config),
+            'stopreason': new o.STOPREASONApi(config),
+            'student': new o.STUApi(config),
+            'studentgroup': new o.STUGROUPApi(config),
+            'studentsource': new o.STUDENTSRCApi(config),
+            'studentsummary': new o.STUSUMApi(config),
+            'teacher': new o.TEACHERApi(config),
+            'teachergroup': new o.TEACHERGROUPApi(config),
+            'tuitionclass': new o.TUITIONApi(config),
+            'user': new o.USERApi(config),
+                  
     };
 
   if (!docsOpenapi[documentName]) {
@@ -57,6 +105,6 @@ export const getWorkflowApi = () => {
   
 }
 
-export const getPorfileApi = () => {
+export const getProfileApi = () => {
   return new o.PROFILEApi(getAxiosConfig())
 }

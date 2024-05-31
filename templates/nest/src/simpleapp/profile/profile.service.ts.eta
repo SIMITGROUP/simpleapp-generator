@@ -5,8 +5,8 @@
  * Author: Ks Tan
  */
 import { UserService, User } from './../services/user.service';
-import countrytimezone from 'countries-and-timezones'
-import countryToCurrency, { Currencies, Countries } from "country-to-currency";
+import countrytimezone from 'countries-and-timezones';
+import countryToCurrency, { Currencies, Countries } from 'country-to-currency';
 import {
   Injectable,
   Scope,
@@ -91,14 +91,14 @@ export class ProfileService {
     appuser: UserContext,
     tenantName: string,
     timeZone: string,
-    utcOffset: number
+    utcOffset: number,
   ) {
     // try{
-    const timezonedata = countrytimezone.getCountriesForTimezone(timeZone)[0]
-    const countryCode  = timezonedata['id']
-    const countryName  = timezonedata['name']
-    const currencyCode = countryToCurrency[countryCode]
-    
+    const timezonedata = countrytimezone.getCountriesForTimezone(timeZone)[0];
+    const countryCode = timezonedata['id'];
+    const countryName = timezonedata['name'];
+    const currencyCode = countryToCurrency[countryCode];
+
     appuser.getDBSession().startTransaction();
     const tenantdata: Tenant = {
       tenantId: 1,
@@ -244,5 +244,27 @@ export class ProfileService {
 
   async getSession(appuser: UserContext) {
     return 'OK';
+  }
+
+  
+   async runTourComplete(appuser: UserContext, guideName: string) {
+    if (!guideName || guideName == '')
+      throw new BadRequestException('undefine guideName');
+
+    const user = await this.usersvc.findById(
+      appuser,
+      appuser.getId(),
+    );
+    if(!Array.isArray(user.completedTours)){
+        user.completedTours=[]
+      }
+
+    if (!user.completedTours.includes(guideName)) {
+      
+      user.completedTours.push(guideName);            
+      const res = await this.usersvc.findIdThenUpdate(appuser, user._id, user);
+    }
+
+    return 'ok';
   }
 }

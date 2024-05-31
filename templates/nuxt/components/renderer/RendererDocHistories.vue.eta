@@ -1,0 +1,56 @@
+<template>
+  <div class="flex flex-row text-xs cursor-pointer" 
+    v-if="data?.updated && data?.updated !=''" @click="viewHistories">    
+    <ImageAvatar v-if="data?.updatedBy" :id="data.updatedBy" :size="12"></ImageAvatar>
+    <div class="flex flex-col p-2">
+      <TextDocStatus v-if="data?.docStatus" :docStatus="data?.docStatus" />
+      <TextSubsubtitle class=" text-gray-400 italic">{{ t('updated') }}:</TextSubsubtitle>
+      <RendererDateTime :value="data?.updated" class="text-gray-400 italic"/>
+    </div>
+    
+
+    <Dialog v-model:visible="visibleHistories" modal
+      :header="t('histories')" :pt="{root:{class:'w-1/4'}}">
+      <Timeline :value="events" class="w-full md:w-20rem">
+        <template #opposite="slotProps">
+          <RendererDateTime class="italic text-gray-400 text-xs" :value="slotProps.item.date"/>
+        </template>
+        <template #content="slotProps">
+          <div>
+            <div>{{ slotProps.item.status }}</div>
+          </div>  
+          
+        </template>
+    </Timeline>
+    </Dialog>
+  </div>
+  
+</template>
+<script lang="ts" setup>
+import TextSubsubtitle from '../text/TextSubsubtitle.vue';
+import RendererDateTime from './RendererDateTime.vue';
+  const visibleHistories = ref(false)
+  const props=defineProps<{data:any}>()
+  const events = computed(()=>{
+    const list =  [{ status: t('created'), date: props.data.created },]
+
+    if(props.data.updated != props.data.created){
+      list.push({ status: t('paidFeature'), date:''})
+      list.push( { status:  t('lastUpdate'), date: props.data.updated })
+    }     
+    return list   
+  })
+  const severity = computed(()=>{
+    const stat = props.data.docStatus 
+    if(props.data.docStatus=='confirm') return "success"
+    else if(props.data.docStatus=='void') return "danger"
+    else if(props.data.docStatus=='draft') return "secondary"
+    else return "warning"
+  })
+
+
+  const viewHistories = () =>{
+    visibleHistories.value=true
+    console.log("histories")
+  }
+</script>

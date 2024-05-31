@@ -1,12 +1,20 @@
 <template>
   <Button
     v-if="isMobile()"
-    :class="`w-full rounded-full text-center block dark:bg-gray-600 bg-gray-600 active:dark:bg-gray-400 text-white ${animate ? 'animate-bounce' :'' }`"
+    severity="secondary"
+    :class="`w-full rounded-full text-center block  ${
+      animate ? 'animate-bounce' : ''
+    }`"
     @click="onActivate"
   >
     <slot></slot>
   </Button>
-  <Button v-else :class="`btn-default ${animate ? 'animate-bounce' :'' }`" @click="onActivate">
+  <Button
+    v-else
+    severity="secondary"
+    :class="`${animate ? 'animate-bounce' : ''}`"
+    @click="onActivate"
+  >
     <slot></slot>
   </Button>
 </template>
@@ -18,7 +26,7 @@
  * author: Ks Tan
  */
 const emits = defineEmits(["click"]);
-const props = defineProps<{animate?:boolean}>()
+const props = defineProps<{ animate?: boolean }>();
 const onActivate = (e: Event) => {
   emits("click", e);
 };

@@ -1,8 +1,8 @@
 <template>
   <Button
     v-if="isMobile()"
-    severity="danger"
-    :class="`w-full rounded-full text-center block  ${
+    severity="info"
+    :class="`w-full rounded-full text-center block ${
       animate ? 'animate-bounce' : ''
     }`"
     @click="onActivate"
@@ -11,7 +11,7 @@
   </Button>
   <Button
     v-else
-    severity="danger"
+    severity="info"
     :class="`${animate ? 'animate-bounce' : ''}`"
     @click="onActivate"
   >

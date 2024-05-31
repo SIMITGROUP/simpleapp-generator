@@ -160,4 +160,23 @@ export class ProfileController {
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
   }
+  @Post('/tour-complete/:guidename')
+  @Roles(Role.User)
+  @ApiOperation({
+    operationId: 'runTourComplete',
+    description: 'complete specific tour guide',
+  })
+  @ApiResponse({ status: 201, type: Object, description: 'Success' })
+  async runTourComplete(
+    @AppUser() appuser: UserContext,
+    @Param('guidename') guidename: string,
+    
+  ) {
+    const result = await this.profileservice.runTourComplete(appuser,guidename,);
+    if (result) {
+      return result;
+    } else {
+      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+    }
+  }
 }

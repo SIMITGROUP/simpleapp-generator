@@ -1,11 +1,15 @@
 <template>
-  <span v-if="typeof modelValue == 'undefined' || typeof modelValue == 'string'"
-    >-</span
-  >
-  <span v-else-if="showCurrency"> {{ currenyValue }}</span>
-  <span v-else>
-    {{ modelValue.toLocaleString(useI18n().defaultLocale, options) }}</span
-  >
+  
+  <span>
+    <span class="mr-1" v-if="showCurrency">{{ getCurrency() }}</span>    
+    <span v-if="typeof modelValue != 'undefined'">{{
+    modelValue.toLocaleString(useI18n().defaultLocale, options)
+      }}</span>
+    <span v-else-if="typeof props.value != 'undefined'">{{
+      props.value.toLocaleString(useI18n().defaultLocale, options)
+      }}</span>
+    <span v-else>-</span>
+  </span>
 </template>
 <script lang="ts" setup>
 /**
@@ -14,20 +18,24 @@
  * last change 2024-02-04
  * author: Ks Tan
  */
-const currenyValue = computed(() => {
-  if (modelValue.value === undefined) return "-";
-  return Intl.NumberFormat(useI18n().defaultLocale, {
-    // style: "currency",
-    // currency: getUserProfile()?.currency ?? '',
-    // currencyDisplay: "symbol",
-  }).format(modelValue.value);
-});
 const options = {
   style: "decimal", // Other options: 'currency', 'percent', etc.
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 };
-const modelValue = defineModel<number>({ required: true });
-const props = defineProps<{ showCurrency?: boolean }>();
+const modelValue = defineModel<number>();
+const props = defineProps<{ showCurrency?: boolean ; value?:number }>();
+
+const currenyValue = computed(() => {
+  if (typeof modelValue.value == 'number'){
+    return Intl.NumberFormat(useI18n().defaultLocale, 
+        {}).format(modelValue.value);
+  }else if(typeof props.value == 'number'){
+    return Intl.NumberFormat(useI18n().defaultLocale,{}).format(props.value);
+  }else return '-'
+  
+  
+});
+
 
 </script>

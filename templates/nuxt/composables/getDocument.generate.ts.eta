@@ -11,7 +11,7 @@ export const getDocument = (docname:SimpleAppDocumentType) =>{
 }
 
 // (appuser: UserContext, filter: any) => Promise<void>;
-export const onScreenAddDocument = <T>(docname:SimpleAppDocumentType,paras?:T,after?:(eventType:FormCrudEvent, data:T)=>Promise<void>)=>{
+export const onScreenAddDocument = <T>(docname:SimpleAppDocumentType,paras?:T,after?:(eventType:FormCrudEvent, data:T,visible:Ref<boolean>)=>Promise<void>)=>{
         useNuxtApp().$event('ViewRecord',{
             documentName: docname,
             eventId:randomUUID(),
@@ -19,15 +19,15 @@ export const onScreenAddDocument = <T>(docname:SimpleAppDocumentType,paras?:T,af
             paras:paras,
             document: getDocument(docname)?.docClass,
             viewer: getDocument(docname)?.viewer,    
-            after: (eventType:FormCrudEvent, data: any) => {
+            after: (eventType:FormCrudEvent, data: any,visible:Ref<boolean>) => {
                 //do nothing
-                 if(after)after(eventType,data as T)
+                if(after)after(eventType,data as T,visible)
             },
             label:t(docname)
         
           })
     }
-    export const onScreenEditDocument = <T>(docname:SimpleAppDocumentType,_id:string,after?:(eventType:FormCrudEvent, data:T)=>Promise<void>,autoclose:boolean=true)=>{
+    export const onScreenEditDocument = <T>(docname:SimpleAppDocumentType,_id:string,after?:(eventType:FormCrudEvent, data:T,visible:Ref<boolean>)=>Promise<void>,autoclose:number=1)=>{
         
         useNuxtApp().$event('ViewRecord',{
             documentName: docname,
@@ -36,9 +36,9 @@ export const onScreenAddDocument = <T>(docname:SimpleAppDocumentType,paras?:T,af
             autoclose:autoclose,
             document: getDocument(docname)?.docClass,
             viewer: getDocument(docname)?.viewer,    
-            after: async (eventType:FormCrudEvent, data: any) => {
+            after: async (eventType:FormCrudEvent, data: any,visible:Ref<boolean>) => {
                 //do nothing
-                 if(after)after(eventType,data as T)
+                 if(after)after(eventType,data as T,visible)
             },
             label:t(docname)        
           })

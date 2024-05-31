@@ -1,18 +1,19 @@
 <template>
   <div class="w-full">
     <div class="flex flex-row">
-      <label v-if="!hideLabel" :for="fieldid" >
+      <label v-if="!hideLabel" :for="fieldid">
         {{ t(documentName) }}
       </label>
-      <ButtonText
+      <div
         v-if="allowAddNew"
         @click="addnew"
-        class="text-xs text-blue-600"
+        class="cursor-pointer ml-2 pt-1 text-xs text-blue-600"
       >
         <span>{{ t("new") }}</span>
-      </ButtonText>
+      </div>
     </div>
-    <MultiSelect class="w-full md:w-full"
+    <MultiSelect
+      class="w-full md:w-full"
       :input-id="fieldid"
       v-if="multiple"
       display="chip"
@@ -21,18 +22,39 @@
       :options="options"
       optionLabel="label"
       optionValue="value"
+      filter
       :placeholder="placeholder"
-    />
-    <Dropdown class="w-full md:w-full"
+    >
+    <template #value="slotProps">
+      <slot name="value" :slotProps="slotProps">
+      </slot>
+    </template>
+    <template #option="slotProps">
+      <slot name="default" :option="slotProps.option" :index="slotProps.index">
+      </slot>
+    </template>
+      
+    </MultiSelect>
+    <Dropdown
+      class="w-full md:w-full"
       :input-id="fieldid"
       v-else
       @update:modelValue="change"
+      filter
       v-model="modelValue"
       :options="options"
       optionLabel="label"
       optionValue="value"
       :placeholder="placeholder"
-    />
+    >
+    <template #value="slotProps">
+      <slot name="value" :item="getItem(modelValue)"></slot>
+    </template>
+      <template #option="slotProps" >
+        <slot name="default" :option="slotProps.option" :index="slotProps.index"></slot>        
+      </template>
+
+    </Dropdown>
   </div>
 </template>
 <script setup lang="ts">
@@ -66,6 +88,7 @@ const options = ref<
   {
     value: string;
     label: string;
+    more:any;
   }[]
 >([]);
 const getListOptions = async () => {
@@ -79,17 +102,22 @@ const getListOptions = async () => {
   options.value = list.value.map((item) => ({
     value: item._id,
     label: item.label,
+    more: item
   }));
 };
 onMounted(async () => {
+  
   await getListOptions();
   if (modelValue.value) change(modelValue.value);
 });
-const getItem = (id: string) => list.value?.find((item) => item._id == id);
+const getItem = (id: string) => list.value?.find((item) => {  
+return  item._id == id
+});
 
 const change = (id: string | string[]) => {
   const selectedItem = getItem(id);
   emits("change", id, selectedItem);
+  // console.log("changed",selectedItem)
 };
 
 const addnew = () => {
@@ -108,7 +136,7 @@ const addnew = () => {
             else if (Array.isArray(modelValue.value))
               modelValue.value.push(data._id);
           } else modelValue.value = data._id;
-          refreshDocumentList(props.documentName)
+          refreshDocumentList(props.documentName);
           emits("change", data._id, getItem(data._id));
         }
       },

@@ -1,0 +1,50 @@
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { UserContext } from './user.context';
+import { WebhookService } from 'src/simpleapp/services/webhook.service';
+@Injectable()
+export class RunWebhookService {
+  public constructor(private webhookService: WebhookService) {}
+  @OnEvent('webhook')
+  async runWebhook(
+    appuser: UserContext,
+    documentName: string,
+    actionName: string,
+    data?: any,
+  ) {
+    let subscribeall=false
+    const webhooks = await this.webhookService.search(appuser, {
+      documentName: documentName,
+      active: true,
+    });
+    if (webhooks.length == 0) return;
+
+    const webhook = webhooks[0];
+    let subscribes:string[] = []
+    if(webhook.setting=='' || webhook.setting===undefined){
+      subscribeall=true
+    }else{
+      subscribes= JSON.parse(webhook.setting)
+    }
+
+    if(subscribes.includes(actionName)){
+      const webhookurl = webhook.url;
+      const secretkey = webhook.secret;
+      const req = await fetch(webhookurl, {
+        method: 'POST',
+        headers: { 'x-apiKey': secretkey },
+        body: JSON.stringify(data),
+      });
+      const statusCode = req.status
+      const body = req.body
+
+    }
+    
+  }
+}

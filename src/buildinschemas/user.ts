@@ -47,6 +47,10 @@ export const user:SchemaType ={
         email: {type: "string",minLength:10,format: "email"},
         active: {type: "boolean",default:true},
         description: {type:"string"},
-        lastActivity: {type: "string",description:"capture ISO8601 last api call"}
+        lastActivity: {type: "string",description:"capture ISO8601 last api call"},
+        completedTours: {
+          type: "array",
+          items: { "type": "string", "examples": ["mainpage"] }
+        }
       }
 }

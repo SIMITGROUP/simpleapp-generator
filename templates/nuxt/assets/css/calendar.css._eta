@@ -5,6 +5,9 @@
  * author: Ks Tan
  */
 /* calendar */
+.vuecal .p-button{
+  color: initial;
+}
 
 #monthviewcal .vuecal__cell--current,
 #monthviewcal .vuecal__cell--today {

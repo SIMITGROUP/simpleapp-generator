@@ -149,6 +149,27 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   }
 
 
+<% if(simpleappconfig.search !==undefined){%>
+@Get('/fulltextsearch/:keyword')
+  @HttpCode(200)
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.<%= `${it.typename}_search`%>)
+  @ApiResponse({
+    status: 200,
+    description: 'success',
+    type: [schemas.<%= it.typename%>]
+  })
+  @ApiResponse({ status: 400, description: 'bad request' })
+  @ApiResponse({ status: 500, description: 'internal error' })
+  @ApiOperation({ operationId: 'runFullTextSearch' })
+  async fulltextsearch(
+    @AppUser() appuser: UserContext,
+    @Param('keyword') keyword:string
+  ) {
+    return await this._fulltextsearch(appuser, keyword);
+  }
+<%}%>
+
+
 /***************************** begin additionalAPI definations *****************************************/
 
 <% for(let i=0;i<it.apiSettings.length;i++){%>

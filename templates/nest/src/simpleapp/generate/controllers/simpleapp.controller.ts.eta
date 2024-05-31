@@ -30,6 +30,7 @@ type ServiceType = {
   findIdThenPatch: Function;
   setData: Function;
   getAutoComplete: Function;
+  fullTextSearch:Function;
 };
 
 // @ApiTags(doctype)
@@ -50,16 +51,22 @@ export class SimpleAppAbstractController<
   async _list(appuser: UserContext) {
     return this.service.list(appuser);
   }
+  async _fulltextsearch(appuser: UserContext, keyword: string) {
+    return this.service.fullTextSearch(
+      appuser,
+      keyword
+    );
+  }
   async _search(appuser: UserContext, searchObject: SearchBody) {
     return this.service.search(
       appuser,
       searchObject['filter'],
       searchObject['fields'],
       searchObject['sorts'],
-      searchObject['lookup']
+      searchObject['lookup'],
     );
   }
-  async _autocomplete(appuser: UserContext, keyword:string,data?:T) {
+  async _autocomplete(appuser: UserContext, keyword: string, data?: T) {
     return this.service.getAutoComplete(appuser, keyword, data);
   }
   async _findOne(appuser: UserContext, id: string) {

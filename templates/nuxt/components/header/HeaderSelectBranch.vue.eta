@@ -3,7 +3,8 @@
     <select
       v-if="selectedbranch"
       v-model="selectedbranch"
-      class="text-right bodycolorclass pt-3 pb-3 text-lg"
+      style="background: transparent;  border: none;"
+      class="text-right pt-3 pb-3 text-lg"
       @change="switchXorg()"
     >
       <optgroup v-for="o in orgList" :label="o.label">

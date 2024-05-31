@@ -82,7 +82,7 @@ const alltenants = ref();
 
 const loadAllTenants = async () => {
   waiting.value=false
-  alltenants.value = (await getPorfileApi().getAllTenants()).data;
+  alltenants.value = (await getProfileApi().getAllTenants()).data;
 };
 
 // const props = defineProps<{

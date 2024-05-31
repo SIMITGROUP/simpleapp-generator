@@ -18,6 +18,9 @@ export const getDocumentUrl = (document:string,id?:string,querystr?:string)=>{
     return path
 }
 
+export const getPathResource=()=>{
+    return useRoute().path.toString().replace('/'+getCurrentXorg(),'')
+}
 
 export const goTo = (document:string,id?:string,querystr?:string)=>{    
     navigateTo(getDocumentUrl(document,id,querystr))   
@@ -38,11 +41,14 @@ export const getPathPara = (paraname:string,emptyvalue:string=''):string=>{
     return emptyvalue
    }
 }
-export const getPathQuery = (paraname:string,emptyvalue:string=''):string=>{
+export const getPathQuery = (paraname:string,emptyvalue:string|string[]=''):string|string[]=>{
     const paravalue = useRoute().query[paraname]
-    if(paravalue){
-     return paravalue.toString()
-    }else{
+    if( paraname.includes('[')){
+        return (typeof paravalue == 'string'? [paravalue] : paravalue) as string[]
+    }else if(typeof paravalue == 'string'){
+        return paravalue.toString()
+    }
+    else{
      return emptyvalue
     }
  }

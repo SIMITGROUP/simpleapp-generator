@@ -1,5 +1,10 @@
 <template>
-  <span v-if="modelValue">{{ toUTCTime(modelValue) }}</span>
+  <span v-if="modelValue">
+    {{ dateRenderToTimeStr(modelValue) }}
+  </span>
+  <span v-else-if="value">
+    {{ dateRenderToTimeStr(value) }}
+  </span>
   <span v-else>-</span>
 </template>
 <script lang="ts" setup>
@@ -10,4 +15,5 @@
  * author: Ks Tan
  */
 const modelValue = defineModel<Date | string>();
+const props = defineProps<{ value: Date | string }>();
 </script>

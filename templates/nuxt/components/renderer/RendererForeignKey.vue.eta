@@ -21,25 +21,26 @@ import { ForeignKey, FormCrudEvent, SimpleAppDocumentType } from "~/types";
 
 type SettingProp = { collection: SimpleAppDocumentType; displayField?: string };
 const modelValue = defineModel<ForeignKey>();
+
 const emits = defineEmits(["after"]);
-const props = defineProps<{ setting: SettingProp }>();
+const props = defineProps<{value?:ForeignKey;  setting: SettingProp }>();
 const displayText = computed(() => {
   const s = props.setting;
-  if (!modelValue.value) return undefined;
-  else if (!s.collection) return modelValue.value;
-  else if (s.displayField) return modelValue.value[s.displayField];
-  else return modelValue.value.label;
+  if (!modelValue.value && !props.value) return undefined;
+  else if (!s.collection) return modelValue.value??props.value;
+  else if (s.displayField) return modelValue.value[s.displayField] ??props.value[s.displayField];
+  else return modelValue.value?.label ??props.value?.label;
 });
 const { $event } = useNuxtApp();
 const viewer = ref();
 const viewRecord = () => {
   viewer.value = getDocument(props.setting.collection)?.viewer;
-
+  const value = modelValue.value?? props.value
   // getDocumentUrl(setting.collection,modelValue ? modelValue['_id']:'')
   //getDocumentUrl(setting.collection,modelValue ? modelValue['_id']:'')
   $event("ViewRecord", {
-    _id: modelValue.value?._id as string,
-    label: modelValue.value?.label as string,
+    _id: value?._id as string,
+    label: value?.label as string,
     eventId: randomUUID(),
     documentName: props.setting.collection,
     viewer: viewer.value,

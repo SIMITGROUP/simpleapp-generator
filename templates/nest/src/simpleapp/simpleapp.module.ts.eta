@@ -10,7 +10,7 @@ import {DocNumberFormatGenerator} from './generate/commons/docnogenerator.servic
 import { AuditTrail } from './generate/commons/audittrail.service';
 import { CloudapiModule } from 'src/cloudapi/cloudapi.module';
 import { PrintapiModule } from 'src/printapi/printapi.module';
-
+import { RunWebhookService } from 'src/simpleapp/generate/commons/runwebhook.service'
 import { UserResolverService } from './services/userresolver.service';
 // auto import modules
 <% for(let i=0;i<it.modules.length; i++){ %>
@@ -53,6 +53,7 @@ import { <%=capitalizeFirstLetter(bpmn)%>ListenerService } from 'src/simpleapp/w
   controllers: [<% for(let i=0;i<it.modules.length; i++){ %><%= it.modules[i].docname %>Controller,<%}%> ProfileController,WorkflowController],
   providers: [
     SimpleAppRobotUserService,
+    RunWebhookService,
     AuditTrail,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %>
       <%= it.modules[i].docname %>Service,
       <%= it.modules[i].docname %>Resolver,

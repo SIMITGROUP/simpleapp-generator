@@ -22,7 +22,8 @@
       </slot>
     </ListView>
 
-    <Dialog v-model:visible="showDialog" modal :header="t('editDetails')">
+    <Dialog v-model:visible="showDialog"
+       modal :header="t('editDetails')" :pt="{root:{class:'w-1/2'}}">
       <div class="flex flex-col p-2 gap-4">
         <slot name="popupbody" :index="rowIndex" :item="list[rowIndex]">
           row {{ rowIndex }} define SimpleAppInputs here
@@ -56,11 +57,11 @@ const props = defineProps<{
   readonly?: boolean;
   doc: SimpleAppClient<any, any>;
 }>();
-const readonly = computed(()=>{
-  if(props.readonly) return true
-  else if(props.doc.isReadOnly()) return true
-  else return false
-})
+const readonly = computed(() => {
+  if (props.readonly) return true;
+  else if (props.doc.isReadOnly()) return true;
+  else return false;
+});
 const showRow = (index: number, item: T) => {
   showDialog.value = true;
   rowIndex.value = index;

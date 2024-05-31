@@ -21,7 +21,13 @@ export const getAvatarLink = (email:string, size:number):string=>{
   return `https://gravatar.com/avatar/${md5(email)}?size=${size}`;
   //return `https://api.simbiz.cloud/cloudapi/avatar/${md5(email)}?size=${size}`  
 }
+export const getAvatarByUid = (id:string, size:number):string=>{
+  const url = `${useRuntimeConfig().public.APP_URL}/api/${getCurrentXorg()}`
+  return `${url}/images/student/${id}`;
+  
+}
 
+export const getDefaultLocale =()=> useNuxtApp().$i18n.defaultLocale
 export const t = (txt:string,options?:any):string => !txt || txt.trim()=='' ? '' : useNuxtApp().$i18n.t(txt,options)
 export const upperFirst = (str:string) => _.upperFirst(str)
 export const labelSorter = (a,b)=>{
@@ -36,4 +42,37 @@ export const labelSorter = (a,b)=>{
 
   // names must be equal
   return 0;
+}
+
+export const valueSorter = (a,b)=>{
+  const vA = a.value
+  const vB = b.value
+   if (vA < vB) {
+     return -1;
+   }
+   if (vA > vB) {
+     return 1;
+   }
+
+ return 0;
+}
+export const valueSorterDesc = (a,b)=>{
+  const vA = a.value
+  const vB = b.value
+   if (vA < vB) {
+     return 1;
+   }
+   if (vA > vB) {
+     return -1;
+   }
+
+ return 0;
+}
+export const numberToMoneyString = (value:number)=>{
+  const options = {
+    style: "decimal", // Other options: 'currency', 'percent', etc.
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  };
+  return value.toLocaleString(useI18n().defaultLocale, options)
 }

@@ -91,6 +91,7 @@ export class UserContext {
   getTenantId = () => this.tenantId;
   getOrgId = () => this.orgId;
   getBranchId = () => this.branchId;
+  getBranchCode = () => this.branchCode;
   getEmail = () => this.email;
   getTimeZone = () => this.timeZone;
   getCountry = () => this.country;
@@ -218,7 +219,7 @@ export class UserContext {
             }
           }
 
-          userinfo.branchRecordId = myperm.currentbranch[0].branchRecordId;
+          userinfo.branchRecordId = myperm.currentbranch[0]._id;
           userinfo.branchCode = myperm.currentbranch[0].branchCode;
           userinfo.branchName = myperm.currentbranch[0].branchName;
           userinfo.orgRecordId = myperm.currentorg[0]._id;
@@ -258,7 +259,7 @@ export class UserContext {
     const tokeninfo = jwt.decode(tokenstr);
     this.token = tokenstr;
     this.uid = tokeninfo?.sub ?? '';
-    this.email = tokeninfo?.email ??'';
+    this.email = tokeninfo?.email ?? '';
     this.uname = tokeninfo?.preferred_username ?? '';
     this.fullname = tokeninfo?.name ?? [];
     this.ssoACL = tokeninfo?.resource_access ?? [];
@@ -535,7 +536,7 @@ export class UserContext {
   };
 
   searchInsertedRecordId(collection: string, _id: string) {
-    if(!this.modifiedRecords.createds[collection]) return undefined
+    if (!this.modifiedRecords.createds[collection]) return undefined;
     return this.modifiedRecords.createds[collection].find(
       (item) => item === _id,
     );
@@ -723,5 +724,14 @@ export class UserContext {
       }
     }
     return data;
+  }
+
+  offsetDate(date: string): string {
+    const timestamp = new Date(date).getTime();
+    const offsets = this.getOffsetMinute() * 60000;
+    const isodate =
+      new Date(timestamp + offsets).toISOString().split('.')[0] + 'Z';
+    // console.log("Generate schedule ",date,":",appuser.getOffsetMinute()," => ",isodate)
+    return isodate;
   }
 }

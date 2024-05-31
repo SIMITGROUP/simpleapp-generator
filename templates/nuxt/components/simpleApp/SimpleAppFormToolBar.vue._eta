@@ -41,9 +41,9 @@
       }}</TextTitle>
       <ButtonText @click="callClose"><i class="pi pi-times" /></ButtonText>
     </div> -->
-    <div class="flex flex-row gap-2 p-0 justify-between">
+    <div class="flex flex-row gap-2 mb-2 p-0 justify-between">
       <!-- left -->
-      <div class="flex flex-row">
+      <div class="flex flex-row gap-2">
         <div v-for="(menu, index) in menus" :key="index">
           <div v-if="menu.label && menu.type == 'crud'">
             <ButtonAction
@@ -58,7 +58,11 @@
       <!-- center -->
       <div class="flex flex-row"></div>
       <!-- right -->
-      <div class="flex flex-row">
+      <div class="flex flex-row gap-2">
+        <DebugDocumentData v-model="data" :label="t(doc.getDocName())" />
+        <div v-if="data.documentStatus">
+          <RendererDocHistories :data="data" />
+        </div>
         <div v-for="(menu, index) in menus" :key="index">
           <div v-if="menu.label && menu.type == 'docstatus'">
             <ButtonAction
@@ -72,7 +76,7 @@
     </div>
     <ConfirmPopup></ConfirmPopup>
   </div>
-  <Dialog v-model:visible="visiblePrintFormats" :header="t('printFormats')">
+  <!-- <Dialog v-model:visible="visiblePrintFormats" :header="t('printFormats')">
     <div>
       <ListView
         :list="printformats"
@@ -85,7 +89,7 @@
         </div>
       </ListView>
     </div>
-  </Dialog>
+  </Dialog> -->
   <OverlayPanelWithToolBar
     v-if="visiblePrintPreview"
     v-model="visiblePrintPreview"
@@ -96,7 +100,20 @@
         ><i class="pi pi-times"
       /></ButtonText>
     </template>
-    <template #headerCenter>{{ t("printPreview") }}</template>
+    <template #headerCenter>
+      <div class="flex flex-row gap-2 justify-center">
+        <Dropdown
+          :options="printformats"
+          option-label="formatName"
+          option-value="formatId"
+          v-model="currentprintformat"
+          @change="printPdf"
+        ></Dropdown>
+        <ButtonPrimary @click="showPrintFormats"
+          ><i class="pi pi-refresh"
+        /></ButtonPrimary>
+      </div>
+    </template>
     <template #headerRight>
       <div v-if="isMobile()">
         <ButtonText class="text-xl" @click="sendToPrint">
@@ -110,6 +127,14 @@
     </template>
     <!-- :header="t('printPreview')"
     position="bottom" -->
+    <!-- {{pdfReady}} -->
+
+    <!-- <div v-if="!pdfReady">
+      <div class="flex flex-col justify-center">
+        <div class="pi pi-spin pi-spinner" style="font-size: 8rem"></div>
+        <div>{{ t("loading") + "..." }}</div>
+      </div>
+    </div>     -->
     <TextDanger v-if="printservererror || !printstr">
       {{ t("printServerError") }}
     </TextDanger>
@@ -141,9 +166,16 @@ import VuePdfEmbed from "vue-pdf-embed";
 
 import { SimpleAppClient } from "~/simpleapp/generate/clients/SimpleAppClient";
 import { useConfirm } from "primevue/useconfirm";
-import { FormActions, FormCrudEvent, FormMenu } from "~/types";
+import {
+  FormActions,
+  FormCrudEvent,
+  FormMenu,
+  SchemaPrintFormat,
+} from "~/types";
+import { DropdownChangeEvent } from "primevue/dropdown";
 import { MenuItem } from "primevue/menuitem";
 import { MenuItemCommandEvent } from "primevue/menuitem";
+const currentprintformat = ref();
 const pdfrenderer = ref();
 const confirm = useConfirm();
 const emits = defineEmits(["on", "close"]);
@@ -151,13 +183,17 @@ const visiblePrintFormats = ref(false);
 const visiblePrintPreview = ref(false);
 const printstr = ref();
 const printservererror = ref(false);
+const pdfReady = ref(false);
 const props = defineProps<{
   document: SimpleAppClient<any, any>;
   disableaction?: string[];
 }>();
+const doc = props.document;
+const data = doc.getReactiveData();
 
 const createData = async () => {
   try {
+    setRecentDocument(data.value._id,{docName:doc.getDocName(),label:title.value})
     return await doc.create();
   } catch (e) {
     console.debug("validation error:", e);
@@ -165,6 +201,7 @@ const createData = async () => {
 };
 const updateData = async () => {
   try {
+    setRecentDocument(data.value._id,{docName:doc.getDocName(),label:title.value})
     return await doc.update();
   } catch (e) {
     console.debug("validation error:", e);
@@ -172,14 +209,13 @@ const updateData = async () => {
 };
 const deleteData = async () => {
   try {
+    getRecently().delete(data.value._id)
     return await doc.delete();
   } catch (e) {
     console.debug("validation error:", e);
   }
 };
 
-const doc = props.document;
-const data = doc.getReactiveData();
 type Datatype = keyof typeof data.value;
 const config = doc.getSchema()["x-simpleapp-config"];
 const titlefield = (config.documentTitle ?? config.uniqueKey) as Datatype;
@@ -213,26 +249,36 @@ const emitMobileEvent = (itemevent: MenuItemCommandEvent) => {
   emitEvent(itemevent.item, event);
 };
 
-const printPdf = async (index: number, format: any) => {
-  console.log("printPdf");
+const printPdf = async (dropdown?: DropdownChangeEvent) => {
+  let index = 0;
+
+  if (printformats && printformats.length > 0 && dropdown !== undefined) {
+    index = printformats?.findIndex((item) => item.formatId == dropdown.value);
+  }
+  let format: SchemaPrintFormat = printformats[index];
   printservererror.value = false;
   const formatid: string = format.formatId;
+  currentprintformat.value = formatid;
   visiblePrintPreview.value = true;
   // console.log("formatidformatid", format);
+  // pdfReady.value=false
   try {
     const tmp: any = await doc
       .getApi()
       .runPrint(data.value._id ?? "", formatid);
+    // pdfReady.value=true
     printstr.value = "data:application/pdf;base64," + tmp.data;
   } catch (e) {
+    pdfReady.value = true;
     printservererror.value = true;
-    printstr.value = "";
+    // printstr.value = "";
     console.error("error from print server", e);
   }
 };
 const getActions = () => {
   const actions = doc.getActions();
-  const printformats = doc.getSchema()["x-simpleapp-config"]?.printFormats;
+  // const printformats = doc.getSchema()["x-simpleapp-config"]?.printFormats;
+
   const crudmenus: any[] = [];
 
   // Object.keys(actions).forEach((key)=>{ //crud, api, docstatus
@@ -258,15 +304,14 @@ const getActions = () => {
       command: showPrintFormats,
     });
   }
-  console.log("crudmenus", crudmenus);
+  // console.log("crudmenus", crudmenus);
 
   // })
   return crudmenus;
 };
 
-const showPrintFormats = () => {
-  visiblePrintFormats.value = true;
-  // console.log("showPrintFormatContext",itemEvent)
+const showPrintFormats = async () => {
+  await printPdf();
 };
 const emitEvent = async (menu: FormMenu, clickEvent: Event | MouseEvent) => {
   if (menu.action == "delete") {

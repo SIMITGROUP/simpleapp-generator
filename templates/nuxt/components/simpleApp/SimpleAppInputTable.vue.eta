@@ -10,16 +10,17 @@
       <div class="text-center">No record found.</div>
     </template>
     <template #header v-if="!setting.readonly && !readonly">
-      
+      <div class="flex flex-row gap-2">
       <slot name="header">
         <Button
           icon="pi pi-plus"
           @click="addNew()"
           class="simpleapp-datatable-add btn-primary"
           type="button"
-          >{{t('add')}}</Button
-        >  
+          >{{ t("add") }}</Button
+        >
       </slot>
+    </div>
     </template>
     <slot>
       <Column class="text-center" header="undefine columns">

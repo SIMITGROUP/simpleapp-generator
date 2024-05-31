@@ -11,7 +11,7 @@ export const systemMsgQty = computed(()=>messages.value.filter(item=>!item.read)
 export const sysMessage ={
     download: async ()=> {
         messages.value = await useNuxtApp().$SystemmessageDoc().search({})
-        console.log("Download messages",messages)
+        //console.log("Download messages",messages)
         return messages.value
     },
     getMessages: () => messages.value

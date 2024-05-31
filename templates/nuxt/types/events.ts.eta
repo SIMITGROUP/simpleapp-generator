@@ -16,9 +16,9 @@ export type ViewRecord = {
     documentName: SimpleAppDocumentType
     viewer?: any 
     readonly?:boolean    
-    autoclose?:boolean
+    autoclose?:number
     paras?:any
-    after?: (eventType:FormCrudEvent,data:any )=>void
+    after?: (eventType:FormCrudEvent,data:any,dialogVisible:Ref<boolean> )=>void
     document?:SimpleAppClient<any,any>
 }
 export type RefreshDocumentList ={
@@ -38,5 +38,5 @@ export type EventType ={
     'SessionExpire': string
     'CloseDialog': string
     'pickGroup':string
-    'HoldScreen':boolean
+    'HoldScreen':boolean    
 }

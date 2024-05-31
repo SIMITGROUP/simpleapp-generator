@@ -231,7 +231,9 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
 
         Object.assign(pipeline[0]['$match'], isolationFilter);
         //console.log("final agg",pipeline)
-        return await this.doc.aggregate(pipeline,{session:appuser.getDBSession()});
+        return await this.doc.aggregate(pipeline, {
+          session: appuser.getDBSession(),
+        });
       } catch (err) {
         throw new InternalServerErrorException(err);
       }
@@ -246,7 +248,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     filters: FilterQuery<T>,
     projection: string[] = undefined,
     sort: any = undefined,
-    lookup:{[key:string]:string}=undefined
+    lookup: { [key: string]: string } = undefined,
   ) {
     try {
       const isolationFilter = { ...this.getIsolationFilter(appuser) };
@@ -259,29 +261,29 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         await this.hooks.beforeSearch(appuser, newfilters);
       // console.log("before _find",newfilters)
       // console.log("this.doc",this.doc)
-      let searchResults:T[] = []
-      if(lookup===undefined){
+      let searchResults: T[] = [];
+      if (lookup === undefined) {
+        this.logger.debug('after search', newfilters);
         searchResults = await this.doc
           .find(newfilters, projection, { session: appuser.getDBSession() })
           .sort(sort);
+      } else {
+        const pipelines = this.searchToAggregate(
+          filters,
+          projection,
+          sort,
+          lookup,
+        );
+        this.logger.debug('after aggregate', pipelines);
+
+        searchResults = await this.aggregate(appuser, pipelines);
       }
-      else{
 
-       const pipelines =  this.searchToAggregate(filters,projection,sort,lookup)  
-       console.log("after aggregate",pipelines);
-
-       searchResults=await this.aggregate(appuser,pipelines)
-      }
-      
-
-      
-      
-      const list:T[] = searchResults.map((p: T) => {
+      const list: T[] = searchResults.map((p: T) => {
         return p;
       });
       // console.log("after map",productlist)
-      if (this.hooks.afterSearch)
-        await this.hooks.afterSearch(appuser, list);
+      if (this.hooks.afterSearch) await this.hooks.afterSearch(appuser, list);
 
       //   console.log(products);
       return list;
@@ -289,6 +291,16 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       throw new BadRequestException(err.message);
     }
     // return this;
+  }
+
+  async fullTextSearch(appuser: UserContext, keyword: string) {
+    const isolationFilter = { ...this.getIsolationFilter(appuser) };
+    this.polishIsolationFilter(isolationFilter);
+
+    const filters = { $text: { $search: keyword } };
+    const newfilters: FilterQuery<T> = { ...filters, ...isolationFilter };
+
+    return await this.doc.find(newfilters);
   }
   async findById(appuser: UserContext, id: string) {
     if (this.hooks.beforeFetchRecord)
@@ -384,6 +396,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     // result = await newdoc.save()
     try {
       if (this.hooks.afterCreate) await this.hooks.afterCreate(appuser, result);
+      this.callWebhook(appuser, 'create', result);
       return result as T;
     } catch (err) {
       throw new InternalServerErrorException(
@@ -545,6 +558,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         if (this.hooks.afterDelete)
           await this.hooks.afterDelete(appuser, deleteresult, id);
         //this.doc.findByIdAndDelete(id);
+        this.callWebhook(appuser, 'delete', deletedata);
         return deleteresult;
       } else {
         this.logger.debug('reject query', dependency);
@@ -605,6 +619,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       appuser.addUpdatedRecordId(this.documentName, data._id);
       if (this.hooks.afterUpdate)
         await this.hooks.afterUpdate(appuser, id, existingdata, result);
+      this.callWebhook(appuser, 'update', result);
       return result; // await this.findById(appuser, id);
     } catch (err) {
       this.logger.error(err);
@@ -665,6 +680,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
 
       if (this.hooks.afterUpdate)
         await this.hooks.afterUpdate(appuser, id, existingdata, result);
+      this.callWebhook(appuser, 'update', result);
       return result; //await this.findById(appuser, id);
     } catch (err) {
       throw new InternalServerErrorException(err.message);
@@ -768,6 +784,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       if (this.hooks.afterSetStatus)
         await this.hooks.afterSetStatus(appuser, docstatus, finaldata);
 
+      this.callWebhook(appuser, docstatus, finaldata);
       return updateresult;
     }
   }
@@ -953,45 +970,63 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     return pdfresult;
   }
 
+  searchToAggregate(
+    filter: FilterQuery<T>,
+    columns: string[],
+    sort: string[][],
+    lookup: { [key: string]: string },
+  ) {
+    const pipelines: PipelineStage[] = [];
+    const projection = {};
+    // console.log('sortsort', sort);
 
-  searchToAggregate(filter:FilterQuery<T>,columns:string[],sort:string[][],
-    lookup:{[key:string]:string}){
-    const pipelines:PipelineStage[]=[]
-    const projection={}
-
-    pipelines.push({$match:filter})
-    if(Array.isArray(columns)&&columns.length>0){
-      columns.forEach(col=>{
-        projection[col]=1
-      })
+    pipelines.push({ $match: filter });
+    if (Array.isArray(columns) && columns.length > 0) {
+      columns.forEach((col) => {
+        projection[col] = 1;
+      });
     }
 
+    const collections = Object.keys(lookup);
+    collections.forEach((tokey: string) => {
+      const toarr = tokey.split('.');
+      const to = toarr[0];
+      const foreignField = toarr[1] ?? '_id';
+      pipelines.push({
+        $lookup: {
+          from: to,
+          as: '_' + to,
+          localField: lookup[tokey],
+          foreignField: foreignField,
+        },
+      });
+      pipelines.push({ $unwind: '$_' + to });
 
-    const collections = Object.keys(lookup)
-    collections.forEach(to=>{
-      pipelines.push({$lookup:{
-        from:to,
-        as:'_'+to,
-        localField:lookup[to],
-        foreignField:'_id'
-      }})
-      pipelines.push({$unwind:'$_'+to})
+      if (Object.keys(projection).length > 0) projection['_' + to] = 1;
+    });
 
-      if(Object.keys(projection).length>0)projection['_'+to]=1
-    })
+    if (Object.keys(projection).length > 0)
+      pipelines.push({ $project: projection });
 
-    if(Object.keys(projection).length>0) pipelines.push({$project:projection})
-    
-    if(Array.isArray(sort) && sort.length>0){
-      const sortobj={}
-      sort.forEach(item=>{
-        sortobj[item[0]]=item[1]
-      })
-      pipelines.push({$sort: sortobj})
+    if (Array.isArray(sort) && sort.length > 0) {
+      const sortobj = {};
+      sort.forEach((item) => {
+        sortobj[item[0]] = item[1].toLowerCase() == 'asc' ? 1 : -1;
+      });
+      pipelines.push({ $sort: sortobj });
     }
-
-    console.log("pipelinespipelinespipelines",pipelines)
+    // console.log('pipelinespipelinespipelines', pipelines);
 
     return pipelines;
+  }
+
+  callWebhook(appuser: UserContext, actionName: string, data: any) {
+    this.eventEmitter.emit(
+      'webhook',
+      appuser,
+      this.documentName,
+      actionName,
+      data,
+    );
   }
 }

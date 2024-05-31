@@ -18,11 +18,11 @@
     <div
       class="absolute h-full top-0 right-0 text-right text-white z-10 align-middle p-3"
     >
-      <button
+      <a
         class="pi pi-times rounded-full bg-slate-500 p-1 cursor-pointer text-xs"
         @click="clear"
         tabindex="0"
-      ></button>
+      ></a>
     </div>
   </div>
   <div v-else class="relative">
@@ -63,7 +63,7 @@
       <template #header>
         <slot name="header">
           <div class="flex flex-row font font-bold dark:text-white">
-            <div >{{ t('user') }}</div>
+            <div>{{ t("user") }}</div>
           </div>
         </slot>
       </template>
@@ -198,7 +198,7 @@ const modifiedpath = path.replaceAll("/", ".");
 const queryresult = jsonpath.query(props.setting.defaultValue, modifiedpath)[0];
 const remotedoc = getDocument(props.setting.fieldsetting["x-foreignkey"]);
 const schema: SchemaType = <SchemaType>remotedoc?.docClass.getSchema();
-const labelfield = 'fullName'
+const labelfield = "fullName";
 
 const docname = props.setting.fieldsetting["x-foreignkey"];
 const placeholdertxt = computed(() => props.placeholder ?? t(docname));
@@ -254,11 +254,11 @@ const showAutocompleteDialog = (isbutton: boolean) => {
 //obtain remote data
 const getListFromAutocompleteApi = (event: any) => {
   const keyword = event?.query ?? "";
-  const defaultfilter: any = { active: true , uid : {$ne:''}}
-    
+  const defaultfilter: any = { active: true, uid: { $ne: "" } };
+
   const morefilter = props.autocompleteFilter ?? defaultfilter;
-  
-  getDocumentApi('user')
+
+  getDocumentApi("user")
     .autoComplete(keyword, morefilter)
     .then((res: any) => {
       console.log("Run autocomplete?");
@@ -267,7 +267,7 @@ const getListFromAutocompleteApi = (event: any) => {
       if (props.allowAddNew) {
         list.value = list.value.concat({
           _id: "new",
-          uid:'',
+          uid: "",
           label: "<" + t("new") + ">",
         });
       }
@@ -290,11 +290,11 @@ const pickAutoComplete = (event: any) => {
     const selecteddata = {
       _id: event.value._id,
       uid: event.value.uid,
-      fullName: event.value.label
-    }
-  
-    modelValue.value =selecteddata
-    autocompleteitem.value = selecteddata
+      fullName: event.value.label,
+    };
+
+    modelValue.value = selecteddata;
+    autocompleteitem.value = selecteddata;
   }
   mobileVisible.value = false;
 };
@@ -336,7 +336,7 @@ const openViewer = (readonly: boolean) => {
         ) {
           autocompleteitem.value = {
             _id: data._id,
-            uid:data.uid,
+            uid: data.uid,
             fullName: data.fullName,
           };
           if (schema["x-simpleapp-config"].additionalAutoCompleteFields) {
@@ -369,9 +369,9 @@ const afterRenderMobileForm = async (
     autocompleteitem.value = {
       _id: data._id,
       uid: data.uid,
-      fullName: data.fullName
+      fullName: data.fullName,
     };
-   
+
     modelValue.value = { ...autocompleteitem.value };
     emitChanges();
     mobileVisible.value = false;

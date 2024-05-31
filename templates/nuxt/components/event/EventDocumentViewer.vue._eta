@@ -55,7 +55,7 @@ const lastDocumentName = computed(() => {
 });
 const { $listen } = useNuxtApp();
 const visible = ref(false);
-const autodeletetab =ref(true)
+const autodeletetab = ref(true);
 const allview = ref<{ [key: string]: ViewRecord }>({});
 const after = (
   v: ViewRecord,
@@ -64,10 +64,12 @@ const after = (
   result: any,
 ) => {
   if (v.after) {
-    v.after(eventType, data);
-
+    v.after(eventType, data, visible);
+    console.log("eventTypeeventType",eventType,"setting['autoclose'] ",autodeletetab.value)
     //only after mount consider no remove tab
-    if (eventType != "mount" && autodeletetab.value) deleteTab();
+    if (eventType == "mount") return
+    
+    deleteTab();
   }
 };
 
@@ -79,20 +81,29 @@ onKeyStroke("Escape", (e) => {
 const deleteTab = () => {
   const keys = Object.keys(allview.value);
   const lastkey = keys[keys.length - 1];
-  delete allview.value[lastkey];
+  console.log("Trigger delete tab")
+  if (keys.length == 1) {
+    const callback = allview.value[lastkey]?.after;
+    if (typeof callback == "function") {
+      callback(FormCrudEvent.exit, undefined, visible);
+    }
 
-  // updateprops.value++
-  if (Object.keys(allview.value).length == 0) {
-    visible.value = false;
-    useNuxtApp().$event("CloseDialog", "viewer");
-    return;
+    if(autodeletetab.value){
+      delete allview.value[lastkey];
+      visible.value = false;
+      useNuxtApp().$event("CloseDialog", "viewer");  
+    }
+    
+  }else{
+    console.log("Trigger delete tab2")
+    delete allview.value[lastkey];
   }
 };
 
 $listen("ViewRecord", (setting) => {
   visible.value = true;
-  if(setting['autoclose']!=undefined){
-    autodeletetab.value = setting['autoclose']
+  if (setting["autoclose"] != undefined) {
+    autodeletetab.value = setting["autoclose"] ==0 ? false : true;
   }
   allview.value[setting.eventId] = setting;
 });
@@ -104,7 +115,7 @@ $listen("CloseDialog", (documentName: string) => {
   if (
     allview.value[lastkey] &&
     allview.value[lastkey].documentName == documentName
-  ) {    
+  ) {
     deleteTab();
   }
 });
@@ -115,11 +126,21 @@ $listen("CloseDialog", (documentName: string) => {
 // });
 //
 const clearView = () => {
+  const firstId = Object.keys(allview.value)[0];
+  console.log("clear view", allview.value);
+  const callback = allview.value[firstId]?.after;
+  if (typeof callback == "function") {
+    callback(FormCrudEvent.exit, undefined, visible);
+  }
   allview.value = {};
 };
-
+// watch(visible,()=>{
+//       if(visible.value==false){
+//         v.after(FormCrudEvent.exit, data,visible);
+//       }
+//     })
 watch(visible, () => {
-  if (visible.value == false) {
+  if (!visible.value) {
     clearView();
   }
 });

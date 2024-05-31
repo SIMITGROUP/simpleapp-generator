@@ -6,6 +6,10 @@
  */
 import {SimpleAppClient} from '~/simpleapp/generate/clients/SimpleAppClient'
 import { SimpleAppDocumentType } from './documentlist';
+export type NameValue={
+  name:string;
+  value:number
+}
   export type ForeignKey = {
     _id: string;
     label: string;
@@ -31,7 +35,12 @@ import { SimpleAppDocumentType } from './documentlist';
     isolationType?:string
     url?:string
   }
-  
+  export type RecentlyValue = {
+    docName:string
+    label:string
+    branchId:number
+    time:string
+  }
   export type DocNoFormat ={
     docNoFormatName: string
     docNoFormatNo:string
@@ -52,4 +61,5 @@ import { SimpleAppDocumentType } from './documentlist';
       fields?: any[];
       
       sorts?: any[];
+      lookup?: {[key:string]:string};
   }

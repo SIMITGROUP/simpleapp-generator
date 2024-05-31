@@ -10,14 +10,14 @@
             v-model:model-value="data.tenantName"
           />
           <div class="p-inputgroup-addon p p-0">
-            <button
+            <Button
               :label="t('create')"
-              class="border rounded-tl-none rounded-bl-none btn btn-primary -ml-1 h-full p-3 rounded-r-md"
+              class="border rounded-tl-none rounded-bl-none bg bg-primary-600 text-white -ml-1 h-full p-3 rounded-r-md"
               @click="createTenant"
               :loading="onhold"
             >
               {{ t("create") }}
-            </button>
+            </Button>
           </div>
         </div>
       </form>
@@ -33,24 +33,23 @@
  */
 import { ref } from "vue";
 import { AxiosResponse } from "axios";
-import {EventType,NotificationStatus} from "~/types"
+import { EventType, NotificationStatus } from "~/types";
 const visible = ref(false);
 const data = ref({
   tenantName: "",
   timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  utcOffset: new Date().getTimezoneOffset()
+  utcOffset: new Date().getTimezoneOffset(),
 });
-
-
 
 const createtitle = ref("Create My Company");
 const errCreateTenant = ref();
 const onhold = ref(false);
 
 const createTenant = async () => {
+  holdScreenStart()
   onhold.value = true;
 
-  getPorfileApi()
+  getProfileApi()
     .createTenant(data.value)
     .then((res: AxiosResponse) => {
       if (res && res.status && res.status == 201) {
@@ -64,17 +63,16 @@ const createTenant = async () => {
       errCreateTenant.value = err["message"];
       console.error("errCreateTenant", err.response.data.data);
 
-      useNuxtApp().$event('Notification',{
-        documentName:'tenant',
+      useNuxtApp().$event("Notification", {
+        documentName: "tenant",
         status: NotificationStatus.error,
-        summary:t('createError'),
-        data:err.response?.data?.data
-
-      })
-
+        summary: t("createError"),
+        data: err.response?.data?.data,
+      });
     })
     .finally(() => {
       onhold.value = false;
+      holdScreenEnd()
     });
 };
 </script>

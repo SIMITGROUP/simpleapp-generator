@@ -6,8 +6,9 @@
       class="w-full"
       :inputid="inputid"
       :date-format="getPrimevueCalendarDateFormat()"
-      @update:modelValue="emits('change',modelValue)"
-    />
+      @update:modelValue="emits('change', modelValue)"
+      showButtonBar
+    />    
   </div>
 </template>
 <script setup lang="ts">
@@ -19,7 +20,7 @@
  */
 const modelValue = defineModel<Date>({ required: true });
 const inputid = randomUUID();
-const emits = defineEmits(['change'])
+const emits = defineEmits(["change"]);
 const props = defineProps<{
   label?: string;
 }>();

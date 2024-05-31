@@ -1,7 +1,10 @@
 <template>
-  <a @click="go" class="text-primary-700 dark:text-primary-300 dark:hover:text-primary-200 hover:text-primary-500 cursor-pointer">
+  <a
+    @click="go"
+    class="text-primary-700 dark:text-primary-300 dark:hover:text-primary-200 hover:text-primary-500 cursor-pointer"
+  >
     <slot name="default">
-      <div>{{ value[fields[0]] }}</div>
+      <div>{{ value[fields[0]] ?? t('undefined') }}</div>
     </slot>
   </a>
 </template>
@@ -20,6 +23,6 @@ const props = defineProps<{
 }>();
 
 const go = () => {
-  goTo(props.setting.path, props.value._id);  
+  goTo(props.setting.path, props.value._id);
 };
 </script>

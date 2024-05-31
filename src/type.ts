@@ -145,6 +145,7 @@ export type SchemaConfig = {
   allStatus?:DocumentStatus[]
   additionalApis?:DocumentApi[]      
   additionalAutoCompleteFields ?: string[]  
+  search?:string[]
   // libs?:ImportLibs[]   // both process class and frontend client class will import same lib
   formulas?: Formula[]  
   documentType: string

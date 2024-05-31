@@ -75,7 +75,7 @@ let schema: any;
 const getLayoutClass = () =>
   `simpleapp-input-container flex  ${
     props.inputType == "checkbox"
-      ? " flex-row gap-4 mt-1 ml-1 "
+      ? " flex flex-col "
       : "flex flex-col "
   }`;
 

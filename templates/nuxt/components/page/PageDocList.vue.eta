@@ -8,6 +8,7 @@
       </div>
       <div>
         <ButtonText
+          v-if="allowAction('create')"
           @click="goTo(doc.getDocName(), 'new')"
           class="pi pi-plus"
         ></ButtonText>
@@ -36,12 +37,13 @@
     >
       <template #toolbar>
         <div class="w-full text-left">
-          <ButtonPrimary
-            class="pi pi-plus"
+          <ButtonPrimary          
             @click="newData"
             v-tooltip="t('new')"
-            v-if="canPerform(resourcename, 'create')"
-          ></ButtonPrimary>
+            v-if="allowAction('create') && canPerform(resourcename, 'create')"
+          >
+            <i class="pi pi-plus"></i>
+          </ButtonPrimary>
         </div>
       </template>
       <template #default>
@@ -65,9 +67,13 @@
                 :fields="[col]"
               >
               </RendererLink>
-              <TextMain v-else-if="col=='documentStatus'">{{t(data[col])}}</TextMain>
-              <RendererMoney v-else-if="schemacols[col]['format'] == 'money'"
-                v-model="data[col]">
+              <TextMain v-else-if="col == 'documentStatus'">{{
+                t(data[col])
+              }}</TextMain>
+              <RendererMoney
+                v-else-if="schemacols[col]['format'] == 'money'"
+                v-model="data[col]"
+              >
               </RendererMoney>
               <span v-else-if="typeof schemacols[col].enum != 'undefined'">
                 {{ t(data[col]) }}
@@ -82,6 +88,12 @@
               >
                 {{ data[col]?.label ?? data[col]?.code ?? data[col] }}
               </RendererForeignKey>
+              <span v-else-if="schemacols[col].format == 'date'">
+                <RendererDate v-model="data[col]" />
+              </span>
+              <span v-else-if="schemacols[col].format == 'datetime'">
+                <RendererDateTime v-model="data[col]" />
+              </span>
               <span v-else-if="data[col]?.label !== undefined">{{
                 data[col].label
               }}</span>
@@ -147,6 +159,7 @@ const props = defineProps<{
   columns: string[];
   mobileColumns?: string[];
   sorts?: string[][];
+  availableActions?:string[]
 }>();
 const maxcolumns = 16;
 const emits = defineEmits(["selectRow"]);
@@ -168,6 +181,12 @@ const recordlist = ref<T[]>();
 const uniqueKey = doc.getSchema()["x-simpleapp-config"].uniqueKey;
 const documentTitle = doc.getSchema()["x-simpleapp-config"].documentTitle;
 const schemacols = doc.getSchema().properties;
+const allowAction = (actname:string)=>{
+  if(props.availableActions === undefined) return true
+  else if(Array.isArray(props.availableActions) &&  props.availableActions.length>0 && !props.availableActions.includes(actname)) 
+    return false
+  else return true
+}
 const getCssClass = (col: string) => {
   if (schemacols[col]?.type == "number") return "text-right";
   else if (schemacols[col]?.type == "boolean")

@@ -6,6 +6,92 @@
  */
 import { DurationType } from "~/types"
 
+const convertToDate= (date:Date|string)=>{
+  return date instanceof Date ? date : new Date(date)
+}
+
+//after review
+export const today = () => useDayjs()().format('YYYY-MM-DD')
+
+/**
+ * convert date object or ISO8601 date become local datetime string
+ * @param date date|string
+ * @returns local shortform date-time
+ */
+export const dateRenderToDateTimeStr = (date:Date|string) => 
+  convertToDate(date).toLocaleString().replace(',', ' ').slice(0,-3)
+/**
+ * convert date object or ISO datestring become local date string
+ * @param date date|string
+ * @returns local short form date
+ */
+export const dateRenderToDateStr = (date:Date|string) => 
+  convertToDate(date).toLocaleDateString().replace(',', ' ')
+/**
+ * convert date object or ISO datestring become time string (without seconds)
+ * @param date date|string
+ * @returns 
+ */
+export const dateRenderToTimeStr = (date:Date|string) => 
+  convertToDate(date).toLocaleTimeString().slice(0,-3)
+
+
+/**
+ * convert date object or ISO datestring become DD/MM format
+ * @param date date|string
+ * @returns 
+ */
+export const dateRenderToDDMM = (date:Date|string) => 
+  getDayJs()(date).format('DD/MM')
+  
+
+
+/**
+ * convert iso8601 date string to date object
+ * @param datestr :string
+ * @returns date object
+ */
+export const stringToDate = (datestr:string) => new Date(datestr)
+
+/**
+ * convert date object to ISO string YYYY-MM-DDTHH:mm:ssZ
+ * @param date :Date 
+ * @returns 
+ */
+export const dateToISOString = (date:Date|string) => convertToDate(date).toISOString().split('.')[0]+"Z"
+//useDayjs()(date).toISOString().split('.')[0]+"Z"
+/**
+ * convert date object to date string (YYYY-MM-DD)
+ * @param date :Date  
+ * @returns date return string in YYYY-MM-DD
+ */
+export const dateToString = (date:Date|string) => useDayjs()(date).format('YYYY-MM-DD')
+/**
+ * convert date object to time string (HH:mm:ss)
+ * @param date 
+ * @returns timestring
+ */
+export const dateToTimeString = (date:Date) => useDayjs()(date).format('HH:mm:ss')
+/**
+ * get 3 char day name sun/mon/tue in lower case
+ * @param date : Date|string date obj or iso8601 date 
+ * @returns string
+ */
+export const getDayNameInWeek = (date:Date|string) => useDayjs()(date).format('ddd').toLowerCase();
+/**
+ * get last date of the specific date
+ * @param dates: Date|string
+ * @returns string
+ */
+export const lastDateOfMonth = (date:Date|string) =>  useDayjs()(date).endOf('month').format('YYYY-MM-DD');
+
+
+
+
+
+
+//before reevaluate
+
 export const setDateLocale = (localename:string) =>  useDayjs().locale(localename)
 export const dateExists = (date:Date,listDate:Date[]) => {
     const existsrecord = listDate.find(item=>{
@@ -14,15 +100,26 @@ export const dateExists = (date:Date,listDate:Date[]) => {
     return existsrecord===undefined ? false :true
   }
 export const getDayJs = ()=>useDayjs()
-export const lastDateOfMonth = (datestr:string) =>  useDayjs()(datestr).endOf('month').format('YYYY-MM-DD');
-export const today = () => useDayjs()().format('YYYY-MM-DD')
-export const dateToString = (date:Date) => useDayjs()(date).format('YYYY-MM-DD')
-export const dateToISOString = (date:Date) => useDayjs()(date).toISOString()
-export const dateToTimeString = (date:Date) => useDayjs()(date).format('HH:mm:ss')
-export const stringToDate = (datestr:string) => new Date(datestr)
+
+
+
+
+export const dateToISOWithoutConvert=(date:Date)=>{  
+    const timestamp = date.getTime() - date.getTimezoneOffset() * 60000;
+    return  new Date(timestamp).toISOString().split('.')[0]+"Z"
+}
+export const convertIsoToDateToWithoutConvert=(datestr:string)=>{  
+  // const timestamp = date.getTime() - date.getTimezoneOffset() * 60000;
+  const offsets  = (new Date()).getTimezoneOffset() * 60000
+  const timestamp = stringToDate(datestr).getTime() + offsets
+  return  new Date(timestamp)
+}
+
+
 export const dateToDateTimeString = (date:Date)=> useDayjs().utc(date).format('YYYY-MM-DD HH:mm:ss')
-export const toLocalDate = (date:string | Date)=> useDayjs().utc(date).format(getDateFormat())
+export const toLocalDate = (date:string | Date)=> useDayjs()(date).format(getDateFormat())
 export const toLocalDateTime = (date:string | Date)=> useDayjs().utc(date).format(getDateTimeFormat())
+
 export const toUTCDate = (date:string | Date)=> useDayjs().utc(date).format(getDateFormat())
 export const toUTCDateTime = (date:string | Date)=> useDayjs().utc(date).format(getDateTimeFormat())
 export const toUTCTime = (date:string | Date)=> useDayjs().utc(date).format('HH:mm')
@@ -33,5 +130,5 @@ export const getPrimevueCalendarDateFormat = () => {
   const country = <string>getUserProfile()?.country
   return 'dd/mm/yy'
 }
-export const getDayNameInWeek = (date:Date|string) => useDayjs()(date).format('ddd').toLowerCase();
+
 export const addTime = (date:Date|string,duration:number,unit:DurationType) => getDayJs()(date).add(duration, 'hour').toDate()

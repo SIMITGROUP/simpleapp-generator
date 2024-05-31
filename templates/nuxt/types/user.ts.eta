@@ -4,6 +4,7 @@
  * last change 2024-02-23
  * Author: Ks Tan
  */
+import {Branch} from "~/simpleapp/generate/openapi"
 export type UserListItem = {
     _id: string
     uid?:string
@@ -31,7 +32,12 @@ export type UserListItem = {
     group:string
     active:boolean
   }
-  
+  export type UserStoreBranch ={
+    branch:Branch
+    group:string[]
+    xOrg:string
+    _id:string
+  }
   
   export type PermissionListItem = {
     branchId: number  
@@ -66,12 +72,7 @@ export type UserProfile = {
   offsetMinute:number
   timeZone:string
   fullName : string
-  branches: {
-    _id: string
-    branch: any
-    group: string
-    xOrg: string
-  }[]
+  branches: UserStoreBranch[]
   invites: {
     _id: string;
     email: string;
