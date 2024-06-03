@@ -71,5 +71,8 @@
     "messages":"Messages",
     "systemconfig": "System Config",
     "preview": "Preview",
-    "docnoformat":"Document Numbering Formats"
+    "docnoformat":"Document Numbering Formats",
+    "add":"Add",
+    "approve" : "Approve",
+    "decline":"Decline"
   }

@@ -1,51 +1,56 @@
 <template>
-<ClientOnly>
-  <VueCal
-    :id="id"
-    class="w-full"
-    hide-view-selector
-    click-to-navigate
-    :time="false"
-    today-button
-    active-view="month"
-    :disable-views="['week', 'day']"
-    :selected-date="selectedDate"
-    events-count-on-year-view
-    @view-change="viewChange"
-    :events="allevents"
-    @cell-focus="chooseDate"
-    xsmall
-  >
-    <template #today-button>
-      <!-- Using Vuetify (but we prefer Wave UI 🤘) -->
-      <div @click="chooseDate(new Date(), true)">{{ t("today") }}</div>
-    </template>
-    <template #cell-content="{ cell, events }">
-      <div>
+  <ClientOnly>
+    <VueCal
+      :id="id"
+      class="w-full"
+      hide-view-selector
+      click-to-navigate
+      :time="false"
+      today-button
+      active-view="month"
+      :disable-views="['week', 'day']"
+      :selected-date="selectedDate"
+      events-count-on-year-view
+      @view-change="viewChange"
+      :events="allevents"
+      @cell-focus="chooseDate"
+      xsmall
+    >
+      <template #today-button>
+        <!-- Using Vuetify (but we prefer Wave UI 🤘) -->
+        <div @click="chooseDate(new Date(), true)">{{ t("today") }}</div>
+      </template>
+      <template #cell-content="{ cell, events }">
         <div>
-          <s v-if="isHoliday(cell.formattedDate)"  v-tooltip="getHolidayName(new Date(cell.formattedDate))"
-            class="text text-red-400 dark:text-red-400 font-bold"
-            >{{ cell.content }}</s>
-          <div v-else-if="isOffDay(cell)" class="text-gray-400">
-            <s v-tooltip="t('offDay')">{{ cell.content }}</s>
-          </div>          
-          <span v-else>{{ cell.content }} </span>
-        </div>
+          <div>
+            <s
+              v-if="isHoliday(cell.formattedDate)"
+              v-tooltip="getHolidayName(new Date(cell.formattedDate))"
+              class="text text-red-400 dark:text-red-400 font-bold"
+              >{{ cell.content }}</s
+            >
+            <div v-else-if="isOffDay(cell)" class="text-gray-400">
+              <s v-tooltip="t('offDay')">{{ cell.content }}</s>
+            </div>
+            <span v-else>{{ cell.content }} </span>
+          </div>
 
-        <div>
-          <slot name="default" :cell="cell" :events="events">
-            <Badge
-              v-if="events.length > 0"
-              @contextmenu="(mouseevent) => onRightClickDate(mouseevent, cell)"
-              severity="info"
-              :value="events.length"
-            />
-          </slot>
+          <div>
+            <slot name="default" :cell="cell" :events="events">
+              <Badge
+                v-if="events.length > 0"
+                @contextmenu="
+                  (mouseevent) => onRightClickDate(mouseevent, cell)
+                "
+                severity="info"
+                :value="events.length"
+              />
+            </slot>
+          </div>
         </div>
-      </div>
-    </template>
-  </VueCal>
-</ClientOnly>
+      </template>
+    </VueCal>
+  </ClientOnly>
 </template>
 <script lang="ts" setup generic="T">
 /**
@@ -70,7 +75,7 @@ const props = defineProps<{
   holidays: OffDay[];
 }>();
 const offdays = ref<string[]>([]);
-const emits = defineEmits(["chooseDate", "rightClick"]);
+const emits = defineEmits(["chooseDate", "rightClick","viewChange"]);
 // const allholidays = computed(() => props.holidays.map((item) => item.date));
 const selectedDate = defineModel<Date>({ required: true });
 const getHolidayName = (date: Date) =>
@@ -93,6 +98,7 @@ const allevents = computed(() => {
 });
 const viewChange = (event: CalViewChange) => {
   viewStatus.value = event;
+  emits('viewChange',event)
 };
 
 const isHoliday = (datestr: string) => {
@@ -101,8 +107,9 @@ const isHoliday = (datestr: string) => {
   );
 };
 const isOffDay = (cell: any) => {
-  
-  const dayname: string = new Date(cell.formattedDate) .toLocaleString("en", { weekday: "short" }).toLowerCase();
+  const dayname: string = new Date(cell.formattedDate)
+    .toLocaleString("en", { weekday: "short" })
+    .toLowerCase();
   if (offdays.value.includes(dayname)) return true;
   else return false;
 };

@@ -2,63 +2,59 @@
   <Calendar
     :pt="pt"
     :inputId="uuid"
-    :path="setting.instancepath"      
+    :path="setting.instancepath"
     v-model="datetimevalue"
-    @update:modelValue="updateDateTime"      
+    @update:modelValue="updateDateTime"
     showButtonBar
     :readonly="readonly"
-    :placeholder="placeholder"     
+    :placeholder="placeholder"
     :showTime="showtime"
     :timeOnly="timeOnly"
     hourFormat="12"
     v-bind="componentProps as CalendarProps"
-  />    
+  />
 </template>
 <script setup lang="ts">
 // :date-format="getDateFormat()"
-import { CalendarProps } from 'primevue/calendar';
-const props =defineProps<{
- pt:any 
- uuid:string
- placeholder?:string
- setting: any;
- readonly?: boolean;
- componentProps?:CalendarProps
- type: "date"|"time"|"datetime"
-}>()
+import { CalendarProps } from "primevue/calendar";
+const props = defineProps<{
+  pt: any;
+  uuid: string;
+  placeholder?: string;
+  setting: any;
+  readonly?: boolean;
+  componentProps?: CalendarProps;
+  type: "date" | "time" | "datetime";
+}>();
 
-
-const emits = defineEmits(['change'])
-const showtime = props.type == 'date'? false : true
-const timeOnly = props.type=='time'?true:false
+const emits = defineEmits(["change"]);
+const showtime = props.type == "date" ? false : true;
+const timeOnly = props.type == "time" ? true : false;
 const modelValue = defineModel<string>({ required: true });
 const datetimevalue = ref<Date>();
 
-
-const refreshFromParent = ()=>{
-if(modelValue.value === undefined || modelValue.value=='')
-datetimevalue.value = undefined
-else if(props.type=='time')
-datetimevalue.value = stringToDate(('2000-01-01 '+modelValue.value??'00:00:00'))
-else if(props.type=='date')
-datetimevalue.value = stringToDate((modelValue.value)+'T00:00:00')
-else
-datetimevalue.value = stringToDate(modelValue.value)
-}
-
-watch(modelValue, () => refreshFromParent())
-
-const updateDateTime = (value: any) => {
-if (!value) modelValue.value = "";
-else if(props.type=='datetime')modelValue.value = dateToISOString(value)
-else if(props.type=='date')modelValue.value = dateToString(value)
-else if(props.type=='time') modelValue.value = dateToTimeString(value)
-
-  
-
-emits('change');
+const refreshFromParent = () => {
+  if (modelValue.value === undefined || modelValue.value == "")
+    datetimevalue.value = undefined;
+  else if (props.type == "time")
+    datetimevalue.value = stringToDate(
+      "2000-01-01 " + (modelValue.value ?? "00:00:00"),
+    );
+  else if (props.type == "date")
+    datetimevalue.value = stringToDate(modelValue.value + "T00:00:00");
+  else datetimevalue.value = stringToDate(modelValue.value);
 };
 
+watch(modelValue, () => refreshFromParent());
 
-refreshFromParent()
+const updateDateTime = (value: any) => {
+  if (!value) modelValue.value = "";
+  else if (props.type == "datetime") modelValue.value = dateToISOString(value);
+  else if (props.type == "date") modelValue.value = dateToString(value);
+  else if (props.type == "time") modelValue.value = dateToTimeString(value);
+
+  emits("change");
+};
+
+refreshFromParent();
 </script>

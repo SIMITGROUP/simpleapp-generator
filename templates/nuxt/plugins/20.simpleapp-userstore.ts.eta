@@ -125,7 +125,7 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               else
                 return Promise.reject('relogin')  
             }catch(e){
-              return Promise.reject('catch go relogin')  
+              return Promise.reject(e)  
             }
             
           },
@@ -225,7 +225,6 @@ export default defineNuxtPlugin( async(nuxtApp) => {
 
       try{
         const pingsessionres = await useUserStore().pingSession()
-        console.log("pingsessionres",pingsessionres)
         if(pingsessionres == 'wrongxorg'){
           navigateTo('/')
         }
@@ -239,8 +238,18 @@ export default defineNuxtPlugin( async(nuxtApp) => {
             }
         }
       }catch(e){
+          console.error("Ping issue cannot proceed:",e)
 
-         await useUserStore().logout(useRoute().path)    
+          if(e?.code=='ERR_BAD_RESPONSE'){
+                console.log("ping failed failed failed",e.code)
+                 throw createError({
+                  statusCode:e.code,
+                  statusMessage:e.message,
+                  fatal:true
+                })           
+              }
+            else
+              await useUserStore().logout(useRoute().path)    
       }
       
     }else{

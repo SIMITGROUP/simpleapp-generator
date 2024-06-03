@@ -22,11 +22,11 @@ import { <%= obj.docname %>MongoSchema } from './generate/models/<%= obj.doctype
 <%}%>
 import { ProfileController } from './profile/profile.controller';
 import { ProfileService } from './profile/profile.service';
-import { WorkflowController } from './generate/workflow/workflow.controller';
-import { WorkflowDelegate } from './generate/workflow/workflow.delegate';
-import { WorkflowConfig } from './generate/workflow/workflow.config';
-import { WorkflowService } from './generate/workflow/workflow.service';
-import { WorkflowUserService } from './generate/workflow/workflow.userservice';
+//import { WorkflowController } from './generate/workflow/workflow.controller';
+//import { WorkflowDelegate } from './generate/workflow/workflow.delegate';
+//import { WorkflowConfig } from './generate/workflow/workflow.config';
+//import { WorkflowService } from './generate/workflow/workflow.service';
+//import { WorkflowUserService } from './generate/workflow/workflow.userservice';
 import { SimpleAppRobotUserService } from './generate/commons/robotuser.service';
 <%for(let i=0; i<it.allbpmn.length;i++){%>
 <%let bpmn = it.allbpmn[i]%>
@@ -50,14 +50,17 @@ import { <%=capitalizeFirstLetter(bpmn)%>ListenerService } from 'src/simpleapp/w
         <%}%>
       ]),
   ],
-  controllers: [<% for(let i=0;i<it.modules.length; i++){ %><%= it.modules[i].docname %>Controller,<%}%> ProfileController,WorkflowController],
+  controllers: [<% for(let i=0;i<it.modules.length; i++){ %><%= it.modules[i].docname %>Controller,<%}%> ProfileController,
+  //WorkflowController
+  ],
   providers: [
     SimpleAppRobotUserService,
     RunWebhookService,
     AuditTrail,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %>
       <%= it.modules[i].docname %>Service,
       <%= it.modules[i].docname %>Resolver,
-      <%}%> ProfileService,WorkflowDelegate,WorkflowConfig,WorkflowService,WorkflowUserService,
+      <%}%> ProfileService,
+      //WorkflowDelegate,WorkflowConfig,WorkflowService,WorkflowUserService,
      <%for(let i=0; i<it.allbpmn.length;i++){%>
         <%let bpmn = it.allbpmn[i]%>
         <%=capitalizeFirstLetter(bpmn)%>ListenerService,
@@ -66,6 +69,8 @@ import { <%=capitalizeFirstLetter(bpmn)%>ListenerService } from 'src/simpleapp/w
   exports:[SimpleAppRobotUserService,AuditTrail,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %>
     <%= it.modules[i].docname %>Service,
     <%= it.modules[i].docname %>Resolver,
-    <%}%> ProfileService,WorkflowDelegate,WorkflowConfig,WorkflowService,WorkflowUserService,UserResolverService,]
+    <%}%> ProfileService,
+    //WorkflowDelegate,WorkflowConfig,WorkflowService,WorkflowUserService,
+    UserResolverService,]
 })
 export class GenerateModule {}

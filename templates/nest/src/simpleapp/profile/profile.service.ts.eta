@@ -124,6 +124,7 @@ export class ProfileService {
       orgName: tenantName,
       active: true,
       orgCode: 'HQ',
+      registrationNo: '000000',
       timeZone: timeZone,
       offsetMinute: utcOffset,
       currency: currencyCode,
@@ -143,6 +144,13 @@ export class ProfileService {
       branchId: 1,
       branchCode: 'HQ',
       branchName: tenantName,
+      street1: '11,my street 1',
+      street2: 'my street 2',
+      postcode: '11111',
+      city: 'my city',
+      tel: '99999999999',
+      email: 'change-email@email.com',
+      region: 'my region',
       country: countryName,
       active: true,
       orgId: orgResult.orgId,
@@ -246,22 +254,17 @@ export class ProfileService {
     return 'OK';
   }
 
-  
-   async runTourComplete(appuser: UserContext, guideName: string) {
+  async runTourComplete(appuser: UserContext, guideName: string) {
     if (!guideName || guideName == '')
       throw new BadRequestException('undefine guideName');
 
-    const user = await this.usersvc.findById(
-      appuser,
-      appuser.getId(),
-    );
-    if(!Array.isArray(user.completedTours)){
-        user.completedTours=[]
-      }
+    const user = await this.usersvc.findById(appuser, appuser.getId());
+    if (!Array.isArray(user.completedTours)) {
+      user.completedTours = [];
+    }
 
     if (!user.completedTours.includes(guideName)) {
-      
-      user.completedTours.push(guideName);            
+      user.completedTours.push(guideName);
       const res = await this.usersvc.findIdThenUpdate(appuser, user._id, user);
     }
 

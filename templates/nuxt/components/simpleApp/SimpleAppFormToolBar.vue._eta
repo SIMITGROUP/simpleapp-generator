@@ -47,6 +47,14 @@
         <div v-for="(menu, index) in menus" :key="index">
           <div v-if="menu.label && menu.type == 'crud'">
             <ButtonAction
+              v-if="menu.action == 'print'"
+              :disabled="!canPerform(doc.getDocName(true), 'access')"
+              @click="emitEvent(menu, $event)"
+              :action-name="menu.action"
+              >{{ menu.label }}</ButtonAction>
+            <ButtonAction
+              v-else
+              :disabled="!canPerform(doc.getDocName(true), menu.action)"
               @click="emitEvent(menu, $event)"
               :action-name="menu.action"
               >{{ menu.label }}</ButtonAction
@@ -66,6 +74,7 @@
         <div v-for="(menu, index) in menus" :key="index">
           <div v-if="menu.label && menu.type == 'docstatus'">
             <ButtonAction
+              :disabled="!canPerform(doc.getDocName(true), menu.action)"
               @click="emitEvent(menu, $event)"
               :action-name="menu.action"
               >{{ menu.label }}</ButtonAction
@@ -74,22 +83,8 @@
         </div>
       </div>
     </div>
-    <ConfirmPopup></ConfirmPopup>
   </div>
-  <!-- <Dialog v-model:visible="visiblePrintFormats" :header="t('printFormats')">
-    <div>
-      <ListView
-        :list="printformats"
-        #default="{ item, index }"
-        @click="printPdf"
-      >
-        <div class="flex flex-col">
-          <TextBold>{{ t(item.formatName) }}</TextBold>
-          <TextSubtitle>{{ item.description }}</TextSubtitle>
-        </div>
-      </ListView>
-    </div>
-  </Dialog> -->
+
   <OverlayPanelWithToolBar
     v-if="visiblePrintPreview"
     v-model="visiblePrintPreview"
@@ -193,7 +188,12 @@ const data = doc.getReactiveData();
 
 const createData = async () => {
   try {
-    setRecentDocument(data.value._id,{docName:doc.getDocName(),label:title.value})
+    setRecentDocument(data.value._id, {
+      docName: doc.getDocName(),
+      label: title.value,
+      branchId: data.value.branchId,
+      time: new Date().toISOString(),
+    });
     return await doc.create();
   } catch (e) {
     console.debug("validation error:", e);
@@ -201,7 +201,12 @@ const createData = async () => {
 };
 const updateData = async () => {
   try {
-    setRecentDocument(data.value._id,{docName:doc.getDocName(),label:title.value})
+    setRecentDocument(data.value._id, {
+      docName: doc.getDocName(),
+      label: title.value,
+      branchId: data.value.branchId,
+      time: new Date().toISOString(),
+    });
     return await doc.update();
   } catch (e) {
     console.debug("validation error:", e);
@@ -209,7 +214,7 @@ const updateData = async () => {
 };
 const deleteData = async () => {
   try {
-    getRecently().delete(data.value._id)
+    getRecently().delete(data.value._id);
     return await doc.delete();
   } catch (e) {
     console.debug("validation error:", e);
@@ -218,13 +223,27 @@ const deleteData = async () => {
 
 type Datatype = keyof typeof data.value;
 const config = doc.getSchema()["x-simpleapp-config"];
-const titlefield = (config.documentTitle ?? config.uniqueKey) as Datatype;
+const titlefield = (
+  config.allStatus && config.allStatus.length > 0
+    ? config.uniqueKey
+    : config.documentTitle
+) as Datatype;
 const title = computed(() =>
   data.value[titlefield as Datatype]
     ? data.value[titlefield as Datatype]
     : t(doc.getDocName()),
 );
-const printformats = doc.getSchema()["x-simpleapp-config"]?.printFormats;
+const printformats = computed(() => {
+  const formats = doc.getSchema()["x-simpleapp-config"]?.printFormats;
+  if (Array.isArray(formats)) {
+    return formats.map((item) => {
+      item.formatName = t(item.formatName);
+      return item;
+    });
+  } else {
+    return [];
+  }
+});
 const menu = ref();
 const menus = computed(() =>
   [...getActions(), ...getDocActions()].filter((item) => showMenuButton(item)),
@@ -251,11 +270,18 @@ const emitMobileEvent = (itemevent: MenuItemCommandEvent) => {
 
 const printPdf = async (dropdown?: DropdownChangeEvent) => {
   let index = 0;
-
-  if (printformats && printformats.length > 0 && dropdown !== undefined) {
-    index = printformats?.findIndex((item) => item.formatId == dropdown.value);
+  setRecentDocument(data.value._id, {
+    docName: doc.getDocName(),
+    label: title.value,
+    branchId: data.value.branchId,
+    time: new Date().toISOString(),
+  });
+  if (printformats && printformats.value.length > 0 && dropdown !== undefined) {
+    index = printformats.value.findIndex(
+      (item) => item.formatId == dropdown.value,
+    );
   }
-  let format: SchemaPrintFormat = printformats[index];
+  let format: SchemaPrintFormat = printformats.value[index];
   printservererror.value = false;
   const formatid: string = format.formatId;
   currentprintformat.value = formatid;
@@ -295,7 +321,7 @@ const getActions = () => {
       });
     }
   });
-  if (printformats && printformats.length > 0) {
+  if (printformats && printformats.value.length > 0) {
     crudmenus.push({
       action: "print",
       label: t("preview"),
@@ -334,6 +360,12 @@ const emitEvent = async (menu: FormMenu, clickEvent: Event | MouseEvent) => {
     } else if (menu.action == "update") {
       if (await updateData()) emits("on", FormCrudEvent.update);
     } else if (menu.type == "docstatus") {
+      setRecentDocument(data.value._id, {
+        docName: doc.getDocName(),
+        label: title.value,
+        branchId: data.value.branchId,
+        time: new Date().toISOString(),
+      });
       emits("on", FormCrudEvent.setDocStatus, menu.action);
     } else if (menu.action == FormCrudEvent.exit)
       emits("on", FormCrudEvent.exit);

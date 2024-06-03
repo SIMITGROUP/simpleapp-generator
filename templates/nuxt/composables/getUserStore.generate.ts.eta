@@ -48,10 +48,11 @@ export const getPageBaseUrl = (resourcename:string) =>{
  * @return boolean
  */
 export const canPerform = (resource:string,action:string):boolean =>{
-    return getUserStore().canPerform(resource,action)
+
+    return getUserStore().canPerform(upperFirst(resource),action)
 }
 export const haveAccess = (resource:string):boolean =>{
-    return getUserStore().haveAccess(resource)
+    return getUserStore().haveAccess(upperFirst(resource))
 }
 
 

@@ -90,6 +90,7 @@ export class UserContext {
   getFullname = () => this.fullname;
   getTenantId = () => this.tenantId;
   getOrgId = () => this.orgId;
+  getOrgRecordId = () => this.orgRecordId;
   getBranchId = () => this.branchId;
   getBranchCode = () => this.branchCode;
   getEmail = () => this.email;
@@ -609,6 +610,7 @@ export class UserContext {
                 as: 'org',
               },
             },
+            {$unwind:'$org'},
             {
               $lookup: {
                 from: 'branch',
@@ -617,6 +619,7 @@ export class UserContext {
                 as: 'branch',
               },
             },
+            {$unwind:'$branch'},
           ],
         },
       };
@@ -639,7 +642,7 @@ export class UserContext {
         activeusers.forEach((u) => {
           const permissions = u.permissions
             .filter((item: any) => {
-              return item.org[0].active && item.branch[0].active;
+              return item.org.active && item.branch.active;
             })
             .map((item: any) => {
               return {
@@ -647,10 +650,11 @@ export class UserContext {
                 orgId: item.orgId,
                 branchId: item.branchId,
                 groups: item.groups,
-                orgCode: item.org[0].orgCode,
-                orgName: item.org[0].orgName,
-                branchCode: item.branch[0].branchCode,
-                branchName: item.branch[0].branchName,
+                orgRecordId:item.org._id, 
+                orgCode: item.org.orgCode,
+                orgName: item.org.orgName,
+                branchCode: item.branch.branchCode,
+                branchName: item.branch.branchName,
                 xOrg: this.generateXorg(u.tenantId, item.orgId, item.branchId),
               };
             });

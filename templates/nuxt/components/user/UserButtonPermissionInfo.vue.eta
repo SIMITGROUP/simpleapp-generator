@@ -6,6 +6,7 @@
     <Sidebar
       v-model:visible="showpermissioninfo"
       modal
+      :pt="{ root: { class: 'w-2/3' } }"
       :header="permissiontitle"
       position="right"
     >
@@ -55,7 +56,7 @@
             <div class="text text-gray-400">{{ copied }}</div>
           </div>
           <pre id="permissionstr">
-                            {{ permissions }}
+                            {{ computedpermissions }}
                         </pre
           >
         </div>
@@ -65,7 +66,7 @@
           v-else="showjson"
         >
           <div class="m mr-3">{{ res }}</div>
-          <div class="gap-4" v-if="allactions">
+          <div class="gap-4" v-if="allactions" >
             <SelectButton
               v-if="mode == 'edit'"
               multiple
@@ -75,12 +76,12 @@
 
             <span v-else v-for="actionname in allactions[res]" class="m m-1">
               <Chip
-                class="bg-primary"
+                class="bg-primary-600 text-white"
                 v-if="canPerformAction(selectedgroup, res, actionname)"
                 severity="success"
-                :label="actionname"
+                :label="t(actionname)"
               ></Chip>
-              <Chip v-else :label="actionname"></Chip>
+              <Chip v-else :label="t(actionname)"></Chip>
             </span>
           </div>
         </div>
@@ -110,8 +111,16 @@ const mode = ref("preview");
 
 const allresources = getUniqueResource();
 const allactions = ref();
-const permissions = ref();
-
+const permissions = ref<{ [key: string]: string[] }>();
+const computedpermissions = computed(() => {
+  const tmp: { [key: string]: string[] } = {};
+  for (const keyname in permissions.value) {
+    if (permissions.value[keyname].length > 0)
+      tmp[keyname] = permissions.value[keyname];
+  }
+  return tmp;
+  // return permissions.value.filter((item:string[],key:string)=>item.length>0)
+});
 const activeroles = ref();
 const copied = ref("");
 
@@ -136,7 +145,7 @@ const selectGroup = (selectedgroup: any) => {
   permissions.value = {};
   for (let i = 0; i < allresources.length; i++) {
     const r = allresources[i];
-    console.log(r);
+    // console.log(r);
     const actions = getActionFromResource(r);
     allactions.value[r] = actions;
     permissions.value[r] = getGroupResourcePermission(groupname, r).map(

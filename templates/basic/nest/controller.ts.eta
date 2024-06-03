@@ -345,7 +345,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
 
   <% if(simpleappconfig?.printFormats){%>
   @Get(':id/print/:formatid')
-  @Roles(Role.SuperAdmin, Role.SuperUser, Role.<%= `${it.typename}_print`%>)
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.<%= `${it.typename}_access`%>)
   @ApiResponse({
     status: 200,
     description: 'return base64 pdf string',

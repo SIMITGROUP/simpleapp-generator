@@ -13,6 +13,7 @@ const allroles:roletype[] = [
     <% for(let i=0;i<it.modules.length; i++){ %>
         <% const m = it.modules[i] %>
         <% const appconfig = m.schema["x-simpleapp-config"] %>                
+        {resource: '<%=m.docname%>', action:'access'},
         {resource: '<%=m.docname%>', action:'create'},
         {resource: '<%=m.docname%>', action:'update'},
         {resource: '<%=m.docname%>', action:'delete'},

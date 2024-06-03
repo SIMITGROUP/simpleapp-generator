@@ -230,7 +230,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         this.polishIsolationFilter(isolationFilter);
 
         Object.assign(pipeline[0]['$match'], isolationFilter);
-        //console.log("final agg",pipeline)
+        this.logger.verbose(pipeline, `${this.documentName} aggregate:`);
         return await this.doc.aggregate(pipeline, {
           session: appuser.getDBSession(),
         });
@@ -576,20 +576,24 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   // };
 
   findIdThenUpdate = async (appuser: UserContext, id: string, data: T) => {
-    const existingdata = await this.findById(appuser, id);
-
+    
+    try {
     //version exists, need ensure different only 1
-    if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
-      throw new BadRequestException(
-        `You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`,
-      );
-    }
+      const existingdata = await this.findById(appuser, id);
+      if(!existingdata) throw new NotFoundException(`${this.documentName} findIdThenUpdate:  _id:${id} not found`, 'not found');
 
+      this.logger.debug("update id:"+id,this.documentName+' findIdThenUpdate')
+      if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
+        throw new BadRequestException(
+          `You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`,
+        );
+      }
+      this.logger.debug("warn1",existingdata)
     data.__v = existingdata.__v + 1;
-    if (!existingdata) {
-      throw new NotFoundException(`${id} not found`, 'not found');
-    }
-
+    // if (!existingdata) {
+    //   throw new NotFoundException(`${id} not found`, 'not found');
+    // }
+    this.logger.debug("warn2")
     if (this.hooks.beforeUpdate)
       await this.hooks.beforeUpdate(appuser, id, data, existingdata);
 
@@ -611,7 +615,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     this.polishIsolationFilter(isolationFilter);
     isolationFilter['_id'] = id;
     this.applyNestedDateTime(appuser, data, 'update');
-    try {
+    
       const result = await this.doc.findOneAndReplace(isolationFilter, data, {
         session: dbsession,
         new: true,

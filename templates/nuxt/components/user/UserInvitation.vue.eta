@@ -1,19 +1,29 @@
 <template>
-<Dialog v-model:visible="visible" modal :header="popuptitle" class="crudsimple-dialog" :autoZIndex="false" :style="{zIndex:100 }">            
+  <Dialog
+    v-model:visible="visible"
+    modal
+    :header="popuptitle"
+    class="crudsimple-dialog">
     <div v-if="invites">
-        
-        <div v-for="item in invites" class="w w-auto p p-2 grid grid-cols-3 hover-list-primary border">
-            <div class="flex flex-col col-span-2">
-                <div class="font font-bold">{{item.tenantName}}</div>
-                <div class="text text-xs text-gray-500 italic">{{ item.created }}</div>
-            </div>
-            <div >
-                <Button class="btn-primary" @click="approve(item._id)">Approve</Button>
-                <Button class="btn-danger" @click="decline(item._id)">Decline</Button>
-            </div>
+      <div
+        v-for="item in invites"
+        class="w w-auto p p-2 grid grid-cols-3 hover-list-primary border"
+      >
+        <div class="flex flex-col col-span-2">
+          <div class="font font-bold">{{ item.tenantName }}</div>
+          <div class="text text-xs text-gray-500 italic">
+            {{ item.created }}
+          </div>
         </div>
-    </div>        
-</Dialog>
+        <div class="flex flex-row gap-2">
+          <ButtonPrimary @click="approve(item._id)"
+            >{{t('approve')}}</ButtonPrimary
+          >
+          <ButtonDanger @click="decline(item._id)">{{t('decline')}}</ButtonDanger>
+        </div>
+      </div>
+    </div>
+  </Dialog>
 </template>
 <script setup lang="ts">
 /**
@@ -22,35 +32,33 @@
  * last change 2023-10-28
  * Author: Ks Tan
  */
-    import Dialog from 'primevue/dialog';
-    import {onMounted, ref} from 'vue'
-    import {EventType} from '../types'
-    import ProgressSpinner from 'primevue/progressspinner'
-    const {$userstore,$event}= useNuxtApp()
-    const disabled = ref(false)
-    const visible=ref(false)
-    const invites = ref()
-    const invitationmsg = "There is some invitation to join their organization:"
-    const popuptitle = ref(invitationmsg)
-    onMounted(()=>{
-        invites.value =  getUserProfile().invites
-        if(invites.value.length>0){
-            visible.value=true
-        }
-    })
-    
-    const approve = async (id:string) =>{
-       
-    //    await reloadUserStore()
-       await $userstore.decideInvitation(id,'accept')
-       $event('InvitationAccepted',id)
-       visible.value=false
-    }
-    const decline = async (id:string) => {
-    //    await reloadUserStore()
-       await $userstore.decideInvitation(id,'reject')
-       $event('InvitationRejected',id)
-       visible.value=false
-    }
-    
-    </script>
+import Dialog from "primevue/dialog";
+import { onMounted, ref } from "vue";
+import { EventType } from "../types";
+import ProgressSpinner from "primevue/progressspinner";
+const { $userstore, $event } = useNuxtApp();
+const disabled = ref(false);
+const visible = ref(false);
+const invites = ref();
+const invitationmsg = "There is some invitation to join their organization:";
+const popuptitle = ref(invitationmsg);
+onMounted(() => {
+  invites.value = getUserProfile().invites;
+  if (invites.value.length > 0) {
+    visible.value = true;
+  }
+});
+
+const approve = async (id: string) => {
+  //    await reloadUserStore()
+  await $userstore.decideInvitation(id, "accept");
+  $event("InvitationAccepted", id);
+  visible.value = false;
+};
+const decline = async (id: string) => {
+  //    await reloadUserStore()
+  await $userstore.decideInvitation(id, "reject");
+  $event("InvitationRejected", id);
+  visible.value = false;
+};
+</script>

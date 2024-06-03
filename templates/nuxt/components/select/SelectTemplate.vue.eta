@@ -25,15 +25,17 @@
       filter
       :placeholder="placeholder"
     >
-    <template #value="slotProps">
-      <slot name="value" :slotProps="slotProps">
-      </slot>
-    </template>
-    <template #option="slotProps">
-      <slot name="default" :option="slotProps.option" :index="slotProps.index">
-      </slot>
-    </template>
-      
+      <template #value="slotProps">
+        <slot name="value" :slotProps="slotProps"> </slot>
+      </template>
+      <template #option="slotProps">
+        <slot
+          name="default"
+          :option="slotProps.option"
+          :index="slotProps.index"
+        >
+        </slot>
+      </template>
     </MultiSelect>
     <Dropdown
       class="w-full md:w-full"
@@ -47,13 +49,16 @@
       optionValue="value"
       :placeholder="placeholder"
     >
-    <template #value="slotProps">
-      <slot name="value" :item="getItem(modelValue)"></slot>
-    </template>
-      <template #option="slotProps" >
-        <slot name="default" :option="slotProps.option" :index="slotProps.index"></slot>        
+      <template #value="slotProps">
+        <slot name="value" :item="getItem(modelValue)"></slot>
       </template>
-
+      <template #option="slotProps">
+        <slot
+          name="default"
+          :option="slotProps.option"
+          :index="slotProps.index"
+        ></slot>
+      </template>
     </Dropdown>
   </div>
 </template>
@@ -80,7 +85,7 @@ const props = defineProps<{
 }>();
 // const initvalue = props.multiple==true ? [] : ''
 const modelValue = defineModel<string | string[]>();
-
+const allowAddNew = computed(()=> props.allowAddNew && canPerform(props.documentName,'create'))
 const list = ref<ForeignKey[]>([]);
 const fieldid = randomUUID();
 
@@ -88,7 +93,7 @@ const options = ref<
   {
     value: string;
     label: string;
-    more:any;
+    more: any;
   }[]
 >([]);
 const getListOptions = async () => {
@@ -102,17 +107,17 @@ const getListOptions = async () => {
   options.value = list.value.map((item) => ({
     value: item._id,
     label: item.label,
-    more: item
+    more: item,
   }));
 };
 onMounted(async () => {
-  
   await getListOptions();
   if (modelValue.value) change(modelValue.value);
 });
-const getItem = (id: string) => list.value?.find((item) => {  
-return  item._id == id
-});
+const getItem = (id: string) =>
+  list.value?.find((item) => {
+    return item._id == id;
+  });
 
 const change = (id: string | string[]) => {
   const selectedItem = getItem(id);

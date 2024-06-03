@@ -9,16 +9,25 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DocNumberFormatResult } from '../types';
 import { Docnoformat } from '../types/docno.type';
-import {  Injectable, InternalServerErrorException, BadRequestException} from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 // import moment from 'moment';
-import dayjs from 'dayjs'
+import dayjs from 'dayjs';
 import { ForeignKey } from '../types';
 
 export class DocNumberFormatGenerator {
-  constructor(@InjectModel('Docnoformat') private docformat: Model<Docnoformat>,) {}
+  constructor(
+    @InjectModel('Docnoformat') private docformat: Model<Docnoformat>,
+  ) {}
 
-
-  async generateNextNumberFromDocument( appuser: UserContext, docType: string, data: any,) {
+  async generateNextNumberFromDocument(
+    appuser: UserContext,
+    docType: string,
+    data: any,
+  ) {
     let formatId = '';
     if (data.docNoFormat && data.docNoFormat._id) {
       formatId = data.docNoFormat._id;
@@ -32,14 +41,18 @@ export class DocNumberFormatGenerator {
     return docnoobj.result;
   }
 
-  generateNextNo = async ( appuser: UserContext,doctype: string, id: string = '',) => {
+  generateNextNo = async (
+    appuser: UserContext,
+    doctype: string,
+    id: string = '',
+  ) => {
     doctype = doctype.toUpperCase();
     let filter = { docNoType: doctype };
     if (id) {
       filter['_id'] = id;
     }
     Object.assign(filter, appuser.getBranchFilter());
-    const result = await this.docformat.find(filter);
+    const result = await this.docformat.find(filter).session(appuser.getDBSession());
     //search(appuser, filter);
     if (result && result.length > 0) {
       const d: Docnoformat = result[0];
@@ -98,7 +111,7 @@ export class DocNumberFormatGenerator {
         for (let d = 0; d < datepattern.length; d++) {
           const dpattern = datepattern[d];
           const date = new Date();
-          const formatteddate =dayjs().format(
+          const formatteddate = dayjs().format(
             dpattern.replace('{', '').replace('}', ''),
           );
           newvalue = newvalue.replace(dpattern, formatteddate);

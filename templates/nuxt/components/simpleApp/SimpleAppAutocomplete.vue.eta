@@ -285,7 +285,7 @@ const getListFromAutocompleteApi = (event: any) => {
       console.log("Run autocomplete?");
       list.value = res.data;
 
-      if (props.allowAddNew) {
+      if (props.allowAddNew && canPerform(upperFirst(targetDocument),'create')) {
         list.value = list.value.concat({
           _id: "new",
           label: "<" + t("new") + ">",
@@ -333,7 +333,7 @@ const setFocus = (ev: any) => {
 const openViewer = (readonly: boolean) => {
   if (remotedoc) {
     $event("ViewRecord", {
-      _id: (modelValue.value?._id ?? '' )as string,
+      _id: (modelValue.value?._id ?? "") as string,
       eventId: randomUUID(),
       label: (readonly
         ? modelValue.value?.label

@@ -65,10 +65,10 @@ const after = (
 ) => {
   if (v.after) {
     v.after(eventType, data, visible);
-    console.log("eventTypeeventType",eventType,"setting['autoclose'] ",autodeletetab.value)
+   
     //only after mount consider no remove tab
-    if (eventType == "mount") return
-    
+    if (eventType == "mount") return;
+    else if(eventType=='setDocStatus') return;
     deleteTab();
   }
 };
@@ -81,21 +81,20 @@ onKeyStroke("Escape", (e) => {
 const deleteTab = () => {
   const keys = Object.keys(allview.value);
   const lastkey = keys[keys.length - 1];
-  console.log("Trigger delete tab")
+  // console.log("Trigger delete tab");
   if (keys.length == 1) {
     const callback = allview.value[lastkey]?.after;
     if (typeof callback == "function") {
       callback(FormCrudEvent.exit, undefined, visible);
     }
 
-    if(autodeletetab.value){
+    if (autodeletetab.value) {
       delete allview.value[lastkey];
       visible.value = false;
-      useNuxtApp().$event("CloseDialog", "viewer");  
+      useNuxtApp().$event("CloseDialog", "viewer");
     }
-    
-  }else{
-    console.log("Trigger delete tab2")
+  } else {
+    // console.log("Trigger delete tab2");
     delete allview.value[lastkey];
   }
 };
@@ -103,7 +102,7 @@ const deleteTab = () => {
 $listen("ViewRecord", (setting) => {
   visible.value = true;
   if (setting["autoclose"] != undefined) {
-    autodeletetab.value = setting["autoclose"] ==0 ? false : true;
+    autodeletetab.value = setting["autoclose"] == 0 ? false : true;
   }
   allview.value[setting.eventId] = setting;
 });
@@ -127,7 +126,7 @@ $listen("CloseDialog", (documentName: string) => {
 //
 const clearView = () => {
   const firstId = Object.keys(allview.value)[0];
-  console.log("clear view", allview.value);
+  // console.log("clear view", allview.value);
   const callback = allview.value[firstId]?.after;
   if (typeof callback == "function") {
     callback(FormCrudEvent.exit, undefined, visible);

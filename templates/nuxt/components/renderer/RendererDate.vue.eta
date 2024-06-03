@@ -15,5 +15,5 @@
  * author: Ks Tan
  */
 const modelValue = defineModel<Date | string>();
-  const props = defineProps<{value:Date|string}>()
+const props = defineProps<{ value?: Date | string }>();
 </script>

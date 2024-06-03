@@ -7,9 +7,7 @@
     <title v-if="id">{{ data.fullName ?? data.email }}</title>
     <TabView lazy>
       <TabPanel :header="t('profile')">
-        <div
-          class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-2"
-        >
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-2">
           <SimpleAppInput
             :input-type="SimpleAppInputType.text"
             :setting="o.getField('#/properties/fullName')"
@@ -37,7 +35,7 @@
           />
         </div>
 
-        <DebugDocumentData v-model="data" :label="doc.getDocName()" />
+        <!-- <DebugDocumentData v-model="data" :label="doc.getDocName()" /> -->
       </TabPanel>
       <TabPanel :header="t('permission')">
         <!-- <UserButtonPermissionInfo></UserButtonPermissionInfo> -->
