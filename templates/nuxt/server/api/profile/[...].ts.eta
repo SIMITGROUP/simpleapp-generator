@@ -75,6 +75,34 @@ export default defineEventHandler(async (event:any) => {
 
                 // Send the image data as the response body
                 frontEndRes.end(Buffer.from(res.data, 'binary'));
+            }else if(documentLink.includes('images/')){
+                // console.log(documentLink," Resdata of base64 photo",res.data.length)
+                let imageData
+                frontEndRes.setHeader('Content-Type', 'image/png');
+                
+                // console.log("load image for",documentLink)
+                if( res.data.length){
+                    // console.log("obtain base64 from server length:",res.data.length)
+                    imageData = base64ToBuffer(res.data);
+                    
+                }else{
+                    // console.log("server no image, use default image")
+                    const folder = 'public/images/'
+                    let filename = ''
+                    if(documentLink.includes('student')) filename='student.png';
+                    else if(documentLink.includes('teacher')) filename='teacher.png';                    
+                    else if(documentLink.includes('organization')) filename='organization.png';
+                    else  filename='unknown.png';
+                    const fullpath = folder+filename;
+                    // console.log("photo path",fullpath)
+                    if(fs.existsSync(fullpath)){
+                        imageData = fs.readFileSync(fullpath)
+                    }else{
+                        console.log(fullpath,'does not exists')
+                    }                    
+                }
+                 frontEndRes.end(Buffer.from(imageData, 'binary'));                                
+                
             } else {
                 // For non-image responses, set the Content-Type header and send the response body
                 // setHeader(event, 'Content-type', <string>res.headers['Content-Type']);
@@ -114,3 +142,18 @@ export default defineEventHandler(async (event:any) => {
     })
     
 })
+
+
+
+function base64ToBuffer(base64String:string) {
+    // Split the base64 string into parts
+    const parts = base64String.split(',');
+    const contentType = parts[0].split(':')[1];
+    const base64Data = parts[1];
+  
+    // Decode the base64 data
+    const binaryString = atob(base64Data);
+    const buffer = new Buffer.from(binaryString, 'binary');
+  
+    return buffer
+  }

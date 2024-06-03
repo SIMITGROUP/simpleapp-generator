@@ -18,6 +18,7 @@ const after = (actionName: string, data: <%= it.typename %>) => {
       break;
     case "create":
       emits("afterCreate", data);
+      refreshDocumentList('<%= it.name %>')
       break;
     case "update":
       break;
