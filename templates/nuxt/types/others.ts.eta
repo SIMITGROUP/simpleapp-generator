@@ -16,7 +16,13 @@ export type NameValue={
     code?: string
     [key:string]: any
   };
-  
+  export type TextSearchBody = {
+    keyword: string;
+    fields?: string[];
+    sorts?: string[][];
+    lookup?: Record<string, string>;
+  };
+
   export type DocumentMetaData =  {
     docName:string
     docType:string

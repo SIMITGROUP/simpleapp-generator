@@ -7,18 +7,28 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { UserContext } from './user.context';
-import { WebhookService } from 'src/simpleapp/services/webhook.service';
+import {
+  Webhook,
+  WebhookService,
+} from 'src/simpleapp/services/webhook.service';
+import {
+  Webhookhistory,
+  WebhookhistoryService,
+} from 'src/simpleapp/services/webhookhistory.service';
 @Injectable()
 export class RunWebhookService {
-  public constructor(private webhookService: WebhookService) {}
+  public constructor(
+    private webhookService: WebhookService,
+    private webhookhistoryService: WebhookhistoryService,
+  ) {}
   @OnEvent('webhook')
-  async runWebhook(
+  async loadWebhook(
     appuser: UserContext,
     documentName: string,
     actionName: string,
     data?: any,
   ) {
-    let subscribeall=false
+    let subscribeall = false;
     const webhooks = await this.webhookService.search(appuser, {
       documentName: documentName,
       active: true,
@@ -26,25 +36,34 @@ export class RunWebhookService {
     if (webhooks.length == 0) return;
 
     const webhook = webhooks[0];
-    let subscribes:string[] = []
-    if(webhook.setting=='' || webhook.setting===undefined){
-      subscribeall=true
-    }else{
-      subscribes= JSON.parse(webhook.setting)
+    let subscribes: string[] = [];
+    if (webhook.setting == '' || webhook.setting === undefined) {
+      subscribeall = true;
+    } else {
+      subscribes = JSON.parse(webhook.setting);
     }
 
-    if(subscribes.includes(actionName)){
-      const webhookurl = webhook.url;
-      const secretkey = webhook.secret;
-      const req = await fetch(webhookurl, {
-        method: 'POST',
-        headers: { 'x-apiKey': secretkey },
-        body: JSON.stringify(data),
+    if (subscribeall || subscribes.includes(actionName)) {
+      await this.runWebHook(appuser, webhook, data);
+    }
+  }
+
+  async runWebHook(appuser: UserContext, webhook: Webhook, data: any) {
+    const webhookurl = webhook.url;
+    const headers = { 'x-from': process.env.PROJECT_NAME };
+    if (Array.isArray(webhook.headers)) {
+      webhook.headers.forEach((h) => {
+        headers[h.name] = h.value;
       });
-      const statusCode = req.status
-      const body = req.body
-
     }
-    
+    const options = {
+      method: webhook.requestMethod,
+      body: JSON.stringify(data),
+      headers: headers,
+    };
+
+    const req = await fetch(webhookurl, options);
+    const statusCode = req.status;
+    const body = req.body;
   }
 }

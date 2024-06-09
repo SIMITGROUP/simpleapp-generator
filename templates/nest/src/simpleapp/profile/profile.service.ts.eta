@@ -103,6 +103,11 @@ export class ProfileService {
     const tenantdata: Tenant = {
       tenantId: 1,
       tenantName: tenantName,
+      clientSetting: {        
+              auditTrail:false,
+              webhook:false,
+              support:false,        
+      },
       active: true,
       owner: {
         _id: appuser.getId(),

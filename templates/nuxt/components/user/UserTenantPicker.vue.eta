@@ -1,26 +1,28 @@
 <template>
-  <div class="w-full">
+  <div class="w-full p-4">
+    <LazyTenantCreator v-model:model-value="visibleCreateTenant"></LazyTenantCreator>
+    <ButtonPrimary @click="visibleCreateTenant=true">{{ t('newBusiness') }}</ButtonPrimary>
     <div v-if="waiting" class="p-4 w-full">waiting..</div>
-    <div v-else class="w-full p-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div
+      v-else
+      class="w-full p-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+    >
       <div v-for="tenant in alltenants" class="border rounded-lg p-2 m-2">
-        
         <TextTitle>{{ tenant.tenantName }}</TextTitle>
-        <div v-for=" item in tenant.permissions">
+        <div v-for="item in tenant.permissions">
           <NuxtLink :to="`/${item.xOrg}`" external>
-            <div class="flex flex-row gap-2 hover:bg-primary-100">        
+            <div class="flex flex-row gap-2 hover:bg-primary-100">
               <div class="min-w-14 p=2">
-                <ImageOrganization :orgRecordId="item.orgRecordId" :size="12"/>
-              </div>      
-              <div class="flex flex-col w-full justify-end gap-2">              
+                <ImageOrganization :orgRecordId="item.orgRecordId" :size="12" />
+              </div>
+              <div class="flex flex-col w-full justify-end gap-2">
                 <div class="flex flex-row gap-2">
                   <TextMain>{{ item.branchCode }}</TextMain>
                   <Tag v-for="groupname in item.groups">{{ t(groupname) }}</Tag>
                 </div>
                 <TextSubsubtitle>{{ item.orgName }}</TextSubsubtitle>
-                
-                
               </div>
-          </div>
+            </div>
           </NuxtLink>
         </div>
       </div>
@@ -39,7 +41,7 @@ import TextPrimary from "../text/TextPrimary.vue";
 import ImageOrganization from "../image/ImageOrganization.vue";
 const waiting = ref(true);
 const alltenants = ref();
-
+const visibleCreateTenant = ref(false)
 const loadAllTenants = async () => {
   waiting.value = false;
   alltenants.value = (await getProfileApi().getAllTenants()).data;
@@ -53,10 +55,10 @@ const getBranchlist = (tenant: any) => tenant.permissions;
 // const getOrglist = (tenant: any) =>
 //   _.uniqBy(getBranchlist(tenant), "orgId").map((item: any) => ({
 //     orgId: item.orgId,
-    // orgRecordId:'aaa',// item.orgRecordId,
-  //   orgCode: item.orgCode,
-  //   orgName: item.orgName,
-  // }));
+// orgRecordId:'aaa',// item.orgRecordId,
+//   orgCode: item.orgCode,
+//   orgName: item.orgName,
+// }));
 
 onNuxtReady(() => {
   loadAllTenants();

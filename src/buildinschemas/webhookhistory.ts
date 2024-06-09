@@ -1,21 +1,14 @@
 import {SchemaType,RESTMethods,IsolationType} from '../type'
 
-export const webhook:SchemaType = {
+export const webhookhistory:SchemaType = {
     type: "object",
     "x-simpleapp-config":{
-      documentType:'webhook',
-      documentName:'webhook',
+      documentType:'webhookhistory',
+      documentName:'webhookhistory',
       isolationType:IsolationType.tenant,      
-      uniqueKey:'documentName',
-      documentTitle:'documentName',
-      additionalApis:[
-        {"action":"testWebhook",
-        "entryPoint":":id/test",
-        "requiredRole":["Admin"],
-        "method":RESTMethods.get,
-        "responseType":"String",
-        "description":"Testwebhook"
-        }]     
+      // uniqueKey:'documentName',
+      // documentTitle:'documentName'
+      // pageType:"crud",      
     },        
     required:["documentName","url"],
     properties: {     
@@ -27,17 +20,9 @@ export const webhook:SchemaType = {
       tenantId: {type:'integer',default:1,minimum:0 },
       orgId: {type:'integer',default:1,minimum:0 },
       branchId: {type:'integer',default:1,minimum:0 },
-      documentName:{type:"string",minLength:3,},
+      webHookId:{type:"string",format:"uuid"},
       url: {type: "string", format:'uri'},      
-      requestMethod:{
-        type: "string", 
-        enum:['post','get','patch','put','delete','head'],
-      },    
-      authentication:{
-        type:"string",
-        enum:['none','basic'],
-        description:"apikey authentication use none + headers props"
-      },  
+      authentication: {type: "string"},
       headers: {
         type: "array",
         items:{
@@ -49,10 +34,9 @@ export const webhook:SchemaType = {
           }
         }
       },
-
       description: {type: "string",format:"text"},
-      active: {type: "boolean", default:true},
-      setting:{type:"string",format:"text"}
+      setting:{type:"string",format:"text"},
+      result:{type:"string"}
     }
 }
 

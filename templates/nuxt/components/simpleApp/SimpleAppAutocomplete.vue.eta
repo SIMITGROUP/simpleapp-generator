@@ -4,6 +4,7 @@
     class="p-2 border rounded-lg border-gray-300 dark:border-blue-900/40"
   >
     <button
+      type="button"
       :readonly="readonly"
       class="cursor-pointer text-primary-600 dark:text-primary-400"
       tabindex="0"
@@ -16,9 +17,12 @@
     v-else-if="modelValue !== undefined"
     class="p-2 border rounded-lg border-gray-300 dark:border-blue-900/40 relative"
   >
+  <!-- readonly -->
     <button
       ref="autocompleteinput"
-      readonly
+      type="button"
+      :id="inputId"
+      
       class="cursor-pointer text-primary-600 dark:text-primary-400"
       @click="openViewer(true)"
     >
@@ -29,6 +33,7 @@
       class="absolute h-full top-0 right-0 text-right text-white z-10 align-middle p-3"
     >
       <button
+      type="button"
         class="pi pi-times rounded-full bg-slate-500 p-1 cursor-pointer text-xs"
         @click="clear"
         tabindex="0"
@@ -189,7 +194,7 @@ import {
   SchemaType,
 } from "~/types";
 const mobileVisible = ref(false);
-const autocompleteinput = ref<autocompletetype | undefined>();
+const autocompleteinput = ref();
 const { $event } = useNuxtApp();
 const list = ref<any[]>([]);
 const props = withDefaults(
@@ -237,6 +242,13 @@ if (modelValue.value && modelValue.value._id) {
 const clear = () => {
   autocompleteitem.value = undefined;
   modelValue.value = undefined;
+  if(!isMobile()){
+    setTimeout(()=>{    
+    const autoel = autocompleteinput.value.$el
+    autoel?.firstElementChild?.focus()    
+  },100)  
+  }
+  
 };
 
 //if record picked, click button show record info instead
@@ -285,7 +297,10 @@ const getListFromAutocompleteApi = (event: any) => {
       console.log("Run autocomplete?");
       list.value = res.data;
 
-      if (props.allowAddNew && canPerform(upperFirst(targetDocument),'create')) {
+      if (
+        props.allowAddNew &&
+        canPerform(upperFirst(targetDocument), "create")
+      ) {
         list.value = list.value.concat({
           _id: "new",
           label: "<" + t("new") + ">",
@@ -323,6 +338,12 @@ watch(modelValue, (newvalue: any) => {
 });
 const emitChanges = () => {
   emits("change", modelValue.value);
+  if(!isMobile()){
+    setTimeout(()=>{    
+    const autoel = autocompleteinput.value
+    autoel?.focus()    
+  },100)}
+
 };
 
 const setFocus = (ev: any) => {

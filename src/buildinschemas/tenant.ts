@@ -23,6 +23,14 @@ export const tenant:SchemaType ={
         branchId: {type:'integer',default:1,minimum:0 },
         tenantName: {type: "string", minLength:3},
         active: {"type": "boolean","examples": [true],default:true},
+        clientSetting: {
+            type:"object",
+            properties:{
+                auditTrail:{type:"boolean",default:false},
+                webhook:{type:"boolean",default:false},
+                support:{type:"boolean",default:false}
+            }            
+        },
         description: {"type": "string"},
         owner: {
             type: "object",

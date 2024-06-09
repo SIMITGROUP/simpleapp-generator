@@ -1,5 +1,7 @@
 <template>
-  <NuxtLayout :name="getLayout()">     
+  <NuxtLayout>     
+    
+    <!-- <NuxtLayout :name="getLayout()">      -->
     <ConfirmDialog></ConfirmDialog>         
     <DynamicDialog />
     <SessionBlock/>
@@ -28,13 +30,13 @@ watch(()=>useRoute().params['xorg'],async (newval,oldvalue)=>{
 })
 
 const getLayout = ()=>{
-  const { status } = useAuth();   
+  // const { status } = useAuth();   
    
-  if(status.value=='unauthenticated') return 'loginlayout'
-  else {
-    if (isMobile()) return 'mobile'
-    else 'default'
-  } 
+  // if(status.value=='unauthenticated') return 'loginlayout'
+  // else {
+  //   if (isMobile()) return 'mobile'
+  //   else 'default'
+  // } 
 }
 
 onMounted(()=>{

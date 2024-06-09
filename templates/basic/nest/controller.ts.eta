@@ -150,9 +150,10 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
 
 
 <% if(simpleappconfig.search !==undefined){%>
-@Get('/fulltextsearch/:keyword')
+@Post('/fulltextsearch')
   @HttpCode(200)
   @Roles(Role.SuperAdmin, Role.SuperUser, Role.<%= `${it.typename}_search`%>)
+  @ApiBody({ description: 'Data', type: schemas.TextSearchBody })
   @ApiResponse({
     status: 200,
     description: 'success',
@@ -163,9 +164,9 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiOperation({ operationId: 'runFullTextSearch' })
   async fulltextsearch(
     @AppUser() appuser: UserContext,
-    @Param('keyword') keyword:string
+    @Body() data: types.TextSearchBody,
   ) {
-    return await this._fulltextsearch(appuser, keyword);
+    return await this._fulltextsearch(appuser, data);
   }
 <%}%>
 

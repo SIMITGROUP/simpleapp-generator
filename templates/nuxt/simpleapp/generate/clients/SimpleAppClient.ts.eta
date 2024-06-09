@@ -10,7 +10,7 @@ import addErrors from 'ajv-errors';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import type { AxiosResponse } from 'axios';
-import {SearchBody,Notification,NotificationStatus,SchemaType,FormActions} from '~/types'
+import {SearchBody,TextSearchBody,Notification,NotificationStatus,SchemaType,FormActions} from '~/types'
 
 // import { useToast, } from 'primevue/usetoast';
 // import type {  ToastMessageOptions } from 'primevue/toast';
@@ -24,6 +24,7 @@ type crudType = {
   runDelete: Function;
   runSearch: Function;
   runDefault:Function;
+  runFullTextSearch:Function;
 };
 export class SimpleAppClient<
   TData extends { _id?: string,created?:string },
@@ -349,4 +350,9 @@ export class SimpleAppClient<
     }
     return data
   }
+
+  async runFullTextSearh(body:TextSearchBody) {
+      const response = await this.docapi.runFullTextSearch(body)
+      return response.data
+    }
 }

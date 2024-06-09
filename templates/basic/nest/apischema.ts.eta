@@ -6,7 +6,7 @@
  */
 import { ApiProperty } from '@nestjs/swagger';
 import { Field, ObjectType,ID } from '@nestjs/graphql';
-
+import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 <%Object.keys(it.models).forEach(function(name) { %>
     <% let schema = it.models[name].model %>        
         @ObjectType()
@@ -17,7 +17,11 @@ import { Field, ObjectType,ID } from '@nestjs/graphql';
                 <% if(typeof obj == 'string') {%>
                     @Field()
                     @ApiProperty({type: ()=><%=obj%>})
-                    <%= key %>:  <%= obj %>;                
+                    <%= key %>:  <%= obj %>;        
+                <%} else if(typeof obj.default !='undefined' && JSON.stringify(obj.default)=='{}'){%>
+                        @Field(()=>GraphQLJSON)
+                        @ApiProperty({ type:()=>Object,required: false, default: {} })
+                        <%= key %>: Object;
                 <% }else if( Array.isArray( obj)){%>
                     @Field(type=>[<%=initType(obj[0]) %>])
                     @ApiProperty({type: ()=>[<%=initType(obj[0]) %>] })                    

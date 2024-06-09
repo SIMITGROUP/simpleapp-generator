@@ -29,3 +29,17 @@ export type UserPermission = {
   groups: string[]
   userId : string
 }
+export type OutstandingByStudent = {
+  _id: string;
+  student: ForeignKey;
+  level: ForeignKey;
+  totalAmt: number;
+  invoices: ForeignKey[];
+};
+
+export type TextSearchBody = {
+  keyword:string;
+  fields?:string[];
+  sorts?:string[][];
+  lookup?: Record<string,string>;
+}

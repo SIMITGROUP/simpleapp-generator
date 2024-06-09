@@ -26,8 +26,13 @@ import { UserService } from './../../services/user.service';
 import { InjectModel } from '@nestjs/mongoose';
 const Base64URL = require('@darkwolf/base64url');
 import { UserMongoSchema } from './../models/user.model';
-import { User } from './../types/user.type';
-import { Permission } from './../types/perm.type';
+// import { User } from './../types/user.type';
+import {
+  TenantClientSetting,
+  Permission,
+  User,
+} from 'src/simpleapp/generate/types';
+// import { Permission } from './../types/perm.type';
 import {
   ProfileUserBranch,
   ProfileUserInvites,
@@ -67,6 +72,11 @@ export class UserContext {
   protected invites: any[] = []; //User + field tenant:Tenant[]
   protected roles: string[] = [];
   protected moreProps: any[] = [];
+  protected clientSetting: TenantClientSetting = {
+    auditTrail: false,
+    support: false,
+    webhook: false,
+  };
   private dbsession: ClientSession;
   protected modifiedRecords: ModifiedRecords = {
     createds: {},
@@ -92,6 +102,7 @@ export class UserContext {
   getOrgId = () => this.orgId;
   getOrgRecordId = () => this.orgRecordId;
   getBranchId = () => this.branchId;
+  getClientSetting = () => this.clientSetting;
   getBranchCode = () => this.branchCode;
   getEmail = () => this.email;
   getTimeZone = () => this.timeZone;
@@ -103,10 +114,10 @@ export class UserContext {
   getRoles = () => this.roles;
   getModifieds = () => this.modifiedRecords;
   getBranches = (): ProfileUserBranch[] => {
-    this.branches;
+    // this.branches;
     const data: ProfileUserBranch[] = [];
 
-    if (this.branches) {
+    if (Array.isArray(this.branches)) {
       for (let i = 0; i < this.branches.length; i++) {
         const b = this.branches[i];
         data.push({
@@ -176,6 +187,9 @@ export class UserContext {
             },
           },
           {
+            $unwind: '$currentbranch',
+          },
+          {
             $lookup: {
               from: 'organization',
               localField: 'orgId',
@@ -183,6 +197,20 @@ export class UserContext {
               as: 'currentorg',
             },
           },
+          {
+            $unwind: '$currentorg',
+          },
+          {
+            $lookup: {
+              from: 'tenant',
+              localField: 'tenantId',
+              foreignField: 'tenantId',
+              as: 'currentTenant',
+            },
+          },
+          {
+            $unwind: '$currentTenant',
+          }          
         ],
       },
     };
@@ -191,10 +219,12 @@ export class UserContext {
 
     if (this.tenantId > 0) {
       pipeline.push(joinpermission);
+      pipeline.push({$unwind:'$permissions'})
+
     }
     // console.log("obtainProfileFromDbobtainProfileFromDb ",pipeline)
     // const users = await usermodel.find(filter)
-    const users = await this.usermodel.aggregate(pipeline);
+    const users = await this.usermodel.aggregate(pipeline);    
     this.logger.verbose(
       `aggregate user profile from database`,
       'obtainProfileFromDb',
@@ -207,7 +237,7 @@ export class UserContext {
 
       //console.log(userinfo)
       if (this.tenantId > 0) {
-        const myperm = userinfo.permissions[0];
+        const myperm = userinfo.permissions;
 
         if (myperm && myperm.groups) {
           userinfo.groups = myperm.groups;
@@ -220,16 +250,17 @@ export class UserContext {
             }
           }
 
-          userinfo.branchRecordId = myperm.currentbranch[0]._id;
-          userinfo.branchCode = myperm.currentbranch[0].branchCode;
-          userinfo.branchName = myperm.currentbranch[0].branchName;
-          userinfo.orgRecordId = myperm.currentorg[0]._id;
-          userinfo.orgCode = myperm.currentorg[0].orgCode;
-          userinfo.orgName = myperm.currentorg[0].orgName;
-          userinfo.timeZone = myperm.currentorg[0].timeZone;
-          userinfo.currency = myperm.currentorg[0].currency;
-          userinfo.country = myperm.currentorg[0].country;
-          userinfo.offsetMinute = myperm.currentorg[0].offsetMinute;
+          userinfo.branchRecordId = myperm.currentbranch._id;
+          userinfo.branchCode = myperm.currentbranch.branchCode;
+          userinfo.branchName = myperm.currentbranch.branchName;
+          userinfo.orgRecordId = myperm.currentorg._id;
+          userinfo.orgCode = myperm.currentorg.orgCode;
+          userinfo.orgName = myperm.currentorg.orgName;
+          userinfo.timeZone = myperm.currentorg.timeZone;
+          userinfo.currency = myperm.currentorg.currency;
+          userinfo.country = myperm.currentorg.country;
+          userinfo.offsetMinute = myperm.currentorg.offsetMinute;
+          userinfo.clientSetting = myperm.currentTenant.clientSetting;
         }
       } else {
         userinfo.groups = [];
@@ -239,16 +270,6 @@ export class UserContext {
 
       const dblastactivity = userinfo.lastActivity ?? '2000-01-01T00:00:00Z';
       const lastvisit = new Date(dblastactivity).getTime() ?? 0;
-      // if(currentitme - lastvisit)
-
-      //update last activtity dont too frequent
-      //if(!dblastactivity || currentitme - lastvisit > 5000 ){
-      //  const newusermodel = await this.usermodel.findById(userinfo._id)
-      //  newusermodel.lastActivity= this.lastActivity
-      //  const result = await newusermodel.save()
-      //}
-
-      // const result =  await this.usermodel.findOneAndUpdate({_id: userinfo._id},{lastActivity: new Date().toISOString})
       return userinfo;
     } else {
       return undefined;
@@ -287,6 +308,7 @@ export class UserContext {
       this.orgRecordId = userinfo['orgRecordId'] ?? '';
       this.branchRecordId = userinfo['branchRecordId'] ?? '';
       this.groups = userinfo['groups'] ?? [];
+      this.clientSetting = userinfo['clientSetting'] ?? {};
       this.roles = userinfo['roles'] ?? [Role.Everyone, Role.User];
       this.moreProps = this.setMoreProps(userinfo);
     } else {
@@ -586,14 +608,6 @@ export class UserContext {
         },
       } as PipelineStage;
 
-      const getTenantData: PipelineStage = {
-        $lookup: {
-          from: 'tenant',
-          localField: 'tenantId',
-          foreignField: 'tenantId',
-          as: 'tenant',
-        },
-      };
 
       const permission: PipelineStage = {
         $lookup: {
@@ -610,7 +624,7 @@ export class UserContext {
                 as: 'org',
               },
             },
-            {$unwind:'$org'},
+            { $unwind: '$org' },
             {
               $lookup: {
                 from: 'branch',
@@ -619,14 +633,14 @@ export class UserContext {
                 as: 'branch',
               },
             },
-            {$unwind:'$branch'},
+            { $unwind: '$branch' },
           ],
         },
       };
 
       const pipelines: PipelineStage[] = [
-        filteruser,
-        getTenantData,
+        { $match: { uid: this.uid, tenantId: { $gt: 0 }}},
+        { $lookup: { from: 'tenant', localField: 'tenantId', foreignField: 'tenantId',as: 'tenant'}},
         permission,
       ];
       // const users=[]
@@ -650,7 +664,7 @@ export class UserContext {
                 orgId: item.orgId,
                 branchId: item.branchId,
                 groups: item.groups,
-                orgRecordId:item.org._id, 
+                orgRecordId: item.org._id,
                 orgCode: item.org.orgCode,
                 orgName: item.org.orgName,
                 branchCode: item.branch.branchCode,

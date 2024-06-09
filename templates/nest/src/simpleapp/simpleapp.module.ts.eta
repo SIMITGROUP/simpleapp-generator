@@ -8,9 +8,9 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {DocNumberFormatGenerator} from './generate/commons/docnogenerator.service'
 import { AuditTrail } from './generate/commons/audittrail.service';
-import { CloudapiModule } from 'src/cloudapi/cloudapi.module';
-import { PrintapiModule } from 'src/printapi/printapi.module';
-import { RunWebhookService } from 'src/simpleapp/generate/commons/runwebhook.service'
+import { CloudapiModule } from '../cloudapi/cloudapi.module';
+import { PrintapiModule } from '../printapi/printapi.module';
+import { RunWebhookService } from '../simpleapp/generate/commons/runwebhook.service'
 import { UserResolverService } from './services/userresolver.service';
 // auto import modules
 <% for(let i=0;i<it.modules.length; i++){ %>

@@ -6,11 +6,12 @@
  */
 import { getUserProfile } from './../composables/getUserStore.generate';
 import  {MenuData} from '~/types'
-export default defineNuxtRouteMiddleware((to, from) => {  
-  
-  // return true;
+export default defineNuxtRouteMiddleware((to, from) => {      
   const userprofile = getUserProfile()
-  if(to.path=='/relogin'){
+  //skip auto then simply allow
+  if(!to.meta.auth){
+    return true
+  }else if(to.path=='/relogin'){
     return true
   }else if( getPublicResource(String(to.params['xorg'])).filter((item:MenuData)=>to.fullPath === item.url)){        
     return true
@@ -37,7 +38,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
         if($userstore.haveAccess(resourcename)){                    
           return true
         }else{
-          console.error("access deny, redirect to '/'")
+       //   congetWorkflowApisole.error("access deny, redirect to '/'")
           return navigateTo('/')
           // abortNavigation()
         }

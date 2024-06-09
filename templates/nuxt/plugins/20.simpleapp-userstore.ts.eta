@@ -7,7 +7,7 @@
 import { defineNuxtPlugin } from "#app";
 import {PROFILEApi} from '../simpleapp/generate/openapi'
 import {UserProfile} from '~/types'
-import axios, { Axios, AxiosResponse } from 'axios'
+import axios, { Axios, AxiosError, AxiosResponse } from 'axios'
 import _ from 'lodash'
 import { group } from "console";
 
@@ -109,12 +109,17 @@ export default defineNuxtPlugin( async(nuxtApp) => {
             if(!xorg){
               apiurl = `${useRuntimeConfig().public.APP_URL}/api`
             }else{
-              const xorgdecode = atob(<string>xorg)
-              if(xorgdecode.includes('-')){
-                apiurl = `${useRuntimeConfig().public.APP_URL}/api/${xorg}`
-              }else{                 
+              try{
+                const xorgdecode = atob(<string>xorg)
+                if(xorgdecode.includes('-')){
+                  apiurl = `${useRuntimeConfig().public.APP_URL}/api/${xorg}`
+                }else{                 
+                  return Promise.reject('wrongxorg')
+                }
+              }catch(e){
                 return Promise.reject('wrongxorg')
               }
+              
             
             }
             const {$axios} = useNuxtApp()
@@ -218,43 +223,58 @@ export default defineNuxtPlugin( async(nuxtApp) => {
           }
         }        
       })
-    
-    
-    if( useRoute().meta.auth !==false){
-      console.log("pingsessionres starat")
-
+     
+     
       try{
         const pingsessionres = await useUserStore().pingSession()
-        if(pingsessionres == 'wrongxorg'){
-          navigateTo('/')
-        }
-        else if(pingsessionres){
+        
+        if(pingsessionres){
           await useUserStore().loadRemoteUserInfo()        
         }
-        return {        
-            provide: {
-                userstore:useUserStore()
-              // base64url: Base64URL
-            }
-        }
-      }catch(e){
-          console.error("Ping issue cannot proceed:",e)
-
-          if(e?.code=='ERR_BAD_RESPONSE'){
-                console.log("ping failed failed failed",e.code)
+        
+      }catch(e:any){              
+          
+          //server down, stop page
+          if(e == 'wrongxorg'){
+            navigateTo('/picktenant',{external:true})
+          }
+          else if(e?.code=='ERR_BAD_RESPONSE'){                
                  throw createError({
                   statusCode:e.code,
                   statusMessage:e.message,
                   fatal:true
                 })           
+          }else if(e?.response?.status==302){ //no session            
+            //need authentication, relogin
+            if( useRoute().meta.auth !==false){              
+              await useUserStore().logout(useRoute().path)
+            }
+            else {
+              //pulic page, do nothing`
+              return    {
+                 provide: {
+                  userstore:useUserStore()
+                 }
               }
-            else
-              await useUserStore().logout(useRoute().path)    
+              
+            }
+          }
+            // else
+            //   
       }
       
-    }else{
+
+
+      return {        
+          provide: {
+              userstore:useUserStore()
+          }
+      }
+    // }else{
       
-    }
+    //     console.log("No need auth")
+    //     return true
+    // }
     
     
     

@@ -51,7 +51,8 @@
               :disabled="!canPerform(doc.getDocName(true), 'access')"
               @click="emitEvent(menu, $event)"
               :action-name="menu.action"
-              >{{ menu.label }}</ButtonAction>
+              >{{ menu.label }}</ButtonAction
+            >
             <ButtonAction
               v-else
               :disabled="!canPerform(doc.getDocName(true), menu.action)"
@@ -68,8 +69,8 @@
       <!-- right -->
       <div class="flex flex-row gap-2">
         <DebugDocumentData v-model="data" :label="t(doc.getDocName())" />
-        <div v-if="data.documentStatus">
-          <RendererDocHistories :data="data" />
+        <div>
+          <RendererDocHistories :data="data" :documentName="doc.getDocName()" />
         </div>
         <div v-for="(menu, index) in menus" :key="index">
           <div v-if="menu.label && menu.type == 'docstatus'">

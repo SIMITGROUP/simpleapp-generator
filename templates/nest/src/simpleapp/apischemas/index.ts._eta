@@ -67,3 +67,20 @@ export class UserPermission {
   @ApiProperty({ type: 'string', required: true, format: 'uuid', default: '' })
   userId: string;
 }
+
+@ObjectType()
+export class TextSearchBody{
+  @Field()
+  @ApiProperty({ type: String })
+  keyword:string
+  @Field(()=>[String])
+  @ApiProperty({ type: ()=>[String] })
+  fields?:string[]
+  @Field(()=>[[String]])
+  @ApiProperty({ type: ()=>[[String]], })  
+  sorts?:string[][]
+  @Field()
+  @ApiProperty({ type: Object })  
+  
+  lookup?: Record<string,string>  
+}

@@ -1,6 +1,7 @@
 <template>
   <Calendar
     :pt="pt"
+    :dateFormat="getPrimevueCalendarDateFormat()"
     :inputId="uuid"
     :path="setting.instancepath"
     v-model="datetimevalue"

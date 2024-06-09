@@ -27,6 +27,8 @@ export const Default<%=modelname%> = (uuid:string)=>{
             orgId : getUserProfile()?.orgId,
           <%}else if(key=='branchId'){ %>
             branchId : getUserProfile()?.branchId,
+          <%} else if(typeof field.default !='undefined' && JSON.stringify(field.default)=='{}'){%>           
+            //<%=key%> : <%~ JSON.stringify(field.default) %>,          
           <% } else if(typeof field.default !='undefined' && field.type=='string'){%> 
             <%=key%> : '<%= field.default  %>',
           <%} else if(typeof field.default !='undefined'){%> 

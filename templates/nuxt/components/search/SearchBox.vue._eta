@@ -1,0 +1,371 @@
+<template>
+  <div
+    v-if="getCurrentXorg() && canPerform('student', 'search')"
+    class="w-full border p-2 rounded-lg flex flex-row gap-1 cursor-pointer justify-between"
+    @click="showDialog"
+  >
+    <i class="pi pi-search p-1" />
+
+    <span>{{ t("search") }}</span>
+    <span
+      v-if="isMacOS"
+      class="bg-green-800 text-white pl-2 pr-2 text-sm rounded border"
+    >
+      ⌘+k
+    </span>
+    <span
+      v-else
+      class="bg-green-800 text-white pl-2 pr-2 text-sm rounded border"
+    >
+      cmd+k
+    </span>
+
+    <Dialog
+      v-model:visible="visiblesearch"
+      :closable="false"
+      dismissable-mask
+      position="top"
+      modal
+      :pt="{ root: { class: 'mt-0 w-1/2 max-h-screen' } }"
+    >
+      <template #header>
+        <div class="flex flex-col w-full">
+          <SearchInput
+            ref="searchbox"
+            id="searchbox"
+            v-model="searchVal"
+            :searchIcon="false"
+            :shortcutIcon="true"
+            :clearIcon="false"
+            :hideShortcutIconOnBlur="false"
+            :selectOnFocus="true"
+            :placeholder="t('searchKeyword')"
+            @update:modelValue="onchange"
+            @keydown="onKeyDown"
+          ></SearchInput>
+        </div>
+      </template>
+      <template #default :tabIndex="tabIndex">
+        <div v-if="searchVal == ''"><SearchBoxBefore /></div>
+        <div v-else-if="searchVal != keyword"><ProgressSpinner /></div>
+        <TabView v-else-if="list.length > 0 || menulist.length > 0" lazy>
+          <TabPanel :header="t('all')">
+            <Listbox
+              ref="alllist"
+              @update:model-value="selectItem"
+              v-model="selecteddata"
+              :options="groupedData"
+              optionGroupLabel="label"
+              optionGroupChildren="items"
+            >
+              <template #optiongroup="{ option, index }">
+                <div class="flex align-items-center font-semibold">
+                  <div>{{ option.label }}</div>
+                </div>
+              </template>
+              <template #option="{ option, index }">
+                <div v-if="option.documentName == 'menu'">
+                  <SearchBoxMenu :item="option.data" />
+                </div>
+                <div v-else>
+                  <SearchBoxStudent
+                    v-if="option.documentName == 'student'"
+                    :item="option.data"
+                  />
+                  <SearchBoxTeacher
+                    v-else-if="option.documentName == 'teacher'"
+                    :item="option.data"
+                  />
+                  <SearchBoxAccTrans
+                    v-else-if="option.documentName == 'accounttransaction'"
+                    :item="option.data"
+                  />
+                  <SearchBoxProduct
+                    v-else-if="option.documentName == 'product'"
+                    :item="option.data"
+                  />
+                  <TextSubsubtitle class="italic"
+                    >{{ option.documentName }}
+                    {{ option.data.score }}</TextSubsubtitle
+                  >
+                </div>
+              </template>
+            </Listbox>
+
+            <!-- <ListView  ref="searchlistel" :list="list" idField="_id" @click="selectItem" #default="{item,index}">                                
+                <SearchBoxMenu  v-if="item.documentName=='menu'" :item="item.data"/>
+                <SearchBoxStudent v-else-if="item.documentName=='student'" :item="item.data"/>
+                <SearchBoxTeacher v-else-if="item.documentName=='teacher'" :item="item.data"/>                
+                <SearchBoxAccTrans v-else-if="item.documentName=='accounttransaction'" :item="item.data"/>
+              </ListView> -->
+          </TabPanel>
+          <TabPanel :header="t('students')" v-if="students.length > 0">
+            <ListView
+              ref="searchstudentlistel"
+              :list="students"
+              idField="_id"
+              #default="{ item, index }"
+            >
+              <SearchBoxStudent :item="item.data" />
+            </ListView>
+          </TabPanel>
+          <TabPanel :header="t('transactions')" v-if="acctrans.length > 0">
+            <ListView
+              ref="searchstudentlistel"
+              :list="acctrans"
+              idField="_id"
+              #default="{ item, index }"
+            >
+              <SearchBoxAccTrans :item="item.data" />
+            </ListView>
+          </TabPanel>
+          <TabPanel :header="t('teacher')" v-if="teachers.length > 0">
+            <ListView
+              ref="searchteacherlistel"
+              :list="teachers"
+              idField="_id"
+              #default="{ item, index }"
+            >
+              <SearchBoxTeacher :item="item.data" />
+            </ListView>
+          </TabPanel>
+        </TabView>
+        <div v-else><NodataLarge /></div>
+      </template>
+    </Dialog>
+  </div>
+</template>
+<script setup lang="ts">
+/**
+ * This file was automatically generated by simpleapp generator during initialization. It is changable.
+ * last change 2024-02-22
+ * author: Ks Tan
+ */
+import SearchInput from "vue-search-input";
+import { getAllDocuments } from "~/simpleapp/generate/commons/documents";
+import "vue-search-input/dist/styles.css";
+import { debounce } from "lodash"; // Assuming you have Lodash installed
+import {
+  Accounttransaction,
+  Student,
+  Teacher,
+} from "~/simpleapp/generate/openapi";
+import { SimpleAppDocuments, MenuData, ForeignKey } from "~/types";
+import TextSubsubtitle from "../text/TextSubsubtitle.vue";
+const alllist = ref();
+const selecteddata = ref();
+const students = computed(() =>
+  list.value.filter((item) => item.documentName == "student"),
+);
+const parents = computed(() =>
+  list.value.filter((item) => item.documentName == "parent"),
+);
+const teachers = computed(() =>
+  list.value.filter((item) => item.documentName == "teacher"),
+);
+const acctrans = computed(() =>
+  list.value.filter((item) => item.documentName == "accounttransaction"),
+);
+
+type ResultDataType = { _id: string; documentName: string; data: any };
+const list = ref<ResultDataType[]>([]);
+const menulist = ref<ResultDataType[]>([]);
+
+const groupedData = computed(() => [
+  {
+    label: t("menus"),
+    items: menulist.value,
+  },
+  {
+    label: t("results"),
+    items: list.value.sort((a, b) => {
+      const vA = a.data.score;
+      const vB = b.data.score;
+      if (vA < vB) {
+        return 1;
+      }
+      if (vA > vB) {
+        return -1;
+      }
+
+      return 0;
+    }),
+  },
+]);
+
+const searchlistel = ref(null);
+const deviceType: any = useNuxtApp().$device;
+type SearchDoc = {
+  [key: string]: {
+    fields: string[];
+    // search:string[]
+    // sort:string
+  };
+};
+const documents: SearchDoc = {
+  student: {
+    fields: [
+      "studentName",
+      "studentCode",
+      "alternateName",
+      "level",
+      "studentGroup",
+      "status",
+      "updated",
+    ],
+  },
+  parent: {
+    fields: ["parentName", "active", "updated"],
+  },
+  product: {
+    fields: [
+      "productCode",
+      "productName",
+      "defaultPrice",
+      "billingMethod",
+      "category",
+      "categoryType",
+      "active",
+      "updated",
+    ],
+  },
+  teacher: {
+    fields: [
+      "teacherNo",
+      "teacherName",
+      "alternateName",
+      "teacherGroup",
+      "active",
+      "updated",
+    ],
+  },
+  accounttransaction: {
+    fields: [
+      "date",
+      "document",
+      "documentNo",
+      "documentName",
+      "amount",
+      "updated",
+      "student",
+    ],
+  },
+};
+
+const isMacOS = computed(() => deviceType.isMacOS);
+const havedata = ref(false);
+const searchbox = ref();
+const visiblesearch = ref(false);
+const searchVal = ref("");
+const keyword = ref("");
+const tabIndex = ref(0);
+const selectedIndex = ref(0);
+const isloading = ref(false);
+
+const showDialog = () => {
+  searchVal.value = "";
+  keyword.value = "";
+  visiblesearch.value = true;
+  setTimeout(() => {
+    const el = document.querySelector("#searchbox") as HTMLInputElement;
+    if (el !== undefined) el.focus();
+  }, 500);
+};
+
+onMounted(() => {
+  document.onkeydown = function (e) {
+    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault(); // present "Save Page" from getting triggered.
+      showDialog();
+    } else if (e.key == "Escape") {
+      visiblesearch.value = false;
+    }
+  };
+});
+const onchange = debounce((str: string) => {
+  havedata.value = false;
+  if (searchVal.value == "") return false;
+  keyword.value = searchVal.value;
+  search();
+  havedata.value = true;
+}, 800);
+
+const search = () => {
+  list.value = [];
+  isloading.value = true;
+  searchdocument();
+  for (const key in documents) {
+    const searchdoc = documents[key];
+    if (canPerform(key, "search")) {
+      let doc;
+      if (key == "student") doc = useNuxtApp().$StudentDoc();
+      else if (key == "teacher") doc = useNuxtApp().$TeacherDoc();
+      else if (key == "accounttransaction")
+        doc = useNuxtApp().$AccounttransactionDoc();
+      else if (key == "product") doc = useNuxtApp().$ProductDoc();
+      else if (key == "parent") doc = useNuxtApp().$ParentDoc();
+      else {
+        continue;
+      }
+      doc
+        .runFullTextSearh({
+          keyword: keyword.value,
+        })
+        .then((data: any[]) => {
+          if (data.length > 0) {
+            list.value = list.value.concat(
+              data.map((item) => {
+                const tmp: ResultDataType = {
+                  _id: <string>item._id,
+                  documentName: doc.getDocName(),
+                  data: item,
+                };
+                return tmp;
+              }),
+            );
+          }
+        });
+    }
+  }
+  isloading.value = false;
+  // setTimeout(() => setFocus(), 200);
+};
+
+function onKeyDown(event:KeyboardEvent){
+  if(['ArrowDown','ArrowUp'].includes(event.code)){
+    setFocus()
+  }
+}
+const searchdocument = () => {
+  menulist.value = getAllDocuments()
+    .filter(
+      (item) =>
+        item.page != "" && item.docName.includes(keyword.value.toLowerCase()),
+    )
+    .map((item) => {
+      const tmp: ResultDataType = {
+        _id: item.docName,
+        documentName: "menu",
+        data: item,
+      };
+      return tmp;
+    })
+    .sort();
+};
+
+const selectItem = (item: ResultDataType) => {
+  if (item.documentName == "menu") {
+    goTo(item._id);
+  } else if (item.documentName == "student") {
+    goTo("managestudents", item._id);
+  } else {
+    goTo(item.documentName, item._id);
+  }
+  visiblesearch.value = false;
+};
+
+function setFocus() {
+  const listbodyid = alllist.value?.$el?.id;
+  document.querySelector(`#${listbodyid} .p-listbox-list`)?.focus();
+}
+</script>

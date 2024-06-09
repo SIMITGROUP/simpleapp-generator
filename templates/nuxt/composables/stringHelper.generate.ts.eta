@@ -23,12 +23,12 @@ export const getAvatarLink = (email:string, size:number):string=>{
 }
 export const getAvatarByUid = (id:string, size:number):string=>{
   const url = `${useRuntimeConfig().public.APP_URL}/api/${getCurrentXorg()}`
-  return `${url}/images/student/${id}`;
+  return `${url}/images/user/${id}`;
   
 }
 
 export const getDefaultLocale =()=> useNuxtApp().$i18n.defaultLocale
-export const t = (txt:string,options?:any):string => !txt || txt.trim()=='' ? '' : useNuxtApp().$i18n.t(txt,options)
+export const t = (txt:string,options?:any):string => typeof txt !='string' ?'' : useNuxtApp().$i18n.t(txt.trim(),options)
 export const upperFirst = (str:string) => _.upperFirst(str)
 export const labelSorter = (a,b)=>{
    const nameA = a.label.toUpperCase(); // ignore upper and lowercase

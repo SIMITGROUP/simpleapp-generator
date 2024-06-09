@@ -1,15 +1,23 @@
-<template>
-  <div class="relative">
-    <div v-if="header">
-      <slot name="header">
-        <TextMain class="text-gray-800 pl-2 pt-2">{{ header }}</TextMain>
-      </slot>
-      <hr class="mt-2" />
-    </div>
-    <div v-if="withFilter" class="flex flex-row p-2">
-      <InputGroup :pt="{ root: { class: 'p-0' } }">
-        <InputGroupAddon
-          v-if="filter !== undefined && Object.keys(filter).length > 0"
+<template>  
+    <Listbox      
+      ref="listview"
+      :options="filterlist" 
+      v-model="selectedItem" 
+      :optionLabel="titleField" 
+      :filter="withFilter"
+      :optionValue="idField"
+      
+      :filterFields="filterFields"
+      :pt="{filterContainer:{class:'p-inputgroup'}}"
+      >          
+      <template #empty>
+          <slot name="nodata">
+              <NodataLarge/>
+          </slot>
+      </template> 
+      <template #filtericon="sss">
+        <!-- <i class="pi pi-refresh"/> -->
+        <InputGroupAddon v-if="filter !== undefined && Object.keys(filter).length > 0"
           :pt="{
             root: {
               class:
@@ -18,20 +26,15 @@
           }"
           @click="showMoreFilter"
         >
-        </InputGroupAddon>
-        <InputGroupAddon
-          v-else
-          :pt="{ root: { class: 'p-0 pi pi-filter cursor-pointer p-3' } }"
-          @click="showMoreFilter"
-        >        
-        </InputGroupAddon>
-        <InputText
-          :placeholder="t('searchKeyword')"
-          v-model="searchvalue"
-          type="search"
-          :pt="{ root: { class: 'p-1' } }"
-          ref="listviewfilter"
-        />
+      </InputGroupAddon>
+      <InputGroupAddon
+        v-else-if="filter !== undefined"
+        :pt="{ root: { class: 'p-0 pi pi-filter cursor-pointer p-3' } }"
+        @click="showMoreFilter"
+      >
+      </InputGroupAddon>
+        <slot name="filterInputGroupAddon"></slot>
+        
         <InputGroupAddon
           :pt="{
             root: {
@@ -42,73 +45,53 @@
           v-if="withAddNew"
           @click="emits('add')"
         >
-
         </InputGroupAddon>
-        <slot name="inputAddOn"></slot>
-      </InputGroup>
-    </div>
+      </template>
+      
+      <template #header="{options,value}">                
+          <div>
+            <slot name="header">
+              <TextMain class="text-gray-800 pl-2 pt-2">{{ header }}</TextMain>
+            </slot>
+            <hr class="mt-2" />
+          </div>          
+      </template>
 
-    <div
-      v-if="showIndex"
-      class="flex flex-col fixed left-1 top-1/5 gap-2 z-10 rounded border bg-white dark:bg-black opacity-90"
-    >
-      <NuxtLink
-        class="text-primary-600 dark:text-primary-400 text-lg p-2"
-        :url="'#' + l"
-        v-for="l in allLetters"
-        >{{ l }}</NuxtLink
-      >
-    </div>
-
-    <div v-if="filterlist && filterlist.length > 0">
-      <div>
-        <div v-for="(item, index) in filterlist">
-          <!-- :class="isMobile() ? '' : 'overflow overflow-y-scroll overflow-auto '" -->
+      <template #option="{option,index}">
+        <div
+          :id="titleField && option[titleField] && option[titleField][0]"
+        ></div>
+        <div
+          class="w-full bg-gray-400 dark:bg-gray-500 p-1 pl-2 top-0 sticky opacity-90"
+          v-if="
+            showIndex && titleField && showCategoryBar(option[titleField][0])
+          "
+        >
+          <span>{{ option[titleField][0] }}</span>
+        </div>
+        <div class="border-l-none border-r-none listview-item">
+        <!--     :to="getUrl(option)" -->
           <div
-            :id="titleField && item[titleField] && item[titleField][0]"
-          ></div>
-          <div
-            class="w-full bg-gray-400 dark:bg-gray-500 p-1 pl-2 top-0 sticky opacity-90"
-            v-if="
-              showIndex && titleField && showCategoryBar(item[titleField][0])
-            "
+        
+            :class="`p-2 ${showClickEffect ? 'listlink' : ''}`"
           >
-            <span>{{ item[titleField][0] }}</span>
-          </div>
-          <div
-            @click="onClick(index, item, $event)"
-            :class="`border-l-none border-r-none listview-item dark:border-t-gray-700 ${
-              index > 0 ? 'border-t-2' : ''
-            }`"
-          >
-            <NuxtLink
-              :to="getUrl(item)"
-              :class="`p-2 ${showClickEffect ? 'listlink' : ''}`"
-            >
-              <slot name="default" :item="item" :index="index">
-                <div class="flex flex-row">
-                  <div class="flex-1 mr-2 dark:text-white">
-                    {{ item[titleField ?? ""] }}
-                  </div>
-                  <div class="text-right dark:text-gray-400 text-gray-600">
-                    {{ item[subTitleField ?? ""] }}
-                  </div>
+            <slot name="default" :item="option" :index="index">
+              <div class="flex flex-row">
+                <div class="flex-1 mr-2 dark:text-white">
+                  {{ option[titleField ?? ""] }}
                 </div>
-              </slot>
-            </NuxtLink>
+                <div class="text-right dark:text-gray-400 text-gray-600">
+                  {{ option[subTitleField ?? ""] }}
+                </div>
+              </div>
+            </slot>
           </div>
         </div>
-      </div>
-    </div>
-    <div v-else>
-      <div class="w-full h-20 p-2 border-l-none border-r-none">
-        <slot name="nodata">
-          <div class="border-round border-1 surface-border p-4 surface-card">
-            {{ t("noDataFound") }}
-          </div>
-        </slot>
-      </div>
-    </div>
+      </template>        
+    </Listbox>        
+  
+    
+  
 
     <Dialog
       v-model:visible="visibleMoreFilter"
@@ -129,7 +112,7 @@
         </div>
       </template>
     </Dialog>
-  </div>
+  
 </template>
 <script setup lang="ts" generic="T extends { [key: string]: any }">
 /**
@@ -141,8 +124,10 @@
 import { ref } from "vue";
 import { ListItem } from "~/types/listview";
 import _ from "lodash";
+const listview = ref(null)
 const visibleMoreFilter = ref(false);
 const listviewfilter = ref();
+const selectedItem = ref('')
 const props = withDefaults(
   defineProps<{
     list: T[];
@@ -150,40 +135,31 @@ const props = withDefaults(
     urlsuffix?: string;
     header?: string;
     titleField?: string;
-    idField?: string;
+    idField: string;
     subTitleField?: string;
     withFilter?: boolean;
     filter?: { [key: string]: any };
     withAddNew?: boolean;
     showIndex?: boolean;
     showClickEffect?: boolean;
+    
   }>(),
   {
     idField: "_id",
   },
 );
+const filterFields=computed(()=>{
+  const fields:string[] = []
+  if(props.titleField) fields.push(props.titleField)
+  if(props.subTitleField) fields.push(props.subTitleField)
+  return fields
+})
 const letters = ref<string[]>([]);
 let lastchar = "";
 
 const emits = defineEmits(["add", "runFilter", "clearFilter", "click"]);
 const searchvalue = ref("");
-const selecteditem = ref("");
-const clickRow = (item: ListItem) => {
-  // emit('clickitem',item)
-  // selecteditem.value = item.code
-};
-const getUrl = (item: any) => {
-  const urlsuffix =
-    props.urlsuffix === undefined || props.urlsuffix == ""
-      ? ""
-      : "/" + props.urlsuffix;
-  if (props.url && props.idField) {
-    if (_.last(props.url) == "/")
-      return `${props.url}${item[props.idField]}${urlsuffix}`;
-    else return `${props.url}/${item[props.idField]}${urlsuffix}`;
-  } else return undefined;
-  // :to="url ? `${url}/${item[idField]}` : undefined"
-};
+
 const filterlist = computed(() => {
   let newlist: T[] = [];
   if (!Array.isArray(props.list)) {
@@ -236,9 +212,6 @@ const showCategoryBar = (letter: string) => {
   }
 };
 
-const onClick = (index: number, data: T, event: Event | MouseEvent) => {
-  emits("click", index, data, event);
-};
 
 const showMoreFilter = () => {
   visibleMoreFilter.value = true;
@@ -251,7 +224,20 @@ const runFilter = () => {
   visibleMoreFilter.value = false;
   emits("runFilter");
 };
-onMounted(() => {
-  // if(props.withFilter) listviewfilter.value.$el.focus()
-});
+
+watch(selectedItem,(newvalue)=>{
+  if(newvalue){
+    emits("click",newvalue);
+    if(props.url){
+      navigateTo(props.url+'/'+newvalue)
+    }
+    
+  }
+})
+
+function setFocus(){
+  const listbodyid = listview.value?.$el?.id
+  document.querySelector(`#${listbodyid} .p-listbox-list`)?.focus()
+}
+defineExpose({setFocus})
 </script>

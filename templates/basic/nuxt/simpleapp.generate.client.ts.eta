@@ -300,10 +300,5 @@ export class <%= it.typename%>Client extends SimpleAppClient<openapi.<%= it.type
   <%}%>
   /***************************** end document status code*****************************************/
 
-  <%if(it.jsonschema['x-simpleapp-config']['search']!==undefined){%>
-    async runFullTextSearh(keyword:string) {
-      const response = await this.docapi.runFullTextSearch(keyword)
-      return response.data
-    }
-  <%}%>
+
 }

@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 // import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { UserContext } from '../commons/user.context';
-import { SearchBody } from '../types';
+import { SearchBody,TextSearchBody } from '../types';
 const doctype = 'person'.toUpperCase();
 type ServiceType = {
   list: Function;
@@ -51,10 +51,10 @@ export class SimpleAppAbstractController<
   async _list(appuser: UserContext) {
     return this.service.list(appuser);
   }
-  async _fulltextsearch(appuser: UserContext, keyword: string) {
+  async _fulltextsearch(appuser: UserContext, body:TextSearchBody) {
     return this.service.fullTextSearch(
       appuser,
-      keyword
+      body
     );
   }
   async _search(appuser: UserContext, searchObject: SearchBody) {

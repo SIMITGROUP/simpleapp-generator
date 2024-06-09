@@ -4,14 +4,44 @@
  * last change 2023-10-28
  * Author: Ks Tan
  */
-import { Injectable } from "@nestjs/common";
+import { InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';
+import { UserContext } from '../commons/user.context';
+import { Model } from 'mongoose';
+import * as types from 'src/simpleapp/generate/types';
 
 @Injectable()
 export class AuditTrail {
-    constructor(){        
-    }
 
-    addEvent(data:any){
-        console.log("Add event into db:",data)
-    }
+  constructor( @InjectModel('Documentevent') private doc: Model<types.Documentevent>) {}
+
+
+
+  // addEvent(data: any) {
+  //   console.log('Add event into db:', data);
+  // }
+  async addEvent(appuser:UserContext,documentName:string,id:string,eventType:string,data:any){
+      
+
+      
+      const eventdata:types.Documentevent = {
+        _id:crypto.randomUUID(),
+        documentName:documentName,
+        documentId:id,
+        eventType:eventType,
+        eventdata:data
+      }
+      Object.assign(eventdata, appuser.getCreateFilter());  
+        console.log('add event',documentName,id,eventType)
+        console.log('Add event into db:', eventdata);
+        const newdoc = new this.doc(eventdata);
+        const dbsession = appuser.getDBSession();
+        const result = await newdoc.save({ session: dbsession });
+
+        
+  }
+
+  async addManyEvents(appuser:UserContext,documentName:string,eventType:string,data:any[]){
+    console.log('add many event',documentName,eventType)
+  }
 }

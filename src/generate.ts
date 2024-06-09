@@ -504,6 +504,6 @@ const prepareRoles =(groupsettings) => {
 }
 
 
-const getCodeGenHelper = () => 'const capitalizeFirstLetter = (str) => str.slice(0, 1).toUpperCase() + str.slice(1);' +
+const getCodeGenHelper = () => 'const capitalizeFirstLetter = (str) => !str ? `Object` : str.slice(0, 1).toUpperCase() + str.slice(1);' +
 'const initType=(str)=>{return ["string","number","boolean","array","object"].includes(str) ? capitalizeFirstLetter(str) : str;};' +
 'const camelCaseToWords = (s) => {const result = s.replace(/([A-Z])/g, \' $1\');return result.charAt(0).toUpperCase() + result.slice(1);}'
