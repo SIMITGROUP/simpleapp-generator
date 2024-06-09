@@ -210,7 +210,7 @@ export class UserContext {
           },
           {
             $unwind: '$currentTenant',
-          }          
+          },
         ],
       },
     };
@@ -219,12 +219,11 @@ export class UserContext {
 
     if (this.tenantId > 0) {
       pipeline.push(joinpermission);
-      pipeline.push({$unwind:'$permissions'})
-
+      pipeline.push({ $unwind: '$permissions' });
     }
     // console.log("obtainProfileFromDbobtainProfileFromDb ",pipeline)
     // const users = await usermodel.find(filter)
-    const users = await this.usermodel.aggregate(pipeline);    
+    const users = await this.usermodel.aggregate(pipeline);
     this.logger.verbose(
       `aggregate user profile from database`,
       'obtainProfileFromDb',
@@ -241,7 +240,7 @@ export class UserContext {
 
         if (myperm && myperm.groups) {
           userinfo.groups = myperm.groups;
-          userinfo.roles = [] as Role[];
+          userinfo.roles = [Role.Everyone, Role.User] as Role[];
           for (let g = 0; g < userinfo.groups.length; g++) {
             const roles: Role[] = rolegroups[userinfo.groups[g]]();
             for (let r = 0; r < roles.length; r++) {
@@ -608,7 +607,6 @@ export class UserContext {
         },
       } as PipelineStage;
 
-
       const permission: PipelineStage = {
         $lookup: {
           from: 'permission',
@@ -639,12 +637,19 @@ export class UserContext {
       };
 
       const pipelines: PipelineStage[] = [
-        { $match: { uid: this.uid, tenantId: { $gt: 0 }}},
-        { $lookup: { from: 'tenant', localField: 'tenantId', foreignField: 'tenantId',as: 'tenant'}},
+        { $match: { uid: this.uid, tenantId: { $gt: 0 } } },
+        {
+          $lookup: {
+            from: 'tenant',
+            localField: 'tenantId',
+            foreignField: 'tenantId',
+            as: 'tenant',
+          },
+        },
         permission,
       ];
       // const users=[]
-      this.logger.warn(pipelines, 'pipelines');
+      // this.logger.warn(pipelines, 'pipelines');
       const users = await this.usermodel.aggregate(pipelines);
 
       if (users) {

@@ -67,7 +67,6 @@ export class ProfileController {
     }
   }
 
-
   @Get('session')
   @Roles(Role.Everyone, Role.User)
   @ApiOperation({
@@ -80,15 +79,15 @@ export class ProfileController {
     description: 'Success',
   })
   @ApiResponse({ status: 401, type: Object, description: 'Expired' })
-  async getSession(@AppUser() appuser: UserContext) {   
-    const result = await this.profileservice.getSession(appuser);    
+  async getSession(@AppUser() appuser: UserContext) {
+    const result = await this.profileservice.getSession(appuser);
     if (result) {
       return result;
     } else {
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
   }
-  
+
   @Get('/tenants')
   @Roles(Role.Everyone, Role.User)
   @ApiOperation({
@@ -127,9 +126,16 @@ export class ProfileController {
     @AppUser() appuser: UserContext,
     @Body('tenantName') tenantName: string,
     @Body('timeZone') timeZone: string,
-    @Body('utcOffset') utcOffset:number
+    @Body('utcOffset') utcOffset: number,
+    @Body('businessType') businessType: string,
   ) {
-    const result = await this.profileservice.createTenant(appuser, tenantName,timeZone,utcOffset);
+    const result = await this.profileservice.createTenant(
+      appuser,
+      tenantName,
+      timeZone,
+      utcOffset,
+      businessType,
+    );
     if (result) {
       return result;
     } else {
@@ -170,9 +176,11 @@ export class ProfileController {
   async runTourComplete(
     @AppUser() appuser: UserContext,
     @Param('guidename') guidename: string,
-    
   ) {
-    const result = await this.profileservice.runTourComplete(appuser,guidename,);
+    const result = await this.profileservice.runTourComplete(
+      appuser,
+      guidename,
+    );
     if (result) {
       return result;
     } else {

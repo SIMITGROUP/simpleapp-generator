@@ -92,6 +92,7 @@ export class ProfileService {
     tenantName: string,
     timeZone: string,
     utcOffset: number,
+    businessType: string,
   ) {
     // try{
     const timezonedata = countrytimezone.getCountriesForTimezone(timeZone)[0];
@@ -103,10 +104,11 @@ export class ProfileService {
     const tenantdata: Tenant = {
       tenantId: 1,
       tenantName: tenantName,
-      clientSetting: {        
-              auditTrail:false,
-              webhook:false,
-              support:false,        
+      businessType: businessType,
+      clientSetting: {
+        auditTrail: false,
+        webhook: false,
+        support: false,
       },
       active: true,
       owner: {
