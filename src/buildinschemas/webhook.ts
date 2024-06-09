@@ -7,15 +7,7 @@ export const webhook:SchemaType = {
       documentName:'webhook',
       isolationType:IsolationType.tenant,      
       uniqueKey:'documentName',
-      documentTitle:'documentName',
-      additionalApis:[
-        {"action":"testWebhook",
-        "entryPoint":":id/test",
-        "requiredRole":["Admin"],
-        "method":RESTMethods.get,
-        "responseType":"String",
-        "description":"Testwebhook"
-        }]     
+      documentTitle:'documentName'     
     },        
     required:["documentName","url"],
     properties: {     
