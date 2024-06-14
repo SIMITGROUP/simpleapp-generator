@@ -30,6 +30,7 @@ export type NameValue={
     isolationType:string   
     documentDate:string
     docNumber:boolean
+    webhook:string[]|undefined
     docClass: SimpleAppClient<any,any>
     viewer?: Function
   }

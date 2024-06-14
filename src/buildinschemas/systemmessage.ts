@@ -27,15 +27,15 @@ export const systemmessage:SchemaType =
       "orgId": { "type": "integer", "default": 1 },
       "branchId": { "type": "integer", "default": 1 },      
       "uid": { "type": "string","format":"uuid" },
+      "messageType":{"type":"string",minLength:3},
       "messageTitle": {
         "type": "string",
         "minLength": 3
       },
       "read": { "type": "boolean", "default": false},    
-      "url":{ "type": "string"},    
-      "description": {
+      "body": {
         "type": "string",
-        "format": "text"
+        "format": "html"
       }
     }
   }

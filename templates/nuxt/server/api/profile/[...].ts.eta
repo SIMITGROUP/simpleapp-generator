@@ -45,8 +45,11 @@ export default defineEventHandler(async (event:any) => {
         // }
 
         const frontEndRes = event.node.res;
-        const url = process.env.SIMPLEAPP_BACKEND_URL + `/profile/${documentLink}`;
+        
+        const url =  process.env.SIMPLEAPP_BACKEND_URL + `/profile/${documentLink}`;
         // console.warn('backend server-----',req.method,url,forwardData)
+
+        
         const axiosConfig: any = {
             method: req.method,
             url: url,
@@ -56,7 +59,12 @@ export default defineEventHandler(async (event:any) => {
             data: forwardData,
             params: forwardData,
         }
-        
+
+        if(documentLink=='avatar' ){
+            axiosConfig.url =  process.env.AVATAR_URL
+            delete axiosConfig.params
+        }
+        // console.log("axiosConfig",axiosConfig)
         // if(key === 'system') {
         //     axiosConfig.headers["X-Global"] = true;
         //     delete axiosConfig.headers["X-Org"];
@@ -68,6 +76,7 @@ export default defineEventHandler(async (event:any) => {
         // }
 
         axios(axiosConfig).then((res) => {
+            // console.log("RRes",res)
             if (res.headers['content-type'] === 'image/png') {
                 // Set the response headers for the image
                 frontEndRes.setHeader('Content-Type', 'image/png');

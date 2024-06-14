@@ -15,6 +15,8 @@ export const getAllDocuments=():DocumentMetaData[]  => [
       {docName:'<%= d['docname'].toLowerCase() %>',docType:'<%= d['doctype'].toUpperCase()%>',page: '<%=d['pagetype']%>', isolationType:'<%=conf['isolationType']%>', 
             documentDate:'<%=conf['documentDate']??""%>', docNumber:<%=conf['generateDocumentNumber']??false%>, 
             viewer: () => import('~/components/viewer/Viewer<%=d['docname']%>.vue'),
-              docClass: useNuxtApp().$<%=d['docname']%>Doc()},
+              docClass: useNuxtApp().$<%=d['docname']%>Doc(),
+              webhook:<%~ JSON.stringify(conf['webhook'])%>
+              },
     <%}%>
   ]

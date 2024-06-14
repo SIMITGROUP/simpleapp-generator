@@ -15,7 +15,8 @@ export const alldocuments:any[] = [
         isolationType:'<%=conf['isolationType']%>', 
         documentDate:'<%=conf['documentDate']??""%>', 
         docNumber:<%=conf['generateDocumentNumber']??false%>,
-        docNoPattern: '<%=conf['docNoPattern']%>'
+        docNoPattern: '<%=conf['docNoPattern']%>',
+        webhook:<%~ JSON.stringify(conf['webhook'])%>
         },
     <%}%>
   ]

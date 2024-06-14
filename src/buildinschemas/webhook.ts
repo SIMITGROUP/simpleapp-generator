@@ -6,10 +6,10 @@ export const webhook:SchemaType = {
       documentType:'webhook',
       documentName:'webhook',
       isolationType:IsolationType.tenant,      
-      uniqueKey:'documentName',
-      documentTitle:'documentName'     
+      uniqueKey:'title',
+      documentTitle:'title'     
     },        
-    required:["documentName","url"],
+    required:["title","url"],
     properties: {     
       _id:{type:'string'},
       created:{type:'string'},
@@ -19,8 +19,10 @@ export const webhook:SchemaType = {
       tenantId: {type:'integer',default:1,minimum:0 },
       orgId: {type:'integer',default:1,minimum:0 },
       branchId: {type:'integer',default:1,minimum:0 },
-      documentName:{type:"string",minLength:3,},
-      url: {type: "string", format:'uri'},      
+      title:{type:"string",minLength:3,},
+      url: {type: "string", format:'uri'},     
+      serverSubscriptionId :{type:"string"},
+      serverSubscriptionSecret :{type:"string"},
       requestMethod:{
         type: "string", 
         enum:['post','get','patch','put','delete','head'],
@@ -29,7 +31,14 @@ export const webhook:SchemaType = {
         type:"string",
         enum:['none','basic'],
         description:"apikey authentication use none + headers props"
-      },  
+      },
+      basicAuth:{
+        type:"object",
+        properties:{
+          user:{type:"string"},
+          password:{type:"string"}
+        }
+      },
       headers: {
         type: "array",
         items:{
@@ -44,7 +53,12 @@ export const webhook:SchemaType = {
 
       description: {type: "string",format:"text"},
       active: {type: "boolean", default:true},
-      setting:{type:"string",format:"text"}
+      eventTypes:{
+        type:"array",
+        minItems:1,
+        items:{
+          type:"string"
+        }}
     }
 }
 

@@ -2,7 +2,7 @@
   <div
     @click="openUploadDialog"
     :title="selectedBase64Img"
-    class="vvv place-content-center image-to-base64-uploader rounded-lg border block"
+    class="place-content-center image-to-base64-uploader rounded-lg border block"
   >
     <ClientOnly>
       <slot name="default">
@@ -11,10 +11,10 @@
       </slot>
 
       <Dialog
-        v-if="dialogVisible"
+        v-if="dialogVisible" modal
         v-model:visible="dialogVisible"
         header="Image Upload"
-        :pt="{ root: { class: 'w-4/5' } }"
+        :pt="{ root: { class: 'w-11/12' } }"
       >
         <div class="w-full grid grid-cols-2 gap-2">
           <div class="w-7/8 border rounded p-4">
@@ -96,8 +96,8 @@ const handleImageUpload = (event) => {
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
-        const maxWidth = 400; // Set your desired maximum width
-        const maxHeight = 300; // Set your desired maximum height
+        const maxWidth = 800; // Set your desired maximum width
+        const maxHeight = 600; // Set your desired maximum height
         const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
         const scaledWidth = img.width * scale;
         const scaledHeight = img.height * scale;

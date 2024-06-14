@@ -7,7 +7,8 @@
 export enum SimpleAppInputType  {
     'text'='text',
     'textarea'='textarea',
-
+    'html'='html',
+    
     'date'='date',
     'time'='time',
     'calendar'='calendar',

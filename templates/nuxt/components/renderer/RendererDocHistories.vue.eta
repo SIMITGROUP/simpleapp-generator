@@ -1,16 +1,19 @@
 <template>
   <div
-    class="flex flex-row text-xs cursor-pointer justify-end "
+    class="flex flex-row text-xs cursor-pointer justify-end"
     v-if="data?.updated && data?.updated != ''"
     @click="viewHistories"
   >
-    <ImageAvatar  
+    <ImageAvatar
       v-if="data?.updatedBy"
       :id="data.updatedBy"
-      :size="8"
+      :size="36"
     ></ImageAvatar>
     <div class="flex flex-col flex-1">
-      <TextDocStatus v-if="data?.documentStatus" :docStatus="data?.documentStatus" />
+      <TextDocStatus
+        v-if="data?.documentStatus"
+        :docStatus="data?.documentStatus"
+      />
       <!-- <TextSubsubtitle class="text-gray-400 italic"
         >{{ t("updated") }}:</TextSubsubtitle
       > -->
@@ -26,7 +29,7 @@
       <Timeline :value="events" class="w-full md:w-20rem">
         <template #opposite="{ item }">
           <div class="flex flex-row">
-            <ImageAvatar :email="item.email" :id="item.uid" :size="12" />
+            <ImageAvatar :email="item.email" :id="item.uid" />
             <div class="flex flex-col">
               <span>{{ item.fullName }}</span>
               <RendererDateAge

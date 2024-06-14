@@ -1,6 +1,8 @@
 <template>
   <title>{{ t("profile") }}</title>
-
+  <div class="p-4 place-items-center text-center justify-center flex flex-row">
+    <ImageAvatar :size="128" changable class="cursor-pointer"/>
+  </div>
   <div class="p-4">
     <div class="px-4 sm:px-0">
       <h3

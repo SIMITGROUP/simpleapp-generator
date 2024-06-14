@@ -34,51 +34,51 @@
       v-bind="componentProps as InputSwitchProps"
       @change="onChange"
     />
-    
+
     <!-- calendar component -->
-    <SimpleAppCalendarInput 
+    <SimpleAppCalendarInput
       v-else-if="
         SimpleAppInputType.calendar == inputType ||
         inputType == SimpleAppInputType.date
       "
       :pt="pt"
       type="date"
-      v-model="modelValue"      
+      v-model="modelValue"
       :uuid="slotprops.uuid"
       :placeholder="placeholder"
       :setting="setting"
       :readonly="isReadonly"
       :componentProps="componentProps"
       @change="onChange"
-      />
-    
+    />
+
     <!-- time component -->
-    <SimpleAppCalendarInput 
+    <SimpleAppCalendarInput
       v-else-if="inputType == SimpleAppInputType.time"
       :pt="pt"
       type="time"
-      v-model="modelValue"      
+      v-model="modelValue"
       :uuid="slotprops.uuid"
       :placeholder="placeholder"
       :setting="setting"
       :readonly="isReadonly"
       :componentProps="componentProps"
       @change="onChange"
-      />
-    
-    <SimpleAppCalendarInput 
+    />
+
+    <SimpleAppCalendarInput
       v-else-if="inputType == SimpleAppInputType.datetime"
       :pt="pt"
       type="datetime"
-      v-model="modelValue"      
+      v-model="modelValue"
       :uuid="slotprops.uuid"
       :placeholder="placeholder"
       :setting="setting"
       :readonly="isReadonly"
       :componentProps="componentProps"
       @change="onChange"
-      />
-    
+    />
+
     <!-- select/list component -->
     <Listbox
       v-model="modelValue"
@@ -279,7 +279,7 @@
       @focus="setFocus"
       :max-fraction-digits="2"
       :min-fraction-digits="2"
-      mode="currency" 
+      mode="currency"
       :currency="getCurrency()"
       :readonly="isReadonly"
       :pt="pt"
@@ -304,6 +304,16 @@
       :placeholder="placeholder"
       v-bind="componentProps as TextareaProps"
     />
+    <Editor  
+      v-else-if="inputType == SimpleAppInputType.html"
+      @update:modelValue="onChange"
+      :inputId="slotprops.uuid"
+      :path="setting.instancepath"
+      :placeholder="placeholder"
+      :readonly="isReadonly"
+      v-model="modelValue as string" 
+      v-bind="componentProps as EditorProps"
+      />
     <InputText
       v-else
       v-model="modelValue as string"
@@ -351,11 +361,11 @@ import RadioButton, { RadioButtonProps } from "primevue/radiobutton";
 import Rating, { RatingProps } from "primevue/rating";
 import Slider, { SliderProps } from "primevue/slider";
 import Textarea, { TextareaProps } from "primevue/textarea";
+import Editor, { EditorProps } from "primevue/editor";
 import { SimpleAppInputType } from "~/types";
 const resetcount = ref(0);
 const instancepath = ref("");
 const modelValue = defineModel({ required: true });
-
 
 const watchOnChange = ref(false);
 const props = withDefaults(
@@ -387,7 +397,6 @@ const props = withDefaults(
 );
 
 const pt = ref(props.pt);
-
 
 if (props?.instancepath) instancepath.value = props.instancepath;
 else if (props.setting?.instancepath)
@@ -432,7 +441,6 @@ const isReadonly = computed(() => {
   }
 });
 
-
 const setFocus = (ev: any) => {
   if (!isMobile()) ev.target.select();
 };
@@ -463,7 +471,6 @@ const emits = defineEmits([
   "update:modelValue",
   "update:docNoFormat",
 ]);
-
 
 const onChange = () => {
   if (props.setting.document.isReady()) {

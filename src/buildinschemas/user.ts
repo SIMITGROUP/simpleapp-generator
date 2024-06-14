@@ -45,6 +45,13 @@ export const user:SchemaType ={
         },
         fullName: {type: "string",minLength:3},
         email: {type: "string",minLength:10,format: "email"},
+        mobileNo: {
+          type: "string",
+          anyOf:[
+            {"const":""},
+            {"format": "tel","examples": ["0123456789"]}          
+          ]
+        },
         active: {type: "boolean",default:true},
         description: {type:"string"},
         lastActivity: {type: "string",description:"capture ISO8601 last api call"},

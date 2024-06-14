@@ -367,7 +367,6 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       dbsession.startTransaction();
     }
 
-
     this.logger.debug(
       'this.withDocNumberFormat :' +
         this.withDocNumberFormat +
@@ -379,7 +378,6 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       await this.genNewDocNo(appuser, data);
     }
 
-    
     let isolationFilter: any = { ...appuser.getCreateFilter() };
     isolationFilter = this.polishIsolationFilter(isolationFilter, data);
 
@@ -623,14 +621,14 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
           `You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`,
         );
       }
-      this.logger.debug('warn1', existingdata);
+      // this.logger.debug('warn1', existingdata);
       data.__v = existingdata.__v + 1;
       // if (!existingdata) {
       //   throw new NotFoundException(`${id} not found`, 'not found');
       // }
-      this.logger.debug('warn2');
+      // this.logger.debug('warn2');
       if (this.hooks.beforeUpdate)
-        await this.hooks.beforeUpdate(appuser, id, data, existingdata);
+        await this.hooks.beforeUpdate(appuser, id,  existingdata,data);
 
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction()) {
@@ -693,7 +691,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     data.__v = existingdata.__v + 1;
 
     if (this.hooks.beforeUpdate)
-      await this.hooks.beforeUpdate(appuser, id, data, existingdata);
+      await this.hooks.beforeUpdate(appuser, id,existingdata, data);
 
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
