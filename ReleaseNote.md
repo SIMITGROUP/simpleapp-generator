@@ -1,3 +1,16 @@
+[1.6.5g]
+1. change simpleapp document controller use document name instead of document type
+2. allow use header x-apikey(match env X_APIKEY), x-apisecret (match env X_APISECRET), to by pass access token. which will use robotuser in user context
+3. add support of x-guest-accesstoken (submit by external user source, like parent/student app), it store into usercontext as guestinfo, since appuser = robotuser
+4. Fix document search properties to restrict (required field and sorts)
+
+
+[1.6.5f]
+1. added webhook db
+2. support audit trail
+3. support upload avatar to cloudapi
+4. added html input for simpleapp
+
 [1.2.0]
 1. lot of house keeping
 2. frontend more stable login using keycloak

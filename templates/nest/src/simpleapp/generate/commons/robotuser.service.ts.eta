@@ -11,12 +11,12 @@ import { Model } from 'mongoose';
 import { UserContext } from 'src/simpleapp/generate/commons/user.context';
 import { User } from 'src/simpleapp/services/user.service';
 import { Permission } from 'src/simpleapp/services/perm.service';
-
+const Base64URL = require('@darkwolf/base64url');
 @Injectable()
 export class SimpleAppRobotUserService {
   private systemAccessToken: string;
-  private setToken = (token:string) =>  this.systemAccessToken = token
-  private getToken = ()=>this.systemAccessToken
+  private setToken = (token: string) => (this.systemAccessToken = token);
+  private getToken = () => this.systemAccessToken;
   private expired: string;
   logger = new Logger();
   @InjectModel('User') private readonly usermodel: Model<User>;
@@ -28,7 +28,7 @@ export class SimpleAppRobotUserService {
   }
 
   async init() {
-    await this.refreshSystemToken();
+    // await this.refreshSystemToken();
   }
   async refreshSystemToken() {
     enum GrantType {
@@ -76,25 +76,27 @@ export class SimpleAppRobotUserService {
         return data;
       });
 
-    this.setToken(tokens.access_token)
-    // console.log("access token ",this.getToken())
+    this.setToken(tokens.access_token);
+    console.log("access token ",this.getToken())
     const nextrefresh = tokens.expires_in * 0.8;
     const appuser = this.prepareAppUser(undefined);
-    
-    if(tokens.access_token){
-      setTimeout(async () => {
-        await this.refreshSystemToken();
-      }, nextrefresh * 1000);
-    }
+
+    // if (tokens.access_token) {
+    //   setTimeout(async () => {
+    //     await this.refreshSystemToken();
+    //   }, nextrefresh * 1000);
+    // }
   }
 
   prepareAppUser(data: any) {
+    console.log("prepareAppUserprepareAppUser");
     const appuser = new UserContext(this.usermodel, this.permmodel);
     appuser.setAsStaticUser(
       '00000000-0000-0000-0000-000000000000',
       'robot',
       'Robot',
       'robot@a.org',
+      Base64URL.encodeText('0-0-0')
     );
 
     const tenantId = data?.tenantId ?? 0;
@@ -103,11 +105,7 @@ export class SimpleAppRobotUserService {
 
     appuser.setXorg(appuser.generateXorg(tenantId, orgId, branchId));
     appuser.setUserToken(this.getToken());
-    // console.log(
-    //   'return user ' + appuser.getUname(),
-    //   appuser.getXorg(),
-    //   appuser.getUserToken().length,
-    // );
+  
     return appuser;
   }
 }

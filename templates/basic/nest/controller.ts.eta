@@ -56,9 +56,9 @@ import {UserContext} from '../commons/user.context'
 }
 %>
 <% let superadmindoctype = ['tenant','globaluser'] %>
-const doctype = '<%= it.doctype %>'.toUpperCase();
-@ApiTags(doctype)
-@Controller(doctype.toLowerCase())
+const apiname = '<%= it.typename %>'.toUpperCase();
+@ApiTags(apiname)
+@Controller(apiname.toLowerCase())
 export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   <%= it.typename %>Service,  
   schemas.<%= it.typename%>,

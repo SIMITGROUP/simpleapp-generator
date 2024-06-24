@@ -58,6 +58,9 @@ export class UserContext {
   protected ssoACL: any = {};
   protected token: string = '';
   protected refreshtoken: string = '';
+  //guest access token obtain from header 'x-guest-accesstoken', during use x-apikey/x-apisecret
+  protected guestToken?: string='';  
+  protected guestInfo:{uid:string,uname:string,fullname:string,email:string} = {uid:'',uname:'',fullname:'',email:''}
   protected groups: string[] = [];
   protected branchCode: string = '';
   protected branchName: string = '';
@@ -110,6 +113,7 @@ export class UserContext {
   getOffsetMinute = () => this.offsetMinute;
   getGroups = () => this.groups;
   getCurrency = () => this.currency;
+  getGuestInfo = () => this.guestInfo;
   getMoreProps = () => this.moreProps;
   getRoles = () => this.roles;
   getModifieds = () => this.modifiedRecords;
@@ -282,10 +286,11 @@ export class UserContext {
     this.uid = tokeninfo?.sub ?? '';
     this.email = tokeninfo?.email ?? '';
     this.uname = tokeninfo?.preferred_username ?? '';
-    this.fullname = tokeninfo?.name ?? [];
+    this.fullname = tokeninfo?.name ?? '';
     this.ssoACL = tokeninfo?.resource_access ?? [];
     this.logger.verbose(`set token ${this.uid}`);
     //read current user from db
+    // console.log("Set User token")
     // console.log("await this.obtainProfileFromDb()")
     const userinfo = await this.obtainProfileFromDb();
     this.logger.verbose(userinfo, 'obtainProfileFromDb result');
@@ -696,6 +701,7 @@ export class UserContext {
     uname: string,
     name: string,
     email: string,
+    xorg:string
   ) => {
     //define token info
     this.token = '';
@@ -704,9 +710,18 @@ export class UserContext {
     this.uname = uname;
     this.fullname = name;
     this.ssoACL = '';
-    this.roles = [Role.Everyone, Role.User];
+    this.roles = [Role.Everyone, Role.User,Role.SuperUser];
+    this.setXorg(xorg);
   };
 
+  setGuestToken(tokenstr:string){
+    const tokeninfo = jwt.decode(tokenstr);   
+    this.guestInfo.uid = tokeninfo?.sub ?? '';
+    this.guestInfo.email = tokeninfo?.email ?? '';
+    this.guestInfo.uname = tokeninfo?.preferred_username ?? '';
+    this.guestInfo.fullname = tokeninfo?.name ?? '';
+      
+  }
   /**
    * define additional properties from user into moreProps
    */

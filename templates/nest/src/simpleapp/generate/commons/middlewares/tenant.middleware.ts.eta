@@ -56,9 +56,9 @@ export class TenantMiddleware implements NestMiddleware {
 
     if (req.baseUrl == '/graphql') {
       let tokenstr: string = req.headers['authorization'] ?? '';
-      tokenstr = tokenstr.replace('Bearer ', '');      
-      const xorg = req.headers['x-org'] ?? this.defaultxorg;      
-      if (tokenstr) {
+      tokenstr = tokenstr.replace('Bearer ', '');
+      const xorg = req.headers['x-org'] ?? this.defaultxorg;
+      if (tokenstr) {        
         await u.setCurrentUserInfo(tokenstr, xorg);
       }
       req['sessionuser'] = u;
@@ -66,6 +66,33 @@ export class TenantMiddleware implements NestMiddleware {
       return;
     }
     this.logger.debug(`running TenantMiddleware for ${req.baseUrl}`);
+
+    
+    //if APIKEY defined, and there is api key and secret supplied. use robot user
+    if(process.env.X_APIKEY &&req.headers['x-apikey'] && req.headers['x-apisecret']){
+    
+      if(req.headers['x-apikey']==process.env.X_APIKEY &&
+        req.headers['x-apisecret']==process.env.X_APISECRET){        
+
+         u.setAsStaticUser(
+            '00000000-0000-0000-0000-000000000000',
+            'robot',
+            'Robot',
+            'robot@a.org',
+            req.headers['x-org']?? this.defaultxorg
+          );
+        if(req.headers['x-guest-accesstoken']) {
+          u.setGuestToken(<string>req.headers['x-guest-accesstoken']);
+        }
+        req['sessionuser'] = u;
+        next();
+        return;
+      }else{
+        this.logger.log('invalid api key/scret');
+        throw new BadRequestException('invalid api key/scret');
+      }
+    }
+
     if (!req.headers['authorization']) {
       this.logger.log('undefine bearer token');
       return res.status(401).send('Undefine bearer token');
@@ -84,8 +111,7 @@ export class TenantMiddleware implements NestMiddleware {
       let tokenstr: string = req.headers['authorization'];
       tokenstr = tokenstr.replace('Bearer ', '');
 
-      const xorg = req.headers['x-org'] ?? this.defaultxorg;
-
+      const xorg = req.headers['x-org'] ?? this.defaultxorg;      
       await u.setCurrentUserInfo(tokenstr, xorg);
       if (u.getId() == '' && this.requireXorg(req.baseUrl)) {
         this.logger.log('access deny of no user:', req.baseUrl);

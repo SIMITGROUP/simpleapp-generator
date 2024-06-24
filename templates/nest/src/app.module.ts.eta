@@ -25,6 +25,7 @@ import {
   RoleGuard,
   PolicyEnforcementMode,
 } from 'nest-keycloak-connect';
+import { CustomKeycloakGuard } from './simpleapp/generate/commons/customkeycloak.guard';
 import {RolesGuard} from './simpleapp/generate/commons/roles/roles.guard'
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -92,11 +93,17 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ]),    
       ],
   controllers: [AppController],
-  providers: [AppService,AppResolver,  {
-    provide: APP_INTERCEPTOR,
-    useClass: ResponseInterceptor,  
-  },
-    {provide: APP_GUARD,useClass: AuthGuard,},
+  providers: [
+    AppService,
+    CustomKeycloakGuard,
+    ResourceGuard,
+    AppResolver,  
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,  
+    },
+  {provide: APP_GUARD,useClass: CustomKeycloakGuard,},
+    // {provide: APP_GUARD,useClass: AuthGuard,},
     {provide: APP_GUARD,useClass: ResourceGuard,},
     {provide: APP_GUARD,useClass: RolesGuard,}
   ],       

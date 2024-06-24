@@ -49,9 +49,39 @@ async function bootstrap() {
         },
       },
       'oauth2',
+    ).
+    addApiKey(
+      {
+        in: 'header',
+        name: 'x-apikey',
+        type: 'apiKey',
+        description: 'optional only use for specal case',
+      },
+      'x-apikey',
+    ).addApiKey(
+      {
+        in: 'header',
+        name: 'x-apisecret',
+        type: 'apiKey',
+        description: 'optional only use for specal case',
+      },
+      'x-apisecret',
     )
+    .addApiKey(
+      {
+        in: 'header',
+        name: 'x-guest-accesstoken',
+        type: 'apiKey',
+        description: 'optional only use for specal case',
+      },
+      'x-guest-accesstoken',
+    )
+    
     .addSecurityRequirements('x-org')
     .addSecurityRequirements('oauth2')
+    .addSecurityRequirements('x-apikey')
+    .addSecurityRequirements('x-apisecret')    
+    .addSecurityRequirements('x-guest-accesstoken')    
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document, {
