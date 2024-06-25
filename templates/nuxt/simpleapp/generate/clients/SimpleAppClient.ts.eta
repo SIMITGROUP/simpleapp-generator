@@ -24,7 +24,7 @@ type crudType = {
   runDelete: Function;
   runSearch: Function;
   runDefault:Function;
-  runFullTextSearch:Function;
+  runFullTextSearch?:Function;
 };
 export class SimpleAppClient<
   TData extends { _id?: string,created?:string },

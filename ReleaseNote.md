@@ -1,3 +1,10 @@
+[1.6.6b-alpha]
+1. add missing customkeycloak guard
+
+
+[1.6.6a-alpha]
+1. fix simpleapp generated frontend lib bugs
+
 [1.6.5g]
 1. change simpleapp document controller use document name instead of document type
 2. allow use header x-apikey(match env X_APIKEY), x-apisecret (match env X_APISECRET), to by pass access token. which will use robotuser in user context

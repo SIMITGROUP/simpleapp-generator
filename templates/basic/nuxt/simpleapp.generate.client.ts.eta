@@ -34,7 +34,7 @@ export type {
 
     } from '../openapi'
 
-export class <%= it.typename%>Client extends SimpleAppClient<openapi.<%= it.typename%>,openapi.<%= it.doctype.toUpperCase()%>Api>{
+export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<openapi.<%= capitalizeFirstLetter(it.name)%>,openapi.<%= it.name.toUpperCase()%>Api>{
   public readonly schema= <%~ JSON.stringify(it.jsonschema) %> as SchemaType;
   protected documentIdentityCode='<%~ it.autocompletecode %>'
   protected documentIdentityName='<%~ it.autocompletename %>'  
@@ -49,7 +49,7 @@ export class <%= it.typename%>Client extends SimpleAppClient<openapi.<%= it.type
     }
 
     //const apipath = `${useRuntimeConfig().public.API_URL}/${xorg}`    
-    //const apiobj = new <%= it.doctype.toUpperCase()%>Api(undefined,apipath,$axios)
+    //const apiobj = new <%= it.name.toUpperCase()%>Api(undefined,apipath,$axios)
     const apiobj = getDocumentApi('<%=it.name %>')
     super(apiobj,'<%= it.doctype %>','<%=it.name %>')
     this.event=$event

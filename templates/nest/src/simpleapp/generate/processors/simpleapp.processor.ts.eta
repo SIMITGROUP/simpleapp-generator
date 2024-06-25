@@ -628,7 +628,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       // }
       // this.logger.debug('warn2');
       if (this.hooks.beforeUpdate)
-        await this.hooks.beforeUpdate(appuser, id,  existingdata,data);
+        await this.hooks.beforeUpdate(appuser, id, existingdata, data);
 
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction()) {
@@ -691,7 +691,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     data.__v = existingdata.__v + 1;
 
     if (this.hooks.beforeUpdate)
-      await this.hooks.beforeUpdate(appuser, id,existingdata, data);
+      await this.hooks.beforeUpdate(appuser, id, existingdata, data);
 
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
@@ -1058,7 +1058,8 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     collections.forEach((tokey: string) => {
       const toarr = tokey.split('.');
       const to = toarr[0];
-      const foreignField = toarr[1] ?? '_id';
+      toarr.splice(0,1)
+      const foreignField = toarr.join('.') ?? '_id';
       pipelines.push({
         $lookup: {
           from: to,
@@ -1083,7 +1084,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       });
       pipelines.push({ $sort: sortobj });
     }
-    // console.log('pipelinespipelinespipelines', pipelines);
+    //this.logger.warn( pipelines,'pipelinespipelinespipelines',);
 
     return pipelines;
   }

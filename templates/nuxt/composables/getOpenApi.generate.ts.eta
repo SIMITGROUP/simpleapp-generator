@@ -39,7 +39,7 @@ export const getDocumentApi = (documentName: string): any => {
   const config = getAxiosConfig()
   const docsOpenapi: any = {
        <% for(let i=0;i<it.modules.length; i++){ %>
-                '<%=it.modules[i].docname.toLowerCase()%>': new o.<%=it.modules[i].doctype.toUpperCase()%>Api(config),                
+                '<%=it.modules[i].docname.toLowerCase()%>': new o.<%=it.modules[i].docname.toUpperCase()%>Api(config),                
               <%}%>                             
     };
 

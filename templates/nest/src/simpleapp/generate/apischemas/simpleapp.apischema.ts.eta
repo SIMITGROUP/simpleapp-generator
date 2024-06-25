@@ -15,6 +15,11 @@ export class ApiKeyValuePair {
   })
   field1: any;
 }
+export class SortItem {
+
+}
+
+
 export class ApiSearchBody {
   @ApiProperty({
     type: Object,
@@ -31,12 +36,21 @@ export class ApiSearchBody {
   })
   fields?: string[];
   @ApiProperty({
-    type: () => [[String]],
-    required: false,
-    examples: ['[[ "field1", "asc" ]]'],
-    default: [['field1', 'asc']],
+        type: 'array',
+        required: false,
+        items:{
+                type: 'array',
+                items:{
+                  type:'string'
+                }
+        },      
+        examples: ['[[ "field1", "asc" ]]'],
+        default: [['field1', 'asc']],     
   })
+  
   sorts?: string[][];
+
+
   @ApiProperty({ type: () => Object, required: false })
   lookup: Object;
 }
