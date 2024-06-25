@@ -1,6 +1,6 @@
 {
   "name": "@simitgroup/simpleapp-generator",
-  "version": "1.6.6b-alpha",
+  "version": "1.6.6c-alpha",
   "description": "frontend nuxtjs and backend nests code generator using jsonschema",
   "main": "dist/index.js",
   "scripts": {
