@@ -4,8 +4,7 @@
       "create",
       "update",
       "delete",
-      "search",
-      "generateNextNo"
+      "search"
     ],
     "Branch": [
       "access",

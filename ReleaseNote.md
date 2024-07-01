@@ -1,3 +1,12 @@
+[1.6.6d-alpha]
+1. fix new project cannot run
+
+
+[1.6.6c-alpha]
+1. fix plenty of frontend lib generate bugs (after change api name)
+2. fix search lookup long
+
+
 [1.6.6b-alpha]
 1. add missing customkeycloak guard
 

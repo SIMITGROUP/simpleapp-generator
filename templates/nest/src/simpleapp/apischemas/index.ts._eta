@@ -79,8 +79,7 @@ export class TextSearchBody{
   @Field(()=>[[String]])
   @ApiProperty({ type: ()=>[[String]], })  
   sorts?:string[][]
-  @Field()
-  @ApiProperty({ type: Object })  
-  
+  @Field(type=>Object)
+  @ApiProperty({ type: Object })    
   lookup?: Record<string,string>  
 }

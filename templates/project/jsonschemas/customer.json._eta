@@ -6,6 +6,7 @@
     "uniqueKey": "customerNo",
     "documentTitle": "customerName",
     "generateDocumentNumber": true,
+    "docNoPattern":"[0000000]",
     "isolationType": "org",
     "pageType": "crud"    
   },

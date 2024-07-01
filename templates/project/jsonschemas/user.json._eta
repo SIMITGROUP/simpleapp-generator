@@ -65,6 +65,12 @@
     "description": {
       "type": "string"
     },
+    "completedTours":{
+      "type":"array",
+      "items":{
+        "type":"string"
+      }
+    },
     "lastActivity": {
       "type": "string",
       "description": "capture ISO8601 last api call"
