@@ -1,3 +1,6 @@
+[1.6.6e-alpha]
+1. Fix jsonpath import method
+
 [1.6.6d-alpha]
 1. fix new project cannot run
 
