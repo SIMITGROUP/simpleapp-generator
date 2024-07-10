@@ -8,7 +8,7 @@ const Fieldtypes= require( './type')
 // const generate= require( './generate')
 
 const fs = require( 'fs')
-const  createproject =require( './createproject')
+// const  createproject =require( './createproject')
 const ps =  require( "child_process")
 const capitalizeFirstLetter= require( './libs')
 const {Logger, ILogObj} = require( "tslog");

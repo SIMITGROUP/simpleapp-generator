@@ -1,3 +1,6 @@
+[1.6.6f-alpha]
+1. Remove unwanted required
+
 [1.6.6e-alpha]
 1. Fix jsonpath import method
 

@@ -1,10 +1,10 @@
 {
   "name": "@simitgroup/simpleapp-generator",
-  "version": "1.6.6e-alpha",
+  "version": "1.6.6f-alpha",
   "description": "frontend nuxtjs and backend nests code generator using jsonschema",
   "main": "dist/index.js",
   "scripts": {
-    "generate": "ts-node src/index.ts -c ../sampleconfig.json; pnpm exec prettier ./backend  --write;pnpm exec prettier ./frontend  --write",
+    "generate": "ts-node src/index.ts -c ./sampleconfig.json; pnpm exec prettier ./backend  --write;pnpm exec prettier ./frontend  --write",
     "build": "npx tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
