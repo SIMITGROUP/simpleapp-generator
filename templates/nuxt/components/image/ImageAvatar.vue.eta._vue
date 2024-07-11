@@ -32,7 +32,7 @@ const uid = computed(
 // const xorgpath = getCurrentXorg() ? `${getCurrentXorg()}/` : "MC0wLTA/";
 
 const sizenumber = props.size ?? 16;
-const imagepath = getAvatarByUid(uid.value,sizenumber) //`${xorgpath}images/organization/${orgRecordId.value}`;
+const imagepath = getAvatarByUid(uid.value, sizenumber) //`${xorgpath}images/organization/${orgRecordId.value}`;
 const imageData = ref("");
 watch(
   uid,

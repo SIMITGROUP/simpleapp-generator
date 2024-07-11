@@ -1,3 +1,7 @@
+[1.6.6g-alpha]
+1. improve x-api-key & x-api-secret, fix schema example
+2. Fix getAvatarByUid.
+
 [1.6.6f-alpha]
 1. Remove unwanted required
 
