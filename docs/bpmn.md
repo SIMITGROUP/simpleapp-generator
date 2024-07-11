@@ -65,17 +65,17 @@ Use BPMN in SimpleApp Generator involve below steps:
     "customerNo": {
       "type": "string",
       "format": "documentno",
-      "examples": ["S0001"]
+      "example": ["S0001"]
     },
     "customerName": {
       "type": "string",
-      "examples": ["Customer 1"],
+      "example": ["Customer 1"],
       "minLength": 3
     },
     "customerStatus": {
       "type": "string",
       "enum": ["unknown", "potential", "suspended", "existing"],
-      "examples": ["unknown"]
+      "example": ["unknown"]
     },
     "email": {
       "type": "string",
@@ -85,7 +85,7 @@ Use BPMN in SimpleApp Generator involve below steps:
       "type": "string",
       "oneOf": [{ "format": "tel" }, { "enum": [""] }]
     },
-    "active": { "type": "boolean", "default": true, "examples": [true] },
+    "active": { "type": "boolean", "default": true, "example": [true] },
     "description": { "type": "string", "format": "text" },
     "docNoFormat": {
       "type": "object",

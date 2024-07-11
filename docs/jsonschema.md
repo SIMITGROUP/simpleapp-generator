@@ -29,8 +29,8 @@ refer below example `product.json`:
   },
   "properties": {
     ...
-    "productCode": { "type": "string", "examples": ["BK-MTHP1"] },
-    "productName": { "type": "string", "examples": ["Math Primary 1 Book"] },
+    "productCode": { "type": "string", "example": ["BK-MTHP1"] },
+    "productName": { "type": "string", "example": ["Math Primary 1 Book"] },
     "category": {
       "type": "object",
       "x-foreignkey": "category",

@@ -27,6 +27,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle(process.env.PROJECT_NAME)
+    .addServer(process.env.BACKEND_URL)
     .setDescription(process.env.PROJECT_DESCRIPTION)
     .setVersion(process.env.PROJECT_VERSION)
     .addApiKey(
@@ -53,19 +54,19 @@ async function bootstrap() {
     addApiKey(
       {
         in: 'header',
-        name: 'x-apikey',
+        name: 'x-api-key',
         type: 'apiKey',
         description: 'optional only use for specal case',
       },
-      'x-apikey',
+      'x-api-key',
     ).addApiKey(
       {
         in: 'header',
-        name: 'x-apisecret',
+        name: 'x-api-secret',
         type: 'apiKey',
         description: 'optional only use for specal case',
       },
-      'x-apisecret',
+      'x-api-secret',
     )
     .addApiKey(
       {
@@ -79,8 +80,8 @@ async function bootstrap() {
     
     .addSecurityRequirements('x-org')
     .addSecurityRequirements('oauth2')
-    .addSecurityRequirements('x-apikey')
-    .addSecurityRequirements('x-apisecret')    
+    .addSecurityRequirements('x-api-key')
+    .addSecurityRequirements('x-api-secret')    
     .addSecurityRequirements('x-guest-accesstoken')    
     .build();
   const document = SwaggerModule.createDocument(app, config);

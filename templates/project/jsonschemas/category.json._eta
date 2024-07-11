@@ -17,18 +17,18 @@
     "tenantId": { "type": "integer", "default": 1},
     "orgId": { "type": "integer", "default": 1},
     "branchId": { "type": "integer", "default": 1},
-    "categoryCode": { "type": "string", "examples": ["TUITION"], "minLength":2 },
-    "categoryName": { "type": "string", "examples": ["Tuition Service"],"minLength":3 },
-    "active": { "type": "boolean", "default": true, "examples": [true] },
+    "categoryCode": { "type": "string", "example": ["TUITION"], "minLength":2 },
+    "categoryName": { "type": "string", "example": ["Tuition Service"],"minLength":3 },
+    "active": { "type": "boolean", "default": true, "example": [true] },
     "categoryType": {
       "type": "string",
       "enum": ["class", "charge","stock"],
-      "examples": ["class"]
+      "example": ["class"]
     },
     "description": {
       "type": "string",
       "format": "text",
-      "examples": ["Maths Tuition primary 1"]
+      "example": ["Maths Tuition primary 1"]
     }
   }
 }

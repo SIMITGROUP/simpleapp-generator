@@ -77,10 +77,11 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @HttpCode(200)
   @ApiResponse({
     status: 200,
-    description: 'Found',    
+    description: 'Sample 200 response',    
+    type: Object
   })
   @ApiResponse({ status: 500, description: 'Internal error' })
-  @ApiOperation({ operationId: 'runDefault', description:"Run default behavior like say hello" })
+  @ApiOperation({ operationId: 'runDefault', description: "Run default behavior like say hello" })
   async runDefault(@AppUser() appuser: UserContext) {
     return await this.service.runDefault(appuser)
   }

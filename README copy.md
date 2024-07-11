@@ -271,13 +271,13 @@ echo '{"definationsFolder":"./definations","backendFolder":"./backend", "fronten
       "properties": {
         "firstName": {
           "type": "string",
-          "examples": [
+          "example": [
             "John"
           ]
         },
         "lastName": {
           "type": "string",
-          "examples": [
+          "example": [
             "Fox"
           ]
         }
@@ -285,20 +285,20 @@ echo '{"definationsFolder":"./definations","backendFolder":"./backend", "fronten
     },
     "age": {
       "type": "integer",
-      "examples": [
+      "example": [
         20
       ]
     },
     "email": {
       "type": "string",
-      "examples": [
+      "example": [
         "john@example.com"
       ],
       "format": "email"
     },
     "dob": {
       "type": "string",
-      "examples": [
+      "example": [
         "2000-01-01"
       ],
       "format": "date"
@@ -307,7 +307,7 @@ echo '{"definationsFolder":"./definations","backendFolder":"./backend", "fronten
       "type": "array",
       "items": {
         "type": "string",
-        "examples": [
+        "example": [
           "badminton",
           "dota",
           "reading"
@@ -326,19 +326,19 @@ echo '{"definationsFolder":"./definations","backendFolder":"./backend", "fronten
         "properties": {
           "street1": {
             "type": "string",
-            "examples": [
+            "example": [
               "11, Fox Road"
             ]
           },
           "street2": {
             "type": "string",
-            "examples": [
+            "example": [
               "My Home Town"
             ]
           },
           "postcode": {
             "type": "integer",
-            "examples": [
+            "example": [
               12345
             ]
           }
@@ -431,19 +431,19 @@ Here is the result:
   "properties": {
     "docNo": {
       "type": "string",
-      "examples": [
+      "example": [
         "SI001"
       ]
     },
     "customer": {
       "type": "string",
-      "examples": [
+      "example": [
         "My Customer Pte Ltd"
       ]
     },
     "amount": {
       "type": "integer",
-      "examples": [
+      "example": [
         200
       ]
     },
@@ -451,7 +451,7 @@ Here is the result:
       "type": "array",
       "items": {
         "type": "string",
-        "examples": [
+        "example": [
           "apple",
           "orange"
         ]
@@ -470,28 +470,28 @@ Here is the result:
         "properties": {
           "item": {
             "type": "string",
-            "examples": [
+            "example": [
               "apple",
               "orange"
             ]
           },
           "qty": {
             "type": "integer",
-            "examples": [
+            "example": [
               100,
               100
             ]
           },
           "unitprice": {
             "type": "integer",
-            "examples": [
+            "example": [
               1,
               1
             ]
           },
           "subtotal": {
             "type": "integer",
-            "examples": [
+            "example": [
               100,
               100
             ]
@@ -501,7 +501,7 @@ Here is the result:
     },
     "remarks": {
       "type": "string",
-      "examples": [
+      "example": [
         "need fast delivery"
       ]
     }
@@ -527,7 +527,7 @@ MONGODB_URL='mongodb://<user>:<pass>@<host>:<port>/<db>?authMechanism=DEFAULT'
 HTTP_PORT=8000
 PROJECT_NAME='SimpleApp Demo1'
 PROJECT_DESCRIPTION='Try CRUD'
-PROJECT_Version='1.0.0'
+PROJECT_VERSION='1.0.0'
 ```
 7. change `src/main.ts`, allow openapi document:
 ```ts
@@ -615,13 +615,13 @@ Below is the sample of jsonschema:
       "properties": {
         "firstName": {
           "type": "string",
-          "examples": [
+          "example": [
             "John"
           ]
         },
         "lastName": {
           "type": "string",
-          "examples": [
+          "example": [
             "Fox"
           ]
         }
@@ -629,20 +629,20 @@ Below is the sample of jsonschema:
     },
     "age": {
       "type": "integer",
-      "examples": [
+      "example": [
         20
       ]
     },
     "email": {
       "type": "string",
-      "examples": [
+      "example": [
         "john@example.com"
       ],
       "format": "email"
     },
     "dob": {
       "type": "string",
-      "examples": [
+      "example": [
         "2000-01-01"
       ],
       "format": "date"
@@ -651,7 +651,7 @@ Below is the sample of jsonschema:
       "type": "array",
       "items": {
         "type": "string",
-        "examples": [
+        "example": [
           "badminton",
           "dota",
           "reading"
@@ -670,19 +670,19 @@ Below is the sample of jsonschema:
         "properties": {
           "street1": {
             "type": "string",
-            "examples": [
+            "example": [
               "11, Fox Road"
             ]
           },
           "street2": {
             "type": "string",
-            "examples": [
+            "example": [
               "My Home Town"
             ]
           },
           "postcode": {
             "type": "integer",
-            "examples": [
+            "example": [
               12345
             ]
           }

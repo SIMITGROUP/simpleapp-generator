@@ -89,7 +89,7 @@
     },
     "timeZone": {
       "type": "string",
-      "examples": [
+      "example": [
         "Asia/Kuala_Lumpur"
       ]
     },

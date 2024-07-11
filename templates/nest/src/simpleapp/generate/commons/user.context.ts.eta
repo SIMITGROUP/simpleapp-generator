@@ -58,7 +58,7 @@ export class UserContext {
   protected ssoACL: any = {};
   protected token: string = '';
   protected refreshtoken: string = '';
-  //guest access token obtain from header 'x-guest-accesstoken', during use x-apikey/x-apisecret
+  //guest access token obtain from header 'x-guest-accesstoken', during use x-api-key/x-api-secret
   protected guestToken?: string='';  
   protected guestInfo:{uid:string,uname:string,fullname:string,email:string} = {uid:'',uname:'',fullname:'',email:''}
   protected groups: string[] = [];

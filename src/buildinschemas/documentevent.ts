@@ -28,7 +28,7 @@ export const documentevent:SchemaType ={
       "eventType": { 
           "type": "string", 
           "enum": ["create","update","delete","read","print","void","confirm","draft"], 
-          "examples": ["create","delete"] 
+          "example": ["create","delete"] 
       },    
       "eventdata": {}
     }

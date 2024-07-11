@@ -10,7 +10,7 @@ export class ApiKeyValuePair {
   @ApiProperty({
     type: Object,
     required: false,
-    examples: ['{"field1":"1"}'],
+    example: [{"field1": "1"}],
     default: '',
   })
   field1: any;
@@ -24,14 +24,14 @@ export class ApiSearchBody {
   @ApiProperty({
     type: Object,
     required: false,
-    examples: ['{"field1":"1"}'],
+    example: [{"field1": "1"}],
     default: { field1: 'ok', field2: true },
   })
   filter?: Object;
   @ApiProperty({
     type: [String],
     required: false,
-    examples: ['["field1","field2"]'],
+    example: ['["field1","field2"]'],
     default: ['field1', 'field2'],
   })
   fields?: string[];
@@ -44,7 +44,7 @@ export class ApiSearchBody {
                   type:'string'
                 }
         },      
-        examples: ['[[ "field1", "asc" ]]'],
+        example: ['[[ "field1", "asc" ]]'],
         default: [['field1', 'asc']],     
   })
   

@@ -22,7 +22,7 @@
 
 [1.6.5g]
 1. change simpleapp document controller use document name instead of document type
-2. allow use header x-apikey(match env X_APIKEY), x-apisecret (match env X_APISECRET), to by pass access token. which will use robotuser in user context
+2. allow use header x-api-key(match env X_APIKEY), x-api-secret (match env X_API_SECRET), to by pass access token. which will use robotuser in user context
 3. add support of x-guest-accesstoken (submit by external user source, like parent/student app), it store into usercontext as guestinfo, since appuser = robotuser
 4. Fix document search properties to restrict (required field and sorts)
 

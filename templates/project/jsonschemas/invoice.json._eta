@@ -49,13 +49,13 @@
     },
     "invoiceNo": {
       "type": "string",
-      "examples": ["SI1111"],
+      "example": ["SI1111"],
       "format": "documentno"
     },
     "invoiceDate": { "type": "string", "format": "date" },
     "invoiceTitle": {
       "type": "string",
-      "examples": ["Sales to XYZ"],
+      "example": ["Sales to XYZ"],
       "minLength": 3
     },
     "invoiceTotal": { "type": "number", "default": 0.00,"format":"money"  },
@@ -82,7 +82,7 @@
     "description": {
       "type": "string",
       "format": "text",
-      "examples": ["Maths Tuition primary 1"]
+      "example": ["Maths Tuition primary 1"]
     }
   }
 }

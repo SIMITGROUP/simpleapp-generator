@@ -95,7 +95,7 @@ export class Configuration {
 
     /**
      * Check if the given MIME is a JSON MIME.
-     * JSON MIME examples:
+     * JSON MIME example:
      *   application/json
      *   application/json; charset=UTF8
      *   APPLICATION/JSON

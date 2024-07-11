@@ -18,8 +18,8 @@
     "tenantId": { "type": "integer", "default": 1 },
     "orgId": { "type": "integer", "default": 1},
     "branchId": { "type": "integer", "default": 1},
-    "productCode": { "type": "string", "examples": ["BK-MTHP1"] },
-    "productName": { "type": "string", "examples": ["Math Primary 1 Book"] },
+    "productCode": { "type": "string", "example": ["BK-MTHP1"] },
+    "productName": { "type": "string", "example": ["Math Primary 1 Book"] },
     "category": {
       "type": "object",
       "x-foreignkey": "category",
@@ -33,7 +33,7 @@
     "description": { "type": "string" },
     "tags": {
       "type": "array",
-      "items": { "type": "string", "examples": ["P1", "Math"] }
+      "items": { "type": "string", "example": ["P1", "Math"] }
     }
   }
 }

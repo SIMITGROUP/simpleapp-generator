@@ -10,21 +10,21 @@ export class RegTenantApiSchema {
   @ApiProperty({
     type: 'string',
     required: true,
-    examples: ['my company 1'],
+    example: ['my company 1'],
     default: '',
   })
   tenantName: string;
   @ApiProperty({
     type: 'string',
     required: true,
-    examples: ['Asia/Kuala_Lumpur'],
+    example: ['Asia/Kuala_Lumpur'],
     default: '',
   })
   timeZone: string;
   @ApiProperty({
     type: Number,
     required: true,
-    examples: [0,-460],
+    example: [0,-460],
     
   })
   utcOffset: number;

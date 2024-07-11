@@ -33,12 +33,12 @@ export const docnoformat:SchemaType ={
               "label":{"type":"string"},
               "branchId":{type:"integer"},
             }},
-            docNoFormatNo: {"type": "string","examples": ["INV"]},
-            docNoFormatName: { "type": "string", "examples": ["Invoice Default Format"]},
-            active: {type: "boolean","examples": [true],default:true},
-            default:{type: "boolean","examples": [true],default:true},
-            docNoType: {type: "string","examples": ["SI","PI"]},
-            docNoPattern: {type: "string","examples": ["SI{YYMM}-<000>","PI-2023-<0000>"],"description":"{date} format as ISO8601 symbol"},          
+            docNoFormatNo: {"type": "string","example": ["INV"]},
+            docNoFormatName: { "type": "string", "example": ["Invoice Default Format"]},
+            active: {type: "boolean","example": [true],default:true},
+            default:{type: "boolean","example": [true],default:true},
+            docNoType: {type: "string","example": ["SI","PI"]},
+            docNoPattern: {type: "string","example": ["SI{YYMM}-<000>","PI-2023-<0000>"],"description":"{date} format as ISO8601 symbol"},          
             nextNumber:{type:"integer",default:1}         
         }
       }

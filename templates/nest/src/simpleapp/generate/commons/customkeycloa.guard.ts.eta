@@ -16,10 +16,10 @@ export class CustomKeycloakGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     
 
-    //graphql no http request, exclude from capability of x-apikey
+    //graphql no http request, exclude from capability of x-api-key
     if(request?.headers){
-        const apiKey = request.headers['x-apikey'];
-        const apiSecret = request.headers['x-apisecret'];
+        const apiKey = request.headers['x-api-key'];
+        const apiSecret = request.headers['x-api-secret'];
         // validate apikey and apisecret at middleware level, reach here mean approved as robot
         if (apiKey && apiSecret ) {
           return true;
