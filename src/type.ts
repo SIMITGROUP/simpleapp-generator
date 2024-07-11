@@ -31,7 +31,7 @@ export type FieldModel = {
   format?: string;
   required?: boolean;
   example?: any;
-  examples?: any;
+//   examples?: any;
 };
 
 // export type SchemaCategoryModel = {

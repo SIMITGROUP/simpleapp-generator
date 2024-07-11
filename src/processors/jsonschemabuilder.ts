@@ -290,7 +290,7 @@ const getField = (
   f.title = obj.title;
   if (obj.description) f.description = obj.description;
   if (obj.format) f.format = obj.format;
-  if (obj.example) f.example = obj.example;
+  if (obj.examples) f.example = obj.examples;
   if (obj.default) {
     f.default = obj.default;
   } else {
