@@ -1,3 +1,9 @@
+[1.6.6i-alpha]
+1. Fix a-api-key env.
+
+[1.6.6h-alpha]
+1. Fix package.json
+
 [1.6.6g-alpha]
 1. improve x-api-key & x-api-secret, fix schema example
 2. Fix getAvatarByUid.
@@ -26,7 +32,7 @@
 
 [1.6.5g]
 1. change simpleapp document controller use document name instead of document type
-2. allow use header x-api-key(match env X_APIKEY), x-api-secret (match env X_API_SECRET), to by pass access token. which will use robotuser in user context
+2. allow use header x-api-key(match env X_API_KEY), x-api-secret (match env X_API_SECRET), to by pass access token. which will use robotuser in user context
 3. add support of x-guest-accesstoken (submit by external user source, like parent/student app), it store into usercontext as guestinfo, since appuser = robotuser
 4. Fix document search properties to restrict (required field and sorts)
 

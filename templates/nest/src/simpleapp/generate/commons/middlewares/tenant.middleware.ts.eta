@@ -69,9 +69,9 @@ export class TenantMiddleware implements NestMiddleware {
 
     
     //if APIKEY defined, and there is api key and secret supplied. use robot user
-    if(process.env.X_APIKEY &&req.headers['x-api-key'] && req.headers['x-api-secret']){
+    if(process.env.X_API_KEY &&req.headers['x-api-key'] && req.headers['x-api-secret']){
     
-      if(req.headers['x-api-key']==process.env.X_APIKEY &&
+      if(req.headers['x-api-key']==process.env.X_API_KEY &&
         req.headers['x-api-secret']==process.env.X_API_SECRET){        
 
          u.setAsStaticUser(
