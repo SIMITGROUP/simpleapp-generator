@@ -7,7 +7,7 @@
       <i class="pi pi-code"></i>
       <span>{{ label }}</span>
     </div>
-    <Sidebar
+    <Drawer
       v-model:visible="visible"
       :pt="{ root: { class: 'w-5/6' } }"
       class="text-red-100"
@@ -23,7 +23,7 @@
                 </pre
         >
       </template>
-    </Sidebar>
+    </Drawer>
   </div>
 </template>
 
@@ -37,7 +37,6 @@
 // import Panel from 'primevue/panel';
 // import ScrollPanel from 'primevue/scrollpanel';
 import Dialog from "primevue/dialog";
-import Sidebar from "primevue/sidebar";
 
 import { ref } from "vue";
 const modelValue = defineModel();

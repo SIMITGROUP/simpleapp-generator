@@ -17,19 +17,19 @@
     <ListDocument
       v-if="recordlist"
       @click="showDialogForm"
-      :recordlist="recordlist as T[]"
+      :recordlist="recordlist"
       :unique-key="uniqueKey"
       :document-title="documentTitle"
     >
       <template #default="{ index, item }">
-        <slot name="mobileList" :index="index" :item="item as T"></slot>
+        <slot name="mobileList" :index="index" :item="item"></slot>
       </template>
     </ListDocument>
   </div>
   <div v-else class="simpleapp-crudsimple">
     <ListDocumentTable
       v-if="recordlist"
-      :value="recordlist as T[]"
+      :value="recordlist"
       :title="doc.getDocName()"
       :unique-key="<string>uniqueKey"
       :document-title="<string>documentTitle"

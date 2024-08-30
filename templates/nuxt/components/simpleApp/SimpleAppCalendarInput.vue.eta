@@ -1,5 +1,5 @@
 <template>
-  <Calendar
+  <DatePicker
     :pt="pt"
     :dateFormat="getPrimevueCalendarDateFormat()"
     :inputId="uuid"
@@ -12,19 +12,19 @@
     :showTime="showtime"
     :timeOnly="timeOnly"
     hourFormat="12"
-    v-bind="componentProps as CalendarProps"
+    v-bind="componentProps"
   />
 </template>
 <script setup lang="ts">
 // :date-format="getDateFormat()"
-import { CalendarProps } from "primevue/calendar";
+import { DatePickerProps } from "primevue/datepicker";
 const props = defineProps<{
   pt: any;
   uuid: string;
   placeholder?: string;
   setting: any;
   readonly?: boolean;
-  componentProps?: CalendarProps;
+  componentProps?: DatePickerProps;
   type: "date" | "time" | "datetime";
 }>();
 

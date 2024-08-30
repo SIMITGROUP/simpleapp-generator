@@ -345,7 +345,7 @@
 import { autocompletetype } from "~/types";
 import moment from "moment";
 import AutoComplete, { AutoCompleteProps } from "primevue/autocomplete";
-import Calendar, { CalendarProps } from "primevue/calendar";
+import { DatePickerProps } from "primevue/datepicker";
 import Checkbox, { CheckboxProps } from "primevue/checkbox";
 import Chips, { ChipsProps } from "primevue/chips";
 import SimpleAppDocumentNo from "./SimpleAppDocumentNo.vue";
@@ -359,7 +359,6 @@ import MultiSelect, { MultiSelectProps } from "primevue/multiselect";
 import Password, { PasswordProps } from "primevue/password";
 import RadioButton, { RadioButtonProps } from "primevue/radiobutton";
 import Rating, { RatingProps } from "primevue/rating";
-import Slider, { SliderProps } from "primevue/slider";
 import Textarea, { TextareaProps } from "primevue/textarea";
 import Editor, { EditorProps } from "primevue/editor";
 import { SimpleAppInputType } from "~/types";
@@ -390,7 +389,7 @@ const props = withDefaults(
       | InputTextProps
       | TextareaProps
       | DropdownProps
-      | CalendarProps
+      | DatePickerProps
       | RatingProps;
   }>(),
   { type: "text" },

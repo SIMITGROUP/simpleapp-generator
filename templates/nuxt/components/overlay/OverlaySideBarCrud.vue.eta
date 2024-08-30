@@ -1,5 +1,5 @@
 <template>
-  <Sidebar
+  <Drawer
     position="right"
     v-if="showDialog"
     v-model:visible="showDialog"
@@ -16,7 +16,7 @@
         <slot name="default"></slot>
       </div>
     </div>
-  </Sidebar>
+  </Drawer>
 </template>
 <script lang="ts" setup>
 /**

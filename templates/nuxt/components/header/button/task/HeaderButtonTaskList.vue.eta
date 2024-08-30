@@ -4,12 +4,12 @@
             <Badge :value="taskqty" severity="danger"></Badge>
         </i>
 
-        <Sidebar v-model:visible="visible" position="right"  :modal="false" :dismissable="false">            
+        <Drawer v-model:visible="visible" position="right"  :modal="false" :dismissable="false">            
             <template #header>
                 <div class="text text-lg font-bold">{{ t('mytasks') }}</div>
             </template>
             <HeaderButtonTaskItem  v-for="task in tasklist" :task="task" @click="viewTask"></HeaderButtonTaskItem>                                                
-        </Sidebar>
+        </Drawer>
         <Dialog v-model:visible="dialogvisible" 
             @update:visible="closeDialog" 
             :pt="{root:{class:'w-1/2 h-5/6'}}"

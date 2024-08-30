@@ -5,7 +5,7 @@
  * last change 2023-10-28
  * Author: Ks Tan
  */
-import OverlayPanel from 'primevue/overlaypanel';
+import Popover from 'primevue/popover';
 const op = ref()
 
 const home = ref({
@@ -63,7 +63,7 @@ const getBranches = ()=>{
                         </NuxtLink>
                         <div v-else>
                             <span class="cursor-pointer dark:text-white" @click="showSwitcher">{{ item.label }}</span>
-                            <OverlayPanel ref="op">
+                            <Popover ref="op">
                                 <div>
                                     <ul class="flex flex-col">
                                         <li  v-for="b in getBranches()" class="p-1 route-link-list ">
@@ -73,7 +73,7 @@ const getBranches = ()=>{
                                         </li>
                                     </ul>
                                 </div>
-                            </OverlayPanel>
+                            </Popover>
                         </div>
 
                 </template>

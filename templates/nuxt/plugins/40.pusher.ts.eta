@@ -9,10 +9,16 @@ import Pusher from 'pusher-js';
 export default defineNuxtPlugin( async(nuxtApp) => {
     const pusherkey =  (useRuntimeConfig().app.PUSHER_KEY ?? '') as string
     const pushercluster = (useRuntimeConfig().app.PUSHER_CLUSTER ?? '') as string    
-    const pusher = new Pusher(pusherkey, { cluster: pushercluster,});
+    let pusher = null;
+    if (pusherkey && pushercluster){
+        pusher = new Pusher(pusherkey, {
+            cluster: pushercluster
+        });
+    }
+
     return {        
         provide: {
-            pusher:pusher
+            pusher: pusher
         }
     }    
 });
