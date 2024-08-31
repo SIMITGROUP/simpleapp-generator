@@ -1,5 +1,5 @@
 <template>    
-  <Calendar 
+  <DatePicker 
       v-model="selectedDate"
       inline            
       @update:modelValue="chooseDate"
@@ -33,10 +33,10 @@
               />
           </div>
       </template>
-  </Calendar>
+  </DatePicker>
 </template>
 <script setup lang="ts" generic="T">
-import { CalendarDateSlotOptions,CalendarMonthChangeEvent } from "primevue/calendar";
+import { DatePickerDateSlotOptions, DatePickerMonthChangeEvent } from "primevue/datepicker";
 
 import {
 CalEventType,
@@ -76,7 +76,7 @@ const disableDays=computed(()=>{
   })
 })
 
-function isHoliday(date:CalendarDateSlotOptions){
+function isHoliday(date: DatePickerDateSlotOptions) {
 
   for(let i = 0 ; i<props.holidays.length;i++){
       const item = props.holidays[i]
@@ -111,13 +111,13 @@ const getEventQty = (date:CalendarDateSlotOptions)=>{
   const recordlength =  props.items.filter(item=>item.start==checkdate).length
   return recordlength
 }
-const viewChange = (event: CalendarMonthChangeEvent) => {    
-emits("viewChange", event);
+const viewChange = (event: DatePickerMonthChangeEvent) => {    
+  emits("viewChange", event);
 };
 
 
 onMounted(() => {
-offdays.value = getCurrentBranch()?.branch.offdays ?? [];
+  offdays.value = getCurrentBranch()?.branch.offdays ?? [];
 });
 </script>
 <style >

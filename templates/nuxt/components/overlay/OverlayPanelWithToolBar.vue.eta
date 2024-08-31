@@ -1,12 +1,12 @@
 <template>
-  <Sidebar
+  <Drawer
     :position="position ?? 'right'"
     v-if="showDialog"
     v-model:visible="showDialog"
     modal
     :show-close-icon="false"
     :dismissable="dismissable"
-    :pt="{root:{class:'w-2/3 border-0 border-l border-l-gray-500'}}"
+    :pt="{root:{class:'!w-2/3 border-0 border-l border-l-gray-500'}}"
     #container
   >
     <div class="overflow-y-scroll">
@@ -25,7 +25,7 @@
         <slot name="default"></slot>
       </div>
     </div>
-  </Sidebar>
+  </Drawer>
 </template>
 <script lang="ts" setup>
 /**

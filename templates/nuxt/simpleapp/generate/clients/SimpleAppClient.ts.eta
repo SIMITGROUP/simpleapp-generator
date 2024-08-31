@@ -4,13 +4,11 @@
  * last change 2024-03-08
  * Author: Ks Tan
  */
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
-import addErrors from 'ajv-errors';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import type { AxiosResponse } from 'axios';
 import {SearchBody,TextSearchBody,Notification,NotificationStatus,SchemaType,FormActions} from '~/types'
+import { getValidateService } from '~/simpleapp/generate/sharelibs/validate';
 
 // import { useToast, } from 'primevue/usetoast';
 // import type {  ToastMessageOptions } from 'primevue/toast';
@@ -294,19 +292,7 @@ export class SimpleAppClient<
     return true;
   }
   validateFailed() {
-    const ajv = new Ajv({ allErrors: true });
-    addFormats(ajv);
-    addErrors(ajv)
-    
-    ajv.addFormat('tel',/^$|^\d{7,15}$/gm)    
-    ajv.addFormat('text',/.*$/)
-    ajv.addFormat('html',/.*$/)
-    ajv.addFormat('documentno',/.*$/)
-    ajv.addFormat('money',/.*$/)
-    
-    ajv.addKeyword({ keyword: 'x-foreignkey', schemaType: 'string' });
-    ajv.addKeyword({ keyword: 'x-simpleapp-config', schemaType: 'object' });
-
+    const ajv = getValidateService();
     
     this.errorlist.value = {};
     this.hook('pre-validation', this.data.value);

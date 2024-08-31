@@ -12,9 +12,7 @@
  * Author: Ks Tan
  */
 import type { JSONSchema7,JSONSchema7Definition } from 'json-schema';
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
-import addErrors from 'ajv-errors';
+import { getValidateService } from "~/simpleapp/generate/sharelibs/validate";
 import _ from 'lodash'
 
     const props = defineProps<{
@@ -130,18 +128,7 @@ import _ from 'lodash'
 
 
    const validate=(callback:Function) => {
-    const ajv = new Ajv({ allErrors: true });
-    addFormats(ajv);
-    addErrors(ajv)
-    
-    ajv.addFormat('tel',/^$|^\d{7,15}$/gm)    
-    ajv.addFormat('text',/.*$/)
-    ajv.addFormat('html',/.*$/)
-    ajv.addFormat('documentno',/.*$/)
-    
-    ajv.addKeyword({ keyword: 'x-foreignkey', schemaType: 'string' });
-    ajv.addKeyword({ keyword: 'x-simpleapp-config', schemaType: 'object' });
-
+    const ajv = getValidateService();
     
     // this.errorlist.value = {};
     // this.hook('pre-validation', this.data.value);

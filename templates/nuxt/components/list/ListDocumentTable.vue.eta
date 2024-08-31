@@ -63,7 +63,7 @@
  * Author: Ks Tan
  */
 // import { CellSetting } from "~/types";
-import { FilterMatchMode } from "primevue/api";
+import { FilterMatchMode } from "@primevue/core/api";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import renderComponent from "~/components/renderer";

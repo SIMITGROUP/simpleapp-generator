@@ -3,7 +3,7 @@
     <button class="" @click="previewPermission">
       <i class="pi pi-question-circle"></i>
     </button>
-    <Sidebar
+    <Drawer
       v-model:visible="showpermissioninfo"
       modal
       :pt="{ root: { class: 'w-2/3' } }"
@@ -86,7 +86,7 @@
           </div>
         </div>
       </div>
-    </Sidebar>
+    </Drawer>
   </div>
 </template>
 <script setup lang="ts">

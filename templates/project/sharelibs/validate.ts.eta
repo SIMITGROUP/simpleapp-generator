@@ -1,0 +1,23 @@
+// @ts-ignore
+import Ajv from 'ajv';
+// @ts-ignore
+import addFormats from 'ajv-formats';
+// @ts-ignore
+import addErrors from 'ajv-errors';
+
+export const getValidateService = (): Ajv => {
+  const ajv = new Ajv({ allErrors: true });
+  addFormats(ajv);
+  addErrors(ajv)
+  
+  ajv.addFormat('tel',/^$|^\d{7,15}$/gm)    
+  ajv.addFormat('text',/.*$/)
+  ajv.addFormat('html',/.*$/)
+  ajv.addFormat('documentno',/.*$/)
+  ajv.addFormat('money',/.*$/)
+  
+  ajv.addKeyword({ keyword: 'x-foreignkey', schemaType: 'string' });
+  ajv.addKeyword({ keyword: 'x-simpleapp-config', schemaType: 'object' });
+  ajv.addKeyword({ keyword: 'example', schemaType: 'array' });
+  return ajv;
+}

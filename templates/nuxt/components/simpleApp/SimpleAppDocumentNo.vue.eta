@@ -23,7 +23,7 @@
       >
         <i class="pi pi-angle-down"></i>
       </button>
-      <OverlayPanel ref="op">
+      <Popover ref="op">
         <div class="m-4">
           <ul>
             <li v-for="docno in docFormatlist" class="hover-list-primary p-2">
@@ -34,7 +34,7 @@
             </li>
           </ul>
         </div>
-      </OverlayPanel>
+      </Popover>
     </span>
     <!-- {{ Object.getOwnPropertyNames(setting) }} -->
   </div>
@@ -47,7 +47,7 @@
  * Author: Ks Tan
  */
 import { ForeignKey } from "~/types";
-import OverlayPanel from "primevue/overlaypanel";
+import Popover from "primevue/popover";
 import InputText from "primevue/inputtext";
 import { DocNoFormat } from "~/types";
 const props = defineProps<{

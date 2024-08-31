@@ -20,9 +20,7 @@ import {
   FilterQuery,
   ProjectionType,
 } from 'mongoose';
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
-import addErrors from 'ajv-errors';
+import { getValidateService } from 'src/simpleapp/generate/sharelibs/validate';
 import {
   NotFoundException,
   HttpException,
@@ -461,18 +459,8 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
   };
   async validateData(appuser: UserContext, data: T, _id?: string) {
-    const ajv = new Ajv({ allErrors: true, useDefaults: true });
-    addFormats(ajv);
-    addErrors(ajv);
+    const ajv = getValidateService();
 
-    ajv.addFormat('tel', /^$|^\d{7,15}$/gm);
-    ajv.addFormat('text', /.*$/);
-    ajv.addFormat('html', /.*$/);
-    ajv.addFormat('documentno', /.*$/);
-    ajv.addFormat('money', /.*$/);
-
-    ajv.addKeyword({ keyword: 'x-foreignkey', schemaType: 'string' });
-    ajv.addKeyword({ keyword: 'x-simpleapp-config', schemaType: 'object' });
     this.logger.debug('run hook during validation');
     let issuccess = true;
     if (this.hooks.beforeValidation) {
