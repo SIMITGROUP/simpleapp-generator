@@ -4,6 +4,7 @@ import _ from 'lodash'
 import { Logger, ILogObj } from "tslog";
 import * as constants from './constant'
 import  {Eta}  from 'eta';
+import path from 'path';
 const log: Logger<ILogObj> = new Logger();
 
 let config = {
@@ -164,11 +165,37 @@ export const prepareNuxt = (callback:Function)=>{
     const targetfolder = config.frontendFolder
     if(!fs.existsSync(`${targetfolder}/.env`)){
         //asume no environment. prepare now
-        exec(`cd ${targetfolder};pnpm install;pnpm install -D @nuxtjs/apollo@next dayjs-nuxt @nuxtjs/device @nuxtjs/color-mode @types/json-schema @nuxtjs/i18n@next nuxt-primevue@latest @nuxtjs/tailwindcss @types/jsonpath @sidebase/nuxt-auth @types/node @vueuse/nuxt @sidebase/nuxt-auth @vueuse/core  prettier @primevue/core`, (error, stdout, stderr)=>{                
+        exec(`cd ${targetfolder};pnpm install;pnpm install -D @nuxtjs/apollo@next dayjs-nuxt @nuxtjs/device @nuxtjs/color-mode @types/json-schema @nuxtjs/i18n@next @nuxtjs/tailwindcss @types/jsonpath @sidebase/nuxt-auth @types/node @vueuse/nuxt @sidebase/nuxt-auth @vueuse/core prettier @primevue/core primevue tailwindcss-primeui`, (error, stdout, stderr)=>{                
             //;pnpm install    
             console.log(error, stdout, stderr)
-                exec(`cd ${targetfolder};pnpm install --save vue-camera-lib vue-pdf-embed dayjs pusher-js country-code-dateformat chart.js tailwind-merge @iconify-json/heroicons  json-schema @vueuse/core ts-md5 primeicons memory-cache jsonpath pinia @pinia/nuxt @nuxt/kit lodash @types/lodash @darkwolf/base64url next-auth@4.21.1 @darkwolf/base64url @nuxt/ui ajv ajv-formats ajv-errors dotenv @fullcalendar/core @fullcalendar/vue3 quill prettier axios json-schema mitt `, (error, stdout, stderr)=>{                
-                console.log(error, stdout, stderr)
+                exec(`cd ${targetfolder};pnpm install --save vue-camera-lib vue-pdf-embed dayjs pusher-js country-code-dateformat chart.js tailwind-merge @iconify-json/heroicons  json-schema @vueuse/core ts-md5 primeicons memory-cache jsonpath pinia @pinia/nuxt @nuxt/kit lodash @types/lodash @darkwolf/base64url next-auth@4.21.1 @darkwolf/base64url @nuxt/ui ajv ajv-formats ajv-errors dotenv @fullcalendar/core @fullcalendar/vue3 quill prettier axios json-schema mitt @primevue/nuxt-module lru-cache vue-advanced-cropper@vue-3`, (error, stdout, stderr)=> {                
+                    console.log(error, stdout, stderr)
+
+                    // copy nuxt primevue tailwind preset to folder
+                    const copyFolderRecursiveSync = (source: string, target: string) => {
+                        // Check if folder needs to be created or integrated
+                        const targetFolder = path.join(target, path.basename(source));
+                        if (!fs.existsSync(targetFolder)) {
+                            fs.mkdirSync(targetFolder, { recursive: true });
+                        }
+
+                        // Copy
+                        if (fs.lstatSync(source).isDirectory()) {
+                            const files = fs.readdirSync(source);
+                            files.forEach((file) => {
+                                const curSource = path.join(source, file);
+                                if (fs.lstatSync(curSource).isDirectory()) {
+                                    copyFolderRecursiveSync(curSource, targetFolder);
+                                } else {
+                                    fs.copyFileSync(curSource, path.join(targetFolder, file));
+                                }
+                            });
+                        }
+                    };
+
+                    // Define source and target folders
+                    const sourceFolder = path.join(constants.templatedir, 'nuxt', 'presets');
+                    copyFolderRecursiveSync(sourceFolder, config.frontendFolder);
                 
                 // fs.mkdirSync(`${targetfolder}/assets/css/`,{recursive:true})
                 // fs.mkdirSync(`${targetfolder}/layouts`,{recursive:true})

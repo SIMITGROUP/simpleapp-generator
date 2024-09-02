@@ -72,7 +72,7 @@ export default defineNuxtConfig({
         '@nuxtjs/i18n',
         'dayjs-nuxt',
         '@sidebase/nuxt-auth',
-        'nuxt-primevue',
+        '@primevue/nuxt-module',
         '@nuxtjs/apollo',
         // '@nuxtjs/pwa', //cannot turn on, will cause nuxt cant start
         // "nuxt-security",     //temporary avoid nuxt-security cause cors
@@ -125,7 +125,10 @@ export default defineNuxtConfig({
         options: {
             ripple: true,
             inputStyle: 'filled',
-
+            unstyled: true,
+            ptOptions: {
+                mergeProps: true,
+            },
         },
         components: {
             include: '*',
@@ -134,9 +137,7 @@ export default defineNuxtConfig({
         directives: {
             include: ['Ripple', 'Tooltip', 'Badge', 'FocusTrap']
         },
-        cssLayerOrder: 'tailwind-base, primevue, tailwind-utilities',
-        importPT: { as: 'SimpleAppPT', from: path.resolve(__dirname, './assets/primevue/passthrough.ts') },
-
+        importPT: { from: '../presets/lara/'},
 
     },
     // pinia: {

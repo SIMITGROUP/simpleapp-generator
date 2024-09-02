@@ -7,7 +7,7 @@
  */
 const alltenants = ref<any[]>([])
 const totaltenant = ref(0)
-  const list = (await getPorfileApi().getAllTenants()).data as any[];
+  const list = (await getProfileApi().getAllTenants()).data as any[];
   if(list.length==0 || list.length>1) navigateTo('/picktenant')
   else navigateTo (`/${list[0].permissions[0].xOrg}`)
   

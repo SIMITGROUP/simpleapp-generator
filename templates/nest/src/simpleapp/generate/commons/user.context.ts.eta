@@ -525,7 +525,7 @@ export class UserContext {
         this.logger.log(result, 'accept invitation 1');
         //set permission of all user under this.user_id
         const updateresult = await this.permmodel
-          .updateMany({ uid: '', user_id: res._id }, { uid: this.getUid() })
+          .updateMany({ uid: '', userId: res._id }, { uid: this.getUid() })
           .session(this.dbsession);
         this.logger.log(updateresult, 'update all permission');
         return true;
@@ -534,7 +534,7 @@ export class UserContext {
           .deleteOne({ _id: id })
           .session(this.dbsession);
         await this.permmodel
-          .deleteMany({ uid: '', user_id: res._id })
+          .deleteMany({ uid: '', userId: res._id })
           .session(this.dbsession);
         return true;
       }
