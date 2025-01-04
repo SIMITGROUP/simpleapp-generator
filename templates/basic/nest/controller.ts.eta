@@ -36,8 +36,9 @@ import {AppUser} from '../commons/decorators/appuser.decorator'
 import {UserContext} from '../commons/user.context'
 
 
-<% const getFieldType =(proptype, typename)=>{
+<% const getFieldType =(proptype, typename,actionname)=>{
   const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
+  if(!typename) throw actionname +" undefine schema";
   let tmptypename = typename.replace('[','').replace(']','')
   
   if(systemtypes.includes(tmptypename)){
@@ -192,12 +193,12 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   <%}%>
   <% if(['post','put','patch'].includes(api.method)){ %>
     @ApiBody({ description: 'Request Body', 
-        type: <%= getFieldType('schema',api.schema)%>
+        type: <%= getFieldType('schema',api.schema,api.action)%>
        
         })
   <%}%>  
   @ApiResponse({status: 200,description: '<%=api.description%>' 
-      ,type: <%= getFieldType('schema',api.responseType)%>
+      ,type: <%= getFieldType('schema',api.responseType,api.action)%>
         })  
   @ApiOperation({ operationId: 'run<%=capitalizeFirstLetter(api.action)%>' })
   <% if(api.queryPara && api.queryPara.length>0) {%>
@@ -208,7 +209,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   async <%=capitalizeFirstLetter(api.action) %>(
     @AppUser() appuser: UserContext,
     <%if(['post','put','patch'].includes(api.method.toLowerCase())){%> 
-      @Body() data:<%= getFieldType('type',api.schema)%>,
+      @Body() data:<%= getFieldType('type',api.schema,api.action)%>,
       //@Body() data:any,
     <%}%>
     <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
@@ -230,7 +231,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
          ){
     
 
-      const res:<%= getFieldType('type',api.responseType)%>  = await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser,<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
+      const res:<%= getFieldType('type',api.responseType,api.action)%>  = await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser,<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
           <%let subpath = api.entryPoint.split('/')%>
           <% for(let a=0;a<subpath.length;a++){%>
             <%const partstr = subpath[a]%>

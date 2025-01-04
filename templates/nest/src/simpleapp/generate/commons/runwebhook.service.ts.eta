@@ -11,26 +11,21 @@ import {
   Webhook,
   WebhookService,
 } from 'src/simpleapp/services/webhook.service';
-import {alldocuments} from 'src/simpleapp/generate/commons/dicts/documents'
+import { alldocuments } from 'src/simpleapp/generate/commons/dicts/documents';
 
 @Injectable()
 export class RunWebhookService {
-  private webhookApiKey = process.env.WEBHOOK_SERVER_APIKEY
-  private webhookAppId=process.env.WEBHOOK_SERVER_APP_ID
+  private webhookApiKey = process.env.WEBHOOK_SERVER_APIKEY;
+  private webhookAppId = process.env.WEBHOOK_SERVER_APP_ID;
   private webhookurl = process.env.WEBHOOK_SERVER_URL;
-  private webhookprefix = process.env.PROJECT_CODE+'.'
-  private  webhookeventurl = `${process.env.WEBHOOK_SERVER_URL}/event/`;
-  private  webhookeventtypeurl = `${process.env.WEBHOOK_SERVER_URL}/event_types/`;
-  private webhooksync:boolean = process.env.WEBHOOKER_SYNC_EVENTTYPE=='true'
+  private webhookprefix = process.env.PROJECT_CODE + '.';
+  private webhookeventurl = `${process.env.WEBHOOK_SERVER_URL}/event/`;
+  private webhookeventtypeurl = `${process.env.WEBHOOK_SERVER_URL}/event_types/`;
+  private webhooksync: boolean = process.env.WEBHOOKER_SYNC_EVENTTYPE == 'true';
 
-
-
-  public constructor(
-    private webhookService: WebhookService,    
-  ) {
-    if(this.webhooksync) this.syncEventTypes()
+  public constructor(private webhookService: WebhookService) {
+    if (this.webhooksync) this.syncEventTypes();
   }
-
 
   @OnEvent('webhook')
   async loadWebhook(
@@ -39,18 +34,16 @@ export class RunWebhookService {
     actionName: string,
     data?: any,
   ) {
-
     //no webhook server implemented
-    if(!this.webhookApiKey) return true
-
+    if (!this.webhookApiKey) return true;
 
     const filter = {
-      eventTypes: documentName + '.' + actionName ,
+      eventTypes: documentName + '.' + actionName,
       active: true,
-    }
-    console.log("Load webhook",documentName,actionName,filter)
+    };
+    console.log('Load webhook', documentName, actionName, filter);
     const webhooks = await this.webhookService.search(appuser, filter);
-    console.log("Loaded webhook",webhooks)
+    console.log('Loaded webhook', webhooks);
     if (webhooks.length == 0) return;
 
     for (let i = 0; i < webhooks.length; i++) {
@@ -74,128 +67,127 @@ export class RunWebhookService {
     webhook: Webhook,
     documentName: string,
     actionName: string,
-    data: any,
+    oridata: any,
   ) {
-    
     const headers = {};
-
-    console.log("Run webhook ",documentName,actionName)
-    if (Array.isArray(webhook.headers)) {
-      webhook.headers.forEach((h) => {
-        headers[h.name] = h.value;
-      });
-    }
-    headers['accept'] = 'application/json';
-    headers['content-type'] = 'application/json';
-    headers['Authorization'] = this.webhookApiKey;
-    const eventname = `${this.webhookprefix}${documentName}.${actionName}`
-    const options = {
-      method: webhook.requestMethod.toUpperCase(),
-      headers: headers,
-      body: JSON.stringify({
-        labels: {
-          tenantId: appuser.getTenantId().toString(),
-        },
-        metadata: {
-          src: process.env.PROJECT_NAME,
-          user: appuser.getFullname(),
-        },
-        application_id: this.webhookAppId,
-        event_type: eventname,
-        event_id: crypto.randomUUID(),
-        occurred_at: new Date().toISOString(),
-        payload: JSON.stringify(data),
-        payload_content_type: 'application/json',
-      }),
-    };
-    try {
-      console.log("webhook request ",this.webhookeventurl,options)
+    
+    try{
+      
+      console.log('Run webhook ', documentName, actionName);
+      const Mustache = require('mustache');
+      const data = Mustache.render(webhook.body,oridata)
+      if (Array.isArray(webhook.headers)) {
+        webhook.headers.forEach((h) => {
+          headers[h.name] = h.value;
+        });
+      }
+      headers['accept'] = 'application/json';
+      headers['content-type'] = 'application/json';
+      headers['Authorization'] = this.webhookApiKey;
+      const eventname = `${this.webhookprefix}${documentName}.${actionName}`;
+      const options = {
+        method: webhook.requestMethod.toUpperCase(),
+        headers: headers,
+        body: JSON.stringify({
+          labels: {
+            tenantId: appuser.getTenantId().toString(),
+          },
+          metadata: {
+            src: process.env.PROJECT_NAME,
+            user: appuser.getFullname(),
+          },
+          application_id: this.webhookAppId,
+          event_type: eventname,
+          event_id: crypto.randomUUID(),
+          occurred_at: new Date().toISOString(),
+          payload: data, //JSON.stringify(),
+          payload_content_type: 'application/json',
+        }),
+      };
+      
+      console.log('webhook request ', this.webhookeventurl, options);
       const req = await fetch(this.webhookeventurl, options);
       const statusCode = req.status;
-      if(statusCode>=300){
-        throw new InternalServerErrorException(`create event ${eventname} failed to webhook server`)
+      if (statusCode >= 300) {
+        throw new InternalServerErrorException(
+          `create event ${eventname} failed to webhook server`,
+        );
       }
-      
+
       // const body = req.body;
     } catch (e) {
-      return e
+      return e;
     }
   }
 
-
-
-  async syncEventTypes(){
+  async syncEventTypes() {
     const options = {
-      method: 'GET', 
+      method: 'GET',
       headers: {
         accept: 'application/json',
-        Authorization: this.webhookApiKey
-      }};
+        Authorization: this.webhookApiKey,
+      },
+    };
     //  {
     //   "service_name": "billing",
     //   "resource_type_name": "invoice",
     //   "verb_name": "documentno",
     //   "event_type_name": "billing.invoice.documentno"
     // },
-    try{
+    try {
+      const res = await fetch(
+        `${this.webhookeventtypeurl}?application_id=${this.webhookAppId}`,
+        options,
+      );
 
+      const locallist = this.getSchemaEventTypes();
+      const eventlist = (await res.json()).map((item) => item.event_type_name);
 
-    const res = await fetch(
-      `${this.webhookeventtypeurl}?application_id=${this.webhookAppId}`, 
-      options)
-
-    const locallist = this.getSchemaEventTypes()
-    const eventlist = (await res.json()).map(item=>item.event_type_name)
-
-    for(let i=0; i<locallist.length;i++){
-      const item = locallist[i]
-      if(!eventlist.includes(item)){
-        //create remote event type
-        await this.createEventType(item)
+      for (let i = 0; i < locallist.length; i++) {
+        const item = locallist[i];
+        if (!eventlist.includes(item)) {
+          //create remote event type
+          await this.createEventType(item);
+        }
       }
+    } catch (e) {
+      throw new InternalServerErrorException(e);
     }
-
-   
-    }catch(e){
-      throw new InternalServerErrorException(e)
-    }
-
-
   }
 
-
-  async createEventType(eventname:string){
-    const para = eventname.split('.')
+  async createEventType(eventname: string) {
+    const para = eventname.split('.');
     const options = {
       method: 'POST',
       headers: {
         accept: 'application/json',
         'content-type': 'application/json',
-        Authorization: this.webhookApiKey
+        Authorization: this.webhookApiKey,
       },
       body: JSON.stringify({
         application_id: this.webhookAppId,
         resource_type: para[0],
         service: para[1],
-        verb: para[2]
-      })
+        verb: para[2],
+      }),
     };
 
-    await fetch(this.webhookeventtypeurl, options)
-      // .then(response => response.json())
-      // .then(response => console.log(response))
-      // .catch(err => console.error(err));
+    await fetch(this.webhookeventtypeurl, options);
+    // .then(response => response.json())
+    // .then(response => console.log(response))
+    // .catch(err => console.error(err));
   }
-  getSchemaEventTypes(){
-    const alleventtypes:string[] = []
-    alldocuments.filter(item=>Array.isArray(item.webhook))
-      .forEach(item=>{
-        item.webhook.forEach(h=>{
+  getSchemaEventTypes() {
+    const alleventtypes: string[] = [];
+    alldocuments
+      .filter((item) => Array.isArray(item.webhook))
+      .forEach((item) => {
+        item.webhook.forEach((h) => {
           alleventtypes.push(
-            `${this.webhookprefix}${item.docName.toLowerCase()}.${h}`)
-        })
-      })
-    return alleventtypes
-
+            `${this.webhookprefix}${item.docName.toLowerCase()}.${h}`,
+          );
+        });
+      });
+    return alleventtypes;
   }
 }

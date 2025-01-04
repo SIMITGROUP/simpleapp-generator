@@ -52,6 +52,7 @@ export const webhook:SchemaType = {
       },
 
       description: {type: "string",format:"text"},
+      body:{type:"string",format:"text",minLength:3},
       active: {type: "boolean", default:true},
       eventTypes:{
         type:"array",

@@ -14,8 +14,10 @@ import { Role } from '../commons/roles/roles.enum';
 
 import { Request } from '@nestjs/common';
 
-<% const getFieldType =(proptype, typename)=>{
+<% const getFieldType =(proptype, typename,actionname)=>{
     const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
+    if(!typename) throw actionname +" undefine schema";
+
     let tmptypename = typename.replace('[','').replace(']','')
     
     if(systemtypes.includes(tmptypename)){
@@ -89,7 +91,7 @@ export class <%= it.typename %>Resolver {
         <%}%>
         )
     <%}%>
-      @Query(()=> <%= getFieldType('schema',api.responseType)%>)  
+      @Query(()=> <%= getFieldType('schema',api.responseType,api.action)%>)  
 
 
 
