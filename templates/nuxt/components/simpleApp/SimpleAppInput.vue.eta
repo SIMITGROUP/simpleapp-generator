@@ -278,12 +278,11 @@
       v-model="modelValue as number"
       @focus="setFocus"
       :max-fraction-digits="2"
-      :min-fraction-digits="2"
-      mode="currency"
-      :currency="getCurrency()"
+      :min-fraction-digits="2"      
       :readonly="isReadonly"
       :pt="pt"
-      :class="!pt ? 'w-full flex flex-col' : ''"
+      :class="!pt ? 'w-full flex flex-col ' : ''"
+      inputClass="text-right"
       :inputId="slotprops.uuid"
       :path="setting.instancepath"
       @update:modelValue="onChange"
@@ -304,16 +303,16 @@
       :placeholder="placeholder"
       v-bind="componentProps as TextareaProps"
     />
-    <Editor  
+    <Editor
       v-else-if="inputType == SimpleAppInputType.html"
       @update:modelValue="onChange"
       :inputId="slotprops.uuid"
       :path="setting.instancepath"
       :placeholder="placeholder"
       :readonly="isReadonly"
-      v-model="modelValue as string" 
+      v-model="modelValue as string"
       v-bind="componentProps as EditorProps"
-      />
+    />
     <InputText
       v-else
       v-model="modelValue as string"

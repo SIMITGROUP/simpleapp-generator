@@ -29,15 +29,15 @@ export class ResponseInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler,
   ): Promise<Observable<any>> {
-    
     //not http request then exclude such as graphql
-    if(context.getType()!='http'){
-      // obtain usersession here        
-      return next.handle().pipe(tap(async () => {
-        //console.log("none http, do nothing at interceptor")
-      }))
+    if (context.getType() != 'http') {
+      // obtain usersession here
+      return next.handle().pipe(
+        tap(async () => {
+          //console.log("none http, do nothing at interceptor")
+        }),
+      );
     }
-
 
     const req = context.switchToHttp().getRequest();
     const resp = context.switchToHttp().getResponse();
@@ -49,13 +49,22 @@ export class ResponseInterceptor implements NestInterceptor {
     const ip = req['ip'];
     const url = req['url'];
     // let { url, method, headers, body }
-    const session = await this.connection.startSession();
-    if (!session['runCount']) {
-      session['runCount'] = 0;
-    } else {
-      session['runCount'] = session['runCount'] + 1;
+    
+      const session = await this.connection.startSession();
+      if (!session['runCount']) {
+        session['runCount'] = 0;
+      } else {
+        session['runCount'] = session['runCount'] + 1;
+      }
+    let uid=''
+    const toUrl  = req['url'] 
+    // console.log("toUrltoUrl",toUrl)
+    if((toUrl !='/profile/login' && toUrl !='/profile/logout' && toUrl!='/profile/renew-token')){
+      usersession.setDBSession(session);
+      uid=usersession.getUid()
+    }else{
+      uid='loginuser'
     }
-    usersession.setDBSession(session);
     // const session: ClientSession = usersession.getDBSession();
     const logid: string = crypto.randomUUID();
     const starttime = new Date();
@@ -66,7 +75,7 @@ export class ResponseInterceptor implements NestInterceptor {
       _id: logid,
       created: starttime.toISOString(),
       duration: 0,
-      createdBy: usersession.getUid(),
+      createdBy: uid,
       path: url,
       method: method,
       headers: headers,

@@ -1,22 +1,108 @@
 #!/bin/bash
+set -e
 type=$1
+ 
+if [ $type == 'frontend' ]; then   
+    echo "##############setup new nuxt#################" 
+    npm create nuxt@latest frontend
+    echo "#############change working directory##################"
+    cd frontend    
+    echo "##############install run time package#################"
+    pnpm install primevue @primeuix/themes @primevue/forms primeicons tailwindcss-primeui \
+            dayjs json-schema jsonpath pinia @pinia/nuxt lodash @types/lodash @nuxtjs/tailwindcss\
+            @darkwolf/base64url ajv ajv-formats ajv-errors dotenv axios path\
+            mitt nuxt-auth-utils zod uuid @nuxtjs/i18n timezone-select-js \
+            lru-cache @nuxt/image dayjs-nuxt 
+    echo "#############install developer package##################"
+    pnpm install -D @primevue/nuxt-module   dayjs-nuxt @types/json-schema @nuxtjs/apollo@next \
+            @nuxtjs/i18n @types/jsonpath @types/node prettier @intlify/message-compiler   \
+            @vueuse/nuxt @vueuse/core
+    echo "##############Generate simpleapp resource for frontend#################"    
 
-# ts-node generate.ts   
-# npx prettier  --write jsonschemas
+    cd ..
+    simpleapp-generator -c config.json -g frontend
+    echo "###############create interface files for openapi################"    
+    openapi-generator-cli generate -i backend/openapi.yaml -o frontend/simpleapp/generate/openapi -g typescript-axios --skip-validate-spec
+    echo "###############copy sharelibs################"
+    cp -a ./sharelibs frontend/simpleapp/generate
+    echo "###############run prettier################"    
+    cd frontend
+    echo "#############activate module by copy nuxt.config.ts##################"                            
+    mv temp/nuxt.config.ts nuxt.config.ts
+    echo "#############Override app.vue for UI##################"                            
+    mv temp/app.vue app.vue    
+    echo "##############generate frontend source code#################"    
+    npx prettier --write ./pages/**/*.vue ./components/**/*.vue ./simpleapp/generate/*/*.ts
+    cd ..
+    echo "##############Done create frontend#################" 
+    echo "run command 'pnpm dev' in backend folder"
+    
 
-
-if [ $type == 'frontend' ]; then
+elif [ $type == 'updatefrontend' ]; then
+    echo "##############Update frontend schemas and resources#################" 
     simpleapp-generator -c config.json -g frontend
     cp -a ./sharelibs frontend/simpleapp/generate
-elif [ $type == 'updatefrontend' ]; then
-    simpleapp-generator -c config.json -g updatefrontend
-    cp -a ./sharelibs frontend/simpleapp/generate
+    echo "##############Convert backend openapi into client axios library#################" 
+    openapi-generator-cli generate -i backend/openapi.yaml -o frontend/simpleapp/generate/openapi -g typescript-axios --skip-validate-spec
+    echo "##############Run prettier#################" 
+    cd frontend
+    npx prettier --write ./pages/**/*.vue ./components/**/*.vue ./simpleapp/generate/*/*.ts
+    cd ..
+    echo "##############Done update frontend#################" 
+    echo "run command 'pnpm dev' in backend folder"
+
+
+elif [ $type == 'pages' ]; then
+  echo "########Generate default pages and round from jsonschema ####" 
+  simpleapp-generator -c config.json -g pages
+  echo "##############Formating/Prettier#################" 
+  cd frontend
+  npx prettier --write ./pages/**/*.vue ./components/**/*.vue ./simpleapp/generate/*/*.ts
+  cd ..
+  echo "##############Done generate pages#################" 
+  echo "run command 'pnpm dev' in frontend folder"
+
+elif [ $type == 'install-dependency' ]; then
+  echo "##############install nestcli and others dependency #################" 
+  npm install -g pnpm @nestjs/cli @openapitools/openapi-generator-cli nuxi  
+
 elif [ $type == 'backend' ]; then
-    simpleapp-generator -c config.json -g backend
-    cp -a ./sharelibs backend/src/simpleapp/generate
-elif [ $type == 'updatebackend' ]; then
-    simpleapp-generator -c config.json -g updatebackend
-    cp -a ./sharelibs backend/src/simpleapp/generate
+  echo "##############create nestproject #################" 
+  nest new -p pnpm backend
+  cd backend
+  echo "##############Generate backend resource from schema#################" 
+  pnpm install --save @nestjs/graphql mustache country-to-currency  \
+        graphql-type-json countries-and-timezones @nestjs/apollo \
+        @apollo/server graphql @nestjs/event-emitter dayjs \
+        bpmn-server@2.1.7 @casl/ability jsonpath yaml lodash \
+        @types/lodash nest-keycloak-connect keycloak-connect bpmn-client \
+        @nestjs/serve-static jsonwebtoken axios @darkwolf/base64url \
+        json-schema @wearenova/mongoose-tenant @nestjs/swagger \
+        @nestjs/mongoose mongoose  ajv ajv-formats ajv-errors \
+        @nestjs/config pusher-js ts-md5 vue-pdf-embed quill
+  pnpm -D install @types/jsonpath
+  cd ..
+  simpleapp-generator -c config.json -g backend
+  echo "##############Copy Share libs#################" 
+  cp -a ./sharelibs backend/src/simpleapp/generate
+  echo "##############Formating/Prettier#################" 
+  cd backend
+  npm run format
+  echo "##############Done setup backend#################" 
+  echo "run command 'pnpm run start:dev' in backend folder"
+
+
+elif [ $type == 'updatebackend' ]; then  
+  echo "##############Generate backend resource from schema#################" 
+  simpleapp-generator -c config.json -g backend
+  echo "##############Copy Share libs#################" 
+  cp -a ./sharelibs backend/src/simpleapp/generate
+  echo "##############Formating/Prettier#################" 
+  cd backend
+  npm run format  
+  echo "##############Done update backend#################" 
+  echo "run command 'pnpm run start:dev' in backend folder"
+
 fi
 
 

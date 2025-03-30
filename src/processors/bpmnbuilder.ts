@@ -7,7 +7,7 @@ import * as constants from '../constant'
 import {moddleOptions} from '../resource/camunda-moodle'
 const log: Logger<ILogObj> = new Logger();
 const { Eta } = require('eta');
-export const  generateWorkflows = async (configs,genFor:string[]) =>{
+export const  generateWorkflows = async (configs,genFor:string) =>{
     const invalidElementId = /[ `!@#$%^&*()+\-=\[\]{};':"\\|,.<>\/?~]/;
 
     const moddle = new BpmnModdle({moddleOptions});
@@ -20,11 +20,11 @@ export const  generateWorkflows = async (configs,genFor:string[]) =>{
     const generateTemplatefolder = `${constants.templatedir}/workflow`        
     let workflows:string[] = []
 
-    if(genFor.includes('nest')){
+    if(genFor =='nest'){
         mkdirSync(`${backendFolder}/src/simpleapp/workflows/bpmn`,{recursive:true})
         mkdirSync(`${backendFolder}/src/simpleapp/workflows/listeners`,{recursive:true})
     }
-    if(genFor.includes('nuxt')){
+    if(genFor =='nuxt'){
         mkdirSync(`${frontendFolder}/simpleapp/workflows/bpmn`,{recursive:true})
         mkdirSync(`${frontendFolder}/simpleapp/workflows/forms`,{recursive:true})
         copyFormKeys(`${bpmnFolder}/../forms`,`${frontendFolder}/simpleapp/workflows/forms`)

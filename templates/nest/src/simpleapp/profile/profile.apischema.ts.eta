@@ -82,7 +82,7 @@ export class MyProfileApiSchema {
   'fullName': string;
   @ApiProperty({type: 'number'})
   'group': string;
-  @ApiProperty({type: ['string']})
+  @ApiProperty({type: ()=> ['string']})
   'roles': string[];
   
 
@@ -92,4 +92,54 @@ export class MyProfileApiSchema {
   'invites': ProfileUserInvites[];
   @ApiProperty({type: 'string'})
   'time': string;
+}
+
+
+
+export class LoginSchema {
+  @ApiProperty({
+    description: 'Username',
+    example: 'username123',
+  })
+  user: string;
+
+  @ApiProperty({
+    description: 'Password',
+    example: 'password123',
+    format: 'password',
+  })
+  password: string;
+}
+
+export class LoginToken {
+  @ApiProperty({
+    description: 'Access Token',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
+  access_token: string;
+  @ApiProperty({
+    description: 'Refresh Token',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
+  refresh_token: string;
+  @ApiProperty({
+    description: 'expired in number',
+    example: 9999,
+  })
+  expires_in: number;
+  @ApiProperty({
+    description: 'Refresh Token',
+    example: 9999,
+  })
+  refresh_expires_in:number;
+  
+}
+export class RefreshToken {
+  @ApiProperty({
+    description: 'Refresh Token',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
+  refreshToken: string;
+  
+  
 }

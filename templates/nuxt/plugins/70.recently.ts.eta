@@ -13,11 +13,11 @@ export default defineNuxtPlugin( async(nuxtApp) => {
       
         // for use with tracking overall storage size
         maxSize: 5000,
-        sizeCalculation: (value, key) => {
+        sizeCalculation: (_value:any, _key:any) => {
           return 1
         },
       
-        dispose: (value, key) => {
+        dispose: (_value:any, _key:any) => {
           //freeFromMemoryOrWhatever(value)
         },
       
@@ -31,9 +31,9 @@ export default defineNuxtPlugin( async(nuxtApp) => {
         updateAgeOnHas: false,
       
         fetchMethod: async (
-          key,
-          staleValue,
-          { options, signal, context }
+          _key:any,
+          _staleValue:any,
+          // { options, signal, context }
         ) => {},
       }
       

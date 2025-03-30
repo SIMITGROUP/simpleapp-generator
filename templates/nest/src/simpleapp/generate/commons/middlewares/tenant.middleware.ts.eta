@@ -29,6 +29,7 @@ import { UserContext } from '../user.context';
 export class TenantMiddleware implements NestMiddleware {
   protected defaultxorg = Base64URL.encodeText('0-0-0');
   protected excludeXorgs = ['/profile', '/profile/tenant', '/profile/session'];
+  protected publicUrl =['/profile/login','/profile/logout','/profile/renew-token']
   protected logger = new Logger();
   protected transController;
   constructor(
@@ -48,17 +49,20 @@ export class TenantMiddleware implements NestMiddleware {
     return true;
   }
   async use(req: Request, res: Response, next: NextFunction) {
-    if (req.baseUrl == '/oauth2-redirect.html') {
+    const toUrl = req.baseUrl
+
+    
+    if (toUrl == '/oauth2-redirect.html') {
       next();
       return;
     }
     const u = new UserContext(this.usermodel, this.permmodel);
 
-    if (req.baseUrl == '/graphql') {
+    if (toUrl == '/graphql') {
       let tokenstr: string = req.headers['authorization'] ?? '';
       tokenstr = tokenstr.replace('Bearer ', '');
       const xorg = req.headers['x-org'] ?? this.defaultxorg;
-      if (tokenstr) {        
+      if (tokenstr) {
         await u.setCurrentUserInfo(tokenstr, xorg);
       }
       req['sessionuser'] = u;
@@ -67,31 +71,44 @@ export class TenantMiddleware implements NestMiddleware {
     }
     this.logger.debug(`running TenantMiddleware for ${req.baseUrl}`);
 
-    
+   
     //if APIKEY defined, and there is api key and secret supplied. use robot user
-    if(process.env.X_API_KEY &&req.headers['x-api-key'] && req.headers['x-api-secret']){
-    
-      if(req.headers['x-api-key']==process.env.X_API_KEY &&
-        req.headers['x-api-secret']==process.env.X_API_SECRET){        
-
-         u.setAsStaticUser(
-            '00000000-0000-0000-0000-000000000000',
-            'robot',
-            'Robot',
-            'robot@a.org',
-            req.headers['x-org']?? this.defaultxorg
-          );
-        if(req.headers['x-guest-accesstoken']) {
+    if (
+      process.env.X_API_KEY &&
+      req.headers['x-api-key'] &&
+      req.headers['x-api-secret']
+    ) {
+      if (
+        req.headers['x-api-key'] == process.env.X_API_KEY &&
+        req.headers['x-api-secret'] == process.env.X_API_SECRET
+      ) {
+        u.setAsStaticUser(
+          '00000000-0000-0000-0000-000000000000',
+          'robot',
+          'Robot',
+          'robot@a.org',
+          req.headers['x-org'] ?? this.defaultxorg,
+        );
+        if (req.headers['x-guest-accesstoken']) {
           u.setGuestToken(<string>req.headers['x-guest-accesstoken']);
         }
         req['sessionuser'] = u;
         next();
         return;
-      }else{
+      } else {
         this.logger.log('invalid api key/scret');
         throw new BadRequestException('invalid api key/scret');
       }
     }
+
+
+    if ( this.publicUrl.includes(toUrl)) {    
+      next();
+      return
+    }
+
+    
+
 
     if (!req.headers['authorization']) {
       this.logger.log('undefine bearer token');
@@ -111,7 +128,7 @@ export class TenantMiddleware implements NestMiddleware {
       let tokenstr: string = req.headers['authorization'];
       tokenstr = tokenstr.replace('Bearer ', '');
 
-      const xorg = req.headers['x-org'] ?? this.defaultxorg;      
+      const xorg = req.headers['x-org'] ?? this.defaultxorg;
       await u.setCurrentUserInfo(tokenstr, xorg);
       if (u.getId() == '' && this.requireXorg(req.baseUrl)) {
         this.logger.log('access deny of no user:', req.baseUrl);

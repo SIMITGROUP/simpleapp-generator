@@ -26,9 +26,9 @@ const X_SIMPLEAPP_CONFIG='x-simpleapp-config'
 let jsonschemas = {};
 let configs:any = {}
 const docs = [];
-let frontendFolder=''
-let backendFolder=''
-let frontendpagefolder=''
+let frontendFolder='./frontend'
+let backendFolder='./backend'
+let frontendpagefolder='./frontend'
 const allroles:any={}
 let langdata:any = {}
 let allbpmn:any = {}
@@ -36,22 +36,24 @@ let activatemodules:ModuleObject[]=[]
 let generateTypes:any = {}
 
 
-export const run =  async (paraconfigs:any,genFor:string[],callback:Function) => {
+export const run =  async (paraconfigs:any,genFor:string,callback:Function) => {
   configs = paraconfigs
-  frontendFolder=configs.frontendFolder
-  backendFolder=configs.backendFolder
+  
   const printformats:SchemaPrintFormat[] = []
   const groupFolder = configs.groupFolder
   const defaultLangFile = configs.defaultLangFile ??  frontendFolder +'/../lang/default.json'
-  if(genFor.includes('nest')){
+  if(genFor =='nest'){
     generateTypes['nest']=backendFolder
   }
-  if(genFor.includes('nuxt')){
+  if(genFor =='nuxt'){
     generateTypes['nuxt']=frontendFolder
+  }
+  if(genFor =='pages'){
+    generateTypes['pages']=frontendpagefolder
   }
   // console.log("genForgenForgenForgenFor",genFor,generateTypes)
   // 
-  frontendpagefolder = `${frontendFolder}/pages/[xorg]`  
+  
   const buildinschemanames = Object.keys(buildinschemas)
   for(let i=0; i<buildinschemanames.length;i++){    
     const schemaname = buildinschemanames[i]
@@ -106,23 +108,26 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
     allroles[documentname]=roles
   }
   
-  if(existsSync(defaultLangFile)){
-    log.info("Process lang file ",defaultLangFile)
-    const langjsonstr = readFileSync(defaultLangFile, 'utf-8');      
-    
-      langdata = JSON.parse(langjsonstr);     
+  if(genFor!='pages'){
+    if(existsSync(defaultLangFile)){
+      log.info("Process lang file ",defaultLangFile)
+      const langjsonstr = readFileSync(defaultLangFile, 'utf-8');      
       
-  }
-
+        langdata = JSON.parse(langjsonstr);     
+        
+    }
   
-  if(configs.bpmnFolder){
-    log.info("Process bpmn folder ",configs.bpmnFolder)
-    allbpmn = await generateWorkflows(configs,genFor)
+    
+    if(configs.bpmnFolder){
+      log.info("Process bpmn folder ",configs.bpmnFolder)
+      allbpmn = await generateWorkflows(configs,genFor)
+    }
+    
+    generateSystemFiles(activatemodules,allbpmn,genFor)
+  
+    generatePrintformat(configs,printformats)
   }
   
-  generateSystemFiles(activatemodules,allbpmn)
-
-  generatePrintformat(configs,printformats)
   
   callback()
 }
@@ -295,8 +300,8 @@ const generateSchema = ( docname: string,
             }
           }
                
-        }else if(foldertype=='nuxt'){
-          console.log("Process nuxt: ",docname)
+        }else if(foldertype=='nuxt' || foldertype=='pages'){
+          console.log(`Process ${foldertype}: `,docname)
           const capname = capitalizeFirstLetter(docname)
         
           const validateWritePage = (targetfile:string,isexists:boolean)=>{
@@ -312,101 +317,101 @@ const generateSchema = ( docname: string,
               return false
             }
           }
-          const mapfiles = {
-            'pages.form.vue.eta': { 
-              to:'components/form', 
-              as: `Form${_.upperFirst(docname)}.vue`,
-              validate: validateWritePage
-            },
-            'pages.mobile.[id].vue.eta': { 
-              to:`pages/[xorg]/mobile/${docname}`, 
-              as:'[id].vue',
-              validate: validateWritePage
-            },
-            'pages.mobile.landing.vue.eta':{ 
-              to:`pages/[xorg]/mobile/${docname}`, 
-              as:`index.vue`,
-              validate: validateWritePage
-            },
-            'component.select.vue.eta': { 
-              to:'components/select', 
-              as: `Select${_.upperFirst(docname)}.vue`,
-              validate: validateWritePage
-            },
-            'pages.viewer.vue.eta': { 
-              to:`components/viewer`, 
-              as: `Viewer${_.upperFirst(docname)}.vue`,
-              validate: validateWritePage
-            },
-            'pages.[id].vue.eta': { 
-              to:`pages/[xorg]/${docname}`, 
-              as:'[id].vue',
-              validate: validateWritePage
-            },
-            'pages.landing.vue.eta': { 
-              to:`pages/[xorg]/${docname}`, 
-              as:`../${docname}.vue`,
-              validate: validateWritePage
-            }, 
-                     
-            'simpleapp.doc.ts.eta': { 
-              to:`simpleapp/docs`, 
-              as:`${capname}Doc.ts`,
-              validate: (targetfile:string,isexists:boolean)=>!isexists
-            },
-            'default.ts.eta': { 
-              to:`simpleapp/generate/defaults`, 
-              as:`${capname}.default.ts`,
-              validate: (targetfile:string,isexists:boolean)=>{
-                return true
-              }
-            },
-            
-            'simpleapp.generate.client.ts.eta': { 
-              to:`simpleapp/generate/clients`, 
-              as:`${capname}Client.ts`, 
-              validate: (targetfile:string,isexists:boolean)=>{
-                return true
-              }
-            },
-          }
-
-
-            // if(configs?.splitMobilePage){
-            //   mapfiles['pages.mobile.[id].vue.eta'] = { 
-            //     to:`pages/[xorg]/mobile/${docname}`, 
-            //     as:'[id].vue',
-            //     validate: validateWritePage
-            //   }
-            //   mapfiles['pages.mobile.landing.vue.eta'] =  { 
-            //     to:`pages/[xorg]/mobile/${docname}`, 
-            //     as:`index.vue`,
-            //     validate: validateWritePage
-            //   }
-            // }
-            
-            const target = mapfiles[filename]   
-            console.log(target);
-            const targetfolder = `${generateTypes[foldertype]}/${target.to}`
-            const targetfile = `${targetfolder}/${target.as}`
-            
-            console.log("targetfile",targetfile);
-            if(jsonschemas[docname][X_SIMPLEAPP_CONFIG]['pageType'] && !existsSync(targetfolder)){
-              console.log("Mkdir",targetfolder)
-              mkdirSync(targetfolder,{recursive:true})              
+          let  mapfiles = {}
+          if(foldertype=='nuxt'){
+            mapfiles = {
+              'pages.form.vue.eta': { 
+                to:'components/form', 
+                as: `Form${_.upperFirst(docname)}.vue`,
+                validate: validateWritePage
+              },
+  
+              'component.select.vue.eta': { 
+                to:'components/select', 
+                as: `Select${_.upperFirst(docname)}.vue`,
+                validate: validateWritePage
+              },
+              'pages.viewer.vue.eta': { 
+                to:`components/viewer`, 
+                as: `Viewer${_.upperFirst(docname)}.vue`,
+                validate: validateWritePage
+              },
+             
+              'simpleapp.doc.ts.eta': { 
+                to:`simpleapp/docs`, 
+                as:`${capname}Doc.ts`,
+                validate: (targetfile:string,isexists:boolean)=>!isexists
+              },
+              'default.ts.eta': { 
+                to:`simpleapp/generate/defaults`, 
+                as:`${capname}.default.ts`,
+                validate: (targetfile:string,isexists:boolean)=>{
+                  return true
+                }
+              },
+              
+              'simpleapp.generate.client.ts.eta': { 
+                to:`simpleapp/generate/clients`, 
+                as:`${capname}Client.ts`, 
+                validate: (targetfile:string,isexists:boolean)=>{
+                  return true
+                }
+              },
             }
-
-
-            const isexists = existsSync(targetfile)
-            const iswrite:boolean = target.validate(targetfile,isexists)
-            log.info("iswrite: ",iswrite)
-            
-            if(iswrite){
-              const filecontent = eta.render(templatepath, variables)     
-              writeFileSync(targetfile,filecontent);
+          }else if(foldertype=='pages'){
+            mapfiles = {
+              
+              'pages.[id].vue.eta': { 
+                to:`pages/[xorg]/${docname}`, 
+                as:'[id].vue',
+                validate: validateWritePage
+              },
+              'pages.landing.vue.eta': { 
+                to:`pages/[xorg]/${docname}`, 
+                as:`../${docname}.vue`,
+                validate: validateWritePage
+              },        
+               // if(configs?.splitMobilePage){
+              //   mapfiles['pages.mobile.[id].vue.eta'] = { 
+              //     to:`pages/[xorg]/mobile/${docname}`, 
+              //     as:'[id].vue',
+              //     validate: validateWritePage
+              //   }
+              //   mapfiles['pages.mobile.landing.vue.eta'] =  { 
+              //     to:`pages/[xorg]/mobile/${docname}`, 
+              //     as:`index.vue`,
+              //     validate: validateWritePage
+              //   }
+              // }                              
             }
-            console.log("complete, go to next file")
+          }                    
+
+           
             
+            const target = mapfiles[filename]  
+            console.log("filename:",filename);
+            if(target) {            
+              console.log("map target ",target);
+              const targetfolder = `${generateTypes[foldertype]}/${target.to}`
+              const targetfile = `${targetfolder}/${target.as}`
+              
+              console.log("targetfile",targetfile);
+              if(jsonschemas[docname][X_SIMPLEAPP_CONFIG]['pageType'] && !existsSync(targetfolder)){
+                console.log("Mkdir",targetfolder)
+                mkdirSync(targetfolder,{recursive:true})              
+              }
+
+
+              const isexists = existsSync(targetfile)
+              const iswrite:boolean = target.validate(targetfile,isexists)
+              log.info("iswrite: ",iswrite)
+              
+              if(iswrite){
+                const filecontent = eta.render(templatepath, variables)     
+                writeFileSync(targetfile,filecontent);
+              }
+              console.log("complete, go to next file")
+            }
             
 
         }
@@ -420,7 +425,7 @@ const generateSchema = ( docname: string,
 }
 
 
-const generateSystemFiles=(modules:ModuleObject[],allbpmn)=>{  
+const generateSystemFiles=(modules:ModuleObject[],allbpmn,genfor:string)=>{  
   const renderProperties = {
     configs:configs,
     modules:modules,
@@ -432,10 +437,10 @@ const generateSystemFiles=(modules:ModuleObject[],allbpmn)=>{
   }
   
   
-  Object.getOwnPropertyNames(generateTypes).forEach((foldertype)=>{
-      const frameworkpath = generateTypes[foldertype]
+  // Object.getOwnPropertyNames(generateTypes).forEach((foldertype)=>{
+      const frameworkpath = generateTypes[genfor]
       // log.info("Generate ",foldertype)
-      const frameworkfolder = `${constants.templatedir}/${foldertype}`
+      const frameworkfolder = `${constants.templatedir}/${genfor}`
       const frameworkfiles = readdirSync(frameworkfolder,{recursive:true})
       const eta = new Eta({views:frameworkfolder,
                 functionHeader: getCodeGenHelper()});
@@ -484,7 +489,8 @@ const generateSystemFiles=(modules:ModuleObject[],allbpmn)=>{
         }
         
         }
-      })
+      // }
+    // )
 
 }
 

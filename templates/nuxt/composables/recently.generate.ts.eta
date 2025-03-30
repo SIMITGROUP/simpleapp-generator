@@ -7,7 +7,7 @@ export const setRecentDocument = (key:string, value:RecentlyValue)=>{
     recent.forEach((value,key)=>{
         tmp[key]=value
     })
-    console.log("JSON.stringify(tmp)",tmp)
+    //console.log("JSON.stringify(tmp)",tmp)
     localStorage.setItem('recently', JSON.stringify(tmp)); // Store keys as an array
 
 }

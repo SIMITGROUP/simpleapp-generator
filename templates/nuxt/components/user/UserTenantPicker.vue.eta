@@ -1,7 +1,11 @@
 <template>
   <div class="w-full p-4">
-    <LazyTenantCreator v-model:model-value="visibleCreateTenant"></LazyTenantCreator>
-    <ButtonPrimary @click="visibleCreateTenant=true">{{ t('newBusiness') }}</ButtonPrimary>
+    <LazyTenantCreator
+      v-model:model-value="visibleCreateTenant"
+    ></LazyTenantCreator>
+    <ButtonPrimary @click="visibleCreateTenant = true">{{
+      t("newBusiness")
+    }}</ButtonPrimary>
     <div v-if="waiting" class="p-4 w-full">waiting..</div>
     <div
       v-else
@@ -13,7 +17,7 @@
           <NuxtLink :to="`/${item.xOrg}`" external>
             <div class="flex flex-row gap-2 hover:bg-primary-100">
               <div class="min-w-14 p=2">
-                <ImageOrganization :orgRecordId="item.orgRecordId" :size="12" />
+                <!-- <ImageOrganization :orgRecordId="item.orgRecordId" :size="12" /> -->
               </div>
               <div class="flex flex-col w-full justify-end gap-2">
                 <div class="flex flex-row gap-2">
@@ -41,7 +45,7 @@ import TextPrimary from "../text/TextPrimary.vue";
 import ImageOrganization from "../image/ImageOrganization.vue";
 const waiting = ref(true);
 const alltenants = ref();
-const visibleCreateTenant = ref(false)
+const visibleCreateTenant = ref(false);
 const loadAllTenants = async () => {
   waiting.value = false;
   alltenants.value = (await getProfileApi().getAllTenants()).data;

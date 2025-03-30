@@ -21,6 +21,8 @@
         <% if(skipcolumns.indexOf(key)>=0){ %>
         <% } else if(obj.type=='boolean'){ %>
             <%~ getBasicElement('checkbox',`#/properties/${key}`,`data.${key}`) %>
+        <% } else if(obj.type=='number' && obj.format=='money'){ %>
+            <%~ getBasicElement('money',`#/properties/${key}`,`data.${key}`) %>            
         <% } else if(obj.type=='number' || obj.type=='integer'){ %>
             <%~ getBasicElement('number',`#/properties/${key}`,`data.${key}`) %>            
         <% } else if(obj.type=='array'  && obj.items && obj.items.type =='string' ){ %>              
@@ -59,7 +61,7 @@
                         <%~ getBasicElement('text',`#/properties/${key}`,`data.${key}`) %>            
                 <% }%>  
         <% } else if(obj.type=='object' && obj.properties){ %>                  
-            <SimpleAppValue :setting="o.getField('#/properties/<%= key %>')">
+            <div>
             <%Object.keys(obj.properties).forEach(function(skey) { %>
                 <% let sobj=obj.properties[skey] %>
                 <% let fieldpath=`#/properties/${key}/properties/${skey}` %>
@@ -69,6 +71,8 @@
 
                 <% if(sobj.type=='boolean'){ %>
                     <%~ getBasicElement('checkbox',fieldpath,vmodel) %>
+                <% } else if(sobj.type=='number' && sobj.format=='money'){ %>
+                    <%~ getBasicElement('money',fieldpath,vmodel) %>
                 <% } else if(sobj.type=='number' || sobj.type=='integer'){ %>
                     <%~ getBasicElement('number',fieldpath,vmodel) %>
                 <% } else if(sobj.type=='array'  && sobj.items && sobj.items.type =='string' ){ %>                                  
@@ -77,23 +81,25 @@
                     <%~ getBasicElement('chip',fieldpath,vmodel) %>
                 <% } else if(sobj.type=='string'){ %>            
                          <% if(sobj.format=='date'){ %>                         
-                            <SimpleAppInput :input-type="SimpleAppInputType.calendar" instancePath="<%=instancePath%>" autofocus :setting="<%~fieldpathgetter%>" v-model="<%= vmodel %>"/>  
+                            <SimpleAppInput :input-type="SimpleAppInputType.calendar" instancePath="<%=instancePath%>" :setting="<%~fieldpathgetter%>" v-model="<%= vmodel %>"/>  
                         <% } else if(sobj.format=='time'){ %>
-                            <SimpleAppText type="<%=sobj.format%>" instancePath="<%=instancePath%>" autofocus :setting="<%~fieldpathgetter%>" v-model="<%= vmodel %>"/>  
+                            <SimpleAppText type="<%=sobj.format%>" instancePath="<%=instancePath%>" :setting="<%~fieldpathgetter%>" v-model="<%= vmodel %>"/>  
                         <% } else if(sobj.format=='text'){ %>
                             <SimpleAppTextarea :setting="<%~fieldpathgetter%>'" instancePath="<%=instancePath%>" v-model="<%= vmodel %>"/>  
                         <% } else if(sobj.format=='html'){ %>
-                            <SimpleAppEditor editorStyle="height: 320px" instancePath="<%=instancePath%>" :setting="<%=fieldpathgetter%>" v-model="<%= vmodel %>"/>  
+                            <SimpleAppEditor editorStyle="height: 320px" instancePath="<%=instancePath%>" :setting="<%~fieldpathgetter%>" v-model="<%= vmodel %>"/>  
                         <% } else if(sobj.format=='email'){ %>
-                            <SimpleAppText  autofocus type="<%=~obj.type%>" instancePath="<%=instancePath%>" :setting="<%=fieldpathgetter%>" v-model="<%= vmodel %>"/>  
+                            <SimpleAppText type="email" instancePath="<%=instancePath%>" :setting="<%~fieldpathgetter%>" v-model="<%= vmodel %>"/>  
                         <% } else if(sobj.enum){ %>
-                            <SimpleAppSelect  autofocus :setting="<%~fieldpathgetter%>" instancePath="<%=instancePath%>" v-model="<%= vmodel %>"/>
+                            <SimpleAppSelect :setting="<%~fieldpathgetter%>" instancePath="<%=instancePath%>" v-model="<%= vmodel %>"/>
                         <% } else {%>
-                                <SimpleAppText   autofocus :setting="<%~fieldpathgetter%>" instancePath="<%=instancePath%>" v-model="<%= vmodel %>"/>  
+                                <SimpleAppText :setting="<%~fieldpathgetter%>" instancePath="<%=instancePath%>" v-model="<%= vmodel %>"/>  
                         <% }%> 
                 <% } %>
             <%})%>   
+            <SimpleAppValue :setting="o.getField('#/properties/<%= key %>')">
             </SimpleAppValue>            
+            </div>
         <% } else if(obj.type=='array' && obj.items && obj.items.type=='object'){%>
             <SimpleAppInputTable  :getField="o.getField" class="col-span-4"
                 :setting="o.getField('#/properties/<%=key%>')" v-model="data.<%=key%>">
@@ -107,6 +113,8 @@
                                 <%~ getBasicElement('autocomplete',`#/properties/${key}/items/properties/${col}`,`data.${key}[index].${col}`,undefined,true,`/${key}/\${index}/${col}`) %>                                
                             <% } else if(subobj.type=='boolean'){%>
                                 <%~ getBasicElement('checkbox',`#/properties/${key}/items/properties/${col}`,`data.${key}[index].${col}`,undefined,true,`/${key}/\${index}/${col}`) %>                                
+                            <% } else if(subobj.type=='number' || subobj.format=='money'){%>
+                                <%~ getBasicElement('money',`#/properties/${key}/items/properties/${col}`,`data.${key}[index].${col}`,undefined,true,`/${key}/\${index}/${col}`) %>                                
                             <% } else if(subobj.type=='number' || subobj.type=='integer'){%>
                                 <%~ getBasicElement('number',`#/properties/${key}/items/properties/${col}`,`data.${key}[index].${col}`,undefined,true,`/${key}/\${index}/${col}`) %>                                
                             <%} else if(subobj.type=='string' && subobj.format){%>
@@ -179,9 +187,12 @@ onMounted(async ()=> await actionListener(FormCrudEvent.mount))
   <% let api = it.apiSettings[i] %>
     const run<%=capitalizeFirstLetter(api.action)%> = async () =>{
 
-        const data = {
+        // code yourself 
+        /* 
+        const data:any = {
             id: id.value
-        }
+        }*/
+        /*
         const result = await doc.run<%=capitalizeFirstLetter(api.action)%>(
              <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
                 <%let subpath = api.entryPoint.split('/')%>
@@ -195,6 +206,7 @@ onMounted(async ()=> await actionListener(FormCrudEvent.mount))
             <%}%>
             data
         )
+        */
         
     }
 <%}%>

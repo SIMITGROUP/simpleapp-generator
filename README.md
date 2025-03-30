@@ -101,6 +101,10 @@ simpleapp-generator -g init
 # !important
 # Modify value in config.json, it will copy over to both frontend and backend .env
 ```
+5. install dependecy like nestjs cli, openapi-generator and etc
+```sh
+./build.sh install-dependency
+```
 
 5. prepare backend
 ```sh

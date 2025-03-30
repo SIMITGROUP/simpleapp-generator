@@ -24,6 +24,7 @@ import {
   HttpException,
   Request,
   Logger,
+  HttpCode
 } from '@nestjs/common';
 import { Roles } from '../generate/commons/roles/roles.decorator';
 import { Role } from '../generate/commons/roles/roles.enum';
@@ -32,7 +33,7 @@ import { UserContext } from '../generate/commons/user.context';
 import { ProfileService } from './profile.service';
 import { AppUser } from '../generate/commons/decorators/appuser.decorator';
 import { RegTenant } from './profile.types';
-import { RegTenantApiSchema, MyProfileApiSchema } from './profile.apischema';
+import { RegTenantApiSchema, MyProfileApiSchema,LoginSchema,LoginToken,RefreshToken } from './profile.apischema';
 @ApiTags('PROFILE')
 @Controller('/profile')
 export class ProfileController {
@@ -65,6 +66,65 @@ export class ProfileController {
     } else {
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
+  }
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiBody({ description: 'Login Schema', type: LoginSchema })
+  @ApiOperation({
+    summary: 'Authenticate user login',
+  })
+  @ApiResponse({
+    status: 200,    
+    description: 'Login successful and obtain JWT Token',
+    type: LoginToken,    
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid credentials',
+  })
+  async login(@Body() loginCredentials: LoginSchema): Promise<LoginToken> {     
+    return this.profileservice.login(loginCredentials);
+  }
+
+  @Post('renew-token')
+  @HttpCode(HttpStatus.OK)
+  @ApiBody({ description: 'refresh token', type: RefreshToken, required:true })
+  @ApiOperation({
+    summary: 'Renew user token',
+  })
+  @ApiResponse({
+    status: 200,    
+    description: 'Login successful and obtain JWT Token',
+    type: LoginToken,    
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid credentials',
+  })
+  async renewToken(@Body() refreshToken: RefreshToken): Promise<LoginToken> {     
+    return this.profileservice.renewToken(refreshToken);
+  }
+  
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiBody({ description: 'Refresh token', type: RefreshToken })
+  @ApiOperation({
+    summary: 'Expire the user token',
+  })
+  @ApiResponse({
+    status: 200,    
+    description: 'Logout successsfully',
+    example: '{}',
+    type: Object,    
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid credentials',
+  })
+  async logout(@Body() refreshToken: RefreshToken): Promise<String> {     
+    return this.profileservice.logout(refreshToken);
   }
 
   @Get('session')
@@ -143,6 +203,28 @@ export class ProfileController {
     }
   }
 
+  @Get('/user-name/:id')
+  @Roles(Role.User)
+  @ApiOperation({
+    operationId: 'getUserName',
+    description: 'Get user name from user id',
+  })
+  @ApiResponse({ status: 200, type: String, description: 'Success' })
+  async getUserName(
+    @AppUser() appuser: UserContext,
+    @Param('id') id: string,
+  ) {
+    const result = await this.profileservice.getUserName(
+      appuser,
+      id,
+    );
+    if (result) {
+      return result;
+    } else {
+      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+    }
+  }
+
   @Post('/invitation/:id/:decision')
   @Roles(Role.Everyone)
   @ApiOperation({
@@ -166,6 +248,7 @@ export class ProfileController {
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
   }
+
   @Post('/tour-complete/:guidename')
   @Roles(Role.User)
   @ApiOperation({

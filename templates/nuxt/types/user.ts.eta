@@ -4,7 +4,11 @@
  * last change 2024-02-23
  * Author: Ks Tan
  */
-import {Branch} from "~/simpleapp/generate/openapi"
+import type {Branch} from "~/simpleapp/generate/openapi"
+export type UserNameMap ={
+  uid:string
+  name:string
+}
 export type UserListItem = {
     _id: string
     uid?:string
@@ -22,16 +26,7 @@ export type UserListItem = {
     orgCode: string
     orgName: string
   }
-  export type BranchListItem = {
-    _id:string
-    tenantId:number
-    orgId: number
-    branchId: number
-    branchName: string
-    branchCode: string
-    group:string
-    active:boolean
-  }
+  
   export type UserStoreBranch ={
     branch:Branch
     group:string[]
@@ -39,18 +34,36 @@ export type UserListItem = {
     _id:string
   }
   
-  export type PermissionListItem = {
-    branchId: number  
-    email:string
-    fullName:string
-    group:string
-    active:boolean
-    orgId: number
-    tenantId:number
-    userId:string
-    _id:string
-    
+  export type UserTenantPermissionItem ={
+    _id: string,
+    orgId: number,
+    branchId: number,
+    groups: string[],
+    orgRecordId: string,
+    orgCode: string,
+    orgName: string,
+    branchCode: string,
+    branchName: string,
+    xOrg: string
   }
+  export type UserTenantPermission = {
+    _id: string,
+    tenantId: number,
+    tenantName: string,
+    permissions: UserTenantPermissionItem[]
+  }
+  // export type PermissionListItem = {
+  //   branchId: number  
+  //   email:string
+  //   fullName:string
+  //   group:string
+  //   active:boolean
+  //   orgId: number
+  //   tenantId:number
+  //   userId:string
+  //   _id:string
+    
+  // }
 
 
 export type UserProfile = {

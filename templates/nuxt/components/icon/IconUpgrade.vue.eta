@@ -1,0 +1,7 @@
+<template>
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M28 23L26.6 24.4L24 21.8V30H22V21.8L19.4 24.4L18 23L23 18L28 23Z" fill="black"/>
+<path d="M15.4 30L5 23.8C4.4 23.4 4 22.8 4 22.1V9.9C4 9.2 4.4 8.5 5 8.2L15 2.3C15.3 2.1 15.6 2 16 2C16.4 2 16.7 2.1 17 2.3L27 8.2C27.6 8.6 28 9.2 28 9.9V16H26V9.9L16 4L6 9.9V22.1L16.5 28.3L15.4 30Z" fill="black"/>
+</svg>
+
+</template>

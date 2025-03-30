@@ -13,10 +13,13 @@ import {
   Inject,
   Logger,
   BadRequestException,
+  UnauthorizedException,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { UserContext } from '../generate/commons/user.context';
 import { RegTenant } from './profile.types';
+import { RegTenantApiSchema, MyProfileApiSchema,LoginSchema,LoginToken,RefreshToken } from './profile.apischema';
 import * as mongoose from 'mongoose';
 import { InjectConnection } from '@nestjs/mongoose';
 import { TenantService, Tenant } from '../services/tenant.service';
@@ -28,14 +31,35 @@ const Base64URL = require('@darkwolf/base64url');
 @Injectable()
 export class ProfileService {
   protected logger = new Logger();
+  private ssoRealmUrl = ''
   constructor(
     private usersvc: UserService,
     private tenantsvc: TenantService,
     private orgsvc: OrganizationService,
     private branchsvc: BranchService,
     private permsvc: PermissionService,
-  ) {}
+  ) {
+    this.ssoRealmUrl =  process.env.OAUTH2_CONFIGURL ?? ''
+    this.ssoRealmUrl = this.ssoRealmUrl.replace(/\/$/, '');
 
+  }
+
+
+  async getUserName(appuser:UserContext,uid:string) {
+    
+    try{
+      const data = await this.usersvc.search(appuser,{uid:uid},['fullName'])
+      if(data.length==0) {        
+        throw new NotFoundException("user not found")
+      }else{
+       
+       return Promise.resolve(data[0].fullName)
+      }      
+    }catch(error){
+      throw new BadRequestException(error)
+    }
+    
+  }
   /**
    * get user profile for current tenant
    * tenantId=0, if profile not exists will auto create one
@@ -64,6 +88,7 @@ export class ProfileService {
       }
     } else {
       userinfo['time'] = new Date().toISOString();
+      
       return userinfo;
     }
   }
@@ -276,5 +301,123 @@ export class ProfileService {
     }
 
     return 'ok';
+  }
+
+
+  async login(loginCredentials: LoginSchema): Promise<LoginToken> {
+    try {      
+      const response = await fetch(
+        `${process.env.OAUTH2_CONFIGURL}/protocol/openid-connect/token`,
+        {
+          method:'post',
+          body: new URLSearchParams({
+            grant_type: 'password',
+            client_id: process.env.OAUTH2_CLIENTID,
+            client_secret: process.env.OAUTH2_CLIENTSECRET,
+            username: loginCredentials.user,
+            password: loginCredentials.password,
+            scope: 'openid email profile',
+          }).toString(),
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        }
+       
+      );
+      const data =await response.json();      
+      
+      if(data['access_token']){
+        const result =  {
+          access_token:   data['access_token'],
+          refresh_token: data['refresh_token'],
+          expires_in: data['expires_in']*1000  + Date.now() - 5000,  //play safe reserve 5 seconds
+          refresh_expires_in: data['refresh_expires_in']*1000 +  Date.now() - 5000, //play safe reserve 5 seconds
+          // scope: data['scope'],
+          // session_state:data['session_state'],
+          email: 'myemail@a.com'
+        };
+        
+        return result;
+      }else{
+        
+        throw new UnauthorizedException('Invalid credentials');
+      }
+      
+    } catch (error) {
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+      throw error;
+    }
+  }
+
+
+  async renewToken(refreshToken:RefreshToken){
+    try {      
+      
+      const bodytxt = new URLSearchParams({
+        grant_type: 'refresh_token',
+        client_id: process.env.OAUTH2_CLIENTID,
+        client_secret: process.env.OAUTH2_CLIENTSECRET,
+        refresh_token: refreshToken.refreshToken,
+      }).toString()
+      const response = await fetch(
+        `${this.ssoRealmUrl}/protocol/openid-connect/token`,
+        {
+          method:'post',
+          body: bodytxt,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        }
+      );
+      const data =await response.json();   
+
+      if(data['access_token']){
+        const result =  {
+          
+          access_token:   data['access_token'],
+          refresh_token: data['refresh_token'],
+          expires_in: data['expires_in']*1000 + Date.now(),
+          refresh_expires_in: data['refresh_expires_in']*1000 +  Date.now(),
+          email: 'myemail@a.com'
+        };
+        return result;
+      }else{
+
+        throw new UnauthorizedException('Invalid refresh token');
+      }   
+
+    } catch (error) {
+      if (error.response?.status === 401) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+      throw error;
+    }   
+
+  }
+
+  async logout(refreshToken:RefreshToken){
+    try {      
+      await fetch(
+        `${this.ssoRealmUrl}/protocol/openid-connect/revoke`,
+        {
+          method:'post',
+          body: new URLSearchParams({
+            grant_type: 'refresh_token',
+            client_id: process.env.OAUTH2_CLIENTID,
+            refresh_token: refreshToken.refreshToken,
+          }).toString(),
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        }
+      );
+    
+    } catch (error) {
+      //logout always ok     
+    }
+    return 'OK'
+     
   }
 }
