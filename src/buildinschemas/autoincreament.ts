@@ -10,6 +10,7 @@ export const autoincreament:SchemaType = {
       additionalApis:[{
         action:"generateNextNo",
         entryPoint:"gennextno/:collection/:field",
+        systemService:true, 
         requiredRole:["User"],
         method:RESTMethods.get,         
         responseType:"Autoincreament",

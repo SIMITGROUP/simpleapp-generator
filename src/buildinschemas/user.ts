@@ -17,6 +17,7 @@ export const user:SchemaType ={
             "entryPoint":":id/permission",
             "requiredRole":[],
             "method":RESTMethods.get,
+            systemService:true, 
             "responseType":"[UserPermission]",
             "description":"Get user permissoin"
             },
@@ -24,6 +25,7 @@ export const user:SchemaType ={
             "entryPoint":":id/permission",
             "requiredRole":[],
             "method":RESTMethods.put,
+            systemService:true, 
             "schema":"[UserPermission]",
             "description":"set user permissoin"
             }

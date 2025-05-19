@@ -209,7 +209,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   async <%=capitalizeFirstLetter(api.action) %>(
     @AppUser() appuser: UserContext,
     <%if(['post','put','patch'].includes(api.method.toLowerCase())){%> 
-      @Body() data:<%= getFieldType('type',api.schema,api.action)%>,
+      @Body() data:<%= getFieldType('schema',api.schema,api.action)%>,
       //@Body() data:any,
     <%}%>
     <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
@@ -231,7 +231,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
          ){
     
 
-      const res:<%= getFieldType('type',api.responseType,api.action)%>  = await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser,<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
+      const res  = await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser,<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
           <%let subpath = api.entryPoint.split('/')%>
           <% for(let a=0;a<subpath.length;a++){%>
             <%const partstr = subpath[a]%>

@@ -12,6 +12,7 @@ import { CloudapiModule } from '../cloudapi/cloudapi.module';
 import { PrintapiModule } from '../printapi/printapi.module';
 import { RunWebhookService } from '../simpleapp/generate/commons/runwebhook.service'
 import { UserResolverService } from './services/userresolver.service';
+import { ApiKeyService } from './generate/commons/libs/apiKeyService.service';
 // auto import modules
 <% for(let i=0;i<it.modules.length; i++){ %>
 <% let obj = it.modules[i]%>
@@ -56,6 +57,7 @@ import { <%=capitalizeFirstLetter(bpmn)%>ListenerService } from 'src/simpleapp/w
   providers: [
     SimpleAppRobotUserService,
     RunWebhookService,
+    ApiKeyService,
     AuditTrail,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %>
       <%= it.modules[i].docname %>Service,
       <%= it.modules[i].docname %>Resolver,
@@ -66,7 +68,7 @@ import { <%=capitalizeFirstLetter(bpmn)%>ListenerService } from 'src/simpleapp/w
         <%=capitalizeFirstLetter(bpmn)%>ListenerService,
     <%}%> UserResolverService,
   ],
-  exports:[SimpleAppRobotUserService,AuditTrail,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %>
+  exports:[SimpleAppRobotUserService,AuditTrail,ApiKeyService,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %>
     <%= it.modules[i].docname %>Service,
     <%= it.modules[i].docname %>Resolver,
     <%}%> ProfileService,

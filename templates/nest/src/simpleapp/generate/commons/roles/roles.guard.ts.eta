@@ -26,7 +26,7 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    let sessionuser:UserContext 
+    let sessionuser: UserContext;
     if (context.getType() == 'http') {
       const request = context.switchToHttp().getRequest();
       sessionuser = request['sessionuser'];
@@ -34,11 +34,11 @@ export class RolesGuard implements CanActivate {
       const req = context.getArgs()[2].req;
       sessionuser = req['sessionuser'];
     }
-    
-    if (!requiredRoles) {
+
+    if (!requiredRoles || requiredRoles.includes(Role.Everyone)) {
       return true;
     }
-
+          
     const roles = sessionuser.getRoles();
     if (!roles) {
       return false;
@@ -47,5 +47,6 @@ export class RolesGuard implements CanActivate {
 
     return result;
     // return true
-  }
+  
+}
 }

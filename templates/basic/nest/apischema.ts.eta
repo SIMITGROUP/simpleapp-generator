@@ -23,7 +23,7 @@ import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
                         @ApiProperty({ type:()=>Object,required: false, default: {} })
                         <%= key %>: Object;
                 <% }else if( Array.isArray( obj)){%>
-                    @Field(type=>[<%=initType(obj[0]) %>])
+                    @Field(type=>[<%=obj[0]!='object' ? initType(obj[0]) : GraphQLJSON %>])
                     @ApiProperty({type: ()=>[<%=initType(obj[0]) %>] })                    
                     <%= key %>:  <%= obj[0] %>[];
                 

@@ -13,6 +13,7 @@ export const systemmessage:SchemaType =
         "entryPoint":":id/read",
         "requiredRole":["User"],
         "responseType":"Systemmessage",
+        systemService:true, 
         "method":RESTMethods.get, 
         "description":"get message content and mark read"
       } ]

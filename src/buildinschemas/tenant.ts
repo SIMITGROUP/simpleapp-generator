@@ -32,6 +32,17 @@ export const tenant:SchemaType ={
                 support:{type:"boolean",default:false}
             }            
         },
+        apiKeys:{
+            type:"array",
+            items:{
+                type:"object",
+                properties:{
+                    apiKey:{type:"string"},
+                    apiSecret:{type:"string"},
+                    description:{type:"string"}                    
+                }
+            }
+        },
         description: {"type": "string"},
         owner: {
             type: "object",

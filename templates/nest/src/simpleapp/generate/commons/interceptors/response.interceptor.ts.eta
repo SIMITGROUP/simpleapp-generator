@@ -49,21 +49,21 @@ export class ResponseInterceptor implements NestInterceptor {
     const ip = req['ip'];
     const url = req['url'];
     // let { url, method, headers, body }
-    
-      const session = await this.connection.startSession();
-      if (!session['runCount']) {
-        session['runCount'] = 0;
-      } else {
-        session['runCount'] = session['runCount'] + 1;
-      }
-    let uid=''
-    const toUrl  = req['url'] 
-    // console.log("toUrltoUrl",toUrl)
-    if((toUrl !='/profile/login' && toUrl !='/profile/logout' && toUrl!='/profile/renew-token')){
+
+    const session = await this.connection.startSession();
+    if (!session['runCount']) {
+      session['runCount'] = 0;
+    } else {
+      session['runCount'] = session['runCount'] + 1;
+    }
+    let uid = '';
+    const toUrl = req['url'];
+    // console.log("usersession",usersession)
+    if (usersession) {
       usersession.setDBSession(session);
-      uid=usersession.getUid()
-    }else{
-      uid='loginuser'
+      uid = usersession.getUid();
+    } else {
+      uid = 'loginuser';
     }
     // const session: ClientSession = usersession.getDBSession();
     const logid: string = crypto.randomUUID();

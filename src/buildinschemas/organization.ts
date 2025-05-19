@@ -16,6 +16,7 @@ export const organization:SchemaType ={
             "entryPoint":"logo",
             "requiredRole":["User"],
             "method":RESTMethods.get,
+            systemService:true, 
             "responseType":"String",
             "description":"obtain avatar base64 jpg image"
           },{

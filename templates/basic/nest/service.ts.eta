@@ -12,6 +12,7 @@ import { UserContext } from '../generate/commons/user.context';
 import { <%= it.typename %>Processor } from '../generate/processors/<%= it.doctype %>.processor';
 //import { <%= it.typename %>,<%= it.typename %>Hooks} from '../generate/types';
 import * as types from '../generate/types';
+import * as schemas from '../generate/apischemas';
 export { <%= it.typename %>} from '../generate/types';
 <% const getFieldType =(proptype, typename,actionname)=>{
   const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
@@ -49,9 +50,10 @@ export class <%= it.typename %>Service extends <%= it.typename %>Processor {
     }
 
 /***************************** begin x-document-api definitions *****************************************/
-/*
+
 <% for(let i=0;i<it.apiSettings.length;i++){%>
 <% let api = it.apiSettings[i] %>
+<% if (api.systemService) continue %>
   async run<%= capitalizeFirstLetter(api.action) %>(
     appuser: UserContext,    
     <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
@@ -79,11 +81,24 @@ export class <%= it.typename %>Service extends <%= it.typename %>Processor {
     <%if (api.workflowSetting && api.workflowSetting.bpmn){ %>      
       return this.startWorkflow(appuser,'<%=api.workflowSetting.bpmn%>',data)
     <%} else {%>
-       return "OK"
+        <% if(api.responseType=='String') {%>
+            return "OK"
+        <%} else if(api.responseType=='Number'){%>
+            return 1
+        <%} else if(api.responseType=='Boolean'){%>
+            return true
+        <%} else if(api.responseType.substring(0,1)=='['){%>
+            return [] as schemas.<%= api.responseType.replace('[','').replace(']','') %>[]
+        <%}else{%>
+           return {} as <%= getFieldType('schema',api.responseType,api.action)%>
+        <%}%>
+      
+        
+       
     <%}%>
   } 
 <%}%>
-*/
+
 
 /***************************** end x-document-api definitions *****************************************/
 }

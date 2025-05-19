@@ -24,15 +24,21 @@ const Base64URL = require('@darkwolf/base64url');
 // import * as jwt from 'nestjs-jwt'
 
 import { UserContext } from '../user.context';
+import { ApiKeyService } from '../libs/apiKeyService.service';
 // import {KeycloakConfigService} from "../keycloak/keycloak.service"
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
   protected defaultxorg = Base64URL.encodeText('0-0-0');
   protected excludeXorgs = ['/profile', '/profile/tenant', '/profile/session'];
-  protected publicUrl =['/profile/login','/profile/logout','/profile/renew-token']
+  protected publicUrl = [
+    '/profile/login',
+    '/profile/logout',
+    '/profile/renew-token',
+  ];
   protected logger = new Logger();
   protected transController;
   constructor(
+    @Inject(ApiKeyService) private apikeyService,
     @InjectModel('User') private readonly usermodel: Model<User>,
     @InjectModel('Permission') private readonly permmodel: Model<Permission>,
   ) {}
@@ -49,9 +55,8 @@ export class TenantMiddleware implements NestMiddleware {
     return true;
   }
   async use(req: Request, res: Response, next: NextFunction) {
-    const toUrl = req.baseUrl
+    const toUrl = req.baseUrl;
 
-    
     if (toUrl == '/oauth2-redirect.html') {
       next();
       return;
@@ -70,61 +75,53 @@ export class TenantMiddleware implements NestMiddleware {
       return;
     }
     this.logger.debug(`running TenantMiddleware for ${req.baseUrl}`);
-
-   
+    try {
     //if APIKEY defined, and there is api key and secret supplied. use robot user
-    if (
-      process.env.X_API_KEY &&
-      req.headers['x-api-key'] &&
-      req.headers['x-api-secret']
-    ) {
-      if (
-        req.headers['x-api-key'] == process.env.X_API_KEY &&
-        req.headers['x-api-secret'] == process.env.X_API_SECRET
-      ) {
-        u.setAsStaticUser(
-          '00000000-0000-0000-0000-000000000000',
-          'robot',
-          'Robot',
-          'robot@a.org',
-          req.headers['x-org'] ?? this.defaultxorg,
-        );
-        if (req.headers['x-guest-accesstoken']) {
-          u.setGuestToken(<string>req.headers['x-guest-accesstoken']);
+    
+      if (req.headers['x-api-key'] &&req.headers['x-api-secret']) {
+        if (await this.apikeyService.verifyTenantId(req)) {
+          u.setAsStaticUser(
+            '00000000-0000-0000-0000-000000000000',
+            'robot',
+            'Robot',
+            'robot@a.org',
+            req.headers['x-org'] ?? this.defaultxorg,
+          );
+          if (req.headers['x-guest-accesstoken']) {
+            u.setGuestToken(<string>req.headers['x-guest-accesstoken']);
+          }
+          req['sessionuser'] = u;
+          next();
+          return;
+        } else{
+          throw new BadRequestException('invalid x-api-key/x-api-secret');
         }
-        req['sessionuser'] = u;
+      }
+
+      if (
+        this.publicUrl.includes(toUrl) ||
+        toUrl.includes('/public/') ||
+        toUrl.includes('/guest/')
+      ) {
         next();
         return;
-      } else {
-        this.logger.log('invalid api key/scret');
-        throw new BadRequestException('invalid api key/scret');
       }
-    }
 
-
-    if ( this.publicUrl.includes(toUrl)) {    
-      next();
-      return
-    }
-
-    
-
-
-    if (!req.headers['authorization']) {
-      this.logger.log('undefine bearer token');
-      return res.status(401).send('Undefine bearer token');
-    }
-    if (!req.headers['x-org'] && this.requireXorg(req.baseUrl)) {
-      this.logger.log(
-        'undefine x-org and require that at ' + req.baseUrl,
-        'TenantMiddleware',
-      );
-      throw new BadRequestException('undefine header string x-org');
-      // return res.status(401).send('undefine header string x-org');
-    }
+      if (!req.headers['authorization']) {
+        this.logger.log('undefine bearer token');
+        return res.status(401).send('Undefine bearer token');
+      }
+      if (!req.headers['x-org'] && this.requireXorg(req.baseUrl)) {
+        this.logger.log(
+          'undefine x-org and require that at ' + req.baseUrl,
+          'TenantMiddleware',
+        );
+        throw new BadRequestException('undefine header string x-org');
+        // return res.status(401).send('undefine header string x-org');
+      }
     // const session = await this.connection.startSession();
     // console.log("line 43")
-    try {
+    
       let tokenstr: string = req.headers['authorization'];
       tokenstr = tokenstr.replace('Bearer ', '');
 

@@ -120,6 +120,7 @@ export type DocumentApi = {
   queryPara?:string[]   //what query parameter wish to accept, example:  ['description','date']
   requiredRole?: string[]   // what special user role wish to allow for this api, example: ['SuperUser']
   method:RESTMethods  
+  systemService?:boolean //is this api handle by simpleapp service, default is false
   responseType ?:string
   schema ?:string
   description:string //description of api
@@ -137,7 +138,7 @@ export type SchemaConfig = {
   pageType?: string  
   uniqueKey?:string  
   uniqueKeys?:string[][]
-  documentTitle?:string 
+  documentTitle?:string   
   loseDataIsolation?:boolean
   generateDocumentNumber?:boolean
   docNoPattern?:string
