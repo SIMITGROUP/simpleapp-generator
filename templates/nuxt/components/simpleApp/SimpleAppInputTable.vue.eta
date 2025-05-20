@@ -3,7 +3,7 @@
     v-bind="$attrs"
     stripedRows
     resizableColumns
-    :rowClass="()=>'align-top'"
+    :rowClass="() => 'align-top'"
     class="simpleapp-datatable p-datatable-sm"
     :value="modelValue"
   >
@@ -16,9 +16,9 @@
           <Button
             icon="pi pi-plus"
             @click="addNew()"
-            class="simpleapp-datatable-add btn-primary"
+            class="simpleapp-datatable-add btn-primary pl-10 pr-10"
             type="button"
-            >{{ t("add") }}</Button
+            ><i class="pi pi-plus">&nbsp;</i>{{ t("add") }}</Button
           >
         </slot>
       </div>

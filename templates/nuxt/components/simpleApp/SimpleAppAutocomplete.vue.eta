@@ -1,12 +1,12 @@
 <template>
   <div
     v-if="readonly"
-    class="p-2 border rounded-lg border-gray-300 dark:border-blue-900/40"
+    class="p-2 border rounded-lg border-gray-300 flex h-input items-center"
   >
     <button
       type="button"
       :readonly="readonly"
-      class="cursor-pointer text-primary-600 dark:text-primary-400"
+      class="cursor-pointer text-primary-600"
       tabindex="0"
       @click="openViewer(true)"
     >
@@ -15,70 +15,71 @@
   </div>
   <div
     v-else-if="modelValue !== undefined"
-    class="p-2 border rounded-lg border-gray-300 dark:border-blue-900/40 relative"
+    class="px-3 border rounded-lg border-gray-300 flex h-input items-center"
   >
-  <!-- readonly -->
+    <!-- readonly -->
     <button
+      :id="inputId"
       ref="autocompleteinput"
       type="button"
-      :id="inputId"
-      
-      class="cursor-pointer text-primary-600 dark:text-primary-400"
-      @click="openViewer(true)"
+      class="cursor-pointer text-primary-600 flex-1 text-left"
+      @click="openViewer(false)"
     >
       {{ modelValue && modelValue.label ? modelValue.label : "-" }}
     </button>
 
     <div
-      class="absolute h-full top-0 right-0 text-right text-white z-10 align-middle p-3"
+      class="text-right text-white align-middle"
     >
       <button
-      type="button"
+        type="button"
         class="pi pi-times rounded-full bg-slate-500 p-1 cursor-pointer text-xs"
-        @click="clear"
         tabindex="0"
-      ></button>
+        @click="clear"
+      />
     </div>
   </div>
   <div v-else class="relative">
     <div
-      class="absolute h-full top-0 right-10 text-right text-white z-10 align-middle p-3"
       v-if="modelValue?._id"
+      class="absolute h-full top-0 right-10 text-right text-white z-10 align-middle py-2 px-3"
     >
       <span
         class="pi pi-times rounded-full bg-slate-500 p-1 cursor-pointer text-xs"
         @click="clear"
-      ></span>
+      />
     </div>
 
     <AutoComplete
       v-if="!isMobile()"
-      class="w-full"
-      v-model="autocompleteitem"
       ref="autocompleteinput"
-      forceSelection
-      optionLabel="label"
-      @focus="setFocus"
-      @item-select="pickAutoComplete"
-      @complete="getListFromAutocompleteApi"
+      v-model="autocompleteitem"
+      pt:root="w-full"
+      pt:pcInputText:root="w-full rounded-r-none"
+      pt:dropdown="min-w-10"
+      force-selection
+      option-label="label"
       :placeholder="placeholdertxt"
       :dropdown="true"
-      @clear="clear"
       :dropdown-mode="'current'"
       :readonly="readonly"
       :pt="pt"
       :delay="500"
       :disabled="readonly"
-      @click="clickAutocomplete"
       :suggestions="list"
-      @blur="onBlurAutocomplete"
-      :inputId="inputId"
+      :input-id="inputId"
       :path="setting.instancepath"
+      @focus="setFocus"
+      @item-select="pickAutoComplete"
+      @complete="getListFromAutocompleteApi"
+      @clear="clear"
+      @click="clickAutocomplete"
+      @blur="onBlurAutocomplete"
     >
       <template #header>
         <slot name="header">
           <div
-            class="flex flex-row font font-semibold text-sm dark:text-white gap-2 p-2"
+            class="flex flex-row font font-semibold text-sm gap-2 p-2"
           >
             <div class="w w-1/3 line-clamp-1">
               {{ t(codefield) ?? t("code") }}
@@ -94,7 +95,7 @@
       </template>
       <template #option="{ index, option }">
         <slot name="option" :index="index" :option="option">
-          <div class="flex flex-row dark:text-white text-sm gap-2">
+          <div class="flex flex-row text-sm gap-2">
             <div class="w w-1/3 line-clamp-1">{{ option.code }}</div>
             <div class="w w-2/3 line-clamp-1">{{ option.label }}</div>
           </div>
@@ -106,35 +107,35 @@
       <InputGroup class="w-full flex flex-row">
         <InputText
           :value="modelValue?.label"
-          @focus="showAutocompleteDialog(false)"
           :placeholder="placeholdertxt"
           class="rounded-r-none"
-        ></InputText>
+          @focus="showAutocompleteDialog(false)"
+        />
         <InputGroupAddon
-          @click="showAutocompleteDialog(true)"
           v-ripple
-          class="bg bg-primary-600 dark:bg-primary-700 text-white rounded-r-lg p-3"
+          class="bg bg-primary-600 text-white rounded-r-lg p-3"
+          @click="showAutocompleteDialog(true)"
         >
-          <i :class="`pi ${modelValue ? 'pi-link' : 'pi-angle-down'}`"></i>
+          <i :class="`pi ${modelValue ? 'pi-link' : 'pi-angle-down'}`" />
         </InputGroupAddon>
       </InputGroup>
 
       <OverlaySideBarCrud
         v-model="mobileVisible"
-        closeEventName="autocompleteoverlay"
+        close-event-name="autocompleteoverlay"
       >
         <template v-if="mobileListMode == 'list'">
           <mobile-toolbar>
             <template #start>
               <ButtonText @click="mobileVisible = false">
-                <i class="pi pi-times"></i>
+                <i class="pi pi-times"/>
               </ButtonText>
             </template>
             <template #center>
               <TextTitle class="text-white">{{ t(docname) }}</TextTitle>
             </template>
             <template #end>
-              <div></div>
+              <div/>
               <!-- <ButtonText @click="openViewer(false)">
             <i class="pi pi-plus"></i>
             </ButtonText>  -->
@@ -142,12 +143,12 @@
           </mobile-toolbar>
           <ListView
             :list="list"
-            :withFilter="true"
-            :defaultFilterValue="defaultFilterValue"
-            idField="_id"
-            titleField="code"
-            subTitleField="label"
+            :with-filter="true"
+            :default-filter-value="defaultFilterValue"
+            id-field="_id"
             #default="{ item, index }"
+            title-field="code"
+            sub-title-field="label"
             @click="onClickInMobile"
           >
             <div class="flex flex-row justify-end">
@@ -242,13 +243,12 @@ if (modelValue.value && modelValue.value._id) {
 const clear = () => {
   autocompleteitem.value = undefined;
   modelValue.value = undefined;
-  if(!isMobile()){
-    setTimeout(()=>{    
-    const autoel = autocompleteinput.value.$el
-    autoel?.firstElementChild?.focus()    
-  },100)  
+  if (!isMobile()) {
+    setTimeout(() => {
+      const autoel = autocompleteinput.value.$el;
+      autoel?.firstElementChild?.focus();
+    }, 100);
   }
-  
 };
 
 //if record picked, click button show record info instead
@@ -294,7 +294,7 @@ const getListFromAutocompleteApi = (event: any) => {
   getDocumentApi(targetDocument)
     .autoComplete(keyword, morefilter)
     .then((res: any) => {
-      console.log("Run autocomplete?");
+      // console.log("Run autocomplete?");
       list.value = res.data;
 
       if (
@@ -338,12 +338,12 @@ watch(modelValue, (newvalue: any) => {
 });
 const emitChanges = () => {
   emits("change", modelValue.value);
-  if(!isMobile()){
-    setTimeout(()=>{    
-    const autoel = autocompleteinput.value
-    autoel?.focus()    
-  },100)}
-
+  if (!isMobile()) {
+    setTimeout(() => {
+      const autoel = autocompleteinput.value;
+      autoel?.firstElementChild?.focus();
+    }, 100);
+  }
 };
 
 const setFocus = (ev: any) => {
@@ -399,7 +399,7 @@ const afterRenderMobileForm = async (
   data: any,
   result: any,
 ) => {
-  console.log("afterRenderMobileForm", eventType);
+  // console.log("afterRenderMobileForm", eventType);
   if (eventType == FormCrudEvent.create || eventType == FormCrudEvent.update) {
     autocompleteitem.value = {
       _id: data._id,
@@ -423,7 +423,7 @@ const afterRenderMobileForm = async (
 };
 
 const clickAutocomplete = (a, b) => {
-  console.log("clickAutocomplete", a, b);
+  // console.log("clickAutocomplete", a, b);
   return false;
 };
 </script>

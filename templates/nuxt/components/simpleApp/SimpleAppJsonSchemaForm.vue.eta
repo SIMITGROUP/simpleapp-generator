@@ -133,7 +133,7 @@ import _ from 'lodash'
     // this.errorlist.value = {};
     // this.hook('pre-validation', this.data.value);
     const validate = ajv.compile(props.schema);
-    console.log("validate data",props.data)
+    // console.log("validate data",props.data)
     const valid = validate(props.data);
     if (!valid) {
       const errors = validate.errors;

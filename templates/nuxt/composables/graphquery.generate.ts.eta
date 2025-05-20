@@ -10,7 +10,7 @@ import { createHttpLink, } from '@apollo/client/core';
 export const setGraphqlServer=()=>{
     const apolloclient = useNuxtApp().$apollo.defaultClient
     const newlink = createHttpLink({
-        uri: `${useRuntimeConfig().public.API_URL}/${getCurrentXorg()}/graphql`,
+        uri: `${useRuntimeConfig().public.apiUrl}/${getCurrentXorg()}/graphql`,
       })
       apolloclient.setLink(newlink)
       apolloclient.defaultOptions={

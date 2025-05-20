@@ -69,6 +69,12 @@ export default defineNuxtPlugin( async(nuxtApp) => {
           console.error("unknown error")
           throw createError({statusCode:500,statusMessage:"Internal server error"}) 
         }
+        //   if (error.response) {
+      //     console.error("Backend error response:", error.response.data);
+      // } else {
+      //     console.error("Network error:", error);
+      // }
+      return Promise.reject(error);
       });      
     return {
         provide: {

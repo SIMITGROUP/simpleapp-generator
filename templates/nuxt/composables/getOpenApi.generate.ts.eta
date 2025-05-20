@@ -6,7 +6,7 @@
  */
  
 import * as o from "../simpleapp/generate/openapi";
-import axios from 'axios'
+import axios, { AxiosInstance } from 'axios'
 
 
 export const getAxiosConfig = () => {
@@ -15,15 +15,23 @@ export const getAxiosConfig = () => {
 
   const suffix = xorgdecode.includes('-') ?  '/'+getCurrentXorg() : ''
   const config: o.Configuration = {
-    basePath: `${useRuntimeConfig().public.APP_URL}/api${suffix}`,
+    basePath: `${useRuntimeConfig().public.appUrl}/api${suffix}`,
     isJsonMime: () => true,
   };
   return config
 }
 
+export const getDocumentApiClass = <T>(ApiClass: new (config: o.Configuration, basePath?: string, axios?: AxiosInstance) => T): T => {
+  const config = getAxiosConfig();
+  const axios = useNuxtApp().$axios;
+  const api = new ApiClass(config, undefined, axios);
+  return api;
+}
+
+
 //get apisession exclude from shared axios to separate handle session
 export const getApiSession = async ()=> {
-  console.log("getApiSession from computable")
+  // console.log("getApiSession from computable")
   return getUserStore().pingSession()
   //,useNuxtApp().$axios)
   // const  profileapi = new o.PROFILEApi(getAxiosConfig(),undefined)

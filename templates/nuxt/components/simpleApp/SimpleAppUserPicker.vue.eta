@@ -1,22 +1,20 @@
 <template>
   <div
     v-if="readonly"
-    class="p-3 border rounded-lg border-gray-300 dark:border-blue-900/40"
+    class="px-3 py-1.5 border rounded-lg border-gray-300 dark:border-blue-900/40 h-input"
   >
-    <div>
-      {{ modelValue && modelValue.fullName ? modelValue.fullName : "-" }}
-    </div>
+    {{ modelValue && modelValue.fullName ? modelValue.fullName : "-" }}
   </div>
   <div
     v-else-if="modelValue !== undefined"
-    class="p-3 border rounded-lg border-gray-300 dark:border-blue-900/40 relative"
+    class="py-1.5 px-3 border rounded-lg border-gray-300 dark:border-blue-900/40 relative h-input"
   >
     <div ref="autocompleteinput" readonly>
       {{ modelValue && modelValue.fullName ? modelValue.fullName : "-" }}
     </div>
 
     <div
-      class="absolute h-full top-0 right-0 text-right text-white z-10 align-middle p-3"
+      class="absolute h-full top-0 right-0 text-right text-white z-10 align-middle py-1.5 pr-3"
     >
       <a
         class="pi pi-times rounded-full bg-slate-500 p-1 cursor-pointer text-xs"
@@ -62,7 +60,7 @@
     >
       <template #header>
         <slot name="header">
-          <div class="flex flex-row font font-bold dark:text-white">
+          <div class="flex flex-row font font-bold">
             <div>{{ t("user") }}</div>
           </div>
         </slot>
@@ -72,7 +70,7 @@
       </template>
       <template #option="{ index, option }">
         <slot name="option" :index="index" :option="option">
-          <div class="flex flex-row dark:text-white">
+          <div class="flex flex-row">
             <div>{{ option.label }}</div>
           </div>
         </slot>
@@ -90,7 +88,7 @@
         <InputGroupAddon
           @click="showAutocompleteDialog(true)"
           v-ripple
-          class="bg bg-primary-600 dark:bg-primary-700 text-white rounded-r-lg p-3"
+          class="bg bg-primary-600 text-white rounded-r-lg p-3"
         >
           <i :class="`pi ${modelValue ? 'pi-link' : 'pi-angle-down'}`"></i>
         </InputGroupAddon>
@@ -261,7 +259,7 @@ const getListFromAutocompleteApi = (event: any) => {
   getDocumentApi("user")
     .autoComplete(keyword, morefilter)
     .then((res: any) => {
-      console.log("Run autocomplete?");
+      // console.log("Run autocomplete?");
       list.value = res.data;
 
       if (props.allowAddNew) {
@@ -364,7 +362,7 @@ const afterRenderMobileForm = async (
   data: any,
   result: any,
 ) => {
-  console.log("afterRenderMobileForm", eventType);
+  // console.log("afterRenderMobileForm", eventType);
   if (eventType == FormCrudEvent.create || eventType == FormCrudEvent.update) {
     autocompleteitem.value = {
       _id: data._id,
@@ -381,7 +379,7 @@ const afterRenderMobileForm = async (
 };
 
 const clickAutocomplete = (a, b) => {
-  console.log("clickAutocomplete", a, b);
+  // console.log("clickAutocomplete", a, b);
   return false;
 };
 </script>

@@ -39,7 +39,12 @@ export default defineNuxtPlugin( async(nuxtApp) => {
           branches:ref([]),
           invites : ref([]),
           time:ref(''),
-          moreProps:ref()
+          moreProps:ref(),
+          package: ref(),
+          appintegration: ref({
+            einvoice: false,
+            simbiz6: false
+          })
         }),
         
         actions:{    
@@ -52,9 +57,9 @@ export default defineNuxtPlugin( async(nuxtApp) => {
             
             let apiurl=''
             if(xorg===undefined){
-              apiurl = `${useRuntimeConfig().public.APP_URL}/api`
+              apiurl = `${useRuntimeConfig().public.appUrl}/api`
             }else{
-              apiurl = `${useRuntimeConfig().public.APP_URL}/api/${xorg}`
+              apiurl = `${useRuntimeConfig().public.appUrl}/api/${xorg}`
             }
           
             return await new PROFILEApi(undefined,apiurl,$axios).getProfile().then((res:AxiosResponse)=>{            
@@ -85,14 +90,15 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               this.time = res.data.time              
               this.invites = res.data.invites
               this.moreProps = res.data.moreProps
-
+              this.package = res.data.moreProps.package;
+              this.appintegration.einvoice = res.data.appintegration.einvoice;
+              this.appintegration.simbiz6 = res.data.appintegration.simbiz6;
               let cachegroup = useCookie('currentGroup').value  ?? ''                            
               if(!this.groups || !this.groups.includes(cachegroup)){
                 cachegroup=''                
               }
               this.currentGroup = cachegroup
               useNuxtApp().$event('pickGroup',cachegroup)
-
               return Promise.resolve(true)
                 // return true
             }).catch((err:any)=>{            
@@ -107,12 +113,12 @@ export default defineNuxtPlugin( async(nuxtApp) => {
             let apiurl=''
             
             if(!xorg){
-              apiurl = `${useRuntimeConfig().public.APP_URL}/api`
+              apiurl = `${useRuntimeConfig().public.appUrl}/api`
             }else{
               try{
                 const xorgdecode = atob(<string>xorg)
                 if(xorgdecode.includes('-')){
-                  apiurl = `${useRuntimeConfig().public.APP_URL}/api/${xorg}`
+                  apiurl = `${useRuntimeConfig().public.appUrl}/api/${xorg}`
                 }else{                 
                   return Promise.reject('wrongxorg')
                 }
@@ -135,7 +141,7 @@ export default defineNuxtPlugin( async(nuxtApp) => {
             
           },
           async decideInvitation(id:string,decision:string){
-            const apiurl = `${useRuntimeConfig().public.APP_URL}/api`
+            const apiurl = `${useRuntimeConfig().public.appUrl}/api`
             const {$axios} = useNuxtApp()
             // console.log("decideInvitation",id,decision)
             const result = await new PROFILEApi(undefined,apiurl,$axios).decideInvitation(id,decision)
@@ -155,11 +161,70 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               this.roles.includes('superuser') 
               ){
               return true
-            }else{
+            }else if( resourcename == 'Paymentverify'){
+              if (
+                this.roles.includes('admin') ||
+              this.roles.includes('manager') 
+              ){
+                return true;
+              }
+            }
+            else if( resourcename == 'Reminder'){
+              if (
+                this.roles.includes('admin') ||
+              this.roles.includes('manager') 
+              ){
+                return true;
+              }
+            }
+            else if( resourcename == 'Generateinvoice'){
+              if (
+                this.roles.includes('admin') ||
+                this.roles.includes('manager') ||
+                this.roles.includes('executive')
+              ){
+                return true;
+              }
+            }
+            else if( resourcename == 'Upgradelevel'){
+              if (
+                this.roles.includes('admin') ||
+                this.roles.includes('manager') ||
+                this.roles.includes('executive')
+              ){
+                return true;
+              }
+            }
+            else if( resourcename == 'Appintegration'){
+              if (
+                this.roles.includes('admin') ||
+                this.roles.includes('manager')
+              ){
+                return true;
+              }
+            }
+            else if( resourcename == 'Postingtosimbiz'){
+              if (
+                this.roles.includes('admin')
+              ){
+                return true;
+              }
+            }
+            else if( resourcename == 'Studentdescription'){
+              if (
+                this.roles.includes('admin') ||
+                this.roles.includes('manager') ||
+                this.roles.includes('executive')
+              ){
+                return true;
+              }
+            }
+            else{
               const checkstr= `${resourcename}:${action}`
               // console.log("verify",checkstr)
               return this.roles.includes(checkstr)
             }
+            return false;
           },
           haveAccess(resourcename:string){          
             //super admin always full access right
@@ -171,6 +236,14 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               this.roles.includes('superuser') 
               ){
               return true
+            }
+            else if( resourcename == 'Paymentverify'){
+              if (
+                this.roles.includes('admin') ||
+              this.roles.includes('manager') 
+              ){
+                return true;
+              }
             }
             for(let i=0; i< this.roles.length; i++){
             const role:string = this.roles[i]
@@ -216,11 +289,15 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               groups:this.groups,
               currentGroup:this.currentGroup,
               time:this.time,
-              moreProps: this.moreProps
-              
+              moreProps: this.moreProps,
+              package: this.package,
+              appintegration: this.appintegration
             }
             return userinfo
-          }
+          },
+          isExecutive() {
+            return this.currentGroup == 'executive';
+          },
         }        
       })
      

@@ -1,37 +1,37 @@
 <template>
   <SimpleAppFieldContainer
-    :hidelabel="hidelabel"
+    v-slot="slotprops"
     v-model="modelValue"
+    :hidelabel="hidelabel"
     :label="label"
     :description="description"
     :pt="pt"
-    :inputType="inputType"
+    :input-type="inputType"
     :setting="setting"
     :instancepath="instancepath"
     :error="error"
-    #default="slotprops"
     :resetcount="resetcount"
   >
     <Checkbox
       v-if="inputType == SimpleAppInputType.checkbox"
+      v-model="modelValue"
       :readonly="isReadonly"
       :pt="pt"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
-      v-model="modelValue"
       :binary="true"
-      v-bind="componentProps as CheckboxProps"
+      v-bind="componentProps"
       @change="onChange"
     />
     <InputSwitch
       v-else-if="inputType == SimpleAppInputType.switch"
+      v-model="modelValue"
       :readonly="isReadonly"
       :pt="pt"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
-      v-model="modelValue as boolean"
       :binary="true"
-      v-bind="componentProps as InputSwitchProps"
+      v-bind="componentProps"
       @change="onChange"
     />
 
@@ -41,102 +41,102 @@
         SimpleAppInputType.calendar == inputType ||
         inputType == SimpleAppInputType.date
       "
+      v-model="modelValue"
       :pt="pt"
       type="date"
-      v-model="modelValue"
       :uuid="slotprops.uuid"
       :placeholder="placeholder"
       :setting="setting"
       :readonly="isReadonly"
-      :componentProps="componentProps"
+      :component-props="componentProps"
       @change="onChange"
     />
 
     <!-- time component -->
-    <SimpleAppCalendarInput
+    <SimpleAppCalendarTime
       v-else-if="inputType == SimpleAppInputType.time"
+      v-model="modelValue"
       :pt="pt"
       type="time"
-      v-model="modelValue"
       :uuid="slotprops.uuid"
       :placeholder="placeholder"
       :setting="setting"
       :readonly="isReadonly"
-      :componentProps="componentProps"
+      :component-props="componentProps"
       @change="onChange"
     />
 
     <SimpleAppCalendarInput
       v-else-if="inputType == SimpleAppInputType.datetime"
+      v-model="modelValue"
       :pt="pt"
       type="datetime"
-      v-model="modelValue"
       :uuid="slotprops.uuid"
       :placeholder="placeholder"
       :setting="setting"
       :readonly="isReadonly"
-      :componentProps="componentProps"
+      :component-props="componentProps"
       @change="onChange"
     />
 
     <!-- select/list component -->
     <Listbox
+      v-else-if="SimpleAppInputType.list == inputType"
       v-model="modelValue"
       :pt="pt"
-      v-else-if="SimpleAppInputType.list == inputType"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
       :readonly="isReadonly"
       class="w w-full lg:w-full"
       :disabled="isReadonly"
       :options="getListOptions()"
-      optionLabel="label"
-      optionValue="value"
+      option-label="label"
+      option-value="value"
       :placeholder="placeholder"
-      v-bind="componentProps as ListboxProps"
+      v-bind="componentProps"
       @change="onChange"
     />
 
-    <Dropdown
+    <Select
+      v-else-if="SimpleAppInputType.select == inputType"
       v-model="modelValue"
       :pt="pt"
-      v-else-if="SimpleAppInputType.select == inputType"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
       :readonly="isReadonly"
       class="w w-full lg:w-full"
       :disabled="isReadonly"
       :options="getListOptions()"
-      optionLabel="label"
-      optionValue="value"
+      option-label="label"
+      option-value="value"
       :placeholder="placeholder"
       v-bind="componentProps"
       @change="onChange"
     />
 
     <MultiSelect
+      v-else-if="SimpleAppInputType.selectmultiple == inputType"
       v-model="modelValue"
       :pt="pt"
-      v-else-if="SimpleAppInputType.selectmultiple == inputType"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
       :readonly="isReadonly"
       class="w w-full lg:w-full"
       :disabled="isReadonly"
       :options="getListOptions()"
-      optionLabel="label"
-      optionValue="value"
+      option-label="label"
+      option-value="value"
       :placeholder="placeholder"
       v-bind="componentProps"
       @change="onChange"
     />
     <!-- radio component -->
     <div v-else-if="inputType == SimpleAppInputType.radio">
-      <div v-for="(item, index) in getListOptions()">
+      <div v-for="(item, index) in getListOptions()" :key="index">
         <RadioButton
-          :pt="pt"
           v-model="modelValue"
-          :inputId="setting.key + '-' + index"
+          :pt="pt"
+          :input-id="setting.key + '-' + index"
           name="smaple"
           :value="item.value"
           :readonly="isReadonly"
@@ -149,66 +149,66 @@
 
     <SimpleAppUserPicker
       v-else-if="inputType == SimpleAppInputType.user"
-      v-model="modelValue as autocompletetype"
+      v-model="modelValue"
       :hidelabel="hidelabel"
       :pt="pt"
       :setting="setting"
       :disabled="isReadonly"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
       :readonly="isReadonly"
       :placeholder="placeholder"
-      :autocompleteFilter="autocompleteFilter"
+      :autocomplete-filter="autocompleteFilter"
       @change="onChange"
     >
       <template #header>
-        <slot name="header"></slot>
+        <slot name="header"/>
       </template>
       <template #content>
-        <slot name="content"></slot>
+        <slot name="content"/>
       </template>
       <template #option="{ index, option }">
-        <slot name="option" :index="index" :option="option"></slot>
+        <slot name="option" :index="index" :option="option"/>
       </template>
     </SimpleAppUserPicker>
 
     <!-- autocomplete, need do more enterprise grade component-->
     <SimpleAppAutocomplete
       v-else-if="inputType == SimpleAppInputType.autocomplete"
-      v-model="modelValue as autocompletetype"
+      v-model="modelValue"
       :hidelabel="hidelabel"
       :pt="pt"
       :setting="setting"
       :disabled="isReadonly"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
       :readonly="isReadonly"
       :placeholder="placeholder"
-      :autocompleteFilter="autocompleteFilter"
+      :autocomplete-filter="autocompleteFilter"
       @change="onChange"
     >
       <template #header>
-        <slot name="header"></slot>
+        <slot name="header"/>
       </template>
       <template #content>
-        <slot name="content"></slot>
+        <slot name="content"/>
       </template>
       <template #option="{ index, option }">
-        <slot name="option" :index="index" :option="option"></slot>
+        <slot name="option" :index="index" :option="option"/>
       </template>
     </SimpleAppAutocomplete>
     <!-- v-bind:attributes="componentProps" -->
     <!--  document no input-->
     <SimpleAppDocumentNo
       v-else-if="inputType == SimpleAppInputType.documentno"
+      v-model="modelValue"
       :setting="setting"
-      v-model="modelValue as string"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :readonly="isReadonly"
-      @update:docNoFormat="triggerDocNoFormatChange"
       :pt="pt"
       :path="setting.instancepath"
       v-bind="componentProps as any"
+      @update:doc-no-format="triggerDocNoFormatChange"
       @change="onChange"
     />
     <!-- use componentProps as any at the moment, no ideal yet, and for compatibility -->
@@ -216,67 +216,68 @@
     <!-- password -->
     <Password
       v-else-if="inputType == SimpleAppInputType.password"
+      v-model="modelValue"
       :type="type"
-      v-model="modelValue as string"
       :pt="pt"
-      @focus="setFocus"
       :readonly="isReadonly"
       class="flex flex-col"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
-      @change="onChange"
       :placeholder="placeholder"
-      v-bind="componentProps as PasswordProps"
+      v-bind="componentProps"
+      :toggleMask="true"
+      :feedback="false"
+      @focus="setFocus"
+      @change="onChange"
     />
 
     <!-- rating -->
     <Rating
       v-else-if="inputType == SimpleAppInputType.rating"
+      v-model="modelValue"
       :type="type"
-      v-model="modelValue as number"
       :pt="pt"
       :readonly="isReadonly"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
+      v-bind="componentProps"
       @change="onChange"
-      v-bind="componentProps as RatingProps"
     />
 
     <!-- chip -->
     <Chips
       v-else-if="inputType == SimpleAppInputType.chip"
+      v-model="modelValue"
       :type="type"
-      v-model="modelValue as string[]"
       :pt="pt"
       :disabled="isReadonly"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
       :placeholder="placeholder"
-      @update:modelValue="onChange"
-      v-bind="componentProps as ChipsProps"
+      v-bind="componentProps"
+      @update:model-value="onChange"
     />
     <!-- simple component  -->
 
     <InputNumber
       v-else-if="inputType == SimpleAppInputType.number"
-      :type="type"
       v-model="modelValue"
-      @focus="setFocus"
+      :type="type"
       :readonly="isReadonly"
       :pt="pt"
       :class="!pt ? 'w-full flex flex-col' : ''"
-      :inputId="slotprops.uuid"
-      @update:modelValue="onChange"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
-      v-bind="componentProps as InputNumber"
+      v-bind="componentProps"
       :placeholder="placeholder"
+      @focus="setFocus"
+      @update:model-value="onChange"
     />
     <!-- // // -->
     <InputNumber
       v-else-if="inputType == SimpleAppInputType.money"
+      v-model="modelValue"
       :type="type"
-      v-model="modelValue as number"
-      @focus="setFocus"
       :max-fraction-digits="2"
       :min-fraction-digits="2"
       mode="currency"
@@ -284,54 +285,55 @@
       :readonly="isReadonly"
       :pt="pt"
       :class="!pt ? 'w-full flex flex-col' : ''"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
-      @update:modelValue="onChange"
-      v-bind="componentProps as InputNumber"
+      v-bind="componentProps"
       :placeholder="placeholder"
+      @focus="setFocus"
+      @update:model-value="onChange"
     />
     <Textarea
       v-else-if="inputType == SimpleAppInputType.textarea"
-      v-model="modelValue as string"
+      v-model="modelValue"
       :autofocus="autofocus"
       :readonly="isReadonly"
       :pt="pt"
       :type="type"
       class="w-full flex flex-col"
-      :inputId="slotprops.uuid"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
-      @change="onChange"
       :placeholder="placeholder"
-      v-bind="componentProps as TextareaProps"
+      v-bind="componentProps"
+      @change="onChange"
     />
-    <Editor  
+    <Editor
       v-else-if="inputType == SimpleAppInputType.html"
-      @update:modelValue="onChange"
-      :inputId="slotprops.uuid"
+      v-model="modelValue"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
       :placeholder="placeholder"
       :readonly="isReadonly"
-      v-model="modelValue as string" 
-      v-bind="componentProps as EditorProps"
-      />
+      v-bind="componentProps"
+      @update:model-value="onChange"
+    />
     <InputText
       v-else
-      v-model="modelValue as string"
-      @focus="setFocus"
+      v-model="modelValue"
       :autofocus="autofocus"
       :readonly="isReadonly"
       :pt="pt"
       :type="type"
       class="w-full flex flex-col"
-      :inputId="slotprops.uuid"
-      @change="onChange"
+      :input-id="slotprops.uuid"
       :path="setting.instancepath"
       :placeholder="placeholder"
-      v-bind="componentProps as InputTextProps"
+      v-bind="componentProps"
+      @focus="setFocus"
+      @change="onChange"
     />
     <!-- component require special treatment -->
 
-    <slot name="footer"></slot>
+    <slot name="footer"/>
   </SimpleAppFieldContainer>
 </template>
 
@@ -342,29 +344,36 @@
  * last change 2023-10-28
  * Author: Ks Tan
  */
-import { autocompletetype } from "~/types";
-import moment from "moment";
-import AutoComplete, { AutoCompleteProps } from "primevue/autocomplete";
-import { DatePickerProps } from "primevue/datepicker";
-import Checkbox, { CheckboxProps } from "primevue/checkbox";
-import Chips, { ChipsProps } from "primevue/chips";
+// import { autocompletetype } from "~/types";
+// import moment from "moment";
+// import AutoComplete, { AutoCompleteProps } from "primevue/autocomplete";
+import type { CalendarProps } from "primevue/calendar";
+import Checkbox from "primevue/checkbox";
+import Chips from "primevue/chips";
 import SimpleAppDocumentNo from "./SimpleAppDocumentNo.vue";
 import SimpleAppAutocomplete from "./SimpleAppAutocomplete.vue";
-import Dropdown, { DropdownProps } from "primevue/dropdown";
-import InputNumber, { InputNumberProps } from "primevue/inputnumber";
-import InputSwitch, { InputSwitchProps } from "primevue/inputswitch";
-import InputText, { InputTextProps } from "primevue/inputtext";
-import Listbox, { ListboxProps } from "primevue/listbox";
-import MultiSelect, { MultiSelectProps } from "primevue/multiselect";
-import Password, { PasswordProps } from "primevue/password";
-import RadioButton, { RadioButtonProps } from "primevue/radiobutton";
-import Rating, { RatingProps } from "primevue/rating";
-import Textarea, { TextareaProps } from "primevue/textarea";
-import Editor, { EditorProps } from "primevue/editor";
+import type { DropdownProps } from "primevue/dropdown";
+// import Dropdown from "primevue/dropdown";
+import type { InputNumberProps } from "primevue/inputnumber";
+import InputNumber from "primevue/inputnumber";
+import type { InputSwitchProps } from "primevue/inputswitch";
+import InputSwitch from "primevue/inputswitch";
+import type { InputTextProps } from "primevue/inputtext";
+import InputText from "primevue/inputtext";
+import Listbox from "primevue/listbox";
+import MultiSelect from "primevue/multiselect";
+import Password from "primevue/password";
+import RadioButton from "primevue/radiobutton";
+import type { RatingProps } from "primevue/rating";
+import Rating from "primevue/rating";
+// import Slider, { SliderProps } from "primevue/slider";
+import type { TextareaProps } from "primevue/textarea";
+import Textarea from "primevue/textarea";
+import Editor from "primevue/editor";
 import { SimpleAppInputType } from "~/types";
 const resetcount = ref(0);
 const instancepath = ref("");
-const modelValue = defineModel({ required: true });
+const modelValue = defineModel<any>({ required: true });
 
 const watchOnChange = ref(false);
 const props = withDefaults(
@@ -389,7 +398,7 @@ const props = withDefaults(
       | InputTextProps
       | TextareaProps
       | DropdownProps
-      | DatePickerProps
+      | CalendarProps
       | RatingProps;
   }>(),
   { type: "text" },
