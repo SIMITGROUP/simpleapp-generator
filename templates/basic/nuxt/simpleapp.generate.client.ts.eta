@@ -265,7 +265,7 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
   /***************************** begin document status code*****************************************/
   <%for(let i=0;i<it.docStatusSettings.length;i++){%>
     <% let setting = it.docStatusSettings[i] %> 
-    async setStatus<%=capitalizeFirstLetter(setting.status)%>(id:string='',data:<%= it.typename%>,runValidate:boolean=false) {
+    async setStatus<%=capitalizeFirstLetter(setting.status)%>(id:string='',data:openapi.<%= it.typename%>,runValidate:boolean=false) {
       const {$event} =useNuxtApp()
       if(runValidate){
         const errors = this.validateFailed();
@@ -292,9 +292,9 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
           documentName:this.getDocName(),
           summary:t('setStatus<%=capitalizeFirstLetter(setting.status)%>Failed'),
           status:NotificationStatus.error,
-          data:errors.response.data.data
+          data:errors.response.data.statusMessage
         })
-        console.error('error:<%=capitalizeFirstLetter(setting.status)%>',errors.response.data.data)
+        console.error('error:<%=capitalizeFirstLetter(setting.status)%>',errors.response.data.statusMessage)
       return Promise.reject(errors)
       })
     }

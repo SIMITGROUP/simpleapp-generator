@@ -133,7 +133,7 @@ export class SimpleAppClient<
               documentName:this.getDocName(),
               summary:'Record create failed',
               status:NotificationStatus.error,
-              data:errors.response.data
+              data:errors.response.data.statusMessage
             })
             console.error('error:create',errors.response.data)
             setTimeout(()=>{
@@ -183,7 +183,7 @@ export class SimpleAppClient<
             documentName:this.getDocName(),
             summary:'Record update failed',
             status:NotificationStatus.error,
-            data:errors.response.data
+            data:errors.response.data.statusMessage
           })
           // console.error('error:update---',errors,",---",errors.message)
           // if(this.event){
@@ -224,7 +224,7 @@ export class SimpleAppClient<
             documentName:this.getDocName(),
             summary:'Record patch failed',
             status:NotificationStatus.error,
-            data:errors.response.data
+            data:errors.response.data.statusMessage
           })
           // console.error('error:update---',errors,",---",errors.message)
           // if(this.event){
@@ -266,7 +266,7 @@ export class SimpleAppClient<
           documentName:this.getDocName(),
           summary:'Record delete failed',
           status:NotificationStatus.error,
-          data:errors.response.data
+          data:errors.response.data.statusMessage
         })
         console.error(errors.response.data)
         setTimeout(()=>{
@@ -338,6 +338,10 @@ export class SimpleAppClient<
   }
 
   async runFullTextSearh(body:TextSearchBody) {
+      if(!this.docapi.runFullTextSearch){
+        return [];
+      }
+
       const response = await this.docapi.runFullTextSearch(body)
       return response.data
     }
