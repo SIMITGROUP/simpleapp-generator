@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-row gap-2">
-    <div v-for="o in options" >
+    <div v-for="o in options">
       <ButtonPrimary v-if="value == o.value" @click="switchButton(o.value)">{{
         o.label
       }}</ButtonPrimary>

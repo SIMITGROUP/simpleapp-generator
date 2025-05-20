@@ -8,6 +8,7 @@
 import axios from 'axios';
 import { getServerSession } from '#auth'
 import type { Session } from 'next-auth';
+import { pathJoin } from '~/server/utils/path';
 
 export default defineEventHandler(async (event:any) => {
     type additionalprops = {accessToken?:string} 
@@ -45,7 +46,7 @@ export default defineEventHandler(async (event:any) => {
         // }
 
         const frontEndRes = event.node.res;
-        
+
         const url =  process.env.SIMPLEAPP_BACKEND_URL + `/profile/${documentLink}`;
         // console.warn('backend server-----',req.method,url,forwardData)
 
@@ -61,7 +62,7 @@ export default defineEventHandler(async (event:any) => {
         }
 
         if(documentLink=='avatar' ){
-            axiosConfig.url =  process.env.AVATAR_URL
+            axiosConfig.url = pathJoin([useRuntimeConfig().public.avatarUrl, documentLink]);
             delete axiosConfig.params
         }
         // console.log("axiosConfig",axiosConfig)
@@ -124,7 +125,7 @@ export default defineEventHandler(async (event:any) => {
                 resolve(res.data);
             }
 
-        }).catch((error) => {            
+        }).catch((error) => {
             if(!error?.response){
                 console.log("backend server no response ",error.code)              
                 reject({ 
