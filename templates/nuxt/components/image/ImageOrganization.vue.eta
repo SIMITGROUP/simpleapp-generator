@@ -2,11 +2,13 @@
   <ImageToBase64Uploader
     v-if="changable"
     #default
-    :class="`w-${sizenumber} h-${sizenumber} place-content-center bg-white`"
+    :class="`w-${sizenumber} h-${sizenumber} place-content-center bg-white rounded-md`"
     @image-uploaded="handleBase64"
+    :imagePath="imagepath"
   >
+    <!-- {{console.log("imagepath",imagepath)}} -->
     <NuxtImg
-      class="w-full h-full"
+      class="w-full h-full rounded-md"
       :key="imageKey"
       provider="myProvider"
       :src="imagepath"
@@ -14,9 +16,15 @@
   </ImageToBase64Uploader>
   <div
     v-else
-    :class="`inline-block border rounded-lg w-${sizenumber} h-${sizenumber} bg-white`"
+    :class="`inline-block rounded-md w-${sizenumber} h-${sizenumber} bg-white text-black`"
   >
-    <NuxtImg class="w-full h-full" provider="myProvider" :src="imagepath" />
+    <!-- {{console.log("imagepath",imagepath)}} -->
+
+    <NuxtImg
+      class="rounded-md min-w-10 min-h-10"
+      provider="myProvider"
+      :src="imagepath"
+    />
   </div>
 </template>
 <script lang="ts" setup>
@@ -30,11 +38,9 @@ const imageKey = ref(0);
 const orgRecordId = computed(
   () => props.orgRecordId ?? getUserProfile()?.orgRecordId,
 );
-const xorgpath= getCurrentXorg() ? `${getCurrentXorg()}/` : 'MC0wLTA/'
+const xorgpath = getCurrentXorg() ? `${getCurrentXorg()}/` : "MC0wLTA/";
 
-const imagepath = `${xorgpath}images/organization/${
-  orgRecordId.value
-}`;
+const imagepath = `${xorgpath}images/organization/${orgRecordId.value}`;
 const sizenumber = props.size ?? 16;
 const imageData = ref("");
 watch(
@@ -46,7 +52,7 @@ const handleBase64 = async (data: string) => {
     key: "org-" + props.orgRecordId,
     value: data,
   };
-  console.log("upload logo ", data);
+  // console.log("upload logo ", data);
   const uploadok = await useNuxtApp()
     .$OrganizationDoc()
     .getApi()

@@ -11,30 +11,40 @@
       </slot>
 
       <Dialog
-        v-if="dialogVisible" modal
+        v-if="dialogVisible"
+        modal
         v-model:visible="dialogVisible"
         header="Image Upload"
         :pt="{ root: { class: 'w-11/12' } }"
       >
         <div class="w-full grid grid-cols-2 gap-2">
           <div class="w-7/8 border rounded p-4">
-            <TabView lazy>
-              <TabPanel :header="t('upload')">
-                <div class="upload-container">
-                  <input
-                    type="file"
-                    ref="fileInput"
-                    accept="image/*"
-                    @change="handleImageUpload"
-                  />
-                </div>
-              </TabPanel>
-              <TabPanel :header="t('webcam')">
-                <div class="webcam-container h h-1/6">
-                  <WebCamUI :fullscreenState="false" @photoTaken="photoTaken" />
-                </div>
-              </TabPanel>
-            </TabView>
+            <Tabs value="upload" lazy>
+              <TabList>
+                <Tab value="upload">{{ t("upload") }}</Tab>
+                <Tab value="webcam">{{ t("webcam") }}</Tab>
+              </TabList>
+              <TabPanels>
+                <TabPanel value="upload">
+                  <div class="upload-container">
+                    <input
+                      type="file"
+                      ref="fileInput"
+                      accept="image/*"
+                      @change="handleImageUpload"
+                    />
+                  </div>
+                </TabPanel>
+                <TabPanel value="webcam">
+                  <div class="webcam-container h h-1/6">
+                    <WebCamUI
+                      :fullscreenState="false"
+                      @photoTaken="photoTaken"
+                    />
+                  </div>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
           </div>
           <div id="preview" class="w-7/8 border rounded p-4">
             <Cropper

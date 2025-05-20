@@ -14,24 +14,28 @@ const doc = useNuxtApp().$BranchDoc();
 
 const props = defineProps<{ _id: string }>();
 const after = (actionName: string, data: Branch) => {
-  console.log("Branch capture after emits ", actionName,doc.getDocName().toLowerCase());
+  // console.log(
+  //   "Branch capture after emits ",
+  //   actionName,
+  //   doc.getDocName().toLowerCase(),
+  // );
   switch (actionName) {
     case "new":
-      goTo('organization');
+      goTo("organization");
       break;
     case "create":
-      goTo('organization');
-      refreshDocumentList('branch');
+      goTo("organization");
+      refreshDocumentList("branch");
       useNuxtApp().$event("CloseDialog", doc.getDocName().toLowerCase());
       break;
     case "update":
-      goTo('organization');
-      refreshDocumentList('branch');
-      useNuxtApp().$event("CloseDialog", doc.getDocName().toLowerCase());      
+      goTo("organization");
+      refreshDocumentList("branch");
+      useNuxtApp().$event("CloseDialog", doc.getDocName().toLowerCase());
       break;
     case "delete":
-      goTo('organization');
-      refreshDocumentList('branch');
+      goTo("organization");
+      refreshDocumentList("branch");
       useNuxtApp().$event("CloseDialog", doc.getDocName().toLowerCase());
       break;
   }

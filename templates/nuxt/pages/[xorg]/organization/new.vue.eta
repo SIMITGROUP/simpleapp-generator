@@ -12,26 +12,24 @@
 import { Branch } from "~/simpleapp/generate/types";
 const doc = useNuxtApp().$BranchDoc();
 
-
 const after = (actionName: string, data: Branch) => {
-  console.log("Branch capture after emits ", actionName,'branch');
+  // console.log("Branch capture after emits ", actionName, "branch");
   switch (actionName) {
     case "create":
-      goTo('organization');
-      refreshDocumentList('branch');
-      useNuxtApp().$event("CloseDialog", 'branch');
+      goTo("organization");
+      refreshDocumentList("branch");
+      useNuxtApp().$event("CloseDialog", "branch");
       break;
     case "update":
-      goTo('organization');
-      refreshDocumentList('branch');
-      useNuxtApp().$event("CloseDialog", 'branch');
-      
+      goTo("organization");
+      refreshDocumentList("branch");
+      useNuxtApp().$event("CloseDialog", "branch");
 
       break;
     case "delete":
-      goTo('organization');
-      refreshDocumentList('branch');
-      useNuxtApp().$event("CloseDialog", 'branch');
+      goTo("organization");
+      refreshDocumentList("branch");
+      useNuxtApp().$event("CloseDialog", "branch");
       break;
   }
 };
