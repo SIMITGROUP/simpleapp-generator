@@ -112,7 +112,8 @@ export const readJsonSchemaBuilder = async (docname: string,orijsondata:JSONSche
     jsondata['required'] ?? [],
     '$',
     schemaconfigs,
-    allmodels
+    allmodels,
+    ""
   );
   return allmodels
 };
@@ -135,18 +136,19 @@ const genSchema = async (
     jsondata: JsonSchemaProperties,
     requiredlist: string[] | undefined,parentpath:string,
     schemaconfigs:SchemaConfig,
-    allmodels: ChildModels
+    allmodels: ChildModels,
+    parentFlatStr: string, // ex: docnoformat.branch
   ): Promise<SchemaModel> => {
-    
     if(!allfields.includes(docname)){
       allfields.push(docname)
     }
     const newmodel: SchemaModel = {};
-    // console.log("jsondata--->>>>",docname,jsondata)
+
     Object.keys(jsondata).forEach(async (key) => {      
       if(!allfields.includes(key)){
         allfields.push(key)
       }
+    
       //below is Object.assign use for force datatype compatibility
       const obj:JSONSchema7={}
       Object.assign(obj,jsondata[key]);
@@ -158,7 +160,11 @@ const genSchema = async (
         isrequired=true
       }
       const newName: string = _.upperFirst(docname) + _.upperFirst(key);
-
+      // const flatHierarchyStr: string = docname + '.' + key;
+      let flatHierarchyStr = parentFlatStr + "." + key;
+      if(parentFlatStr == ''){
+        flatHierarchyStr = docname+ '.' + key;
+      }
 
     // if(obj[X_AUTOCOMPLETE_FIELD]){
     //   docSetting.autocompleteFields.push(key)
@@ -177,11 +183,17 @@ const genSchema = async (
       // newmodel[key] = 'Object';
       // }
       // else 
+
+    
       if(obj[FOREIGNKEY_PROPERTY]){
+      
         const masterdatacollection = obj[FOREIGNKEY_PROPERTY]
-        const clientdatacollection = docname.toLowerCase()
+        // const clientdatacollection = docname.toLowerCase()
+        const clientdatacollection = parentFlatStr.split(".")[0] || docname.toLowerCase();
         const foreignkeyidentity= (obj.type=='object')? `${key}._id` : key
-        const foreignkeypath = (obj.type=='object') ?`${parentpath}.${key}._id`:`${parentpath}.${key}`
+        const foreignkeypath = (obj.type=='object') ? `${parentpath}.${key}._id` : (obj.type =='array') ? `${parentpath}.${key}._id` : `${parentpath}.${key}`
+
+        const foreignkeyidentityNew = foreignkeypath.replace("$.", "").replace("[*]", "")
         
         //current document foreignkeys
         if(schemaconfigs.foreignKeys[masterdatacollection]){
@@ -193,20 +205,21 @@ const genSchema = async (
         //centralize foreignkeys catalogue
         if(!allforeignkeys[masterdatacollection]){
           let tmp:TypeForeignKey = {} as TypeForeignKey
-          tmp[clientdatacollection]=[foreignkeyidentity]
+          tmp[clientdatacollection]=[foreignkeyidentityNew]
           allforeignkeys[masterdatacollection] = tmp
         }
         else if(!allforeignkeys[masterdatacollection][clientdatacollection]){
-          allforeignkeys[masterdatacollection][clientdatacollection]=[foreignkeyidentity]
+
+          allforeignkeys[masterdatacollection][clientdatacollection]=[foreignkeyidentityNew]
         }else{
-          allforeignkeys[masterdatacollection][clientdatacollection].push(foreignkeyidentity)
-        }
-                
+          // console.log(masterdatacollection, 3);
+          allforeignkeys[masterdatacollection][clientdatacollection].push(foreignkeyidentityNew)
+        }       
       }
 
       if (obj.type == 'object') {
         // console.log("line  175",key,obj.type,obj.properties)      
-        await genSchema(newName, obj.type, obj.properties, obj.required,`${parentpath}.${key}`,schemaconfigs,allmodels);
+        await genSchema(newName, obj.type, obj.properties, obj.required,`${parentpath}.${key}`,schemaconfigs,allmodels, flatHierarchyStr);
         newmodel[key] = newName;
       } else if (obj.type == 'array' && obj.items && objectitem?.type == 'object') {
         const childprops = objectitem?.properties
@@ -226,7 +239,7 @@ const genSchema = async (
           childprops['_id']={type:'string'}
         }
         // console.log("line  195")      
-        await genSchema(newName, obj.type, objectitem?.properties, obj.items['required'],`${parentpath}.${key}[*]`,schemaconfigs,allmodels);
+        await genSchema(newName, obj.type, objectitem?.properties, obj.items['required'],`${parentpath}.${key}[*]`,schemaconfigs,allmodels, flatHierarchyStr);
         newmodel[key] = [newName];
       } else if (obj.type == 'array' && objectitem?.type != 'object') {
         //array need submodel
