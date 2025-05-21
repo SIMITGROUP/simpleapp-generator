@@ -10,7 +10,7 @@ export const getValidateService = (): Ajv => {
   addFormats(ajv);
   addErrors(ajv)
   
-  ajv.addFormat('tel',/^$|^\d{7,15}$/gm)    
+  ajv.addFormat("tel", /.*$/);
   ajv.addFormat('text',/.*$/)
   ajv.addFormat('html',/.*$/)
   ajv.addFormat('documentno',/.*$/)
