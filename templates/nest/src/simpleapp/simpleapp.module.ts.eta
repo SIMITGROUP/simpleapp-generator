@@ -8,8 +8,6 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {DocNumberFormatGenerator} from './generate/commons/docnogenerator.service'
 import { AuditTrail } from './generate/commons/audittrail.service';
-import { CloudapiModule } from '../cloudapi/cloudapi.module';
-import { PrintapiModule } from '../printapi/printapi.module';
 import { RunWebhookService } from '../simpleapp/generate/commons/runwebhook.service'
 import { UserResolverService } from './services/userresolver.service';
 // auto import modules
@@ -35,14 +33,27 @@ import { <%=capitalizeFirstLetter(bpmn)%>ListenerService } from 'src/simpleapp/w
 // import {ServiceModule} from  "../services/service.module"
 //import { <%= it.typename %>Service } from '../../generate/<%= it.doctype %>/<%= it.doctype %>.service';
 
+// ------------------------ Start additionalNestModules ------------------------
+<% const nestmodules = it.configs.additionalNestModules%>
+<% for(let i=0; i<nestmodules.length;i++){ %>
+<% const modulename = capitalizeFirstLetter(nestmodules[i]) %>
+  import {<%= modulename %>Module } from  '../<%=nestmodules[i]%>/<%=nestmodules[i]%>.module';
+<%}%>
+// ------------------------- End additionalNestModules -------------------------
 
 //<%if(it.doctype != 'autoinc'){%>import {AutoincreamentModule} from '../autoinc/autoinc.module'<%}%>
 //encryption use for model (not class and cant inject, use singleton instead and init as early as possible)
 
 @Module({
   imports: [
-  CloudapiModule,
-  PrintapiModule,
+
+  // ------------------------ Start additionalNestModules ------------------------
+  <% for(let i=0; i<nestmodules.length;i++){ %>
+  <% const modulename = capitalizeFirstLetter(nestmodules[i]) %>
+    <%= modulename %>Module,
+  <%}%>
+  // ------------------------- End additionalNestModules -------------------------
+
    MongooseModule.forFeature([
         <% for(let i=0;i<it.modules.length; i++){ %>
           <% let obj = it.modules[i]%>
