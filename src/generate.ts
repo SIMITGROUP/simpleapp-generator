@@ -73,13 +73,13 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
     const fullfilename = `${configs.jsonschemaFolder}/${file}`
     try{
       const jsoncontent = readFileSync(fullfilename, 'utf-8');            
-      log.info("Process ",fullfilename)
+      // log.info("Process ",fullfilename)
       const jsonschema = JSON.parse(jsoncontent)
       const schemaconfig = jsonschema["x-simpleapp-config"]
       if(schemaconfig['printFormats']){
         const formats:SchemaPrintFormat[] = schemaconfig['printFormats']
         for(let formatno=0;formatno< formats.length; formatno++ ){
-          log.warn("Format ",formatno,formats[formatno].formatId)
+          // log.warn("Format ",formatno,formats[formatno].formatId)
           printformats.push(formats[formatno])
         }
       }
@@ -97,7 +97,7 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
   for(let g = 0; g< systemgroups.length;g++){
     
     const groupfile = systemgroups[g]
-    log.info("Process group ",groupfile)
+    // log.info("Process group ",groupfile)
     const groupjsonstr = readFileSync(`${groupFolder}/${groupfile}`, 'utf-8');      
     
     const groupdata = JSON.parse(groupjsonstr);
@@ -107,7 +107,7 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
   }
   
   if(existsSync(defaultLangFile)){
-    log.info("Process lang file ",defaultLangFile)
+    // log.info("Process lang file ",defaultLangFile)
     const langjsonstr = readFileSync(defaultLangFile, 'utf-8');      
     
       langdata = JSON.parse(langjsonstr);     
@@ -116,7 +116,7 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
 
   
   if(configs.bpmnFolder){
-    log.info("Process bpmn folder ",configs.bpmnFolder)
+    // log.info("Process bpmn folder ",configs.bpmnFolder)
     allbpmn = await generateWorkflows(configs,genFor)
   }
   
@@ -245,7 +245,7 @@ const generateSchema = ( docname: string,
           const filecategory = arrfilename[0]
           const filetype = arrfilename[1]        
           const autogeneratetypes = ['apischema','controller','jsonschema','model','resolver','processor','type','default']
-          log.info("process nest: ",doctype," :",filename)
+          // log.info("process nest: ",doctype," :",filename)
           if(autogeneratetypes.includes(filecategory)){
             //multiple files in folder, append s at folder name
             const storein = `${backendTargetFolder}/${filecategory}s`  
@@ -256,7 +256,7 @@ const generateSchema = ( docname: string,
             
             const filecontent = eta.render(templatepath, variables)     
             writeFileSync(targetfile,filecontent);
-            console.log("Write complete")
+            // console.log("Write complete")
           }else if(filecategory=='service' ){ //service file won't override if exists
             const targetfolder = `${simpleappTargetFolder}/${filecategory}s`
             const targetfile = `${targetfolder}/${doctype}.${filecategory}.${filetype}`
@@ -265,19 +265,19 @@ const generateSchema = ( docname: string,
             }         
 
             if(!existsSync(targetfile) || readFileSync(targetfile, 'utf-8').includes('--remove-this-line-to-prevent-override--')){
-              log.info("Write ",targetfile)
+              // log.info("Write ",targetfile)
               const filecontent = eta.render(templatepath, variables)     
               writeFileSync(targetfile,filecontent);            
             }
             else{
-              log.info("skip ",targetfile)
+              // log.info("skip ",targetfile)
             }
             
           }else if(filecategory=='test' && isGenerateTest(variables)){            
 
             const targetfolder = `${backendFolder}/test/documents/${docname}`
             const targetfile = `${targetfolder}/${docname}.e2e-spec.ts`
-            log.warn("test file: ",targetfile)
+            // log.warn("test file: ",targetfile)
             // `${backendServiceFolder}/${doctype}.${filecategory}.${filetype}`
             if(!existsSync(targetfolder)){
               mkdirSync(targetfolder,{recursive:true})
@@ -386,11 +386,11 @@ const generateSchema = ( docname: string,
             // }
             
             const target = mapfiles[filename]   
-            console.log(target);
+            // console.log(target);
             const targetfolder = `${generateTypes[foldertype]}/${target.to}`
             const targetfile = `${targetfolder}/${target.as}`
             
-            console.log("targetfile",targetfile);
+            // console.log("targetfile",targetfile);
             if(jsonschemas[docname][X_SIMPLEAPP_CONFIG]['pageType'] && !existsSync(targetfolder)){
               console.log("Mkdir",targetfolder)
               mkdirSync(targetfolder,{recursive:true})              
@@ -399,13 +399,13 @@ const generateSchema = ( docname: string,
 
             const isexists = existsSync(targetfile)
             const iswrite:boolean = target.validate(targetfile,isexists)
-            log.info("iswrite: ",iswrite)
+            // log.info("iswrite: ",iswrite)
             
             if(iswrite){
               const filecontent = eta.render(templatepath, variables)     
               writeFileSync(targetfile,filecontent);
             }
-            console.log("complete, go to next file")
+            // console.log("complete, go to next file")
             
             
 
@@ -414,7 +414,7 @@ const generateSchema = ( docname: string,
       
 
     })
-    console.log("Complete generate schema")
+    // console.log("Complete generate schema")
    
 
 }
@@ -442,7 +442,7 @@ const generateSystemFiles=(modules:ModuleObject[],allbpmn)=>{
       
       //generate code for framework
       for(let index=0; index<frameworkfiles.length; index++){
-        log.info("Process systemfiles ",frameworkfiles[index])
+        // log.info("Process systemfiles ",frameworkfiles[index])
         const longfilename:string = String(frameworkfiles[index])
         const patharr = longfilename.split('/')
         const filename = _.last(patharr)
@@ -466,7 +466,7 @@ const generateSystemFiles=(modules:ModuleObject[],allbpmn)=>{
           }
           // log.warn("Process=== ",targetfilename)
           if(existsSync(targetfilename) &&  forceoverride == false){
-            log.info("file exists, skip: ",targetfilename)
+            // log.info("file exists, skip: ",targetfilename)
             continue;
           }
 
@@ -475,7 +475,7 @@ const generateSystemFiles=(modules:ModuleObject[],allbpmn)=>{
             mkdirSync(foldername,{recursive:true})
           }
           // const templatename = `${frameworkfolder}/${longfilename}`.replace(".eta","").replace('._eta','')
-          log.info("Write template:",targetfilename)
+          // log.info("Write template:",targetfilename)
           const txt = eta.render(longfilename, renderProperties)
           writeFileSync(targetfilename,txt)
           
