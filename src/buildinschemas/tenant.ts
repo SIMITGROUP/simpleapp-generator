@@ -22,7 +22,7 @@ export const tenant:SchemaType ={
         orgId: {type:'integer',default:1,minimum:0 },
         branchId: {type:'integer',default:1,minimum:0 },
         tenantName: {type: "string", minLength:3},
-        active: {"type": "boolean","example": [true],default:true},
+        active: {"type": "boolean","examples": [true],default:true},
         businessType:{type:"string"},
         clientSetting: {
             type:"object",

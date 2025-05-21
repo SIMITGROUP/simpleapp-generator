@@ -43,7 +43,7 @@ export const organization:SchemaType ={
         registrationNo:{type:"string"},
         active: {type: "boolean","default":true,},
         description: {type: "string",format:"text",},
-        timeZone: {"type": "string","example": ["Asia/Kuala_Lumpur"]},
+        timeZone: {"type": "string","examples": ["Asia/Kuala_Lumpur"]},
         offsetMinute:{"type": "number","default":0},
         currency:{"type":"string",minimum:3,maximum:3},
         country:{"type":"string",minimum:2,maximum:2}

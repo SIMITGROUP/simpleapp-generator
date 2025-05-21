@@ -49,7 +49,7 @@ export const user:SchemaType ={
           type: "string",
           anyOf:[
             {"const":""},
-            {"format": "tel","example": ["0123456789"]}          
+            {"format": "tel","examples": ["0123456789"]}          
           ]
         },
         active: {type: "boolean",default:true},
@@ -57,7 +57,7 @@ export const user:SchemaType ={
         lastActivity: {type: "string",description:"capture ISO8601 last api call"},
         completedTours: {
           type: "array",
-          items: { "type": "string", "example": ["mainpage"] }
+          items: { "type": "string", "examples": ["mainpage"] }
         }
       }
 }
