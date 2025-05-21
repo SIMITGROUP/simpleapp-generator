@@ -20,7 +20,9 @@ import {
   FilterQuery,
   ProjectionType,
 } from 'mongoose';
-import { getValidateService } from 'src/simpleapp/generate/sharelibs/validate';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+import addErrors from 'ajv-errors';
 import {
   NotFoundException,
   HttpException,
@@ -40,7 +42,10 @@ import {
   DeleteResultType,
   WorkflowName,
   TextSearchBody,
+  CheckMutipleUnionExistResponse,
 } from '../types';
+import { CustomException } from 'src/customexception';
+
 @Injectable()
 export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   @Inject(EventEmitter2)
@@ -112,6 +117,8 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     this.data = { ...newdata };
     return this;
   };
+  getDocumentIdentityCode = () => this.documentIdentityCode;
+  getDocumentIdentityLabel = () => this.documentIdentityLabel;
   public isReadOnly(): boolean {
     return false;
   }
@@ -162,7 +169,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     try {
       const filter1 = {};
       const filter2 = {};
-      let filters: any[] = [];
+      const filters: any[] = [];
       if (
         this.jsonschema.properties[this.documentIdentityCode]['type'] ==
         'string'
@@ -176,7 +183,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       const filterobj = { $or: filters };
       Object.assign(filterobj, data);
       Object.assign(filterobj, this.getIsolationFilter(appuser));
-      let projections = {
+      const projections = {
         label: `\$${this.documentIdentityLabel}`,
         code: `\$${this.documentIdentityCode}`,
       };
@@ -184,7 +191,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         Object.assign(projections, this.moreAutoCompleteField);
       }
       const products = await this.doc.find(filterobj, projections, {
-        limit: this.LIMITPERPAGE,
+        // limit: this.LIMITPERPAGE,
       });
       const productlist = products.map((p: T) => {
         return p;
@@ -201,10 +208,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
    * @param filters
    * @returns
    */
-  private async searchNoIsolation(
-    appuser: UserContext,
-    filters: FilterQuery<T>,
-  ) {
+  async searchNoIsolation(appuser: UserContext, filters: FilterQuery<T>) {
     try {
       if (this.hooks.beforeSearch)
         await this.hooks.beforeSearch(appuser, filters);
@@ -221,6 +225,23 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       throw new InternalServerErrorException(err.message);
     }
     // return this;
+  }
+  async aggregateNoIsolation(appuser: UserContext, pipeline: PipelineStage[]) {
+    if (pipeline[0] && pipeline[0]['$match']) {
+      try {
+        this.logger.verbose(pipeline, `${this.documentName} aggregate:`);
+
+        return await this.doc.aggregate(pipeline, {
+          session: appuser.getDBSession(),
+        });
+      } catch (err) {
+        throw new InternalServerErrorException(err);
+      }
+    } else {
+      throw new InternalServerErrorException(
+        'first aggregate pipelinestage shall use $match',
+      );
+    }
   }
   async aggregate(appuser: UserContext, pipeline: PipelineStage[]) {
     if (pipeline[0] && pipeline[0]['$match']) {
@@ -269,13 +290,12 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       } else {
         const pipelines = this.searchToAggregate(
           appuser,
-          filters,
+          newfilters,
           projection,
           sort,
           lookup,
         );
         this.logger.debug('after aggregate', pipelines);
-
         searchResults = await this.aggregate(appuser, pipelines);
       }
 
@@ -294,16 +314,60 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   }
 
   async fullTextSearch(appuser: UserContext, body: TextSearchBody) {
-    const isolationFilter = { ...this.getIsolationFilter(appuser) };
-    this.polishIsolationFilter(isolationFilter);
+    try {
+      const isolationFilter = { ...this.getIsolationFilter(appuser) };
+      this.polishIsolationFilter(isolationFilter);
+      const keyword = body.keyword;
 
-    const filters = { $text: { $search: body.keyword } };
-    const newfilters: FilterQuery<T> = { ...filters, ...isolationFilter };
-    const fields = body.fields;
-    const sorts = body.sorts;
-    //not yet support lookup mapper
-    const lookup = body.lookup;
-    return await this.doc.find(newfilters, fields, sorts);
+      // Prepare regex filter
+      const orConditions: any[] = [];
+      if (body.fields && body.fields.length > 0) {
+        body.fields.forEach((field: string) => {
+          if (
+            field != 'defaultPrice' &&
+            field != 'amount' &&
+            field != 'active' &&
+            field != 'updated'
+          ) {
+            orConditions.push({
+              [field]: { $regex: keyword, $options: 'i' },
+            });
+          } else {
+            if (
+              !isNaN(Number(keyword)) &&
+              (field == 'defaultPrice' || field == 'amount')
+            ) {
+              orConditions.push({
+                [field]: { $gte: keyword },
+              });
+            }
+          }
+        });
+      }
+      const filter = {
+        $or: orConditions,
+      };
+
+      const tmpfilters: FilterQuery<T> = { ...filter, ...isolationFilter };
+      const newfilters: FilterQuery<T> = {
+        $and: [tmpfilters],
+      };
+
+      const fields = body.fields || {};
+      const sorts = body.sorts || {};
+
+      // Ensure `this.doc` is a Mongoose model or similar
+      const results = await this.doc
+        .find(newfilters, fields)
+        .sort(sorts)
+        .exec();
+
+      return results;
+    } catch (error) {
+      console.error('Error during full-text search:', error);
+      // Ensure error handling returns a valid status code
+      throw new Error('Failed to perform search');
+    }
   }
   async findById(appuser: UserContext, id: string) {
     if (this.hooks.beforeFetchRecord)
@@ -319,6 +383,129 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     } else {
       return null;
     }
+  }
+
+  async findByIdNoIsolation(appuser: UserContext, id: string) {
+    if (this.hooks.beforeFetchRecord)
+      await this.hooks.beforeFetchRecord(appuser, id);
+
+    const data = await this.searchNoIsolation(appuser, { _id: id as any });
+    if (this.hooks.afterFetchRecord)
+      await this.hooks.afterFetchRecord(appuser, data[0]);
+
+    if (data.length == 1) {
+      // console.log('data0', data[0]);
+      return data[0];
+    } else {
+      return null;
+    }
+  }
+
+  async createManyWithId(appuser: UserContext, datas: T[]) {
+    if (Array.isArray(datas)) {
+      for (let i = 0; i < datas.length; i++) {
+        const data = datas[i];
+        let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
+        isolationFilter = this.polishIsolationFilter(isolationFilter, data);
+
+        Object.assign(data, isolationFilter);
+        this.reCalculateValue(data);
+        await this.validateData(appuser, data);
+        this.applyNestedDateTime(appuser, data, 'create');
+      }
+
+      const result = await this.doc.insertMany(datas);
+      await this.audittrail.addManyEvents(
+        appuser,
+        this.documentName,
+        'createMany',
+        datas,
+      );
+      return result;
+    } else {
+      throw new BadRequestException(
+        this.getDocumentType() + ': create many only support array',
+      );
+    }
+  }
+
+  /**
+   * create many from array with hooks (temporary used for generate sample data only)
+   * @param appuser
+   * @param datas
+   */
+  async createManyWithHook(appuser: UserContext, datas: T[]) {
+    if (Array.isArray(datas)) {
+      for (let i = 0; i < datas.length; i++) {
+        const data = datas[i];
+
+        let result;
+        const dbsession = appuser.getDBSession();
+        if (dbsession && !dbsession.inTransaction()) {
+          dbsession.startTransaction();
+        }
+
+        if (this.withDocNumberFormat && !data[this.documentIdentityCode]) {
+          await this.genNewDocNo(appuser, data);
+        }
+
+        let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
+        isolationFilter = this.polishIsolationFilter(isolationFilter, data);
+
+        Object.assign(data, isolationFilter);
+        this.reCalculateValue(data);
+        await this.validateData(appuser, data);
+        this.applyNestedDateTime(appuser, data, 'create');
+        if (this.hooks.beforeCreate)
+          await this.hooks.beforeCreate(appuser, data);
+        const newdoc = new this.doc(data);
+
+        try {
+          result = await newdoc.save({ session: dbsession });
+          await this.audittrail.addEvent(
+            appuser,
+            this.documentName,
+            result._id,
+            'create',
+            data,
+          );
+          appuser.addInsertedRecordId(this.documentName, result._id);
+        } catch (err) {
+          this.logger.error(err);
+          const processdata = await this.runWorker(
+            appuser,
+            'processdata.processError',
+            {
+              err: err,
+            },
+          );
+
+          if (!processdata) {
+            throw new InternalServerErrorException(err);
+          } else {
+            throw new CustomException(processdata.code, processdata.msg);
+          }
+        }
+
+        try {
+          if (this.hooks.afterCreate)
+            await this.hooks.afterCreate(appuser, result);
+          this.callWebhook(appuser, 'create', result);
+
+          // return result as T;
+        } catch (err) {
+          throw new InternalServerErrorException(
+            `createHook ${this.documentType} error: ${JSON.stringify(err)}`,
+            `${this.documentType} createHook error`,
+          );
+        }
+      }
+    } else {
+      throw new BadRequestException(
+        this.getDocumentType() + ': create many only support array',
+      );
+    }
+    return 'ok';
   }
 
   /**
@@ -353,8 +540,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       );
     }
   }
-
-  async create(appuser: UserContext, data: T) {
+  async createWithId(appuser: UserContext, data: T) {
     let result;
 
     if (!data._id) {
@@ -362,6 +548,88 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
+      dbsession.startTransaction();
+    }
+
+    this.logger.debug(
+      'this.withDocNumberFormat :' +
+        this.withDocNumberFormat +
+        '  && ' +
+        '!data[this.documentIdentityCode] ==' +
+        !data[this.documentIdentityCode],
+    );
+    if (this.withDocNumberFormat && !data[this.documentIdentityCode]) {
+      await this.genNewDocNo(appuser, data);
+    }
+
+    let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
+    isolationFilter = this.polishIsolationFilter(isolationFilter, data);
+
+    this.logger.debug('isolationFilter', 'SimpleAppService');
+    this.logger.debug(isolationFilter, 'SimpleAppService');
+    this.logger.debug('Create data before isolation', 'SimpleAppService');
+    this.logger.debug(data, 'SimpleAppService');
+    Object.assign(data, isolationFilter);
+    this.reCalculateValue(data);
+    await this.validateData(appuser, data);
+    this.logger.debug(data, `after create validation`);
+    this.applyNestedDateTime(appuser, data, 'create');
+
+    if (this.hooks.beforeCreate) await this.hooks.beforeCreate(appuser, data);
+    this.logger.debug(data, `Create Record ${this.documentName}`);
+    const newdoc = new this.doc(data);
+    await this.identifyForeignKeys(appuser, data);
+    try {
+      result = await newdoc.save({ session: dbsession });
+      await this.audittrail.addEvent(
+        appuser,
+        this.documentName,
+        result._id,
+        'create',
+        data,
+      );
+      appuser.addInsertedRecordId(this.documentName, result._id);
+    } catch (err) {
+      this.logger.error(err);
+      const processdata = await this.runWorker(
+        appuser,
+        'processdata.processError',
+        {
+          err: err,
+        },
+      );
+
+      if (!processdata) {
+        throw new InternalServerErrorException(err);
+      } else {
+        throw new CustomException(processdata.code, processdata.msg);
+      }
+    }
+
+    try {
+      if (this.hooks.afterCreate) await this.hooks.afterCreate(appuser, result);
+      this.callWebhook(appuser, 'create', result);
+      return result as T;
+    } catch (err) {
+      throw new InternalServerErrorException(
+        `createHook ${this.documentType} error: ${JSON.stringify(err)}`,
+        `${this.documentType} createHook error`,
+      );
+    }
+  }
+
+  async create(
+    appuser: UserContext,
+    data: T,
+    noStartTransaction: boolean = false,
+  ) {
+    let result;
+
+    if (!data._id) {
+      data._id = crypto.randomUUID();
+    }
+    const dbsession = appuser.getDBSession();
+    if (dbsession && !dbsession.inTransaction() && !noStartTransaction) {
       dbsession.startTransaction();
     }
 
@@ -405,13 +673,21 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       appuser.addInsertedRecordId(this.documentName, result._id);
     } catch (err) {
       this.logger.error(err);
-      throw new InternalServerErrorException(err);
+      const processdata = await this.runWorker(
+        appuser,
+        'processdata.processError',
+        {
+          err: err,
+        },
+      );
+
+      if (!processdata) {
+        throw new InternalServerErrorException(err);
+      } else {
+        throw new CustomException(processdata.code, processdata.msg);
+      }
     }
 
-    // this.doc.create(data)
-    // this.doc
-
-    // result = await newdoc.save()
     try {
       if (this.hooks.afterCreate) await this.hooks.afterCreate(appuser, result);
       this.callWebhook(appuser, 'create', result);
@@ -459,8 +735,20 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
   };
   async validateData(appuser: UserContext, data: T, _id?: string) {
-    const ajv = getValidateService();
+    // console.log('validatedata');
+    const ajv = new Ajv({ allErrors: true, useDefaults: true });
+    addFormats(ajv);
+    addErrors(ajv);
 
+    // ajv.addFormat('tel', /^$|^\d{7,15}$/gm);
+    ajv.addFormat('tel', /.*$/);
+    ajv.addFormat('text', /.*$/);
+    ajv.addFormat('html', /.*$/);
+    ajv.addFormat('documentno', /.*$/);
+    ajv.addFormat('money', /.*$/);
+
+    ajv.addKeyword({ keyword: 'x-foreignkey', schemaType: 'string' });
+    ajv.addKeyword({ keyword: 'x-simpleapp-config', schemaType: 'object' });
     this.logger.debug('run hook during validation');
     let issuccess = true;
     if (this.hooks.beforeValidation) {
@@ -488,12 +776,14 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
     const valid = validate(data);
     if (!valid) {
+      this.logger.error(JSON.stringify(data));
       this.logger.error(JSON.stringify(validate.errors), 'validate errors:');
       throw new BadRequestException(
         'Data validation failed',
         validate.errors as HttpExceptionOptions,
       );
     }
+    //no check for duplicate those
     if (this.hooks.afterValidation)
       await this.hooks.afterValidation(appuser, data, _id);
   }
@@ -543,7 +833,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       dependency = await this.getRelatedRecords(appuser, id);
       //console.log('dependency', dependency);
       if (!dependency) {
-        let filterIsolation = this.getIsolationFilter(appuser);
+        const filterIsolation = this.getIsolationFilter(appuser);
         this.polishIsolationFilter(filterIsolation);
 
         filterIsolation['_id'] = id;
@@ -578,11 +868,17 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       } else {
         this.logger.debug('reject query', dependency);
 
-        throw new ForbiddenException(dependency, 'Foreignkey constraint');
+        throw new ForbiddenException(
+          `This system detected that the [${this.documentName}] data has been used in other record`,
+          'Foreignkey constraint',
+        );
       }
     } catch (err) {
-      throw new InternalServerErrorException(err);
-      //JSON.stringify(dependency),JSON.stringify(dependency)
+      if (err instanceof ForbiddenException) {
+        throw new ForbiddenException(err);
+      } else {
+        throw new InternalServerErrorException(err);
+      } //JSON.stringify(dependency),JSON.stringify(dependency)
     }
   }
 
@@ -590,10 +886,89 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   //   this.doc.updateOne(data);
   // };
 
-  findIdThenUpdate = async (appuser: UserContext, id: string, data: T) => {
+  findIdThenUpdate = async (
+    appuser: UserContext,
+    id: string,
+    data: T,
+    noStartTransaction: boolean = false,
+  ) => {
     try {
       //version exists, need ensure different only 1
       const existingdata = await this.findById(appuser, id);
+      if (!existingdata)
+        throw new NotFoundException(
+          `${this.documentName} findIdThenUpdate:  _id:${id} not found`,
+          'not found',
+        );
+
+      this.logger.debug(
+        'update id:' + id,
+        this.documentName + ' findIdThenUpdate',
+      );
+      if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
+        throw new BadRequestException(
+          `You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`,
+        );
+      }
+      // this.logger.debug('warn1', existingdata);
+      data.__v = existingdata.__v + 1;
+      // if (!existingdata) {
+      //   throw new NotFoundException(`${id} not found`, 'not found');
+      // }
+      // this.logger.debug('warn2');
+      if (this.hooks.beforeUpdate)
+        await this.hooks.beforeUpdate(appuser, id, existingdata, data);
+
+      const dbsession = appuser.getDBSession();
+      if (dbsession && !dbsession.inTransaction() && !noStartTransaction) {
+        dbsession.startTransaction();
+      }
+      // try {
+      Object.assign(data, appuser.getUpdateFilter());
+      // Object.assign(existingdata, data);
+
+      delete data['_id'];
+      this.reCalculateValue(data);
+
+      // existingdata['_id']=''
+      await this.validateData(appuser, data, id);
+
+      const isolationFilter = { ...this.getIsolationFilter(appuser) };
+      this.polishIsolationFilter(isolationFilter);
+      isolationFilter['_id'] = id;
+      this.applyNestedDateTime(appuser, data, 'update');
+
+      const result = await this.doc.findOneAndReplace(isolationFilter, data, {
+        session: dbsession,
+        new: true,
+      });
+      await this.audittrail.addEvent(
+        appuser,
+        this.documentName,
+        id,
+        'update',
+        data,
+      );
+
+      appuser.addUpdatedRecordId(this.documentName, data._id);
+      if (this.hooks.afterUpdate)
+        await this.hooks.afterUpdate(appuser, id, existingdata, result);
+      this.callWebhook(appuser, 'update', result);
+      return result; // await this.findById(appuser, id);
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerErrorException(err.message);
+    }
+  };
+
+  findIdThenUpdateNoIsolation = async (
+    appuser: UserContext,
+    id: string,
+    data: T,
+  ) => {
+    try {
+      //version exists, need ensure different only 1
+      const existingdata = await this.findByIdNoIsolation(appuser, id);
       if (!existingdata)
         throw new NotFoundException(
           `${this.documentName} findIdThenUpdate:  _id:${id} not found`,
@@ -623,7 +998,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         dbsession.startTransaction();
       }
       // try {
-      Object.assign(data, appuser.getUpdateFilter());
+      // Object.assign(data, appuser.getUpdateFilter());
       // Object.assign(existingdata, data);
 
       delete data['_id'];
@@ -632,8 +1007,8 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       // existingdata['_id']=''
       await this.validateData(appuser, data, id);
 
-      const isolationFilter = { ...this.getIsolationFilter(appuser) };
-      this.polishIsolationFilter(isolationFilter);
+      const isolationFilter = {};
+      // this.polishIsolationFilter(isolationFilter);
       isolationFilter['_id'] = id;
       this.applyNestedDateTime(appuser, data, 'update');
 
@@ -752,13 +1127,16 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         for (let j = 0; j < fobjs.length; j++) {
           const fkey = fobjs[j];
           //not deleted in current session, check from database
-          let filter = {};
+          const filter = {};
           filter[fkey] = id;
           const result = await collection.findOne(filter, {
             session: appuser.getDBSession(),
           });
           if (result) {
-            this.logger.error(result, 'related result found');
+            this.logger.error(
+              result,
+              `related result found in ${collectionname} ${fkey} = ${id}`,
+            );
             return result;
           }
         }
@@ -948,7 +1326,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
 
         keystore[collectionname] = results;
         //console.log("keystorekeystore",keystore)
-        let addfield = { $addFields: { collection: collectionname } };
+        const addfield = { $addFields: { collection: collectionname } };
 
         const stagefilter: PipelineStage = {
           $unionWith: {
@@ -974,7 +1352,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         pipelines as HttpExceptionOptions,
       );
     } else {
-      let searchresult: any = {};
+      const searchresult: any = {};
       unionresult.forEach((item) => {
         if (searchresult[item.collection]) {
           searchresult[item.collection].push(item._id);
@@ -1024,6 +1402,23 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     return pdfresult;
   }
 
+  async checkMultipleUnionExist(
+    appuser: UserContext,
+    data: string[],
+  ): Promise<CheckMutipleUnionExistResponse> {
+    const response: CheckMutipleUnionExistResponse = [];
+    const unionKey = this.getDocumentIdentityCode();
+    const searchQuery: any = { [unionKey]: { $in: data } };
+    // search for multiple union exist
+    const result = await this.search(appuser, searchQuery);
+    for (const item of data) {
+      const found = result.find((x) => x[unionKey] === item);
+      response.push({ [item]: found ? 1 : 0 });
+    }
+
+    return response;
+  }
+
   searchToAggregate(
     appuser: UserContext,
     filter: FilterQuery<T>,
@@ -1046,7 +1441,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     collections.forEach((tokey: string) => {
       const toarr = tokey.split('.');
       const to = toarr[0];
-      toarr.splice(0,1)
+      toarr.splice(0, 1);
       const foreignField = toarr.join('.') ?? '_id';
       pipelines.push({
         $lookup: {
@@ -1057,7 +1452,9 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
           pipeline: [{ $match: { tenantId: appuser.getTenantId() } }],
         },
       });
-      pipelines.push({ $unwind: '$_' + to });
+
+      // for support multiple data on lookup
+      // pipelines.push({ $unwind: '$_' + to });
 
       if (Object.keys(projection).length > 0) projection['_' + to] = 1;
     });

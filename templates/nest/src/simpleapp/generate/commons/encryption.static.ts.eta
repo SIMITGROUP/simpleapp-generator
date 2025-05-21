@@ -3,76 +3,71 @@
  * MODIFICATION OVERRIDE BY GENERATEOR
  * last change 2023-10-31
  * Author: Ks Tan
- * 
+ *
  * this class developed for implement field level encryption, however it still half way and keep here for future enhancement
  * it doesn't effect anything at the moment
  */
 
 import { Injectable } from '@nestjs/common';
-import { createCipheriv,createDecipheriv, randomBytes, scrypt,Cipher,Decipher } from 'crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  randomBytes,
+  scrypt,
+  Cipher,
+  Decipher,
+} from 'crypto';
 import { promisify } from 'util';
 
+export class Encryption {
+  private static instance: Encryption;
+  private algorithm = 'aes-256-ctr';
+  private iv = randomBytes(16);
+  private password = String(process.env.ENRYPTION_KEY);
 
+  private key: Buffer;
 
-export class Encryption{
-    private static instance: Encryption;
-    private algorithm = 'aes-256-ctr'
-    private iv = randomBytes(16);
-    private password = String(process.env.ENRYPTION_KEY)
-
-    private key :Buffer
-
-    constructor(){
-        this.init();
-    }
-    public static getInstance(): Encryption {
-        if (!Encryption.instance) {
-            Encryption.instance = new Encryption();
-        }
-
-        return Encryption.instance;
+  constructor() {
+    this.init();
+  }
+  public static getInstance(): Encryption {
+    if (!Encryption.instance) {
+      Encryption.instance = new Encryption();
     }
 
+    return Encryption.instance;
+  }
 
+  async init() {
+    // console.log('Initialized encryption class');
+  }
 
-    async init (){
-        
-        
-        console.log("Initialized encryption class")
-    }
+  getKey = async (salt) => {
+    const key = (await promisify(scrypt)(this.password, salt, 32)) as Buffer;
+    return key;
+  };
 
+  encrypt = async (value: string) => {
+    const salt = 'salt';
+    const key = await this.getKey(salt);
+    const cipher = createCipheriv(this.algorithm, key, this.iv);
+    // console.log('Encrypting text ', value, cipher);
+    const encryptedText = Buffer.concat([
+      cipher.update(value),
+      cipher.final(),
+    ]).toString('hex');
+    // console.log('encryptedText', encryptedText);
+    return encryptedText;
+  };
 
-    getKey = async (salt)=>{
-        const key = (await promisify(scrypt)(this.password,salt , 32)) as Buffer;
-        return key
-    }
-
-    encrypt = async (value:string)=>{
-        const salt ='salt'
-        const key = await this.getKey(salt)
-        const cipher = createCipheriv(this.algorithm, key, this.iv);
-        console.log("Encrypting text ",value,cipher)
-        const encryptedText = Buffer.concat([
-            cipher.update(value),
-            cipher.final(),
-          ]).toString('hex');
-          console.log("encryptedText",encryptedText)
-        return encryptedText
-    }
-
-    decrypt = async (value:string,salt:string)=>{
-        const key = await this.getKey(salt)
-        const decipher = createDecipheriv('aes-256-ctr', key, this.iv);
-        const buf = Buffer.from(value)
-        const decryptedText = Buffer.concat([
-            decipher.update(buf),
-            decipher.final(),
-        ]).toString('hex');
-        return decryptedText
-
-    }
+  decrypt = async (value: string, salt: string) => {
+    const key = await this.getKey(salt);
+    const decipher = createDecipheriv('aes-256-ctr', key, this.iv);
+    const buf = Buffer.from(value);
+    const decryptedText = Buffer.concat([
+      decipher.update(buf),
+      decipher.final(),
+    ]).toString('hex');
+    return decryptedText;
+  };
 }
-
-
-
-

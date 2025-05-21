@@ -6,11 +6,10 @@
 # compiled output
 /dist
 /node_modules
-/public_html
-/src/app.module.ts
-/src/app.service.ts
-/src/app.controller.ts
-/src/main.ts
+# /src/app.module.ts
+# /src/app.service.ts
+# /src/app.controller.ts
+# /src/main.ts
 # Logs
 logs
 *.log

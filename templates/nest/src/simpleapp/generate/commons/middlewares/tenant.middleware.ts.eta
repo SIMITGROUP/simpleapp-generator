@@ -4,135 +4,112 @@
  * last change 2024-03-17
  * Author: Ks Tan
  */
-import {
-  Injectable,
-  NestMiddleware,
-  Logger,
-  Scope,
-  Inject,
-  BadRequestException,
-} from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
+
+import Base64URL from '@darkwolf/base64url';
+import { BadRequestException, Injectable, Logger, NestMiddleware } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Connection } from 'mongoose';
-// import * as mongoose from 'mongoose';
-import { User } from '../../types/user.type';
+import { NextFunction, Request, Response } from 'express';
+import { Model } from 'mongoose';
 import { Permission } from '../../types/perm.type';
-import { InjectConnection } from '@nestjs/mongoose';
-
-const Base64URL = require('@darkwolf/base64url');
-// import * as jwt from 'nestjs-jwt'
-
+import { User } from '../../types/user.type';
+import { Appintegration } from '../../types/appintegration.type';
 import { UserContext } from '../user.context';
-// import {KeycloakConfigService} from "../keycloak/keycloak.service"
+
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
-  protected defaultxorg = Base64URL.encodeText('0-0-0');
-  protected excludeXorgs = ['/profile', '/profile/tenant', '/profile/session'];
-  protected logger = new Logger();
-  protected transController;
+  protected defaultXOrg = Base64URL.encodeText('0-0-0');
+
+  protected excludeXOrgPaths = ['/profile', '/profile/tenant', '/profile/session'];
+
+  private readonly logger = new Logger(this.constructor.name);
+
   constructor(
-    @InjectModel('User') private readonly usermodel: Model<User>,
-    @InjectModel('Permission') private readonly permmodel: Model<Permission>,
+    @InjectModel('User') private readonly userModel: Model<User>,
+    @InjectModel('Permission') private readonly permModel: Model<Permission>,
+    @InjectModel('Appintegration') private readonly appModel: Model<Appintegration>,
   ) {}
 
-  requireXorg(baseurl: string): boolean {
-    // console.log('requireXorg')
-    for (let i = 0; i < this.excludeXorgs.length; i++) {
-      if (baseurl.includes(this.excludeXorgs[i])) {
-        this.logger.verbose('requireXorg = false');
+  requireXOrg(baseurl: string): boolean {
+    for (let i = 0; i < this.excludeXOrgPaths.length; i++) {
+      if (baseurl.includes(this.excludeXOrgPaths[i])) {
+        this.logger.verbose('requireXOrg = false');
         return false;
       }
     }
-    // console.log("Require xorg")
     return true;
   }
+
   async use(req: Request, res: Response, next: NextFunction) {
     if (req.baseUrl == '/oauth2-redirect.html') {
       next();
       return;
     }
-    const u = new UserContext(this.usermodel, this.permmodel);
+
+    let tokenStr: string = req.get('authorization') ?? '';
+    tokenStr = tokenStr.replace('Bearer ', '');
+    const xOrg = req.get('x-org') ?? this.defaultXOrg;
+
+    const user = new UserContext(this.userModel, this.permModel, this.appModel);
 
     if (req.baseUrl == '/graphql') {
-      let tokenstr: string = req.headers['authorization'] ?? '';
-      tokenstr = tokenstr.replace('Bearer ', '');
-      const xorg = req.headers['x-org'] ?? this.defaultxorg;
-      if (tokenstr) {        
-        await u.setCurrentUserInfo(tokenstr, xorg);
+      if (tokenStr) {
+        await user.setCurrentUserInfo(tokenStr, xOrg);
       }
-      req['sessionuser'] = u;
+      req['sessionuser'] = user;
       next();
       return;
     }
-    this.logger.debug(`running TenantMiddleware for ${req.baseUrl}`);
+    this.logger.debug(`Running TenantMiddleware for ${req.baseUrl}`);
 
-    
-    //if APIKEY defined, and there is api key and secret supplied. use robot user
-    if(process.env.X_API_KEY &&req.headers['x-api-key'] && req.headers['x-api-secret']){
-    
-      if(req.headers['x-api-key']==process.env.X_API_KEY &&
-        req.headers['x-api-secret']==process.env.X_API_SECRET){        
-
-         u.setAsStaticUser(
-            '00000000-0000-0000-0000-000000000000',
-            'robot',
-            'Robot',
-            'robot@a.org',
-            req.headers['x-org']?? this.defaultxorg
-          );
-        if(req.headers['x-guest-accesstoken']) {
-          u.setGuestToken(<string>req.headers['x-guest-accesstoken']);
+    // If X_APIKEY defined, and there is api key and secret supplied. use robot user
+    if (process.env.X_APIKEY && req.get('x-apikey') && req.get('x-apisecret')) {
+      if (req.get('x-apikey') == process.env.X_APIKEY && req.get('x-apisecret') == process.env.X_APISECRET) {
+        user.setAsStaticUser('00000000-0000-0000-0000-000000000000', 'robot', 'Robot', 'robot@a.org', req.get('x-org') ?? this.defaultXOrg);
+        if (req.get('x-guest-accesstoken')) {
+          user.setGuestToken(req.get('x-guest-accesstoken'));
         }
-        req['sessionuser'] = u;
+        req['sessionuser'] = user;
         next();
         return;
-      }else{
-        this.logger.log('invalid api key/scret');
-        throw new BadRequestException('invalid api key/scret');
+      } else {
+        this.logger.log('Invalid API Key / Secret');
+        throw new BadRequestException('Invalid API Key / Secret');
       }
     }
 
-    if (!req.headers['authorization']) {
-      this.logger.log('undefine bearer token');
-      return res.status(401).send('Undefine bearer token');
+    if (!req.get('authorization')) {
+      this.logger.log('Undefine Bearer Token');
+      return res.status(401).send('Undefine Bearer Token');
     }
-    if (!req.headers['x-org'] && this.requireXorg(req.baseUrl)) {
-      this.logger.log(
-        'undefine x-org and require that at ' + req.baseUrl,
-        'TenantMiddleware',
-      );
-      throw new BadRequestException('undefine header string x-org');
-      // return res.status(401).send('undefine header string x-org');
-    }
-    // const session = await this.connection.startSession();
-    // console.log("line 43")
-    try {
-      let tokenstr: string = req.headers['authorization'];
-      tokenstr = tokenstr.replace('Bearer ', '');
 
-      const xorg = req.headers['x-org'] ?? this.defaultxorg;      
-      await u.setCurrentUserInfo(tokenstr, xorg);
-      if (u.getId() == '' && this.requireXorg(req.baseUrl)) {
-        this.logger.log('access deny of no user:', req.baseUrl);
-        return res.status(401).send('access deny');
+    if (!req.get('x-org') && this.requireXOrg(req.baseUrl)) {
+      this.logger.log('Undefine header X-Org and require that at ' + req.baseUrl, 'TenantMiddleware');
+      throw new BadRequestException('Undefine header X-Org');
+    }
+
+    try {
+      await user.setCurrentUserInfo(tokenStr, xOrg);
+      if (user.getId() == '' && this.requireXOrg(req.baseUrl)) {
+        this.logger.log('Access deny for user:', req.baseUrl);
+        return res.status(401).send('Access deny for user');
       } else {
-        if (u.getId() == '') {
-          this.logger.verbose(
-            `grant new user (${u.getUid()}) access ${req.baseUrl}`,
-          );
+        if (user.getId() == '') {
+          this.logger.verbose(`Grant new user (${user.getUid()}) access ${req.baseUrl}`);
         } else {
-          this.logger.verbose(
-            `grant user (${u.getId()}) access ${req.baseUrl}`,
-          );
+          this.logger.verbose(`Grant user (${user.getId()}) access ${req.baseUrl}`);
         }
-        req['sessionuser'] = u;
-        this.logger.verbose(u.getRoles());
+        req['sessionuser'] = user;
+        this.logger.verbose('User roles: ' + user.getRoles().join(','));
 
         next();
+        return;
       }
     } catch (err) {
-      this.logger.error(err);
+      let errorMsg: string = <string>err;
+      if (err instanceof Error) {
+        errorMsg = 'Code: ' + err.name + ', Msg: ' + err.message;
+      }
+      this.logger.error('Error set user context: ' + errorMsg);
       throw new BadRequestException(err);
     }
   }

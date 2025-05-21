@@ -47,12 +47,15 @@ export class DocNumberFormatGenerator {
     id: string = '',
   ) => {
     doctype = doctype.toUpperCase();
-    let filter = { docNoType: doctype };
+    const filter = { docNoType: doctype, active: true };
     if (id) {
       filter['_id'] = id;
     }
+    //
     Object.assign(filter, appuser.getBranchFilter());
-    const result = await this.docformat.find(filter).session(appuser.getDBSession());
+    const result = await this.docformat
+      .find(filter)
+      .session(appuser.getDBSession());
     //search(appuser, filter);
     if (result && result.length > 0) {
       const d: Docnoformat = result[0];
@@ -79,7 +82,7 @@ export class DocNumberFormatGenerator {
       }
     } else {
       throw new BadRequestException(
-        `invalid parameter doctype: "${doctype}" or id: ${id}`,
+        `No active document number found for ${doctype}. Please update in Settings > Document Numbering Format`,
       );
     }
   };

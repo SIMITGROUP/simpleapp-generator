@@ -24,9 +24,16 @@ export class RolesGuard implements CanActivate {
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
-    ]);
+    ]) || [];
+    const criticalRoles = [Role.SuperAdmin, Role.SuperUser, Role.TenantOwner];
 
-    let sessionuser:UserContext 
+    criticalRoles.forEach((role) => {
+      if (!requiredRoles.includes(role)) {
+        requiredRoles.push(role);
+      }
+    });
+
+    let sessionuser: UserContext;
     if (context.getType() == 'http') {
       const request = context.switchToHttp().getRequest();
       sessionuser = request['sessionuser'];
@@ -34,7 +41,7 @@ export class RolesGuard implements CanActivate {
       const req = context.getArgs()[2].req;
       sessionuser = req['sessionuser'];
     }
-    
+
     if (!requiredRoles) {
       return true;
     }

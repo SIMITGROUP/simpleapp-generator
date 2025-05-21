@@ -6,8 +6,8 @@
  */
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import * as api from './api';
 import { UserContext } from 'src/simpleapp/generate/commons/user.context';
+import * as api from './api';
 
 @Injectable()
 export class PrintApiService {
@@ -25,18 +25,17 @@ export class PrintApiService {
   }
   async getBase64Pdf(appuser: UserContext, formatid: string, id: string) {
     const printapi = new api.DefaultApi(this.getConfig(appuser), undefined);
-    try{
-      const result:any = await printapi.runPdfBase64(formatid, id, {
+    try {
+      const result: any = await printapi.runPdfBase64(formatid, id, {
         headers: {
-          'x-org': appuser.getXorg(),
+          'x-org': appuser.getXOrg(),
         },
       });
 
       const pdfresult: string = result.data;
-      return pdfresult;  
-    }catch(e){
-      throw new InternalServerErrorException('print-service servicer error')
+      return pdfresult;
+    } catch (e) {
+      throw new InternalServerErrorException('print-service servicer error');
     }
-    
   }
 }
