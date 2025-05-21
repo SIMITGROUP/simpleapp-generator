@@ -191,7 +191,7 @@ const genSchema = async (
         // const clientdatacollection = docname.toLowerCase()
         const clientdatacollection = parentFlatStr.split(".")[0] || docname.toLowerCase();
         const foreignkeyidentity= (obj.type=='object')? `${key}._id` : key
-        const foreignkeypath = (obj.type=='object') ? `${parentpath}.${key}._id` : (obj.type =='array') ? `${parentpath}.${key}._id` : `${parentpath}.${key}`
+        const foreignkeypath = (obj.type=='object') ? `${parentpath}.${key}._id` : (obj.type =='array') ? `${parentpath}.${key}[*]._id` : `${parentpath}.${key}`
 
         const foreignkeyidentityNew = foreignkeypath.replace("$.", "").replace("[*]", "")
         
