@@ -10,20 +10,22 @@ import { ResourceGuard } from 'nest-keycloak-connect';
 
 @Injectable()
 export class CustomKeycloakGuard implements CanActivate {
-  constructor(private reflector: Reflector, private resourceGuard: ResourceGuard) {}
+  constructor(
+    private reflector: Reflector,
+    private resourceGuard: ResourceGuard,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    
 
-    //graphql no http request, exclude from capability of x-api-key
-    if(request?.headers){
-        const apiKey = request.headers['x-api-key'];
-        const apiSecret = request.headers['x-api-secret'];
-        // validate apikey and apisecret at middleware level, reach here mean approved as robot
-        if (apiKey && apiSecret ) {
-          return true;
-        }
+    //graphql no http request, exclude from capability of x-apikey
+    if (request?.headers) {
+      const apiKey = request.headers['x-apikey'];
+      const apiSecret = request.headers['x-apisecret'];
+      // validate apikey and apisecret at middleware level, reach here mean approved as robot
+      if (apiKey && apiSecret) {
+        return true;
+      }
     }
 
     // If API key is not present, fall back to Keycloak authentication
@@ -35,7 +37,7 @@ export class CustomKeycloakGuard implements CanActivate {
     }
   }
 
-  private validateApiKey(apiKey: string, apiSecret: string): boolean {    
+  private validateApiKey(apiKey: string, apiSecret: string): boolean {
     // Implement your API key and secret validation logic here
     // This is just a simple example
     return apiKey === 'your-valid-api-key' && apiSecret === 'your-valid-api-secret';
