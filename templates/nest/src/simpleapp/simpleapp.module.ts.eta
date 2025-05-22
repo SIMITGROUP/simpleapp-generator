@@ -32,37 +32,26 @@ import { <%=capitalizeFirstLetter(bpmn)%>ListenerService } from 'src/simpleapp/w
 <%}%>
 // import {ServiceModule} from  "../services/service.module"
 //import { <%= it.typename %>Service } from '../../generate/<%= it.doctype %>/<%= it.doctype %>.service';
-
-// ------------------------ Start additionalNestModules ------------------------
-<% const nestmodules = it.configs.additionalNestModules%>
-<% for(let i=0; i<nestmodules.length;i++){ %>
-<% const modulename = capitalizeFirstLetter(nestmodules[i]) %>
-  import {<%= modulename %>Module } from  '../<%=nestmodules[i]%>/<%=nestmodules[i]%>.module';
-<%}%>
-// ------------------------- End additionalNestModules -------------------------
+import additionalModule from './additional.module';
 
 //<%if(it.doctype != 'autoinc'){%>import {AutoincreamentModule} from '../autoinc/autoinc.module'<%}%>
 //encryption use for model (not class and cant inject, use singleton instead and init as early as possible)
 
 @Module({
   imports: [
+    ...additionalModule.imports,
 
-  // ------------------------ Start additionalNestModules ------------------------
-  <% for(let i=0; i<nestmodules.length;i++){ %>
-  <% const modulename = capitalizeFirstLetter(nestmodules[i]) %>
-    <%= modulename %>Module,
-  <%}%>
-  // ------------------------- End additionalNestModules -------------------------
-
-   MongooseModule.forFeature([
-        <% for(let i=0;i<it.modules.length; i++){ %>
-          <% let obj = it.modules[i]%>
-          { name: '<%= obj.docname %>', schema: <%= obj.docname %>MongoSchema },
-        <%}%>
-      ]),
+    MongooseModule.forFeature([
+      <% for(let i=0;i<it.modules.length; i++){ %>
+        <% let obj = it.modules[i]%>
+        { name: '<%= obj.docname %>', schema: <%= obj.docname %>MongoSchema },
+      <%}%>
+    ]),
   ],
-  controllers: [<% for(let i=0;i<it.modules.length; i++){ %><%= it.modules[i].docname %>Controller,<%}%> ProfileController,
-  //WorkflowController
+  controllers: [
+    <% for(let i=0;i<it.modules.length; i++){ %><%= it.modules[i].docname %>Controller,<%}%> ProfileController,
+    //WorkflowController
+    ...additionalModule.controllers,
   ],
   providers: [
     SimpleAppRobotUserService,
@@ -76,12 +65,16 @@ import { <%=capitalizeFirstLetter(bpmn)%>ListenerService } from 'src/simpleapp/w
         <%let bpmn = it.allbpmn[i]%>
         <%=capitalizeFirstLetter(bpmn)%>ListenerService,
     <%}%> UserResolverService,
+    ...additionalModule.providers,
   ],
-  exports:[SimpleAppRobotUserService,AuditTrail,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %>
+  exports:[
+    SimpleAppRobotUserService,AuditTrail,DocNumberFormatGenerator,<% for(let i=0;i<it.modules.length; i++){ %>
     <%= it.modules[i].docname %>Service,
     <%= it.modules[i].docname %>Resolver,
     <%}%> ProfileService,
     //WorkflowDelegate,WorkflowConfig,WorkflowService,WorkflowUserService,
-    UserResolverService,]
+    UserResolverService,
+    ...additionalModule.exports,
+  ]
 })
 export class GenerateModule {}
