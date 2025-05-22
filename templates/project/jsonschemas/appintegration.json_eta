@@ -7,7 +7,7 @@
     "isolationType": "branch",
     "uniqueKey": "_id",
     "webhook": [
-      "create1",
+      "create",
       "update",
       "delete"
     ],

@@ -123,6 +123,8 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
   generateSystemFiles(activatemodules,allbpmn)
 
   generatePrintformat(configs,printformats)
+
+  console.log("Process Complete... Start Run callback");
   
   callback()
 }
@@ -157,7 +159,7 @@ const processSchema= async (schemaname:string,jsondata:JSONSchema7)=>{
         }
     // } else {
       // log.warn(`Load `+clc.yellow(file) + ` but it is not supported`)
-    // }      
+    // }   
 }
   
 
@@ -296,7 +298,7 @@ const generateSchema = ( docname: string,
           }
                
         }else if(foldertype=='nuxt'){
-          console.log("Process nuxt: ",docname)
+          // console.log("Process nuxt: ",docname)
           const capname = capitalizeFirstLetter(docname)
         
           const validateWritePage = (targetfile:string,isexists:boolean)=>{

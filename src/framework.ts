@@ -254,12 +254,13 @@ export const prepareNuxt = (callback:Function)=>{
 }
 
 export const prettyNuxt = ()=>{
-    
+    console.log("Formatting Nuxt...");
     prepareOpenApiClient()
     exec(`cd ${config.frontendFolder};npx prettier --write "./pages/**/*.vue" "./components/**/*.vue" "./generate/*/*.ts" `)
                         
 }
 export const prettyNest = ()=>{
+    console.log("Formatting Nest...");
     exec(`cd ${config.backendFolder};npm run format;npx prettier --write src/dicts/foreignkeys.json`)
 }
 
