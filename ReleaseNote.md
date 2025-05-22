@@ -1,4 +1,7 @@
 [1.6.6k-alpha]
+1. Change additional module
+
+[1.6.6k-alpha]
 1. Tmp dirty fix for Simtrain
 
 [1.6.6j-alpha]
