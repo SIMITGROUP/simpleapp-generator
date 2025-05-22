@@ -1,0 +1,227 @@
+{
+  "type": "object",
+  "x-simpleapp-config": {
+    "documentType": "appintegration",
+    "documentName": "appintegration",
+    "documentTitle": "appintegration",
+    "isolationType": "branch",
+    "uniqueKey": "_id",
+    "webhook": [
+      "create1",
+      "update",
+      "delete"
+    ],
+    "pageType": "crud",
+    "additionalApis": [
+      {
+        "action": "runGetOrgIntegrationData",
+        "method": "get",
+        "entryPoint": "branch/:appId",
+        "responseType": "Appintegration",
+        "requiredRole": [
+          "Admin"
+        ],
+        "description": "get integration data for branch"
+      },
+      {
+        "action": "updateIntegrationStatus",
+        "method": "get",
+        "entryPoint": ":appId/:action",
+        "responseType": "Appintegration",
+        "requiredRole": [
+          "Admin"
+        ],
+        "description": "update app integration status"
+      }
+    ]
+  },
+  "required": [
+    "appId",
+    "appType",
+    "settings"
+  ],
+  "properties": {
+    "_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "created": {
+      "type": "string"
+    },
+    "updated": {
+      "type": "string"
+    },
+    "createdBy": {
+      "type": "string"
+    },
+    "updatedBy": {
+      "type": "string"
+    },
+    "tenantId": {
+      "type": "integer",
+      "default": 1
+    },
+    "orgId": {
+      "type": "integer",
+      "default": 1
+    },
+    "branchId": {
+      "type": "integer",
+      "default": 1
+    },
+    "appId": {
+      "type": "string"
+    },
+    "appType": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "systemLink": {
+          "type": "string"
+        },
+        "orgCode": {
+          "type": "string"
+        },
+        "appSystemBranch": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string",
+          "format": "password",
+          "description": "Stored encrypted using AES-256"
+        },
+        "defaultDebtorAccount": {
+          "type": "string"
+        },
+        "defaultSalesAccount": {
+          "type": "string"
+        },
+        "defaultRoundingAccount": {
+          "type": "string"
+        },
+        "defaultRefundAccount": {
+          "type": "string"
+        },
+        "debtorAccountConfig": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "level": {
+                "type": "object",
+                "properties": {
+                  "_id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                }
+              },
+              "account": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "salesAccountConfig": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productCategory": {
+                "type": "object",
+                "properties": {
+                  "_id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "categoryType": {
+                    "type": "string"
+                  }
+                }
+              },
+              "account": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "bankAccountConfig": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "paymentMethod": {
+                "type": "object",
+                "properties": {
+                  "_id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                }
+              },
+              "account": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "isAutoSubmitEinvoice": {
+          "type": "boolean",
+          "default":false
+        },
+        "implementationDate": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "if": {
+    "properties": {
+      "appId": {
+        "const": "simbiz6"
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "settings": {
+        "type": "object",
+        "required": [
+          "systemLink",
+          "orgCode",
+          "username",
+          "password",
+          "appSystemBranch",
+          "defaultDebtorAccount",
+          "defaultSalesAccount",
+          "defaultRoundingAccount",
+          "defaultRefundAccount"
+        ]
+      }
+    }
+  }
+}
