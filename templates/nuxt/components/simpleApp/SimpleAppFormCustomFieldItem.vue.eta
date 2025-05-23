@@ -1,0 +1,29 @@
+<template>
+  <SimpleAppInput
+    :input-type="
+      fieldItem.type === 'number'
+        ? SimpleAppInputType.number
+        : SimpleAppInputType.text
+    "
+    :setting="handleGetField(fieldPath)"
+    v-model="model"
+  />
+</template>
+
+<script setup lang="ts">
+import { SimpleAppInputType } from "~/types";
+import { computed } from "vue";
+
+const props = defineProps<{
+  groupName: string;
+  fieldName: string;
+  fieldItem: any;
+  handleGetField: (path: string) => any;
+}>();
+
+const model = defineModel();
+const fieldPath = computed(
+  () =>
+    `#/properties/more/properties/${props.groupName}/properties/${props.fieldName}`
+);
+</script>

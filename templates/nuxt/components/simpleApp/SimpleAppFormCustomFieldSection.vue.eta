@@ -1,0 +1,22 @@
+<template>
+  <div v-if="properties" class="flex flex-col gap-2 p-2">
+    <SimpleAppFormCustomFieldGroup
+      v-for="[groupName, groupItem] in Object.entries(properties)"
+      :key="groupName"
+      :groupName="groupName"
+      :groupItem="groupItem"
+      :model="model[groupName]"
+      :handleGetField="handleGetField"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { CustomFieldJsonSchema } from "~/types";
+
+defineProps<{
+  properties: CustomFieldJsonSchema["properties"];
+  model: Record<string, any>;
+  handleGetField: (path: string) => any;
+}>();
+</script>

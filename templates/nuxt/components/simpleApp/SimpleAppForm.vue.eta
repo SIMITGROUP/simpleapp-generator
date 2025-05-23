@@ -1,6 +1,13 @@
 <template>
   <form class="simpleapp-form" @submit.prevent="true">
     <slot name="default" :data="document.getData()" :getField="getField"></slot>
+
+    <SimpleAppFormCustomFieldSection
+      v-if="document.schema.properties.more?.properties"
+      :properties="document.schema.properties.more.properties"
+      :model="document.getData().more"
+      :handleGetField="getField"
+    />
   </form>
 </template>
 <script setup lang="ts">

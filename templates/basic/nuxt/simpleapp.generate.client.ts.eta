@@ -65,7 +65,16 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
           this.reCalculateValue()
           this.completeformula=true
       }               
-    },{deep:true})    
+    },{deep:true})
+
+    const { $customFieldStore } = useNuxtApp();
+    watch(
+      () => $customFieldStore.data,
+      (newVal, oldVal) => {
+        this.processCustomField();
+      },
+      { immediate: true, deep: true }
+    );
   }
   setNew = ()=>{         
       const newdata = Default<%= it.typename%>(randomUUID())

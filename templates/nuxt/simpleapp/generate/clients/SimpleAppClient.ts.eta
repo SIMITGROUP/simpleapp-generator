@@ -9,6 +9,7 @@ import type { Ref } from 'vue';
 import type { AxiosResponse } from 'axios';
 import {SearchBody,TextSearchBody,Notification,NotificationStatus,SchemaType,FormActions} from '~/types'
 import { getValidateService } from '~/simpleapp/generate/sharelibs/validate';
+import { SimpleAppCustomFieldClient } from './SimpleAppCustomFieldClient';
 
 // import { useToast, } from 'primevue/usetoast';
 // import type {  ToastMessageOptions } from 'primevue/toast';
@@ -25,7 +26,8 @@ type crudType = {
   runFullTextSearch?:Function;
 };
 export class SimpleAppClient<
-  TData extends { _id?: string,created?:string },
+  // FLAG::CUSTOM
+  TData extends { _id?: string; created?: string; more?: any },
   TApi extends crudType,
 > {
   // protected defaultTimeOut=5000
@@ -41,7 +43,9 @@ export class SimpleAppClient<
   protected docname = '';
   protected errorlist = ref({});
   protected completeformula = true;
-  protected axios ;
+  protected axios;
+  // FLAG::CUSTOM
+  private _customFieldClient = new SimpleAppCustomFieldClient();
   
   constructor(apiobj: TApi,doctype:string,docname:string) {
     this.docapi = apiobj;
@@ -64,8 +68,23 @@ export class SimpleAppClient<
   public isReadOnly():boolean{return false}  //if there is readonly attribute in data, will override it at processor and client    
   setData = (data: any) => {
     // this.data.value = data;
+
+    // FLAG::CUSTOM
+    data.more = this._customFieldClient.processCustomFieldData(
+      this.schema.properties?.["more"],
+      this.isNew(),
+      this.data.value?.more
+    );
+
     Object.assign(this.data.value, data);
   };
+
+  // FLAG::CUSTOM
+  async processCustomField() {
+    const resp = this._customFieldClient.processCustomField(this.doctype);
+    this.schema.properties.more = resp.schema;
+    this.setData(this.data.value);
+  }
   
   async getById(id?: string) {
     this.ready=false

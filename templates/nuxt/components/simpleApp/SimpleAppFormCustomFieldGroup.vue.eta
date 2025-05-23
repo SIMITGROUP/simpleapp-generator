@@ -1,0 +1,32 @@
+<template>
+  <Fieldset :legend="groupName">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-2">
+      <template
+        v-for="[fieldName, fieldItem] in Object.entries(
+          groupItem?.properties ?? {}
+        )"
+        :key="fieldName"
+      >
+        <SimpleAppFormCustomFieldItem
+          :fieldName="fieldName"
+          :fieldItem="fieldItem"
+          :groupName="groupName"
+          v-model="model[fieldName]"
+          :handleGetField="handleGetField"
+        />
+      </template>
+    </div>
+  </Fieldset>
+</template>
+
+<script setup lang="ts">
+import Fieldset from "primevue/fieldset";
+import { CustomFieldItemJsonSchema } from "~/types";
+
+defineProps<{
+  groupName: string;
+  groupItem: CustomFieldItemJsonSchema;
+  model: Record<string, any>;
+  handleGetField: (path: string) => any;
+}>();
+</script>
