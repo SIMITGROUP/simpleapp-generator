@@ -4,7 +4,7 @@
  * last change 2024-02-23
  * Author: Ks Tan
  */
-import {DefaultHooks} from  "../types"
+import {DefaultHooks, ResourceCustomFieldType} from  "../types"
 
 <%Object.keys(it.models).forEach(function(prop){ %>  
   <% let schema = it.models[prop] %>
@@ -22,6 +22,22 @@ import {DefaultHooks} from  "../types"
           <%= key %> <% if(!obj.required || obj.required==false){%>?<%}%>: <%= obj.type %>;   // <%~ JSON.stringify(obj) %>
         <% } %>
       <%})%>
+
+      <% if(schema.isMainModel) { %>
+        /**
+         * Built-in and plugin-defined custom fields.
+         *
+         * Example:
+         * {
+         *   default: { xx: string }, 
+         *   pluginA: { xx: string }
+         * }
+         *
+         * - default: holds the base custom fields stored in the database.
+         * - Other keys: represent custom fields defined by individual plugins.
+         */
+        more?: ResourceCustomFieldType;
+      <% } %>
 
   }
 <%})%>

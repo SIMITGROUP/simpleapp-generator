@@ -4,4 +4,15 @@
  * last change 2024-02-23
  * Author: Ks Tan
  */
+
+<% 
+    it.jsonschema['properties']['more'] = { 
+        type: 'object', 
+        properties: {}, 
+        additionalProperties: {
+            type: 'object',
+        }
+    } 
+%>
+
 export const <%= it.typename%>JsonSchema = <%~ JSON.stringify(it.jsonschema) %>

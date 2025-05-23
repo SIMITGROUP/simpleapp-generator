@@ -256,7 +256,8 @@ const genSchema = async (
     const modelname= _.upperFirst(docname)
     // log.warn("$$$$$$$$$$>>>",modelname,)
     // log.warn(newmodel,modelname)
-    allmodels[modelname] = { 
+    allmodels[modelname] = {
+      isMainModel: parentFlatStr === '',
       type: schematype, 
       model: newmodel,
       codeField: schemaconfigs.uniqueKey??'' ,

@@ -1,5 +1,8 @@
-export type ResourceCustomFieldType = {
-  [key: string]: {
-    [key: string]: any;
-  }
+type CustomFieldItemType = {
+  [key: string]: any;
 }
+
+export type ResourceCustomFieldType = {
+  default?: CustomFieldItemType;
+  [key: string]: CustomFieldItemType;
+};

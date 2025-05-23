@@ -75,6 +75,11 @@ export const run =  async (paraconfigs:any,genFor:string[],callback:Function) =>
       const jsoncontent = readFileSync(fullfilename, 'utf-8');            
       // log.info("Process ",fullfilename)
       const jsonschema = JSON.parse(jsoncontent)
+
+      if( jsonschema['properties']['more']){
+        throw new Error("'more' is reserved property for custom field, you are not allowed use this key")
+      }
+
       const schemaconfig = jsonschema["x-simpleapp-config"]
       if(schemaconfig['printFormats']){
         const formats:SchemaPrintFormat[] = schemaconfig['printFormats']

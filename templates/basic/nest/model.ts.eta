@@ -24,6 +24,8 @@ const schemasetting = {
       <%= key %>: {type: <%= capitalizeFirstLetter(schema[key].type) %>, required: <% if(key==it.autocompletecode || key==it.autocompletename){%>true<%}else{%>false<%}%>},  //field 
     <% } %>
   <%}) %>
+
+  more: { type: Object, required: false, default: {} }
 };
 
 export const <%= capitalizeFirstLetter(it.name) %>MongoSchema = new Schema(schemasetting,{collection: '<%= it.name %>'})

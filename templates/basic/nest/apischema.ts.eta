@@ -33,6 +33,12 @@ import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
                     <%= key %>:  <%= obj.type %>;
                 <% } %>
             <% }) %>
+
+            <% if(it.models[name].isMainModel) { %>
+                @Field(() => GraphQLJSON)
+                @ApiProperty({ type: () => Object, required: false, default: {} })
+                more: Object;
+            <% } %>
         }    
 <%}) %>
 

@@ -1,6 +1,7 @@
 import  { JSONSchema7,JSONSchema7Type,JSONSchema7Version, JSONSchema7TypeName,JSONSchema7Definition } from 'json-schema';
 export type ChildModels = {
   [key: string]: { 
+    isMainModel: boolean;
     type: string; 
     model: SchemaModel,
     codeField:string,

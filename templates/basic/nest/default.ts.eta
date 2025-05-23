@@ -47,6 +47,10 @@ export const Default<%=modelname%> = (uuid:string)=>{
               <%=key%> : <%=field.default%>,  //else <%= typeof field %>
           <%}%>
         <%})%>
+
+        <% if(it.models[modelname].isMainModel) { %>
+            more: {},
+        <% } %>
     }
   <%}%>
 } 
