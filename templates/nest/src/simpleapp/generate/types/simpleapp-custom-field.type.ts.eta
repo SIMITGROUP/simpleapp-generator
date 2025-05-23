@@ -1,0 +1,5 @@
+export type ResourceCustomFieldType = {
+  [key: string]: {
+    [key: string]: any;
+  }
+}
