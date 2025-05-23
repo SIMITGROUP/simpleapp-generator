@@ -916,6 +916,9 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       //   throw new NotFoundException(`${id} not found`, 'not found');
       // }
       // this.logger.debug('warn2');
+      
+      await this.identifyForeignKeys(appuser, data);
+
       if (this.hooks.beforeUpdate)
         await this.hooks.beforeUpdate(appuser, id, existingdata, data);
 
@@ -990,6 +993,9 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       //   throw new NotFoundException(`${id} not found`, 'not found');
       // }
       // this.logger.debug('warn2');
+      
+      await this.identifyForeignKeys(appuser, data);
+
       if (this.hooks.beforeUpdate)
         await this.hooks.beforeUpdate(appuser, id, existingdata, data);
 
@@ -1052,6 +1058,8 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
 
     data.__v = existingdata.__v + 1;
+    
+    await this.identifyForeignKeys(appuser, data);
 
     if (this.hooks.beforeUpdate)
       await this.hooks.beforeUpdate(appuser, id, existingdata, data);
