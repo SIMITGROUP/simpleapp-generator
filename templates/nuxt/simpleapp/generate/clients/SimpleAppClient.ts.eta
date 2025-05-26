@@ -25,6 +25,9 @@ type crudType = {
   runDefault:Function;
   runFullTextSearch?:Function;
 };
+
+type UnwatchType = () => void;
+
 export class SimpleAppClient<
   // FLAG::CUSTOM
   TData extends { _id?: string; created?: string; more?: any },
@@ -46,6 +49,7 @@ export class SimpleAppClient<
   protected axios;
   // FLAG::CUSTOM
   private _customFieldClient = new SimpleAppCustomFieldClient();
+  private _unwatchCustomField: UnwatchType | null = null;
   
   constructor(apiobj: TApi,doctype:string,docname:string) {
     this.docapi = apiobj;
@@ -53,6 +57,11 @@ export class SimpleAppClient<
     this.docname = docname
     this.axios = useNuxtApp().$axios
   }
+
+  destroy() {
+    this._unwatchCustomField?.();
+  }
+
   isReady = ()=>this.ready
   getDocType = () => this.doctype;
   getDocName = (capFirst:boolean=false) => capFirst ? upperFirst(this.docname) :this.docname;
@@ -65,15 +74,14 @@ export class SimpleAppClient<
   getApi = () =>this.docapi;
   getReactiveData = () => this.data;
   public reCalculateValue (){}
-  public isReadOnly():boolean{return false}  //if there is readonly attribute in data, will override it at processor and client    
-  setData = (data: any) => {
-    // this.data.value = data;
+  public isReadOnly():boolean{return false}  //if there is readonly attribute in data, will override it at processor and client
 
+  setData = (data: TData) => {
     // FLAG::CUSTOM
     data.more = this._customFieldClient.processCustomFieldData(
-      this.schema.properties?.["more"],
-      this.isNew(),
-      this.data.value?.more
+      this.schema.properties?.more,
+      (data?.created ?? "") == "",
+      data?.more ?? {},
     );
 
     Object.assign(this.data.value, data);
@@ -85,6 +93,19 @@ export class SimpleAppClient<
     this.schema.properties.more = resp.schema;
     this.setData(this.data.value);
   }
+
+  initCustomFieldWatch() {
+    const { $customFieldStore } = useNuxtApp();
+    if(!this._unwatchCustomField ){
+      this._unwatchCustomField = watch(
+        () => $customFieldStore.data,
+        (newVal, oldVal) => {
+          this.processCustomField();
+        },
+        { immediate: true, deep: true }
+      );
+    }
+  }
   
   async getById(id?: string) {
     this.ready=false
@@ -92,8 +113,9 @@ export class SimpleAppClient<
     return await this.docapi.runFindOne(id,this.axios)
     .then((res: AxiosResponse) => {
       // if(this.event){this.event('info:getById',res.data)}
-      this.data.value={} as TData
-      Object.assign(this.data.value, res.data);
+      // this.data.value={} as TData
+      // Object.assign(this.data.value, res.data);
+      this.setData(res.data)
       this.setWatchChange()
       setTimeout(()=>{
         this.ready=true

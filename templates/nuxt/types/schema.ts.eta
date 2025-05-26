@@ -67,7 +67,9 @@ export type SchemaType = {
     required?:string[]
   
     "x-simpleapp-config":SchemaConfig
-    properties:  SchemaFields
+    properties:  SchemaFields & {
+      more: CustomFieldJsonSchema
+    }
   } 
   
   

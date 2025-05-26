@@ -20,7 +20,6 @@ import {AxiosResponse} from 'axios'
       import * as <%=libs[l].importAs %> from '<%=libs[l].importFrom %>'
   <%}%>
 <%}%>
-// import { JSONSchema7 } from 'json-schema';
 import * as openapi from '../openapi';
 
 export type {
@@ -28,15 +27,23 @@ export type {
       <%Object.keys(it.schema).forEach(function(key){%>              
         <% if(typeof it.schema[key]=='string' || (Array.isArray(it.schema[key]) && typeof it.schema[key][0]=='string' && it.schema[key][0]!='string')){%>
           <%= it.schema[key]  %>,
-        <%} else {%>
-          /*<%~ key + JSON.stringify(it.schema[key])  %>,*/
-        <%} %>
+        <% } %>
       <%})%>
 
     } from '../openapi'
 
 export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<openapi.<%= capitalizeFirstLetter(it.name)%>,openapi.<%= it.name.toUpperCase()%>Api>{
-  public readonly schema= <%~ JSON.stringify(it.jsonschema) %> as SchemaType;
+  <% 
+    it.jsonschema['properties']['more'] = { 
+        type: 'object', 
+        properties: {}, 
+        additionalProperties: {
+            type: 'object',
+        }
+    } 
+  %>
+
+  public override readonly schema= <%~ JSON.stringify(it.jsonschema) %> as SchemaType;
   protected documentIdentityCode='<%~ it.autocompletecode %>'
   protected documentIdentityName='<%~ it.autocompletename %>'  
   <%if(it.jsonschema['x-simpleapp-config']['generateDocumentNumber']){%>
@@ -49,16 +56,16 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
       xorg='MC0wLTA' //0-0-0
     }
 
-    //const apipath = `${useRuntimeConfig().public.API_URL}/${xorg}`    
-    //const apiobj = new <%= it.name.toUpperCase()%>Api(undefined,apipath,$axios)
     const apiobj = getDocumentApi('<%=it.name %>')
     super(apiobj,'<%= it.doctype %>','<%=it.name %>')
     this.event=$event
     this.listen=$listen    
-    this.setNew();        
+    this.setNew();
+    
+    this.initCustomFieldWatch();
   }
 
-  setWatchChange = ()=>{
+  override setWatchChange = ()=>{
     this.unwantchobj = watch(this.getData(),(newvalue)=>{
       if(this.completeformula==true){
           this.completeformula=false
@@ -66,24 +73,17 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
           this.completeformula=true
       }               
     },{deep:true})
-
-    const { $customFieldStore } = useNuxtApp();
-    watch(
-      () => $customFieldStore.data,
-      (newVal, oldVal) => {
-        this.processCustomField();
-      },
-      { immediate: true, deep: true }
-    );
   }
-  setNew = ()=>{         
+
+  override setNew = ()=>{         
       const newdata = Default<%= it.typename%>(randomUUID())
       this.setData(newdata)
       this.setWatchChange()
       return true
-    }
+  }
+
   <%if(it.jsonschema.properties['readOnly'] || it.jsonschema.properties['documentStatus']){%>
-  public isReadOnly():boolean{      
+    public isReadOnly():boolean{      
       <%if(it.jsonschema.properties['readOnly']){%>
         const readonly = this.data.value?.readOnly 
         if(readonly) return true
@@ -96,93 +96,92 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
       return false            
     } 
   <%}%>
-<%Object.keys(it.jsonschema.properties).forEach(function(key) { %>
+  
+  <%Object.keys(it.jsonschema.properties).forEach(function(key) { %>
     <% let obj=it.jsonschema.properties[key] %>
-    
     <% if(obj.type=='array' &&  obj.items && obj.items.type=='object' && obj.items['properties']){ %>
         <%let tablefields = Object.keys(obj.items.properties) %>
-       public add<%=key%> = () => {
-        
-        this.getReactiveData().value.<%= key %>.push(Default<%= it.typename%><%=capitalizeFirstLetter(key)%>(randomUUID()))
-        return this.getReactiveData().value.<%= key %>.length -1
-       }
-        
-          
+        public add<%=key%> = () => {
+          this.getReactiveData().value.<%= key %>.push(Default<%= it.typename%><%=capitalizeFirstLetter(key)%>(randomUUID()))
+          return this.getReactiveData().value.<%= key %>.length -1
+        } 
     <%}%>
   <%})%>
-  
 
-  public getActions(){
+  public override getActions(){
     const actions =  super.getActions()
     actions.docstatus=[
-        <%for(let i=0;i<it.docStatusSettings.length;i++){%>
+      <% for(let i=0;i<it.docStatusSettings.length;i++) { %>
         <% let setting = it.docStatusSettings[i] %> 
         '<%=setting.statusName%>',
-        <%}%> 
+      <% } %> 
     ]
-    actions.api=[  
-          <%for(let i=0;i<it.apiSettings.length;i++){%>
-          <% let api = it.apiSettings[i] %>
-          '<%=api.action%>',
-          <%}%> 
-          ]
+
+    actions.api=[
+      <%for(let i=0;i<it.apiSettings.length;i++){%>
+        <% let api = it.apiSettings[i] %>
+        '<%=api.action%>',
+      <%}%>
+    ]
     return actions
   }
 
-
-  /*****************************begin x-document-api code*****************************************/
+  // ======================================= begin x-document-api code ========================================
  
-  <%for(let i=0;i<it.apiSettings.length;i++){%>
-  <% let api = it.apiSettings[i] %>
-  async run<%=capitalizeFirstLetter(api.action)%>(
-    <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
-      <%let subpath = api.entryPoint.split('/')%>
-      <% for(let a=0;a<subpath.length;a++){%>
-        <%const partstr = subpath[a]%>
-        <%if(partstr.includes(':')){%>
-          <% const paraname = partstr.replace(':','') %>  
-            <%=paraname%>: string,
-        <%}%>    
-      <%}%>  
-    <%}%>
-    <% if(api.queryPara && api.queryPara.length>0) {%>
-      <%for(let j=0; j<api.queryPara.length ; j++){%>          
-        <%=api.queryPara[j]%>: string,
-      <%}%> 
-    <%}%>
-     
-
-         <% if(['post','put','patch'].includes(api.method)){ %>data:<%=api.schema 
-         ?  (api.schema.includes('[') ?  'openapi.'+api.schema.replace('[','').replace(']','') + '[]' : 'openapi.'+api.schema  )
-         :'any'%><%}%>  
-        ){
-    //const recordid: string = this.data.value._id ?? '';
-    return await this.docapi.run<%=capitalizeFirstLetter(api.action)%>(
+  <%for(let i=0;i<it.apiSettings.length;i++) { %>
+    <% let api = it.apiSettings[i] %>
+    async run<%=capitalizeFirstLetter(api.action)%>(
       <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
+        <%let subpath = api.entryPoint.split('/')%>
+        <% for(let a=0;a<subpath.length;a++){%>
+          <%const partstr = subpath[a]%>
+          <%if(partstr.includes(':')){%>
+            <% const paraname = partstr.replace(':','') %>  
+              <%=paraname%>: string,
+          <%}%>    
+        <%}%>  
+      <%}%>
+      <% if(api.queryPara && api.queryPara.length>0) {%>
+        <%for(let j=0; j<api.queryPara.length ; j++){%>          
+          <%=api.queryPara[j]%>: string,
+        <%}%> 
+      <%}%>
+      <% if(['post','put','patch'].includes(api.method)){ %>data: 
+        <%= 
+          api.schema 
+            ? api.schema.includes('[')
+              ? api.schema === '[String]' 
+                ? 'string[]' 
+                : 'openapi.' + api.schema.replace('[', '').replace(']', '') + '[]'
+              : 'openapi.' + api.schema
+            : 'any' 
+        %>
+      <%}%>
+    ){
+      return await this.docapi.run<%=capitalizeFirstLetter(api.action)%>(
+        <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
           <%let subpath = api.entryPoint.split('/')%>
           <% for(let a=0;a<subpath.length;a++){%>
             <%const partstr = subpath[a]%>
             <%if(partstr.includes(':')){%>
-              <% const paraname = partstr.replace(':','') %>  
-               <%=paraname%>,
-            <%}%>    
+              <% const paraname = partstr.replace(':','') %>
+              <%=paraname%>,
+            <%}%>
           <%}%>
         <%}%>
         <% if(['post','put','patch'].includes(api.method)){ %>data<%}%>  
-    )
-    .then((res: AxiosResponse) => {
-      if(this.event){this.event('info:<%=api.action%>',res.data)}
-      return res.data;
-    }).catch((res:any)=>{
-      if(this.event){this.event('error:<%=api.action%>',res)}
-      return Promise.reject(res)
-    });
-  } 
+      )
+      .then((res: AxiosResponse) => {
+        if(this.event){this.event('info:<%=api.action%>',res.data)}
+        return res.data;
+      }).catch((res:any)=>{
+        if(this.event){this.event('error:<%=api.action%>',res)}
+        return Promise.reject(res)
+      });
+    } 
   <%}%>
 
-
-  
-  reCalculateValue(){
+  override reCalculateValue(){
     //console.log('trigger new recalculate')
     const $data = this.getData()
     
@@ -269,9 +268,9 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
     <%}) %> */
   }
 
-  /***************************** end x-document-api code*****************************************/
+  // ======================================== end x-document-api code =========================================
 
-  /***************************** begin document status code*****************************************/
+  // ======================================= begin document status code =======================================
   <%for(let i=0;i<it.docStatusSettings.length;i++){%>
     <% let setting = it.docStatusSettings[i] %> 
     async setStatus<%=capitalizeFirstLetter(setting.status)%>(id:string='',data:openapi.<%= it.typename%>,runValidate:boolean=false) {
@@ -308,7 +307,8 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
       })
     }
   <%}%>
-  /***************************** end document status code*****************************************/
+
+  // ======================================== end document status code ========================================
 
 
 }

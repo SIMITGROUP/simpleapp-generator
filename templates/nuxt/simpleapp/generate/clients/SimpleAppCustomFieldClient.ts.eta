@@ -23,22 +23,22 @@ export class SimpleAppCustomFieldClient {
 
   constructor() {}
 
-  processCustomField(collection: string) {
-    console.log("trigger processCustomField");
+  processCustomField(collectionName: string) {
+    // console.log(collectionName, "trigger processCustomField");
     const { $customFieldStore } = useNuxtApp();
     if (!$customFieldStore.data || isEmpty($customFieldStore.data)) {
       // Not Found Any Custom Field
       return this._defaultReturn;
     }
 
-    const customField = $customFieldStore.findByCollection(collection);
+    const customField = $customFieldStore.findByCollectionName(collectionName);
     if (!customField) {
-      // Not Found Custom Field In Current Collection
+      // Not Found Custom Field In Current collectionName
       return this._defaultReturn;
     }
 
     const schema = this._processCustomFieldMoreProperties(
-      collection,
+      collectionName,
       customField.form.schema
     );
 
@@ -46,14 +46,14 @@ export class SimpleAppCustomFieldClient {
   }
 
   private _processCustomFieldMoreProperties(
-    collection: string,
+    collectionName: string,
     customFieldJsonSchemaString: string | undefined
   ) {
     const customFieldJsonSchema = this._processCustomFieldProperties(
       customFieldJsonSchemaString
     );
     const pluginJsonSchema =
-      this._processPluginCustomFieldProperties(collection);
+      this._processPluginCustomFieldProperties(collectionName);
     return {
       type: "object",
       properties: {
@@ -63,11 +63,11 @@ export class SimpleAppCustomFieldClient {
     };
   }
 
-  private _processPluginCustomFieldProperties(collection: string) {
+  private _processPluginCustomFieldProperties(collectionName: string) {
     return {};
     // const schema: CustomFieldJsonSchema["properties"] = {};
     // const { $appPluginsStore } = useNuxtApp();
-    // const pluginForms = $appPluginsStore.getDocumentForms(collection);
+    // const pluginForms = $appPluginsStore.getDocumentForms(collectionName);
     // if (!pluginForms || pluginForms.length <= 0) {
     //   return schema;
     // }

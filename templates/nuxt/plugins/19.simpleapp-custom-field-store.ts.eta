@@ -1,7 +1,7 @@
 import { ShallowRef } from "vue";
 import { Customfield, CUSTOMFIELDApi } from "~/simpleapp/generate/openapi";
 
-type CustomFieldStoreData = Pick<Customfield, "_id" | "collection" | "form">[];
+type CustomFieldStoreData = Pick<Customfield, "_id" | "collectionName" | "form">[];
 
 type CustomFieldStore = {
   data: ShallowRef<CustomFieldStoreData>;
@@ -18,15 +18,14 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         const api = new CUSTOMFIELDApi(config);
         const resp = await api.runSearch({
           filter: {},
-          fields: ["_id", "collection", "form"],
+          fields: ["_id", "collectionName", "form"],
         });
         // setTimeout(() => {
-        console.log("set");
         this.$patch({ data: resp.data ?? [] });
         // }, 10000);
       },
-      findByCollection(collection: string) {
-        return this.data.find((item) => item.collection === collection) ?? null;
+      findByCollectionName(collectionName: string) {
+        return this.data.find((item) => item.collectionName === collectionName) ?? null;
       },
     },
   });

@@ -6,8 +6,8 @@ export const customfield: SchemaType = {
     documentType: 'customfield',
     documentName: 'customfield',
     isolationType: IsolationType.org,
-    uniqueKey: 'collection',
-    documentTitle: 'collection'
+    uniqueKey: 'collectionName',
+    documentTitle: 'collectionName'
   },
   properties: {
     _id: { type: 'string' },
@@ -18,7 +18,7 @@ export const customfield: SchemaType = {
     tenantId: { type: 'integer', default: 1 },
     orgId: { type: 'integer', default: 1 },
     branchId: { type: 'integer', default: 1 },
-    collection: {
+    collectionName: {
       type: 'string',
       minLength: 2
     },

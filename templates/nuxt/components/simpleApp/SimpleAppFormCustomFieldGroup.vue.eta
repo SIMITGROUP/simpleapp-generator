@@ -1,9 +1,9 @@
 <template>
-  <Fieldset :legend="groupName">
+  <Fieldset :legend="groupItem.title ?? groupName">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-2">
       <template
         v-for="[fieldName, fieldItem] in Object.entries(
-          groupItem?.properties ?? {}
+          groupItem?.properties ?? {},
         )"
         :key="fieldName"
       >
