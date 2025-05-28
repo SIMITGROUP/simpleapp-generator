@@ -10,34 +10,39 @@ import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 <%Object.keys(it.models).forEach(function(name) { %>
     <% let schema = it.models[name].model %>        
         @ObjectType()
-        export class <%= name %>{            
+        export class <%= name %>{       
+            <% if(name === 'CustomfieldForm') { %>
+                @Field(()=>GraphQLJSON)
+                @ApiProperty({ type:()=>Object, required: false, default: {} })
+                schema: Object;
+            <% } else { %>
+                <% Object.keys(schema).forEach(function(key){%>
+                    <% let obj = schema[key] %>
+                    <% if(typeof obj == 'string') {%>
+                        @Field()
+                        @ApiProperty({type: ()=><%=obj%>})
+                        <%= key %>:  <%= obj %>;        
+                    <%} else if(typeof obj.default !='undefined' && JSON.stringify(obj.default)=='{}'){%>
+                            @Field(()=>GraphQLJSON)
+                            @ApiProperty({ type:()=>Object,required: false, default: {} })
+                            <%= key %>: Object;
+                    <% }else if( Array.isArray( obj)){%>
+                        @Field(type=>[<%=initType(obj[0]) %>])
+                        @ApiProperty({type: ()=>[<%=initType(obj[0]) %>] })                    
+                        <%= key %>:  <%= obj[0] %>[];
+                    
+                    <% }else{%>
+                        @Field()                
+                        @ApiProperty(<%~ JSON.stringify(obj)%> )
+                        <%= key %>:  <%= obj.type %>;
+                    <% } %>
+                <% }) %>
 
-            <% Object.keys(schema).forEach(function(key){%>
-                <% let obj = schema[key] %>
-                <% if(typeof obj == 'string') {%>
-                    @Field()
-                    @ApiProperty({type: ()=><%=obj%>})
-                    <%= key %>:  <%= obj %>;        
-                <%} else if(typeof obj.default !='undefined' && JSON.stringify(obj.default)=='{}'){%>
-                        @Field(()=>GraphQLJSON)
-                        @ApiProperty({ type:()=>Object,required: false, default: {} })
-                        <%= key %>: Object;
-                <% }else if( Array.isArray( obj)){%>
-                    @Field(type=>[<%=initType(obj[0]) %>])
-                    @ApiProperty({type: ()=>[<%=initType(obj[0]) %>] })                    
-                    <%= key %>:  <%= obj[0] %>[];
-                
-                <% }else{%>
-                    @Field()                
-                    @ApiProperty(<%~ JSON.stringify(obj)%> )
-                    <%= key %>:  <%= obj.type %>;
+                <% if(it.models[name].isMainModel) { %>
+                    @Field(() => GraphQLJSON)
+                    @ApiProperty({ type: () => Object, required: false, default: {} })
+                    more: Object;
                 <% } %>
-            <% }) %>
-
-            <% if(it.models[name].isMainModel) { %>
-                @Field(() => GraphQLJSON)
-                @ApiProperty({ type: () => Object, required: false, default: {} })
-                more: Object;
             <% } %>
         }    
 <%}) %>

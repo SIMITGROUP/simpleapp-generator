@@ -26,8 +26,20 @@ export const customfield: SchemaType = {
       type: 'object',
       properties: {
         schema: {
-          type: 'string',
-          minLength: 2
+          type: 'object',
+          properties: {},
+          examples: [
+            {
+              type: 'object',
+              required: ['hello'],
+              properties: {
+                hello: {
+                  type: 'string',
+                  minLength: 2,
+                }
+              }
+            }
+          ]
         }
       }
     }

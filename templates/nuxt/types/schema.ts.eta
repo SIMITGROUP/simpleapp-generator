@@ -205,12 +205,14 @@ export type SchemaFields = {
 
 export type CustomFieldJsonSchema = {
   type: string;
+  title?: string;
   required?: string[];
   properties: Record<string, CustomFieldItemJsonSchema>;
 };
 
 export type CustomFieldItemJsonSchema = {
   type: string;
+  title?: string;
   required?: string[];
   properties?: SimpleAppJSONSchema7 | SimpleAppJSONSchema7[] | undefined;
 };

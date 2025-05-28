@@ -1,29 +1,40 @@
 <template>
   <SimpleAppInput
-    :input-type="
-      fieldItem.type === 'number'
-        ? SimpleAppInputType.number
-        : SimpleAppInputType.text
-    "
+    :inputType="inputType"
     :setting="handleGetField(fieldPath)"
     v-model="model"
   />
 </template>
 
 <script setup lang="ts">
-import { SimpleAppInputType } from "~/types";
+import { SimpleAppInputType, SimpleAppJSONSchema7 } from "~/types";
 import { computed } from "vue";
 
 const props = defineProps<{
   groupName: string;
   fieldName: string;
-  fieldItem: any;
+  fieldItem: SimpleAppJSONSchema7;
   handleGetField: (path: string) => any;
 }>();
 
 const model = defineModel();
 const fieldPath = computed(
   () =>
-    `#/properties/more/properties/${props.groupName}/properties/${props.fieldName}`
+    `#/properties/more/properties/${props.groupName}/properties/${props.fieldName}`,
 );
+
+const inputType = computed(() => {
+  if (props.fieldItem.type === "string") return SimpleAppInputType.text;
+
+  if (props.fieldItem.type === "number") return SimpleAppInputType.number;
+
+  if (
+    props.fieldItem.type === "object" &&
+    props.fieldItem?.["x-foreignkey"] != "undefined"
+  ) {
+    return SimpleAppInputType.autocomplete;
+  }
+
+  return SimpleAppInputType.text;
+});
 </script>

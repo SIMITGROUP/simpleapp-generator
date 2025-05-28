@@ -39,7 +39,7 @@ export class SimpleAppCustomFieldClient {
 
     const schema = this._processCustomFieldMoreProperties(
       collectionName,
-      customField.form.schema
+      customField.form.schema as CustomFieldItemJsonSchema,
     );
 
     return { schema };
@@ -47,10 +47,10 @@ export class SimpleAppCustomFieldClient {
 
   private _processCustomFieldMoreProperties(
     collectionName: string,
-    customFieldJsonSchemaString: string | undefined
+    customFieldJsonSchemaString: CustomFieldItemJsonSchema | undefined,
   ) {
     const customFieldJsonSchema = this._processCustomFieldProperties(
-      customFieldJsonSchemaString
+      customFieldJsonSchemaString,
     );
     const pluginJsonSchema =
       this._processPluginCustomFieldProperties(collectionName);
@@ -83,18 +83,24 @@ export class SimpleAppCustomFieldClient {
   }
 
   private _processCustomFieldProperties(
-    customFieldJsonSchemaString: string | undefined
+    customFieldJsonSchemaString: CustomFieldItemJsonSchema | undefined,
   ) {
-    const parsedSchema = JSON.parse(customFieldJsonSchemaString ?? "{}");
+    if (!customFieldJsonSchemaString) {
+      return this._defaultReturn;
+    }
+
     return {
-      default: parsedSchema,
+      default: {
+        title: "Custom Field",
+        ...customFieldJsonSchemaString,
+      },
     };
   }
 
   processCustomFieldData(
     moreSchema: CustomFieldJsonSchema | undefined,
     isNew: boolean,
-    resourceData: CustomFieldMoreDataGroup | undefined
+    resourceData: CustomFieldMoreDataGroup | undefined,
   ) {
     const data: Record<string, any> = {};
     if (!moreSchema || !moreSchema?.properties) {
@@ -102,14 +108,14 @@ export class SimpleAppCustomFieldClient {
     }
 
     for (const [groupName, groupItem] of Object.entries(
-      moreSchema.properties
+      moreSchema.properties,
     )) {
       let groupData: Record<string, any> = {};
       if (groupItem.properties) {
         groupData = this._processGroupItemData(
           groupItem.properties,
           isNew,
-          resourceData?.[groupName]
+          resourceData?.[groupName],
         );
       }
 
@@ -122,7 +128,7 @@ export class SimpleAppCustomFieldClient {
   private _processGroupItemData(
     groupItemProp: SimpleAppJSONSchema7 | SimpleAppJSONSchema7[] | undefined,
     isNew: boolean,
-    resourceData: CustomFieldMoreDataGroupItem | undefined
+    resourceData: CustomFieldMoreDataGroupItem | undefined,
   ) {
     const data: Record<string, any> = {};
 
@@ -142,7 +148,8 @@ export class SimpleAppCustomFieldClient {
           value = resourceData?.[fieldName];
         } else {
           // DB don't have this field
-          value = fieldItem.type === "number" ? 0 : "";
+          value = this._getDefaultValueByType(fieldItem);
+          console.log(fieldName, value);
         }
       }
 
@@ -155,8 +162,23 @@ export class SimpleAppCustomFieldClient {
   private _getFieldDefaultValue(fieldItem: SimpleAppJSONSchema7) {
     return fieldItem.default !== undefined
       ? fieldItem.default
-      : fieldItem.type === "number"
-        ? 0
-        : "";
+      : this._getDefaultValueByType(fieldItem);
+  }
+
+  private _getDefaultValueByType(fieldItem: SimpleAppJSONSchema7){
+    if(fieldItem.type === 'string')
+    {
+      return '';
+    }
+
+    if(fieldItem.type === 'number'){
+      return 0;
+    }
+
+    if(fieldItem.type === 'object') {
+      return undefined
+    }
+
+    return '';
   }
 }
