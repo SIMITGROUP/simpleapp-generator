@@ -1,4 +1,7 @@
-[1.6.6k-alpha]
+[1.6.6m-alpha]
+1. Update Gitignore
+
+[1.6.6l-alpha]
 1. Change additional module
 
 [1.6.6k-alpha]
