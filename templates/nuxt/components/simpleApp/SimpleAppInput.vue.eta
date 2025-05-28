@@ -481,7 +481,7 @@ const emits = defineEmits([
 ]);
 
 const onChange = () => {
-  if (props.setting.document.isReady()) {
+  if (props.setting?.document?.isReady()) {
     pt.value = undefined;
     resetcount.value++;
     emits("change", modelValue.value);

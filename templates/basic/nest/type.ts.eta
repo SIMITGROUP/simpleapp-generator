@@ -9,7 +9,10 @@ import {DefaultHooks} from  "../types"
 <%Object.keys(it.models).forEach(function(prop){ %>  
   <% let schema = it.models[prop] %>
   export type <%= prop %> = {
-     
+    <% // Dynamic Object %>
+    <% if(it.models[prop].type === 'object' && it.models[prop]?.model && Object.keys(it.models[prop].model).length === 0 ) { %>
+      [key: string]: any;
+    <% } else { %>
       <%Object.keys(schema.model).forEach(function(key){ %>     
       <% const obj = schema.model[key] %>
         <% if(typeof obj == 'string') {%>
@@ -22,7 +25,8 @@ import {DefaultHooks} from  "../types"
           <%= key %> <% if(!obj.required || obj.required==false){%>?<%}%>: <%= obj.type %>;   // <%~ JSON.stringify(obj) %>
         <% } %>
       <%})%>
-
+      
+    <% } %>
   }
 <%})%>
 
