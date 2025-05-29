@@ -54,3 +54,5 @@ export class ApiSearchBody {
   @ApiProperty({ type: () => Object, required: false })
   lookup: Object;
 }
+
+export class DynamicData {}

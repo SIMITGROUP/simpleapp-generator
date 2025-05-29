@@ -291,3 +291,7 @@ export type SchemaFields = {
       writeOnly?: boolean | undefined;
       example?: JSONSchema7Type | undefined;
   }
+
+export type DynamicData = {
+  [key: string]: any;
+}
