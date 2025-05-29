@@ -55,4 +55,6 @@ export class ApiSearchBody {
   lookup: Object;
 }
 
-export class DynamicData {}
+export class NoParam {}
+
+export class DynamicParam {}

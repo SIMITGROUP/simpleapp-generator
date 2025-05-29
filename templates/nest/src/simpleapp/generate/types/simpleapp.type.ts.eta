@@ -292,6 +292,8 @@ export type SchemaFields = {
       example?: JSONSchema7Type | undefined;
   }
 
-export type DynamicData = {
+export type NoParam = {}
+
+export type DynamicParam = {
   [key: string]: any;
 }
