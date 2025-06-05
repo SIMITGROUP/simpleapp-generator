@@ -5,7 +5,7 @@
  * Author: Ks Tan
  */
 
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
 export class ApiKeyValuePair {
   @ApiProperty({
     type: Object,
@@ -55,6 +55,8 @@ export class ApiSearchBody {
   lookup: Object;
 }
 
+@ApiExtraModels()
 export class NoParam {}
 
+@ApiExtraModels()
 export class DynamicParam {}

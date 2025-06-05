@@ -1,0 +1,19 @@
+
+export default {
+    //auto generate from lang/default.ts
+    <%let langkeys = Object.keys(it.lang) %>
+    <% for(let l=0; l< langkeys.length; l++){ %>
+    <% let key = langkeys[l] %>
+        '<%=key%>' : <% if (typeof it.lang[key] === 'object') { %><%~ JSON.stringify(it.lang[key], null, 2) %><% } else { %>'<%= it.lang[key] %>'<% } %>,
+    <%}%>    
+
+
+    //auto generate from schema
+    <% for(let i=0; i< it.allfields.length; i++){ %>
+    <% let f = it.allfields[i] %>
+        <% if(!it.lang[f]){%>        
+            '<%= f %>' : '<%= camelCaseToWords(f) %>',
+        <%}%>
+    <%}%>    
+
+}
