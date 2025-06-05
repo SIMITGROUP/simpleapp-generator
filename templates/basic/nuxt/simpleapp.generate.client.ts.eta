@@ -161,7 +161,7 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
         <%}%>
         <% if(['post','put','patch'].includes(api.method)){ %>data<%}%>  
     )
-    .then((res: AxiosResponse) => {
+    .then((res) => {
       if(this.event){this.event('info:<%=api.action%>',res.data)}
       return res.data;
     }).catch((res:any)=>{
@@ -280,7 +280,7 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
           return await Promise.reject(errors);
         } 
       }
-      return await this.docapi.<%=it.name %>ControllerSetStatus<%=capitalizeFirstLetter(setting.status)%>(id,data).then((res:AxiosResponse)=>{
+      return await this.docapi.<%=it.name %>ControllerSetStatus<%=capitalizeFirstLetter(setting.status)%>(id,data).then((res)=>{
         $event('Notification',{
           documentName:this.getDocName(),
           summary:t('setStatus<%=capitalizeFirstLetter(setting.status)%>Success'),
