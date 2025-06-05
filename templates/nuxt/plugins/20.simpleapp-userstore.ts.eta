@@ -61,6 +61,8 @@ export default defineNuxtPlugin( async(nuxtApp) => {
             }else{
               apiurl = `${useRuntimeConfig().public.appUrl}/api/${xorg}`
             }
+
+            $appPluginsStore.loadInstalledPlugins();
           
             return await new PROFILEApi(undefined,apiurl,$axios).getProfile().then((res:AxiosResponse)=>{            
               if(!res){
