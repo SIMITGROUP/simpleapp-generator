@@ -51,7 +51,7 @@ export default defineNuxtPlugin( async(nuxtApp) => {
           async loadRemoteUserInfo(){
             // console.log('loadRemoteUserInfo')
             
-            const {$axios} = useNuxtApp()
+            const { $axios, $appPluginsStore } = useNuxtApp()
             const route = useRoute();
             let xorg = this.getCurrentXorg()            
             
