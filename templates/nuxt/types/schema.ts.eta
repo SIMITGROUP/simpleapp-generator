@@ -198,3 +198,20 @@ export type SchemaFields = {
       writeOnly?: boolean | undefined;
       examples?: JSONSchema7Type[] | undefined;
   }
+
+
+// ==================== Start Custom Field ====================
+
+export type CustomFieldJsonSchema = {
+  type: string;
+  required?: string[];
+  properties: Record<string, CustomFieldItemJsonSchema>;
+};
+
+export type CustomFieldItemJsonSchema = {
+  type: string;
+  required?: string[];
+  properties?: SimpleAppJSONSchema7 | SimpleAppJSONSchema7[] | undefined;
+};
+
+// ===================== End Custom Field =====================

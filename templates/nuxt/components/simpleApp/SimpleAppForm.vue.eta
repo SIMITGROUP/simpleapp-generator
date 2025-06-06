@@ -1,6 +1,11 @@
 <template>
   <form class="simpleapp-form" @submit.prevent="true">
     <slot name="default" :data="document.getData()" :getField="getField"></slot>
+    <SimpleAppCustomFieldFormSection
+      :customFieldJsonSchema="document.schema.properties.more"
+      :data="document.getData().more"
+      :handleGetField="getField"
+    />
   </form>
 </template>
 <script setup lang="ts">

@@ -1,0 +1,184 @@
+import { isEmpty } from "lodash";
+import {
+  CustomFieldItemJsonSchema,
+  CustomFieldJsonSchema,
+  SimpleAppJSONSchema7,
+} from "~/types";
+
+export type CustomFieldMoreDataGroup = {
+  [key: string]: CustomFieldMoreDataGroupItem;
+};
+
+export type CustomFieldMoreDataGroupItem = {
+  [key: string]: any;
+};
+
+export class SimpleAppCustomFieldClient {
+  private _defaultReturn = {
+    schema: {
+      type: "object",
+      properties: {},
+    },
+  };
+
+  constructor() {}
+
+  processCustomField(collectionName: string) {
+    // console.log(collectionName, "trigger processCustomField");
+    const { $customFieldStore } = useNuxtApp();
+    if (!$customFieldStore.data || isEmpty($customFieldStore.data)) {
+      // Not Found Any Custom Field
+      return this._defaultReturn;
+    }
+
+    const customField = $customFieldStore.findByCollectionName(collectionName);
+    if (!customField) {
+      // Not Found Custom Field In Current collectionName
+      return this._defaultReturn;
+    }
+
+    const schema = this._processCustomFieldMoreProperties(
+      collectionName,
+      customField.form.schema as CustomFieldItemJsonSchema,
+    );
+
+    return { schema };
+  }
+
+  private _processCustomFieldMoreProperties(
+    collectionName: string,
+    customFieldJsonSchemaString: CustomFieldItemJsonSchema | undefined,
+  ) {
+    const customFieldJsonSchema = this._processCustomFieldProperties(
+      customFieldJsonSchemaString,
+    );
+    const pluginJsonSchema =
+      this._processPluginCustomFieldProperties(collectionName);
+    return {
+      type: "object",
+      properties: {
+        ...customFieldJsonSchema,
+        ...pluginJsonSchema,
+      },
+    };
+  }
+
+  private _processPluginCustomFieldProperties(collectionName: string) {
+    return {};
+    // const schema: CustomFieldJsonSchema["properties"] = {};
+    // const { $appPluginsStore } = useNuxtApp();
+    // const pluginForms = $appPluginsStore.getDocumentForms(collectionName);
+    // if (!pluginForms || pluginForms.length <= 0) {
+    //   return schema;
+    // }
+
+    // for (let i = 0; i < pluginForms.length; i++) {
+    //   const pluginItem = pluginForms[i];
+    //   const { _id: pluginName, jsonSchema } = pluginItem;
+
+    //   schema[pluginName] = jsonSchema as CustomFieldItemJsonSchema;
+    // }
+
+    // return schema;
+  }
+
+  private _processCustomFieldProperties(
+    customFieldJsonSchemaString: CustomFieldItemJsonSchema | undefined,
+  ) {
+    if (!customFieldJsonSchemaString) {
+      return this._defaultReturn;
+    }
+
+    return {
+      default: {
+        title: "Custom Field",
+        ...customFieldJsonSchemaString,
+      },
+    };
+  }
+
+  processCustomFieldData(
+    moreSchema: CustomFieldJsonSchema | undefined,
+    isNew: boolean,
+    resourceData: CustomFieldMoreDataGroup | undefined,
+  ) {
+    const data: Record<string, any> = {};
+    if (!moreSchema || !moreSchema?.properties) {
+      return data;
+    }
+
+    for (const [groupName, groupItem] of Object.entries(
+      moreSchema.properties,
+    )) {
+      let groupData: Record<string, any> = {};
+      if (groupItem.properties) {
+        groupData = this._processGroupItemData(
+          groupItem.properties,
+          isNew,
+          resourceData?.[groupName],
+        );
+      }
+
+      data[groupName] = groupData;
+    }
+
+    return data;
+  }
+
+  private _processGroupItemData(
+    groupItemProp: SimpleAppJSONSchema7 | SimpleAppJSONSchema7[] | undefined,
+    isNew: boolean,
+    resourceData: CustomFieldMoreDataGroupItem | undefined,
+  ) {
+    const data: Record<string, any> = {};
+
+    if (!groupItemProp) {
+      return data;
+    }
+
+    for (const [fieldName, fieldItem] of Object.entries(groupItemProp)) {
+      let value;
+      if (isNew) {
+        // New Record
+        value = this._getFieldDefaultValue(fieldItem);
+      } else {
+        // Fetch By Id
+        if (resourceData?.[fieldName]) {
+          // DB got this field
+          value = resourceData?.[fieldName];
+        } else {
+          // DB don't have this field
+          value = this._getDefaultValueByType(fieldItem);
+          console.log(fieldName, value);
+        }
+      }
+
+      data[fieldName] = value;
+    }
+
+    return data;
+  }
+
+  private _getFieldDefaultValue(fieldItem: SimpleAppJSONSchema7) {
+    return fieldItem.default !== undefined
+      ? fieldItem.default
+      : this._getDefaultValueByType(fieldItem);
+  }
+
+  private _getDefaultValueByType(fieldItem: SimpleAppJSONSchema7){
+    if(fieldItem.type === 'string')
+    {
+      return '';
+    }
+
+    if(fieldItem.type === 'number'){
+      return 0;
+    }
+
+    if(fieldItem.type === 'object') {
+      return undefined
+    }
+
+    return '';
+  }
+}

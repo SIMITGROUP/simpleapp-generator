@@ -58,7 +58,9 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
     super(apiobj,'<%= it.doctype %>','<%=it.name %>')
     this.event=$event
     this.listen=$listen    
-    this.setNew();        
+    this.setNew();      
+
+    this.processCustomField();  
   }
 
   override setWatchChange = ()=>{
@@ -68,7 +70,16 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
         this.reCalculateValue()
         this.completeformula=true
       }               
-    },{deep:true})    
+    },{deep:true})
+
+    const { $customFieldStore } = useNuxtApp();
+    watch(
+      () => $customFieldStore.data,
+      (newVal, oldVal) => {
+        this.processCustomField();
+      },
+      { immediate: false, deep: true }
+    );
   }
 
   override setNew = ()=>{         
