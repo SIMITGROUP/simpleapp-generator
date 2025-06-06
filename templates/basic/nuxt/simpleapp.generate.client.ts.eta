@@ -27,7 +27,12 @@ export type {
       <%= it.typename%> ,
       <%Object.keys(it.schema).forEach(function(key){%>              
         <% if(typeof it.schema[key]=='string' || (Array.isArray(it.schema[key]) && typeof it.schema[key][0]=='string' && it.schema[key][0]!='string')){%>
-          <%= it.schema[key]  %>,
+          <% const typeKey = it.schema[key] %>
+          <% if(it.models?.[typeKey] && it.models?.[typeKey].type === 'object' &&  Object.keys(it.models?.[typeKey].model).length == 0) { %>
+            // <%= key %>, Dynamic Object
+          <% } else { %>
+            <%= it.schema[key]  %>,
+          <% } %>
         <%} else {%>
           /*<%~ key + JSON.stringify(it.schema[key])  %>,*/
         <%} %>
@@ -36,7 +41,7 @@ export type {
     } from '../openapi'
 
 export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<openapi.<%= capitalizeFirstLetter(it.name)%>,openapi.<%= it.name.toUpperCase()%>Api>{
-  public readonly schema= <%~ JSON.stringify(it.jsonschema) %> as SchemaType;
+  public override readonly schema= <%~ JSON.stringify(it.jsonschema) %> as SchemaType;
   protected documentIdentityCode='<%~ it.autocompletecode %>'
   protected documentIdentityName='<%~ it.autocompletename %>'  
   <%if(it.jsonschema['x-simpleapp-config']['generateDocumentNumber']){%>
@@ -49,8 +54,6 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
       xorg='MC0wLTA' //0-0-0
     }
 
-    //const apipath = `${useRuntimeConfig().public.API_URL}/${xorg}`    
-    //const apiobj = new <%= it.name.toUpperCase()%>Api(undefined,apipath,$axios)
     const apiobj = getDocumentApi('<%=it.name %>')
     super(apiobj,'<%= it.doctype %>','<%=it.name %>')
     this.event=$event
@@ -58,21 +61,24 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
     this.setNew();        
   }
 
-  setWatchChange = ()=>{
+  override setWatchChange = ()=>{
     this.unwantchobj = watch(this.getData(),(newvalue)=>{
       if(this.completeformula==true){
-          this.completeformula=false
-          this.reCalculateValue()
-          this.completeformula=true
+        this.completeformula=false
+        this.reCalculateValue()
+        this.completeformula=true
       }               
     },{deep:true})    
   }
-  setNew = ()=>{         
-      const newdata = Default<%= it.typename%>(randomUUID())
-      this.setData(newdata)
-      this.setWatchChange()
-      return true
-    }
+
+  override setNew = ()=>{         
+    const newdata = Default<%= it.typename%>(randomUUID())
+    this.setData(newdata)
+    this.setWatchChange()
+    return true
+  }
+
+  /********************************** begin document status code *********************************/
   <%if(it.jsonschema.properties['readOnly'] || it.jsonschema.properties['documentStatus']){%>
   public isReadOnly():boolean{      
       <%if(it.jsonschema.properties['readOnly']){%>
@@ -87,7 +93,10 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
       return false            
     } 
   <%}%>
-<%Object.keys(it.jsonschema.properties).forEach(function(key) { %>
+  /*********************************** end document status code **********************************/
+  
+  /*********************************** begin add function code ***********************************/
+  <%Object.keys(it.jsonschema.properties).forEach(function(key) { %>
     <% let obj=it.jsonschema.properties[key] %>
     
     <% if(obj.type=='array' &&  obj.items && obj.items.type=='object' && obj.items['properties']){ %>
@@ -96,14 +105,12 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
         
         this.getReactiveData().value.<%= key %>.push(Default<%= it.typename%><%=capitalizeFirstLetter(key)%>(randomUUID()))
         return this.getReactiveData().value.<%= key %>.length -1
-       }
-        
-          
+       } 
     <%}%>
   <%})%>
-  
+  /************************************ end add function code ************************************/
 
-  public getActions(){
+  public override getActions(){
     const actions =  super.getActions()
     actions.docstatus=[
         <%for(let i=0;i<it.docStatusSettings.length;i++){%>
@@ -121,7 +128,7 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
   }
 
 
-  /*****************************begin x-document-api code*****************************************/
+  /***************************** begin x-document-api code *****************************************/
  
   <%for(let i=0;i<it.apiSettings.length;i++){%>
   <% let api = it.apiSettings[i] %>
@@ -141,12 +148,27 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
         <%=api.queryPara[j]%>: string,
       <%}%> 
     <%}%>
-     
-
-         <% if(['post','put','patch'].includes(api.method)){ %>data:<%=api.schema 
-         ?  (api.schema.includes('[') ?  'openapi.'+api.schema.replace('[','').replace(']','') + '[]' : 'openapi.'+api.schema  )
-         :'any'%><%}%>  
-        ){
+    
+    <% if(['post','put','patch'].includes(api.method)){ %>
+      data: 
+      <% 
+        const convertTypes = ['Object', 'String'];
+        const openApiPrefix = convertTypes.includes(api.schema.replace('[','').replace(']','')) ? '' : 'openapi.';
+      %>
+      <%= 
+        api.schema ? 
+          (
+            api.schema.includes('[') ? 
+              openApiPrefix + (
+                openApiPrefix == '' ? 
+                  api.schema.replace('[','').replace(']','').toLowerCase() : 
+                  api.schema.replace('[','').replace(']','')
+              ) + '[]' : 
+              openApiPrefix + (openApiPrefix == '' ? api.schema.toLowerCase() : api.schema)
+          ) 
+          : 'any' %>
+    <%}%>  
+  ){
     //const recordid: string = this.data.value._id ?? '';
     return await this.docapi.run<%=capitalizeFirstLetter(api.action)%>(
       <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
@@ -173,7 +195,7 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
 
 
   
-  reCalculateValue(){
+  override reCalculateValue(){
     //console.log('trigger new recalculate')
     const $data = this.getData()
     

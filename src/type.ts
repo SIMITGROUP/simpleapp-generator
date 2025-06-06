@@ -9,9 +9,10 @@ export type ChildModels = {
     docStatusSettings?:DocumentStatus[],
     apiSettings?:DocumentApi[],
     // requireautocomplete: boolean
-    isolationtype:string
+    isolationtype:string,
     hasdocformat:boolean,
-    foreignkeys:MyForeignKey
+    foreignkeys:MyForeignKey,
+    required: string[]
   };
 };
 export enum Fieldtypes {

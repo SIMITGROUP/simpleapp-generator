@@ -13,7 +13,12 @@ export const Default<%=modelname%> = (uuid:string)=>{
       return undefined
     <%} else{%>
     return {
-        _id : uuid,
+        <% if(it.models?.[modelname] && it.models[modelname]?.model && Object.keys(it.models[modelname]?.model).length === 0) { %>
+          // Dynamic Object
+        <% } else { %>
+          _id : uuid,
+        <% } %>
+
         <%Object.keys(it.models[modelname].model).forEach(function(key){%>      
           <%let field=it.models[modelname].model[key]%>                
             

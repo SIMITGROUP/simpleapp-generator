@@ -16,11 +16,11 @@ import {DefaultHooks} from  "../types"
       <%Object.keys(schema.model).forEach(function(key){ %>     
       <% const obj = schema.model[key] %>
         <% if(typeof obj == 'string') {%>
-          <%= key %> <%if(obj.required){%>?<%}%>: <%= obj  %>; //child object
+          <%= key %> <%if(!schema.required.includes(key)){%>?<%}%>: <%= obj  %>; //child object
         <% }else if( Array.isArray( obj)){%>
-          <%= key %>?: <%= obj[0] %>[]; //array 1
+          <%= key %> <%if(!schema.required.includes(key)){%>?<%}%>: <%= obj[0] %>[]; //array 1
         <% }else if( obj.type == 'array'){%>
-          <%= key %><%if(obj.required){%>?<%}%>: <%= obj.items.type %>[]; //array 2
+          <%= key %> <%if(!schema.required.includes(key)){%>?<%}%>: <%= obj.items.type %>[]; //array 2
         <% }else{%>
           <%= key %> <% if(!obj.required || obj.required==false){%>?<%}%>: <%= obj.type %>;   // <%~ JSON.stringify(obj) %>
         <% } %>
