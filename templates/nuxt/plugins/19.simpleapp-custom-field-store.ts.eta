@@ -1,0 +1,38 @@
+import { ShallowRef } from "vue";
+import { Customfield, CUSTOMFIELDApi } from "~/simpleapp/generate/openapi";
+
+type CustomFieldStoreData = Pick<Customfield, "_id" | "collectionName" | "form">[];
+
+type CustomFieldStore = {
+  data: ShallowRef<CustomFieldStoreData>;
+};
+
+export default defineNuxtPlugin(async (nuxtApp) => {
+  const useCustomFieldStore = defineStore("custom-field-store", {
+    state: (): CustomFieldStore => ({
+      data: shallowRef([]),
+    }),
+    actions: {
+      async fetchList() {
+        const config = getAxiosConfig();
+        const api = new CUSTOMFIELDApi(config);
+        const resp = await api.runSearch({
+          filter: {},
+          fields: ["_id", "collectionName", "form"],
+        });
+        // setTimeout(() => {
+        this.$patch({ data: resp.data ?? [] });
+        // }, 10000);
+      },
+      findByCollectionName(collectionName: string) {
+        return this.data.find((item) => item.collectionName === collectionName) ?? null;
+      },
+    },
+  });
+
+  return {
+    provide: {
+      customFieldStore: useCustomFieldStore(),
+    },
+  };
+});

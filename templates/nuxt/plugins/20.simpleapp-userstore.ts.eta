@@ -51,7 +51,7 @@ export default defineNuxtPlugin( async(nuxtApp) => {
           async loadRemoteUserInfo(){
             // console.log('loadRemoteUserInfo')
             
-            const { $axios, $appPluginsStore } = useNuxtApp()
+            const { $axios, $appPluginsStore, $customFieldStore } = useNuxtApp()
             const route = useRoute();
             let xorg = this.getCurrentXorg()            
             
@@ -63,6 +63,7 @@ export default defineNuxtPlugin( async(nuxtApp) => {
             }
 
             $appPluginsStore.loadInstalledPlugins();
+            $customFieldStore.fetchList();
           
             return await new PROFILEApi(undefined,apiurl,$axios).getProfile().then((res:AxiosResponse)=>{            
               if(!res){
