@@ -257,6 +257,8 @@ export const prettyNuxt = ()=>{
     console.log("Formatting Nuxt...");
     prepareOpenApiClient()
     exec(`cd ${config.frontendFolder};npx prettier --write "./pages/**/*.vue" "./components/**/*.vue" "./generate/*/*.ts" `)
+    exec(`npx prettier --write ${config.frontendFolder}/simpleapp/generate/clients/*.ts`)
+
                         
 }
 export const prettyNest = ()=>{
