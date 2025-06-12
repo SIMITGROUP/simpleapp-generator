@@ -10,6 +10,7 @@ import {UserProfile} from '~/types'
 import axios, { Axios, AxiosError, AxiosResponse } from 'axios'
 import _ from 'lodash'
 import { group } from "console";
+import { HIGH_PRIVILEGE_ROLES } from "~/data/constant";
 
 
 export default defineNuxtPlugin( async(nuxtApp) => {
@@ -155,6 +156,9 @@ export default defineNuxtPlugin( async(nuxtApp) => {
               // console.log(result)
             }
             //().then((res:AxiosResponse)=>{ }
+          },
+          checkHasHighPrivilege(){
+            return HIGH_PRIVILEGE_ROLES.some(permission =>  this.roles.includes(permission))
           },
           canPerform(resourcename:string,action:string):boolean{
 

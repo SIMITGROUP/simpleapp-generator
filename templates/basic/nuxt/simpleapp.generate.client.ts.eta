@@ -72,14 +72,19 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
       }               
     },{deep:true})
 
-    const { $customFieldStore } = useNuxtApp();
-    watch(
-      () => $customFieldStore.data,
-      (newVal, oldVal) => {
-        this.processCustomField();
-      },
-      { immediate: false, deep: true }
-    );
+    <% if(!['Plugins', 'Plugininstallations', 'Customfield'].includes(capitalizeFirstLetter(it.name))) { %>
+      const { $customFieldStore, $appPluginsStore } = useNuxtApp();
+      if (!this._customFieldWatch) {
+        this._customFieldWatch = watch(
+          [() => $customFieldStore.data, () => $appPluginsStore.installedPlugins],
+          ([newCustomField, newPlugins], [oldCustomField, oldPlugins]) => {
+            this.processCustomField();
+          },
+          { immediate: false, deep: true },
+        );
+      }
+    <% } %>
+    
   }
 
   override setNew = ()=>{         

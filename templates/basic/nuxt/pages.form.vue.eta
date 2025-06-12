@@ -58,7 +58,7 @@
                 <% } else {%>
                         <%~ getBasicElement('text',`#/properties/${key}`,`data.${key}`) %>            
                 <% }%>  
-        <% } else if(obj.type=='object' && obj.properties){ %>                  
+        <% } else if(obj.type=='object' && obj.properties && key !== 'more'){ %>                  
             <SimpleAppValue :setting="o.getField('#/properties/<%= key %>')">
             <%Object.keys(obj.properties).forEach(function(skey) { %>
                 <% let sobj=obj.properties[skey] %>
@@ -125,8 +125,10 @@
                         </Column>
             </SimpleAppInputTable>
         <% } else{%>
-            <!-- Can auto generate <%=obj.key %> -->  
-            <!--  <%~ JSON.stringify(obj) %>-->  
+            <% if(key !== 'more'){ %>
+                <!-- Can auto generate <%=obj.key %> -->  
+                <!--  <%~ JSON.stringify(obj) %>-->  
+            <% } %>
         <%}%>
       <%})%>  
       </div>        

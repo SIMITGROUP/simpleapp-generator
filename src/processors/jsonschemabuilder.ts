@@ -329,7 +329,7 @@ const genSchema = async (
     }
   });
   // log.warn(newmodel,docname)
-  console.log(docname, requiredlist);
+  // console.log(docname, requiredlist);
   const modelname = _.upperFirst(docname);
   // log.warn("$$$$$$$$$$>>>",modelname,)
   // log.warn(newmodel,modelname)

@@ -5,7 +5,7 @@ export const customfield: SchemaType = {
   'x-simpleapp-config': {
     documentType: 'customfield',
     documentName: 'customfield',
-    isolationType: IsolationType.org,
+    isolationType: IsolationType.tenant,
     uniqueKey: 'collectionName',
     documentTitle: 'collectionName'
   },

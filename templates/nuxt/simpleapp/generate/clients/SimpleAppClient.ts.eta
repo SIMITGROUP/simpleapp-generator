@@ -4,72 +4,85 @@
  * last change 2024-03-08
  * Author: Ks Tan
  */
-import { ref } from 'vue';
-import type { Ref } from 'vue';
-import type { AxiosResponse } from 'axios';
-import {SearchBody,TextSearchBody,Notification,NotificationStatus,SchemaType,FormActions} from '~/types'
-import { getValidateService } from '~/simpleapp/generate/sharelibs/validate';
-import { CustomFieldMoreDataGroup, SimpleAppCustomFieldClient } from './SimpleAppCustomFieldClient';
+import { ref } from "vue";
+import type { Ref } from "vue";
+import type { AxiosResponse } from "axios";
+import {
+  SearchBody,
+  TextSearchBody,
+  NotificationStatus,
+  SchemaType,
+  FormActions,
+} from "~/types";
+import { getValidateService } from "~/simpleapp/generate/sharelibs/validate";
+import { SimpleAppCustomFieldClient } from "./SimpleAppCustomFieldClient";
+import { WatchHandle } from "vue";
 
 // import { useToast, } from 'primevue/usetoast';
 // import type {  ToastMessageOptions } from 'primevue/toast';
 // const toast = useToast();
 
 type crudType = {
-  runFindOne: Function;  
+  runFindOne: Function;
   runCreate: Function;
-  runUpdate: Function;  
-  runPatch: Function;  
+  runUpdate: Function;
+  runPatch: Function;
   runDelete: Function;
   runSearch: Function;
-  runDefault:Function;
-  runFullTextSearch?:Function;
+  runDefault: Function;
+  runFullTextSearch?: Function;
 };
 export class SimpleAppClient<
-  TData extends { _id?: string; created?:string; more?: any },
+  TData extends { _id?: string; created?: string; more?: any },
   TApi extends crudType,
 > {
   // protected defaultTimeOut=5000
   protected ready = true;
-  protected delayAfterGetId = 0.5*1000;
-  protected unwantchobj:any;
+  protected delayAfterGetId = 0.5 * 1000;
+  protected unwantchobj: any;
   protected docapi;
-  public event:Function|null=null;
-  public listen:Function|null=null;
+  public event: Function | null = null;
+  public listen: Function | null = null;
   protected data = <Ref<TData>>ref({} as TData);
   public schema = {} as SchemaType; //cant define data type, cause it make autocomplete gone.
-  protected doctype = '';
-  protected docname = '';
+  protected doctype = "";
+  protected docname = "";
   protected errorlist = ref({});
   protected completeformula = true;
   protected axios;
   private _customFieldClient = new SimpleAppCustomFieldClient();
-  
-  constructor(apiobj: TApi,doctype:string,docname:string) {
+  protected _customFieldWatch: WatchHandle | null = null;
+
+  constructor(apiobj: TApi, doctype: string, docname: string) {
     this.docapi = apiobj;
-    this.doctype=doctype
-    this.docname = docname
-    this.axios = useNuxtApp().$axios
+    this.doctype = doctype;
+    this.docname = docname;
+    this.axios = useNuxtApp().$axios;
   }
-  isReady = ()=>this.ready
+  isReady = () => this.ready;
   getDocType = () => this.doctype;
-  getDocName = (capFirst:boolean=false) => capFirst ? upperFirst(this.docname) :this.docname;
-  setNew = ()=>{}
-  isNew = () => this.data.value?.created==''
+  getDocName = (capFirst: boolean = false) =>
+    capFirst ? upperFirst(this.docname) : this.docname;
+  setNew = () => {};
+  isNew = () => this.data.value?.created == "";
   setSchema = (schema: SchemaType) => (this.schema = schema);
-  getSchema = ():SchemaType=> this.schema;
+  getSchema = (): SchemaType => this.schema;
   getErrors = () => this.errorlist;
   getData = () => this.data.value;
-  getApi = () =>this.docapi;
+  getApi = () => this.docapi;
   getReactiveData = () => this.data;
-  public reCalculateValue (){}
-  public isReadOnly():boolean{return false}  //if there is readonly attribute in data, will override it at processor and client    
+  public reCalculateValue() {}
+  public isReadOnly(): boolean {
+    return false;
+  } //if there is readonly attribute in data, will override it at processor and client
   setData = (data: any) => {
     // this.data.value = data;
+    // TODO: TS ERROR
     data.more = this._customFieldClient.processCustomFieldData(
+      // @ts-ignore
       this.schema.properties?.["more"],
-      this.isNew(),
-      this.data.value?.more
+      data.createdBy == "",
+      data.more,
     );
 
     Object.assign(this.data.value, data);
@@ -77,56 +90,61 @@ export class SimpleAppClient<
 
   async processCustomField() {
     const resp = this._customFieldClient.processCustomField(this.doctype);
+     // TODO: TS ERROR
+    // @ts-ignore
     this.schema.properties.more = resp.schema;
     this.setData(this.data.value);
   }
-  
-  async getById(id?: string) {
-    this.ready=false
-    if(this.unwantchobj)this.unwantchobj()
-    return await this.docapi.runFindOne(id,this.axios)
-    .then((res: AxiosResponse) => {
-      // if(this.event){this.event('info:getById',res.data)}
-      this.data.value={} as TData
-      Object.assign(this.data.value, res.data);
-      this.setWatchChange()
-      setTimeout(()=>{
-        this.ready=true
-      },this.delayAfterGetId)
-      
-      return res;
-    }).catch((res:any)=>{
-      // if(this.event){this.event('error:getById',res)}
-      setTimeout(()=>{
-        this.ready=true
-      },this.delayAfterGetId)
-      return Promise.reject(res)
-    });
-  }
-  setWatchChange(){}
 
-  async runDefault(){
-    const res = await this.docapi.runDefault() 
-    return res.data
+  async getById(id?: string) {
+    this.ready = false;
+    if (this.unwantchobj) this.unwantchobj();
+    return await this.docapi
+      .runFindOne(id, this.axios)
+      .then((res: AxiosResponse) => {
+        // if(this.event){this.event('info:getById',res.data)}
+        // this.data.value = {} as TData;
+        // Object.assign(this.data.value, res.data);
+        this.setData(res.data);
+        this.setWatchChange();
+        setTimeout(() => {
+          this.ready = true;
+        }, this.delayAfterGetId);
+
+        return res;
+      })
+      .catch((res: any) => {
+        // if(this.event){this.event('error:getById',res)}
+        setTimeout(() => {
+          this.ready = true;
+        }, this.delayAfterGetId);
+        return Promise.reject(res);
+      });
   }
-  async create() {    
+  setWatchChange() {}
+
+  async runDefault() {
+    const res = await this.docapi.runDefault();
+    return res.data;
+  }
+  async create() {
     const errors = this.validateFailed();
-    const {$event} =useNuxtApp()
+    const { $event } = useNuxtApp();
 
     if (errors) {
-      $event('Notification',{
-        documentName:this.getDocName(),
-        summary:'Record create failed',
-        status:NotificationStatus.error,
-        data:errors
-      })      
+      $event("Notification", {
+        documentName: this.getDocName(),
+        summary: "Record create failed",
+        status: NotificationStatus.error,
+        data: errors,
+      });
       // this.event('error:create',errors)
       return await Promise.reject(errors);
     } else {
-      holdScreenStart()
-      this.ready=false
+      holdScreenStart();
+      this.ready = false;
       return await this.docapi
-        .runCreate(this.data.value,this.axios)
+        .runCreate(this.data.value, this.axios)
         .then((res: AxiosResponse) => {
           // if(this.event){this.event('success:create',res.data);return res.data}
           // console.log(this.getDocName(), "ok")
@@ -135,49 +153,50 @@ export class SimpleAppClient<
           //   summary:'Record create successfully',
           //   status:NotificationStatus.success
           // })
-          this.data.value = {} as TData
+          this.data.value = {} as TData;
           this.data.value = { ...res.data };
-          setTimeout(()=>{
-            this.ready=true
-          },this.delayAfterGetId)
-          holdScreenEnd()
+          setTimeout(() => {
+            this.ready = true;
+          }, this.delayAfterGetId);
+          holdScreenEnd();
           return res.data;
-        }).catch((errors:any)=>{             
-            $event('Notification',{
-              documentName:this.getDocName(),
-              summary:'Record create failed',
-              status:NotificationStatus.error,
-              data:errors.response.data.statusMessage
-            })
-            console.error('error:create',errors.response.data)
-            setTimeout(()=>{
-              this.ready=true
-            },this.delayAfterGetId)
-            holdScreenEnd()
-          return Promise.reject(errors)
+        })
+        .catch((errors: any) => {
+          $event("Notification", {
+            documentName: this.getDocName(),
+            summary: "Record create failed",
+            status: NotificationStatus.error,
+            data: errors.response.data.statusMessage,
+          });
+          console.error("error:create", errors.response.data);
+          setTimeout(() => {
+            this.ready = true;
+          }, this.delayAfterGetId);
+          holdScreenEnd();
+          return Promise.reject(errors);
         });
     }
   }
 
   async update() {
-    const {$event} =useNuxtApp()
-    const recordid: string = this.data.value._id ?? '';
+    const { $event } = useNuxtApp();
+    const recordid: string = this.data.value._id ?? "";
     const errors = this.validateFailed();
     if (errors) {
       // if(this.event){this.event('error:update',errors)}
-      $event('Notification',{
-        documentName:this.getDocName(),
-        summary:'Record update failed',
-        status:NotificationStatus.error,
-        data:errors
-      })
-      console.error('update errors',errors)
+      $event("Notification", {
+        documentName: this.getDocName(),
+        summary: "Record update failed",
+        status: NotificationStatus.error,
+        data: errors,
+      });
+      console.error("update errors", errors);
       return await Promise.reject(errors);
     } else {
-      holdScreenStart()
-      this.ready=false
+      holdScreenStart();
+      this.ready = false;
       return await this.docapi
-        .runUpdate(recordid, this.data.value,this.axios)
+        .runUpdate(recordid, this.data.value, this.axios)
         .then((res: AxiosResponse) => {
           // if(this.event){this.event('success:update',res.data)}
           // $event('Notification',{
@@ -185,82 +204,84 @@ export class SimpleAppClient<
           //   summary:'Record update success',
           //   status:NotificationStatus.success,
           //   data:errors
-          // })        
-          this.data.value = res.data     
-          setTimeout(()=>{
-            this.ready=true
-          },this.delayAfterGetId)
-          holdScreenEnd()     
+          // })
+          this.data.value = res.data;
+          setTimeout(() => {
+            this.ready = true;
+          }, this.delayAfterGetId);
+          holdScreenEnd();
           return res.data;
-        }).catch((errors:any)=>{
-          $event('Notification',{
-            documentName:this.getDocName(),
-            summary:'Record update failed',
-            status:NotificationStatus.error,
-            data:errors.response.data.statusMessage
-          })
+        })
+        .catch((errors: any) => {
+          $event("Notification", {
+            documentName: this.getDocName(),
+            summary: "Record update failed",
+            status: NotificationStatus.error,
+            data: errors.response.data.statusMessage,
+          });
           // console.error('error:update---',errors,",---",errors.message)
           // if(this.event){
           // this.event('error:update',errors.response.data.data)}
-          console.error('error:update',errors.response.data)
-          setTimeout(()=>{
-            this.ready=true
-          },this.delayAfterGetId)
-          holdScreenEnd()
-          return Promise.reject(errors)
+          console.error("error:update", errors.response.data);
+          setTimeout(() => {
+            this.ready = true;
+          }, this.delayAfterGetId);
+          holdScreenEnd();
+          return Promise.reject(errors);
         });
     }
   }
 
   async patch() {
-    const {$event} =useNuxtApp()
-    const recordid: string = this.data.value._id ?? '';
-    holdScreenStart()
-    this.ready=false
-      return await this.docapi
-        .runPatch(recordid, this.data.value,this.axios)
-        .then((res: AxiosResponse) => {
-          // if(this.event){this.event('success:update',res.data)}
-          // $event('Notification',{
-          //   documentName:this.getDocName(),
-          //   summary:'Record update success',
-          //   status:NotificationStatus.success,
-          //   data:errors
-          // })        
-          this.data.value = res.data    
-          setTimeout(()=>{
-            this.ready=true
-          },this.delayAfterGetId)      
-          holdScreenEnd()
-          return res.data;
-        }).catch((errors:any)=>{
-          $event('Notification',{
-            documentName:this.getDocName(),
-            summary:'Record patch failed',
-            status:NotificationStatus.error,
-            data:errors.response.data.statusMessage
-          })
-          // console.error('error:update---',errors,",---",errors.message)
-          // if(this.event){
-          // this.event('error:update',errors.response.data.data)}
-          console.error('error:patch',errors.response.data)
-          setTimeout(()=>{
-            this.ready=true
-          },this.delayAfterGetId)
-          holdScreenEnd()
-          return Promise.reject(errors)
-        
-    })
+    const { $event } = useNuxtApp();
+    const recordid: string = this.data.value._id ?? "";
+    holdScreenStart();
+    this.ready = false;
+    return await this.docapi
+      .runPatch(recordid, this.data.value, this.axios)
+      .then((res: AxiosResponse) => {
+        // if(this.event){this.event('success:update',res.data)}
+        // $event('Notification',{
+        //   documentName:this.getDocName(),
+        //   summary:'Record update success',
+        //   status:NotificationStatus.success,
+        //   data:errors
+        // })
+        this.data.value = res.data;
+        setTimeout(() => {
+          this.ready = true;
+        }, this.delayAfterGetId);
+        holdScreenEnd();
+        return res.data;
+      })
+      .catch((errors: any) => {
+        $event("Notification", {
+          documentName: this.getDocName(),
+          summary: "Record patch failed",
+          status: NotificationStatus.error,
+          data: errors.response.data.statusMessage,
+        });
+        // console.error('error:update---',errors,",---",errors.message)
+        // if(this.event){
+        // this.event('error:update',errors.response.data.data)}
+        console.error("error:patch", errors.response.data);
+        setTimeout(() => {
+          this.ready = true;
+        }, this.delayAfterGetId);
+        holdScreenEnd();
+        return Promise.reject(errors);
+      });
   }
   async delete(id?: string) {
-    if(!id){
-      id = this.data.value._id ?? ''
+    if (!id) {
+      id = this.data.value._id ?? "";
     }
-    const {$event} =useNuxtApp()
-    holdScreenStart()
-    this.ready=false
-    return await this.docapi.runDelete(id,this.axios)
-      .then((res:AxiosResponse)=>{
+    const { $event } = useNuxtApp();
+    holdScreenStart();
+    this.ready = false;
+    return await this.docapi
+      .runDelete(id, this.axios)
+      .then((res: AxiosResponse) => {
         // if(this.event){this.event('success:delete',res.data)}
         // $event('Notification',{
         //   documentName:this.getDocName(),
@@ -268,48 +289,51 @@ export class SimpleAppClient<
         //   status:NotificationStatus.success,
         //   data:res.data
         // })
-        setTimeout(()=>{
-            this.ready=true
-          },this.delayAfterGetId)
-        holdScreenEnd()
+        setTimeout(() => {
+          this.ready = true;
+        }, this.delayAfterGetId);
+        holdScreenEnd();
 
-        return Promise.resolve(res.data)
-      }).catch((errors:any)=>{
+        return Promise.resolve(res.data);
+      })
+      .catch((errors: any) => {
         // if(this.event){this.event('error:delete',errors.response.data.data)}
-        $event('Notification',{
-          documentName:this.getDocName(),
-          summary:'Record delete failed',
-          status:NotificationStatus.error,
-          data:errors.response.data.statusMessage
-        })
-        console.error(errors.response.data)
-        setTimeout(()=>{
-            this.ready=true
-          },this.delayAfterGetId)
-        holdScreenEnd()
-        return Promise.reject(errors)
+        $event("Notification", {
+          documentName: this.getDocName(),
+          summary: "Record delete failed",
+          status: NotificationStatus.error,
+          data: errors.response.data.statusMessage,
+        });
+        console.error(errors.response.data);
+        setTimeout(() => {
+          this.ready = true;
+        }, this.delayAfterGetId);
+        holdScreenEnd();
+        return Promise.reject(errors);
       });
   }
-  async search(searchbody:SearchBody) {
-    return await this.docapi.runSearch(searchbody,this.axios)
-        .then((res:AxiosResponse)=>{
-          // if(this.event){this.event('info:listready',res.data);}
-          return res.data
-        }).catch((errors:any)=>{
-          // if(this.event){this.event('error:list',errors.response.data.data)}
-          return Promise.reject(errors)
-        });
+  async search(searchbody: SearchBody) {
+    return await this.docapi
+      .runSearch(searchbody, this.axios)
+      .then((res: AxiosResponse) => {
+        // if(this.event){this.event('info:listready',res.data);}
+        return res.data;
+      })
+      .catch((errors: any) => {
+        // if(this.event){this.event('error:list',errors.response.data.data)}
+        return Promise.reject(errors);
+      });
   }
-  
+
   hook(type: string, data: TData) {
     //console.log('internal save hook');
     return true;
   }
   validateFailed() {
     const ajv = getValidateService();
-    
+
     this.errorlist.value = {};
-    this.hook('pre-validation', this.data.value);
+    this.hook("pre-validation", this.data.value);
     const validate = ajv.compile(this.schema);
     const valid = validate(this.data.value);
     if (!valid) {
@@ -317,13 +341,11 @@ export class SimpleAppClient<
       const tmp: { [key: string]: any } = {};
       if (errors) {
         for (let i = 0; i < errors?.length; i++) {
-          const err = errors[i]
-          let key: string =  err.instancePath
-          if(err.keyword == 'required'){            
-            key += `/${err.params.missingProperty}`
+          const err = errors[i];
+          let key: string = err.instancePath;
+          if (err.keyword == "required") {
+            key += `/${err.params.missingProperty}`;
           }
-          
-          
 
           if (!tmp[key]) {
             tmp[key] = [];
@@ -335,28 +357,28 @@ export class SimpleAppClient<
       this.errorlist.value = tmp;
       // console.error(this.errorlist);
       // return validate.errors;
-      return ajv.errors??validate.errors;
+      return ajv.errors ?? validate.errors;
     } else {
-      this.hook('post-validation', this.data.value);
+      this.hook("post-validation", this.data.value);
       return false;
     }
   }
 
-  public getActions():FormActions{
-    const data:FormActions =  {
-      crud:['create','update','delete',],
-      docstatus:[],
-      api:[]
-    }
-    return data
+  public getActions(): FormActions {
+    const data: FormActions = {
+      crud: ["create", "update", "delete"],
+      docstatus: [],
+      api: [],
+    };
+    return data;
   }
 
-  async runFullTextSearh(body:TextSearchBody) {
-      if(!this.docapi.runFullTextSearch){
-        return [];
-      }
-
-      const response = await this.docapi.runFullTextSearch(body)
-      return response.data
+  async runFullTextSearh(body: TextSearchBody) {
+    if (!this.docapi.runFullTextSearch) {
+      return [];
     }
+
+    const response = await this.docapi.runFullTextSearch(body);
+    return response.data;
+  }
 }

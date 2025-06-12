@@ -89,7 +89,7 @@ export type SchemaFields = {
   // modified from jsonschemas
   export type SimpleAppJSONSchema7Definition = SimpleAppJSONSchema7 | boolean;
   export interface SimpleAppJSONSchema7 {
-    
+    inputType?: string;
     'x-foreignkey' ?:string
       $id?: string | undefined;
       $ref?: string | undefined;

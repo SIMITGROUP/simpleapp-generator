@@ -4,7 +4,7 @@ export default {
     <%let langkeys = Object.keys(it.lang) %>
     <% for(let l=0; l< langkeys.length; l++){ %>
     <% let key = langkeys[l] %>
-        '<%=key%>' : <% if (typeof it.lang[key] === 'object') { %><%~ JSON.stringify(it.lang[key], null, 2) %><% } else { %>'<%= it.lang[key] %>'<% } %>,
+        "<%=key%>" : <% if (typeof it.lang[key] === 'object') { %><%~ JSON.stringify(it.lang[key], null, 2) %><% } else { %>"<%~ it.lang[key] %>"<% } %>,
     <%}%>    
 
 

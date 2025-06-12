@@ -56,6 +56,10 @@ export const haveAccess = (resource:string):boolean =>{
     return getUserStore().haveAccess(upperFirst(resource))
 }
 
+export const checkHasHighPrivilege = ():boolean =>{
+    return getUserStore().checkHasHighPrivilege()
+}
+
 
 
 export const getProfileEmail = () => getUserProfile()?.email

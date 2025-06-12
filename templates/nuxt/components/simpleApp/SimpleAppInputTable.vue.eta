@@ -55,7 +55,12 @@ const modelValue = defineModel<any[]>();
 
 const addNew = () => {
   const field = props.setting.path.split("/").at(-1);
-  props.setting.document[`add${field}`]();
+  if (props.setting.document[`add${field}`]) {
+    props.setting.document[`add${field}`]();
+  } else {
+    console.log("customfield", modelValue.value);
+    modelValue.value?.push({});
+  }
 };
 /**
  * 1. support array with field to label
