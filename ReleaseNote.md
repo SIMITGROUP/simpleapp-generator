@@ -1,3 +1,7 @@
+[1.6.6n-alpha]
+1. Add Custom Field
+2. Add Plugin
+
 [1.6.6m-alpha]
 1. Update Gitignore
 
