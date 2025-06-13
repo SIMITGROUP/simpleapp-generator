@@ -1,3 +1,6 @@
+[1.6.6o-alpha]
+1. Fix Auto Complete Type
+
 [1.6.6n-alpha]
 1. Add Custom Field
 2. Add Plugin
