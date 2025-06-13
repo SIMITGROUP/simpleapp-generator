@@ -96,7 +96,8 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiResponse({
     status: 200,
     description: 'Found',
-    type: ()=>[{id:'100',label:'label1'}],
+    type: schemas.<%= it.typename %>AutoComplete,
+    isArray: true,
   })
   @ApiResponse({ status: 500, description: 'Internal error' })
   @ApiQuery({ name: 'keyword', type:String})

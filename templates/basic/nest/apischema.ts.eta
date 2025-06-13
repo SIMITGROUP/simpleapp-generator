@@ -7,6 +7,35 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Field, ObjectType,ID } from '@nestjs/graphql';
 import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
+
+<% const draw = (it, obj, key) => { %>
+    <% if(typeof obj == 'string') {%>
+        <% // This Is Dynamic Object %>
+        <% if(it.models?.[obj] && it.models[obj]?.model && Object.keys(it.models[obj]?.model).length === 0) { %>
+            @Field(()=>GraphQLJSON)
+            @ApiProperty({ type:()=>Object,required: false, default: {} })
+            <%= key %>: Object;
+        <% } else { %>
+            @Field()
+            @ApiProperty({type: ()=><%=obj%>})
+            <%= key %>:  <%= obj %>;
+        <% } %>
+    <%} else if(typeof obj.default !='undefined' && JSON.stringify(obj.default)=='{}'){%>
+        @Field(()=>GraphQLJSON)
+        @ApiProperty({ type:()=>Object,required: false, default: {} })
+        <%= key %>: Object;
+    <% } else if( Array.isArray( obj)){%>
+        @Field(type=>[<%=initType(obj[0]) %>])
+        @ApiProperty({type: ()=>[<%=initType(obj[0]) %>] })                    
+        <%= key %>:  <%= obj[0] %>[];
+        
+    <% }else{%>
+        @Field()                
+        @ApiProperty(<%~ JSON.stringify(obj)%> )
+        <%= key %>:  <%= obj.type %>;
+    <% } %>
+<% } %>
+
 <%Object.keys(it.models).forEach(function(name) { %>
     <% let schema = it.models[name].model %>
 
@@ -18,35 +47,35 @@ import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 
         <% Object.keys(schema).forEach(function(key) { %>
             <% let obj = schema[key] %>
-            <% if(typeof obj == 'string') {%>
-                <% // This Is Dynamic Object %>
-                <% if(it.models?.[obj] && it.models[obj]?.model && Object.keys(it.models[obj]?.model).length === 0) { %>
-                    @Field(()=>GraphQLJSON)
-                    @ApiProperty({ type:()=>Object,required: false, default: {} })
-                    <%= key %>: Object;
-                <% } else { %>
-                    @Field()
-                    @ApiProperty({type: ()=><%=obj%>})
-                    <%= key %>:  <%= obj %>;
-                <% } %>
-            <%} else if(typeof obj.default !='undefined' && JSON.stringify(obj.default)=='{}'){%>
-                @Field(()=>GraphQLJSON)
-                @ApiProperty({ type:()=>Object,required: false, default: {} })
-                <%= key %>: Object;
-            <% } else if( Array.isArray( obj)){%>
-                @Field(type=>[<%=initType(obj[0]) %>])
-                @ApiProperty({type: ()=>[<%=initType(obj[0]) %>] })                    
-                <%= key %>:  <%= obj[0] %>[];
-                
-            <% }else{%>
-                @Field()                
-                @ApiProperty(<%~ JSON.stringify(obj)%> )
-                <%= key %>:  <%= obj.type %>;
-            <% } %>
+            <% draw(it, obj, key) %>
         <% }) %>
     }
 <%}) %>
 
-  /*****************************customized code begin here *****************************************/
-  <%~ it.apiSchemaCode %>
+/***************************************** Start Auto Complete *****************************************/
+@ObjectType()
+export class <%= it.apiSchemaName %>AutoComplete {
+    @Field()
+    @ApiProperty({ type: 'string', required: true, default: '' })
+    _id: string;
+
+    @Field()
+    @ApiProperty({ type: 'string', required: true, default: '' })
+    code: string;
+
+    @Field()
+    @ApiProperty({ type: 'string', required: true, default: '' })
+    label: string;
+
+    <% if(it.moreAutoComplete && Array.isArray(it.moreAutoComplete)) { %>
+        <% it.moreAutoComplete.forEach(function(field){ %>
+            <% draw(it, it.models[it.apiSchemaName].model[field], field) %>
+
+        <% }) %>
+    <% } %>
+}
+/****************************************** End Auto Complete ******************************************/
+
+/************************************** Customized Code Begin Here *************************************/
+<%~ it.apiSchemaCode %>
  

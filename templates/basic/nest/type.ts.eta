@@ -6,15 +6,7 @@
  */
 import {DefaultHooks} from  "../types"
 
-<%Object.keys(it.models).forEach(function(prop){ %>  
-  <% let schema = it.models[prop] %>
-  export type <%= prop %> = {
-    <% // Dynamic Object %>
-    <% if(it.models[prop].type === 'object' && it.models[prop]?.model && Object.keys(it.models[prop].model).length === 0 ) { %>
-      [key: string]: any;
-    <% } else { %>
-      <%Object.keys(schema.model).forEach(function(key){ %>     
-      <% const obj = schema.model[key] %>
+<% const draw = (it, obj, key, schema) => { %>
         <% if(typeof obj == 'string') {%>
           <%= key %> <%if(!schema.required.includes(key)){%>?<%}%>: <%= obj  %>; //child object
         <% }else if( Array.isArray( obj)){%>
@@ -24,6 +16,18 @@ import {DefaultHooks} from  "../types"
         <% }else{%>
           <%= key %> <% if(!obj.required || obj.required==false){%>?<%}%>: <%= obj.type %>;   // <%~ JSON.stringify(obj) %>
         <% } %>
+<% } %>
+
+<%Object.keys(it.models).forEach(function(prop){ %>  
+  <% let schema = it.models[prop] %>
+  export type <%= prop %> = {
+    <% // Dynamic Object %>
+    <% if(it.models[prop].type === 'object' && it.models[prop]?.model && Object.keys(it.models[prop].model).length === 0 ) { %>
+      [key: string]: any;
+    <% } else { %>
+      <%Object.keys(schema.model).forEach(function(key){ %>     
+      <% const obj = schema.model[key] %>
+        <% draw(it, obj, key, schema) %>
       <%})%>
       
     <% } %>
@@ -36,3 +40,17 @@ export type <%=it.typename%>Hooks = DefaultHooks<<%=it.typename%>> & {
   
   
 }
+
+/***************************************** Start Auto Complete *****************************************/
+export type <%= it.apiSchemaName %>AutoComplete = {
+    _id: string;
+    code: string;
+    label: string;
+    <% if(it.moreAutoComplete && Array.isArray(it.moreAutoComplete)) { %>
+        <% it.moreAutoComplete.forEach(function(field){ %>
+            <% draw(it, it.models[it.apiSchemaName].model[field], field, it.models[it.apiSchemaName]) %>
+        <% }) %>
+        
+    <% } %> 
+}
+/****************************************** End Auto Complete ******************************************/
