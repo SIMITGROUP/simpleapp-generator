@@ -44,6 +44,7 @@ let configs: any = {};
 const docs = [];
 let frontendFolder = '';
 let backendFolder = '';
+let miniAppJsSdkFolder = '';
 let frontendpagefolder = '';
 const allroles: any = {};
 let langdata: any = {};
@@ -59,6 +60,8 @@ export const run = async (
   configs = paraconfigs;
   frontendFolder = configs.frontendFolder;
   backendFolder = configs.backendFolder;
+  miniAppJsSdkFolder = configs.miniAppJsSdkFolder;
+
   const printformats: SchemaPrintFormat[] = [];
   const groupFolder = configs.groupFolder;
   const defaultLangFile =
@@ -68,6 +71,9 @@ export const run = async (
   }
   if (genFor.includes('nuxt')) {
     generateTypes['nuxt'] = frontendFolder;
+  }
+  if (genFor.includes('miniAppJsSdk')) {
+    generateTypes['miniAppJsSdk'] = miniAppJsSdkFolder;
   }
   // console.log("genForgenForgenForgenFor",genFor,generateTypes)
   //
@@ -457,10 +463,62 @@ const generateSchema = (
           writeFileSync(targetfile, filecontent);
         }
         // console.log("complete, go to next file")
+      } else if (foldertype === 'miniAppJsSdk') {
+        const validateWritePage = (targetfile: string, isexists: boolean) => {
+          if (
+            !jsonschemas[docname][X_SIMPLEAPP_CONFIG]['pageType'] &&
+            !targetfile.includes('Viewer') &&
+            !targetfile.includes('Form')
+          ) {
+            return false;
+          } else if (!isexists) {
+            return true;
+          } else if (
+            !existsSync(targetfile) ||
+            readFileSync(targetfile, 'utf-8').includes(
+              '--remove-this-line-to-prevent-override--'
+            ) ||
+            readFileSync(targetfile, 'utf-8').includes('delete-me')
+          ) {
+            return true;
+          } else {
+            return false;
+          }
+        };
+
+        const mapfiles = {
+          'resource-bridge.service.ts.eta': {
+            to: 'src/services/resources',
+            as: `${_.kebabCase(resourceName)}-bridge.service.ts`,
+            validate: (targetfile: string, isexists: boolean) => {
+              return true;
+            }
+          }
+        };
+
+        const target = mapfiles[filename];
+        const targetfolder = `${generateTypes[foldertype]}/${target.to}`;
+        const targetfile = `${targetfolder}/${target.as}`;
+
+        if (
+          jsonschemas[docname][X_SIMPLEAPP_CONFIG]['pageType'] &&
+          !existsSync(targetfolder)
+        ) {
+          console.log('Mkdir', targetfolder);
+          mkdirSync(targetfolder, { recursive: true });
+        }
+
+        const isexists = existsSync(targetfile);
+        const iswrite: boolean = target.validate(targetfile, isexists);
+        // log.info("iswrite: ",iswrite)
+
+        if (iswrite) {
+          const filecontent = eta.render(templatepath, variables);
+          writeFileSync(targetfile, filecontent);
+        }
       }
     }
   });
-  // console.log("Complete generate schema")
 };
 
 const generateSystemFiles = (modules: ModuleObject[], allbpmn) => {

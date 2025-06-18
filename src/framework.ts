@@ -20,6 +20,7 @@ let config = {
   splitMobilePage: false,
   frontendPort: '8080',
   printFormatDir: './printformats',
+  miniAppJsSdkFolder: './miniAppSdk/js',
   additionalNestModules: ['cloudapi', 'printapi'],
   oauthSetting: {
     oauthBaseUrl: 'https://keycloak-server-url/',
@@ -278,6 +279,12 @@ export const prepareNuxt = (callback: Function) => {
   }
 };
 
+export const prettyMiniAppJsSdk = () => {
+  exec(
+    `npx prettier --write ${config.miniAppJsSdkFolder}/src/**/* --ignore-path .my-empty-ignore`
+  );
+};
+
 export const prettyNuxt = () => {
   console.log('Formatting Nuxt...');
   // prepareOpenApiClient()
@@ -288,6 +295,7 @@ export const prettyNuxt = () => {
     `npx prettier --write ${config.frontendFolder}/simpleapp/generate/clients/*.ts ${config.frontendFolder}/simpleapp/generate/miniApp/**/*.ts`
   );
 };
+
 export const prettyNest = () => {
   console.log('Formatting Nest...');
   exec(

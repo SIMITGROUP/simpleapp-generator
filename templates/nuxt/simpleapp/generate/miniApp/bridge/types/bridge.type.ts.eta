@@ -58,3 +58,10 @@ export type MiniAppBridgeMessageApi<TActions> = {
   };
 };
 
+export type MiniAppBridgeMessageApiResponse<TData> = {
+  type: typeof MINI_APP_BRIDGE_MESSAGES.API_RESPONSE;
+  requestId: string;
+  success: boolean;
+  data?: TData;
+  error?: any;
+};
