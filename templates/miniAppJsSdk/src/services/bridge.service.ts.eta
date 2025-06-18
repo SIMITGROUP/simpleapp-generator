@@ -61,7 +61,8 @@ export class MiniAppBridgeService {
         resource: { name: resource, id: params.id },
         action,
         query: params.query,
-        body: params.body
+        body: params.body,
+        queryParams: params.queryParams,
       }
     };
 
