@@ -69,6 +69,11 @@ export type ModuleObject = {
   schema:SimpleAppJSONSchema7
 }
 export type TypeGenerateDocumentVariable ={
+  /**
+   * Resource Name should be a readable name with camelCase. 
+   * Ex: studentSummary
+   */
+  resourceName: string;
 name: string
 doctype: string
 models: ChildModels

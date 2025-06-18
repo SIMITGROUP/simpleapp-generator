@@ -29,10 +29,6 @@ import * as buildinschemas from './buildinschemas';
 import { JSONSchema7 } from 'json-schema';
 import { generatePrintformat } from './processors/jrxmlbuilder';
 
-type MiniAppWhitelistConfig = {
-  [key: string]: string[];
-};
-
 const { Eta } = require('eta');
 const { capitalizeFirstLetter } = require('./libs');
 // const X_DOCUMENT_TYPE='x-document-type'
@@ -54,7 +50,6 @@ let langdata: any = {};
 let allbpmn: any = {};
 let activatemodules: ModuleObject[] = [];
 let generateTypes: any = {};
-let miniAppWhitelistConfigs: MiniAppWhitelistConfig = {};
 
 export const run = async (
   paraconfigs: any,
@@ -66,7 +61,6 @@ export const run = async (
   backendFolder = configs.backendFolder;
   const printformats: SchemaPrintFormat[] = [];
   const groupFolder = configs.groupFolder;
-  const whitelistFile = configs.whitelistFile;
   const defaultLangFile =
     configs.defaultLangFile ?? frontendFolder + '/../lang/default.json';
   if (genFor.includes('nest')) {
@@ -128,10 +122,6 @@ export const run = async (
     const roles = prepareRoles(groupdata);
     allroles[documentname] = roles;
   }
-
-  // Prepare Mini App Whitelist API
-  const whitelistStr = readFileSync(`${whitelistFile}`, 'utf-8');
-  miniAppWhitelistConfigs = JSON.parse(whitelistStr);
 
   if (existsSync(defaultLangFile)) {
     // log.info("Process lang file ",defaultLangFile)
@@ -204,8 +194,12 @@ const generateSchema = (
   const modelname = _.upperFirst(docname);
   const currentmodel = allmodels[modelname];
 
+  const resourceName =
+    jsonschemas[docname]?.['x-simpleapp-config']?.resourceName ?? docname;
+
   //console.log("---^^^^^------",modelname,docname, doctype, rendertype,currentmodel,allmodels)
   const variables: TypeGenerateDocumentVariable = {
+    resourceName: resourceName,
     name: docname,
     doctype: doctype,
     models: allmodels,
@@ -337,6 +331,7 @@ const generateSchema = (
       } else if (foldertype == 'nuxt') {
         // console.log("Process nuxt: ",docname)
         const capname = capitalizeFirstLetter(docname);
+        // const resourceName =
 
         const validateWritePage = (targetfile: string, isexists: boolean) => {
           if (
@@ -415,6 +410,14 @@ const generateSchema = (
             validate: (targetfile: string, isexists: boolean) => {
               return true;
             }
+          },
+
+          'resource-bridge.service.ts.eta': {
+            to: 'simpleapp/generate/miniApp/bridge/services/resources',
+            as: `${_.kebabCase(resourceName)}-bridge.service.ts`,
+            validate: (targetfile: string, isexists: boolean) => {
+              return true;
+            }
           }
         };
 
@@ -468,8 +471,7 @@ const generateSystemFiles = (modules: ModuleObject[], allbpmn) => {
     foreignkeys: allforeignkeys,
     allfields: allfields,
     allbpmn: allbpmn,
-    lang: langdata,
-    miniAppWhitelistConfigs: miniAppWhitelistConfigs
+    lang: langdata
   };
 
   Object.getOwnPropertyNames(generateTypes).forEach((foldertype) => {
