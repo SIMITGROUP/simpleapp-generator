@@ -7,6 +7,9 @@
 
 export type MiniAppResourceServiceApiParam = {
   id?: string;
+  queryParams?: {
+    [key: string]: any;
+  };
   query?: string;
   // TODO: Type
   body?: any;
