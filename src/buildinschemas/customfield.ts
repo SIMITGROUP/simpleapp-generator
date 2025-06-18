@@ -1,4 +1,4 @@
-import { IsolationType, SchemaType } from '../type';
+import { IsolationType, RESTMethods, SchemaType } from '../type';
 
 export const customfield: SchemaType = {
   type: 'object',
@@ -7,7 +7,18 @@ export const customfield: SchemaType = {
     documentName: 'customfield',
     isolationType: IsolationType.tenant,
     uniqueKey: 'collectionName',
-    documentTitle: 'collectionName'
+    documentTitle: 'collectionName',
+    pageType: 'pageType',
+    additionalApis: [
+      {
+        action: 'getCompleteCustomFieldResources',
+        entryPoint: 'complete-custom-field-resources',
+        requiredRole: ['Customfield_search'],
+        responseType: '[CompleteCustomFieldResource]',
+        method: RESTMethods.get,
+        description: 'Get complete custom field resources'
+      }
+    ]
   },
   properties: {
     _id: { type: 'string' },
@@ -35,7 +46,7 @@ export const customfield: SchemaType = {
               properties: {
                 hello: {
                   type: 'string',
-                  minLength: 2,
+                  minLength: 2
                 }
               }
             }

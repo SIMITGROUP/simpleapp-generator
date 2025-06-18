@@ -4,69 +4,78 @@
  * last change 2024-04-14
  * Author: Ks Tan
  */
-import {SimpleAppClient} from '~/simpleapp/generate/clients/SimpleAppClient'
-import { SimpleAppDocumentType } from './documentlist';
-export type NameValue={
-  name:string;
-  value:number
-}
-  export type ForeignKey = {
-    _id: string;
-    label: string;
-    code?: string
-    [key:string]: any
-  };
-  export type TextSearchBody = {
-    keyword: string;
-    fields?: string[];
-    sorts?: string[][];
-    lookup?: Record<string, string>;
-  };
+import { SimpleAppClient } from "~/simpleapp/generate/clients/SimpleAppClient";
+import { SimpleAppDocumentType } from "./documentlist";
 
-  export type DocumentMetaData =  {
-    docName:string
-    docType:string
-    page: string 
-    isolationType:string   
-    documentDate:string
-    docNumber:boolean
-    webhook:string[]|undefined
-    docClass: SimpleAppClient<any,any>
-    viewer?: Function
-  }
-  export type MenuData =  {
-    label: string
-    icon?: string
-    command?:Function
-    items?: MenuData[]
-    isolationType?:string
-    url?:string
-  }
-  export type RecentlyValue = {
-    docName:string
-    label:string
-    branchId:number
-    time:string
-  }
-  export type DocNoFormat ={
-    docNoFormatName: string
-    docNoFormatNo:string
-    docNoPattern:string
-    active: boolean
-    sample:string
-    }
-  
-  
-  export type RendererSetting ={
-    documentName:SimpleAppDocumentType,
-    [key:string]:any
-  }
-  export type SearchBody = {
-      
-      filter?:object;
-      
-      fields?: any[];
-      
-      sorts?: any[];
-      lookup?: {[key:string]:string};
-  }
+export type NameValue = {
+  name: string;
+  value: number;
+};
+
+export type ForeignKey = {
+  _id: string;
+  label: string;
+  code?: string;
+  [key: string]: any;
+};
+
+export type TextSearchBody = {
+  keyword: string;
+  fields?: string[];
+  sorts?: string[][];
+  lookup?: Record<string, string>;
+};
+
+export type DocumentMetaData = {
+  docName: string;
+  docType: string;
+  page: string;
+  isolationType: string;
+  documentDate: string;
+  docNumber: boolean;
+  webhook: string[] | undefined;
+  docClass: SimpleAppClient<any, any>;
+  viewer?: Function;
+};
+
+export type MenuData = {
+  label: string;
+  icon?: string;
+  command?: Function;
+  items?: MenuData[];
+  isolationType?: string;
+  url?: string;
+};
+
+export type RecentlyValue = {
+  docName: string;
+  label: string;
+  branchId: number;
+  time: string;
+};
+
+export type DocNoFormat = {
+  docNoFormatName: string;
+  docNoFormatNo: string;
+  docNoPattern: string;
+  active: boolean;
+  sample: string;
+};
+
+export type RendererSetting = {
+  documentName: SimpleAppDocumentType;
+  [key: string]: any;
+};
+
+export type SearchBody = {
+  filter?: object;
+
+  fields?: any[];
+
+  sorts?: any[];
+  lookup?: { [key: string]: string };
+};
+
+export type DynamicObject = {
+  [key: string]: any;
+};

@@ -3,11 +3,11 @@
     <slot name="default" :data="document.getData()" :getField="getField"></slot>
     <slot name="customField">
       <!-- TODO: TS Error -->
-      <SimpleAppCustomFieldFormSection
+      <!-- <SimpleAppCustomFieldFormSection
         :customFieldJsonSchema="document.schema.properties.more"
         :data="document.getData().more"
         :handleGetField="getField"
-      />
+      /> -->
     </slot>
   </form>
 </template>
@@ -24,7 +24,6 @@ import type { JSONSchema7, JSONSchema7Definition } from "json-schema";
 import * as alldefaults from "~/simpleapp/generate/defaults";
 import _, { upperFirst } from "lodash";
 const props = defineProps<{
-  
   document: SimpleAppClient<any, any>;
   readonly?: boolean;
 }>();

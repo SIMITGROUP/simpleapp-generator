@@ -77,22 +77,23 @@ export class SimpleAppClient<
   } //if there is readonly attribute in data, will override it at processor and client
   setData = (data: any) => {
     // this.data.value = data;
-    // TODO: TS ERROR
-    data.more = this._customFieldClient.processCustomFieldData(
-      // @ts-ignore
-      this.schema.properties?.["more"],
-      data.createdBy == "",
-      data.more,
-    );
+
+    // TODO: Will Cause Docno Format Broken
+    // data.more = this._customFieldClient.formCustomFieldData(
+    //   this.doctype,
+    //   this.schema.properties?.more,
+    //   data.createdBy == "",
+    //   data.more,
+    // );
 
     Object.assign(this.data.value, data);
   };
 
   async processCustomField() {
-    const resp = this._customFieldClient.processCustomField(this.doctype);
-     // TODO: TS ERROR
-    // @ts-ignore
-    this.schema.properties.more = resp.schema;
+    const resp = this._customFieldClient.formCustomFieldJsonSchema(
+      this.doctype,
+    );
+    this.schema.properties.more = resp;
     this.setData(this.data.value);
   }
 
