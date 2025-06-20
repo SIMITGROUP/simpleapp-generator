@@ -90,11 +90,11 @@ export class SimpleAppClient<
   };
 
   async processCustomField() {
-    const resp = this._customFieldClient.formCustomFieldJsonSchema(
-      this.doctype,
-    );
-    this.schema.properties.more = resp;
-    this.setData(this.data.value);
+    // const resp = this._customFieldClient.formCustomFieldJsonSchema(
+    //   this.doctype,
+    // );
+    // this.schema.properties.more = resp;
+    // this.setData(this.data.value);
   }
 
   async getById(id?: string) {
