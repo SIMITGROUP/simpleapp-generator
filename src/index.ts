@@ -93,6 +93,13 @@ if (continueexecute) {
     });
   };
 
+  const runUpdateMiniAppStreamlitSdk = async () => {
+    fw.setConfiguration(configs);
+    generate.run(configs, ['miniAppStreamlitSdk'], () => {
+      fw.prettyMiniAppStreamlitSdk();
+    });
+  };
+
   const reGenFrontend = async () => {
     fw.setConfiguration(configs);
     generate.run(configs, ['nuxt'], () => {
@@ -146,6 +153,9 @@ if (continueexecute) {
       break;
     case 'updateMiniAppJsSdk':
       runUpdateMiniAppJsSdk();
+      break;
+    case 'updateMiniAppStreamlitSdk':
+      runUpdateMiniAppStreamlitSdk();
       break;
     case 'all':
       run();

@@ -1,0 +1,213 @@
+<% 
+  const upperFirstCase = (value) => {
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  }
+
+  const pascalName = upperFirstCase(it.resourceName);
+  const apiName = it.typename.toUpperCase() + 'Api';
+  const typeActionName = pascalName + 'Actions';
+
+  const miniAppWhitelistApis = it.jsonschema['x-simpleapp-config']?.miniApp?.whitelist || [];
+  const hasMiniAppWhitelistedApi = miniAppWhitelistApis.length > 0;
+%>
+
+from streamlit_javascript import st_javascript
+from ..helper import Helper
+from typing import Optional
+from ..api_option import ApiOption
+from streamlit.components.v1 import html
+import json
+
+
+class <%= pascalName %>:
+    _resource_name = "<%= it.resourceName %>"
+
+    <% for (let i = 0; i < miniAppWhitelistApis.length; i++) { %>
+      <%
+        const action = miniAppWhitelistApis[i];
+      %>
+
+      <% if(action === 'list') { %>
+
+    def <%= action %>(self, options: Optional[ApiOption] = {}):
+      action = "<%= action %>"
+      request_key = Helper.get_api_key(
+        "request", resource=self._resource_name, action=action, options=options
+      )
+
+      st_javascript(
+        f"window.parent.callApi('{self._resource_name}', '{action}')",
+        key=request_key,
+        on_change=lambda: Helper.set_api_response(
+            resource=self._resource_name, action=action, options=options
+        ),
+      )
+      <% } else if(action === 'detail') { %>
+
+    def <%= action %>(self, id: str, options: Optional[ApiOption] = {}):
+      action = "<%= action %>"
+      request_key = Helper.get_api_key(
+        "request", resource=self._resource_name, action=action, options=options
+      )
+      payload = json.dumps({"id": id})
+
+      st_javascript(
+        f"window.parent.callApi('{self._resource_name}', '{action}', {payload})",
+        key=request_key,
+        on_change=lambda: Helper.set_api_response(
+            resource=self._resource_name, action=action, options=options
+        ),
+      )
+      <% } else if(action === 'create') { %>
+
+    def <%= action %>(self, data = {}, options: Optional[ApiOption] = {}):
+      action = "<%= action %>"
+      request_key = Helper.get_api_key(
+        "request", resource=self._resource_name, action=action, options=options
+      )
+      payload = json.dumps({"body": data})
+
+      st_javascript(
+        f"window.parent.callApi('{self._resource_name}', '{action}', {payload})",
+        key=request_key,
+        on_change=lambda: Helper.set_api_response(
+            resource=self._resource_name, action=action, options=options
+        ),
+      )
+      <% } else if(action === 'update') { %>
+
+    def <%= action %>(self, id: str, data = {}, options: Optional[ApiOption] = {}):
+      action = "<%= action %>"
+      request_key = Helper.get_api_key(
+        "request", resource=self._resource_name, action=action, options=options
+      )
+      payload = json.dumps({"id": id, "body": data})
+
+      st_javascript(
+        f"window.parent.callApi('{self._resource_name}', '{action}', {payload})",
+        key=request_key,
+        on_change=lambda: Helper.set_api_response(
+            resource=self._resource_name, action=action, options=options
+        ),
+      )
+      <% } else if(action === 'patch') { %>
+
+    def <%= action %>(self, id: str, data = {}, options: Optional[ApiOption] = {}):
+      action = "<%= action %>"
+      request_key = Helper.get_api_key(
+        "request", resource=self._resource_name, action=action, options=options
+      )
+      payload = json.dumps({"id": id, "body": data})
+
+      st_javascript(
+        f"window.parent.callApi('{self._resource_name}', '{action}', {payload})",
+        key=request_key,
+        on_change=lambda: Helper.set_api_response(
+            resource=self._resource_name, action=action, options=options
+        ),
+      )
+      <% } else if(action === 'delete') { %>
+
+    def <%= action %>(self, id: str, options: Optional[ApiOption] = {}):
+      action = "<%= action %>"
+      request_key = Helper.get_api_key(
+        "request", resource=self._resource_name, action=action, options=options
+      )
+      payload = json.dumps({"id": id})
+      st_javascript(
+        f"window.parent.callApi('{self._resource_name}', '{action}', {payload})",
+        key=request_key,
+        on_change=lambda: Helper.set_api_response(
+            resource=self._resource_name, action=action, options=options
+        ),
+      )
+      <% } else if(action === 'autoComplete') { %>
+
+    def <%= action %>(self, query: str, data = {}, options: Optional[ApiOption] = {}):
+      action = "<%= action %>"
+      request_key = Helper.get_api_key(
+        "request", resource=self._resource_name, action=action, options=options
+      )
+
+      payload = json.dumps({"query": query, "body": data})
+      st_javascript(
+        f"window.parent.callApi('{self._resource_name}', '{action}', {payload})",
+        key=request_key,
+        on_change=lambda: Helper.set_api_response(
+            resource=self._resource_name, action=action, options=options
+        ),
+      )
+      <% } else { %>
+        <% const apiSetting = it.apiSettings.find(item => item.action === action); %>
+        <% if (apiSetting) { %>
+          <% const hasBody = ['post', 'put', 'patch'].includes(apiSetting.method); %>
+
+          <% 
+            const paramMatches = apiSetting.entryPoint.match(/:([\w]+)/g) || [];
+            const paramNames = paramMatches.map(p => p.replace(':', ''));
+
+            const args = paramNames.map(name => {
+              return `${name}: str`;
+            });
+
+
+            const output = [];
+            const queryParams = [];
+
+            for (let i = 0; i < paramNames.length; i++) {
+              const name = paramNames[i];
+              if (name === 'id') {
+                output.push(`'id': ${name}`)
+              } else {
+                queryParams.push(`'${name}': ${name}`)
+              }
+            }
+
+            if (queryParams.length > 0) {
+              output.push(`'queryParams': { ${queryParams.join(', ')} }`);
+            }
+
+            if (hasBody) {
+              args.push('data = {}');
+              output.push("'body': data");
+            }
+
+            args.push('options: Optional[ApiOption] = {}')
+          %>
+
+    def <%= action %>(self, <%= args.join(', ') %>):
+      action = "<%= action %>"
+      request_key = Helper.get_api_key(
+        "request", resource=self._resource_name, action=action, options=options
+      )
+      payload = json.dumps({ <%~ output.join(', ') %> })
+
+      st_javascript(
+        f"window.parent.callApi('{self._resource_name}', '{action}', {payload})",
+        key=request_key,
+        on_change=lambda: Helper.set_api_response(
+            resource=self._resource_name, action=action, options=options
+        ),
+      )
+        <% } %>
+      <% } %>
+    <% } %>
+
+    def response(self, action: str, options: Optional[ApiOption] = {}):
+      return Helper.get_api_response(
+          resource=self._resource_name, action=action, options=options
+      )
+
+    def openOnScreenForm(self, id: Optional[str] = None):
+      id_js = f"'{id}'" if id else "undefined"
+
+      html(
+          f"""
+          <script>
+              window.parent.openOnScreenResourceForm('{self._resource_name}', {{
+                  id: {id_js}
+              }});
+          </script>
+          """,
+          height=0,
+      )

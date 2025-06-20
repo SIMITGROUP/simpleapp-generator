@@ -17,6 +17,15 @@ elif [ $type == 'backend' ]; then
 elif [ $type == 'updatebackend' ]; then
     simpleapp-generator -c config.json -g updatebackend
     cp -a ./sharelibs backend/src/simpleapp/generate
+elif [ $type == 'updateMiniAppJsSdk' ]; then
+    simpleapp-generator -c config.json -g updateMiniAppJsSdk
+    mkdir -p ./miniAppSdk/js/src/constants
+    mkdir -p ./miniAppSdk/js/src/types
+    cp -a ./frontend/simpleapp/generate/miniApp/bridge/constants/* ./miniAppSdk/js/src/constants
+    cp -a ./frontend/simpleapp/generate/miniApp/bridge/types/* ./miniAppSdk/js/src/types
+    cp -a miniAppSdk/js/src/* ../sdk/simtrain-eco-js-sdk/src
+elif [ $type == 'updateMiniAppStreamlitSdk' ]; then
+    simpleapp-generator -c config.json -g updateMiniAppStreamlitSdk
 fi
 
 

@@ -20,7 +20,10 @@ let config = {
   splitMobilePage: false,
   frontendPort: '8080',
   printFormatDir: './printformats',
-  miniAppJsSdkFolder: './miniAppSdk/js',
+  miniAppSdkFolder: {
+    js: './miniAppSdk/js',
+    streamlit: './miniAppSdk/streamlit'
+  },
   additionalNestModules: ['cloudapi', 'printapi'],
   oauthSetting: {
     oauthBaseUrl: 'https://keycloak-server-url/',
@@ -281,13 +284,18 @@ export const prepareNuxt = (callback: Function) => {
 
 export const prettyMiniAppJsSdk = () => {
   exec(
-    `npx prettier --write ${config.miniAppJsSdkFolder}/src/**/* --ignore-path .my-empty-ignore`
+    `npx prettier --write ${config.miniAppSdkFolder.js}/src/**/* --ignore-path .my-empty-ignore`
   );
+};
+export const prettyMiniAppStreamlitSdk = () => {
+  // exec(
+  //   `npx prettier --write ${config.miniAppSdkFolder.streamlit}/simtrain_eco_mini_app_streamlit_sdk/**/* --ignore-path .my-empty-ignore`
+  // );
 };
 
 export const prettyNuxt = () => {
   console.log('Formatting Nuxt...');
-  // prepareOpenApiClient()
+  prepareOpenApiClient();
   exec(
     `cd ${config.frontendFolder};npx prettier --write "./pages/**/*.vue" "./components/**/*.vue" "./generate/*/*.ts" `
   );

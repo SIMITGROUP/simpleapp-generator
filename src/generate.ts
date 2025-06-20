@@ -44,7 +44,7 @@ let configs: any = {};
 const docs = [];
 let frontendFolder = '';
 let backendFolder = '';
-let miniAppJsSdkFolder = '';
+let miniAppSdkFolder = {};
 let frontendpagefolder = '';
 const allroles: any = {};
 let langdata: any = {};
@@ -60,7 +60,7 @@ export const run = async (
   configs = paraconfigs;
   frontendFolder = configs.frontendFolder;
   backendFolder = configs.backendFolder;
-  miniAppJsSdkFolder = configs.miniAppJsSdkFolder;
+  miniAppSdkFolder = configs.miniAppSdkFolder;
 
   const printformats: SchemaPrintFormat[] = [];
   const groupFolder = configs.groupFolder;
@@ -73,7 +73,10 @@ export const run = async (
     generateTypes['nuxt'] = frontendFolder;
   }
   if (genFor.includes('miniAppJsSdk')) {
-    generateTypes['miniAppJsSdk'] = miniAppJsSdkFolder;
+    generateTypes['miniAppJsSdk'] = miniAppSdkFolder['js'];
+  }
+  if (genFor.includes('miniAppStreamlitSdk')) {
+    generateTypes['miniAppStreamlitSdk'] = miniAppSdkFolder['streamlit'];
   }
   // console.log("genForgenForgenForgenFor",genFor,generateTypes)
   //
@@ -514,6 +517,61 @@ const generateSchema = (
 
         if (iswrite) {
           const filecontent = eta.render(templatepath, variables);
+          writeFileSync(targetfile, filecontent);
+        }
+      } else if (foldertype === 'miniAppStreamlitSdk') {
+        const validateWritePage = (targetfile: string, isexists: boolean) => {
+          if (
+            !jsonschemas[docname][X_SIMPLEAPP_CONFIG]['pageType'] &&
+            !targetfile.includes('Viewer') &&
+            !targetfile.includes('Form')
+          ) {
+            return false;
+          } else if (!isexists) {
+            return true;
+          } else if (
+            !existsSync(targetfile) ||
+            readFileSync(targetfile, 'utf-8').includes(
+              '--remove-this-line-to-prevent-override--'
+            ) ||
+            readFileSync(targetfile, 'utf-8').includes('delete-me')
+          ) {
+            return true;
+          } else {
+            return false;
+          }
+        };
+
+        const mapfiles = {
+          'resource-bridge.service.ts.eta': {
+            to: 'simtrain_eco_mini_app_streamlit_sdk/services/resources',
+            as: `${_.snakeCase(resourceName)}.py`,
+            validate: (targetfile: string, isexists: boolean) => {
+              return true;
+            }
+          }
+        };
+
+        const target = mapfiles[filename];
+        const targetfolder = `${generateTypes[foldertype]}/${target.to}`;
+        const targetfile = `${targetfolder}/${target.as}`;
+
+        if (
+          jsonschemas[docname][X_SIMPLEAPP_CONFIG]['pageType'] &&
+          !existsSync(targetfolder)
+        ) {
+          console.log('Mkdir', targetfolder);
+          mkdirSync(targetfolder, { recursive: true });
+        }
+
+        const isexists = existsSync(targetfile);
+        const iswrite: boolean = target.validate(targetfile, isexists);
+        // log.info("iswrite: ",iswrite)
+
+        if (iswrite) {
+          const filecontent = eta.render(templatepath, variables);
+          if (!existsSync(path.dirname(targetfile)))
+            mkdirSync(path.dirname(targetfile), { recursive: true });
           writeFileSync(targetfile, filecontent);
         }
       }
