@@ -7,8 +7,8 @@
   const apiName = it.typename.toUpperCase() + 'Api';
   const typeActionName = pascalName + 'Actions';
 
-  const miniAppWhitelistApis = it.jsonschema['x-simpleapp-config']?.miniApp?.whitelist || [];
-  const hasMiniAppWhitelistedApi = miniAppWhitelistApis.length > 0;
+  const miniAppWhitelistApis = it.jsonschema['x-simpleapp-config']?.miniApp?.whitelist || {};
+  const hasMiniAppWhitelistedApi = Object.keys(miniAppWhitelistApis).length > 0;
 %>
 
 from streamlit_javascript import st_javascript
@@ -22,10 +22,9 @@ import json
 class <%= pascalName %>:
     _resource_name = "<%= it.resourceName %>"
 
-    <% for (let i = 0; i < miniAppWhitelistApis.length; i++) { %>
-      <%
-        const action = miniAppWhitelistApis[i];
-      %>
+    <% Object.entries(miniAppWhitelistApis).forEach(([action, value]) => { %>
+      <% if (value !== true && typeof value !== 'object') { return; } %>
+
 
       <% if(action === 'list') { %>
 
@@ -137,6 +136,22 @@ class <%= pascalName %>:
             resource=self._resource_name, action=action, options=options
         ),
       )
+      <% } else if(action === 'current') { %>
+    
+    def <%= action %>(self, options: Optional[ApiOption] = {}):
+      action = "<%= action %>"
+      request_key = Helper.get_api_key(
+        "request", resource=self._resource_name, action=action, options=options
+      )
+
+      st_javascript(
+        f"window.parent.callApi('{self._resource_name}', '{action}')",
+        key=request_key,
+        on_change=lambda: Helper.set_api_response(
+            resource=self._resource_name, action=action, options=options
+        ),
+      )
+      
       <% } else { %>
         <% const apiSetting = it.apiSettings.find(item => item.action === action); %>
         <% if (apiSetting) { %>
@@ -191,7 +206,7 @@ class <%= pascalName %>:
       )
         <% } %>
       <% } %>
-    <% } %>
+    <% }) %>
 
     def response(self, action: str, options: Optional[ApiOption] = {}):
       return Helper.get_api_response(

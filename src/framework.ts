@@ -288,9 +288,7 @@ export const prettyMiniAppJsSdk = () => {
   );
 };
 export const prettyMiniAppStreamlitSdk = () => {
-  // exec(
-  //   `npx prettier --write ${config.miniAppSdkFolder.streamlit}/simtrain_eco_mini_app_streamlit_sdk/**/* --ignore-path .my-empty-ignore`
-  // );
+  exec(`sh ${config.miniAppSdkFolder.streamlit}/format.sh`);
 };
 
 export const prettyNuxt = () => {
