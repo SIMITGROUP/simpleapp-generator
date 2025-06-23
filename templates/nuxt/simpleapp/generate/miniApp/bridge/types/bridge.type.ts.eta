@@ -16,6 +16,7 @@ export type MiniAppResource = {
 
 export type MiniAppBridgeMessage<TAction> =
   | MiniAppBridgeMessageNavigate
+  | MiniAppBridgeMessageNavigateCurrentMiniApp
   | MiniAppBridgeMessageOpenOnScreenResourceForm
   | MiniAppBridgeMessageApi<TAction>
   | MiniAppBridgeMessageInitResponse;
@@ -25,6 +26,14 @@ export type MiniAppBridgeMessageNavigate = {
   params: {
     target: string;
     id?: string;
+    query?: string;
+  };
+};
+
+export type MiniAppBridgeMessageNavigateCurrentMiniApp = {
+  type: typeof MINI_APP_BRIDGE_MESSAGES.NAVIGATE_CURRENT_MINI_APP;
+  params: {
+    target: string;
     query?: string;
   };
 };

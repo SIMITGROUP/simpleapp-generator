@@ -21,8 +21,8 @@
     const pascalName = upperFirstCase(resourceName);
     const kebabName = camelToKebab(resourceName);
 
-    const miniAppWhitelistApis = config?.miniApp?.whitelist || [];
-    const hasMiniAppWhitelistedApi = miniAppWhitelistApis.length > 0;
+    const miniAppWhitelistApis = config?.miniApp?.whitelist || {};
+    const hasMiniAppWhitelistedApi = Object.keys(miniAppWhitelistApis).length > 0;
 
     return {
       resourceName, 
@@ -40,7 +40,7 @@ import { MiniAppResourceMap } from "../types/resource-mapper.type";
     const { pascalName, kebabName, hasMiniAppWhitelistedApi } = getMiniAppInfo(it.modules[i]);
   %>
   <% if(hasMiniAppWhitelistedApi) { %>
-    import { MiniApp<%= pascalName %>BridgeService } from "../services/resources/<%= kebabName %>-bridge.service";
+    import { MiniApp<%= pascalName %>BridgeEditableService } from "./editable/resources/<%= kebabName %>-bridge.editable.service";
   <% } %>
 <% } %>
 
@@ -54,7 +54,7 @@ export class MiniAppBridgeResourceAccessor {
     <% if(hasMiniAppWhitelistedApi) { %>
       get <%= resourceName %>() {
         if (!this.instances.<%= resourceName %>) {
-          this.instances.<%= resourceName %> = new MiniApp<%= pascalName %>BridgeService();
+          this.instances.<%= resourceName %> = new MiniApp<%= pascalName %>BridgeEditableService();
         }
         return this.instances.<%= resourceName %>;
       }

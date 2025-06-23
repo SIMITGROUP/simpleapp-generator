@@ -13,10 +13,16 @@ import {
   NotificationStatus,
   SchemaType,
   FormActions,
+  DynamicObject,
 } from "~/types";
 import { getValidateService } from "~/simpleapp/generate/sharelibs/validate";
 import { SimpleAppCustomFieldClient } from "./SimpleAppCustomFieldClient";
 import { WatchHandle } from "vue";
+import { CustomFieldClient } from "../features/customField/services/CustomFieldClient";
+import {
+  CustomFieldDataMode,
+  CustomFieldMoreSchema,
+} from "../features/customField/types/common";
 
 // import { useToast, } from 'primevue/usetoast';
 // import type {  ToastMessageOptions } from 'primevue/toast';
@@ -50,8 +56,10 @@ export class SimpleAppClient<
   protected errorlist = ref({});
   protected completeformula = true;
   protected axios;
-  private _customFieldClient = new SimpleAppCustomFieldClient();
+
+  // FLAG::CUSTOM_FIELD
   protected _customFieldWatch: WatchHandle | null = null;
+  private _customFieldClient = new CustomFieldClient();
 
   constructor(apiobj: TApi, doctype: string, docname: string) {
     this.docapi = apiobj;
@@ -95,6 +103,28 @@ export class SimpleAppClient<
     // );
     // this.schema.properties.more = resp;
     // this.setData(this.data.value);
+  }
+
+  prepareCustomFieldJsonSchema() {
+    const resp = this._customFieldClient.prepareCustomFieldJsonSchema(
+      this.doctype,
+    );
+    this.schema.properties.more = resp;
+  }
+
+  prepareCustomFieldData<T extends DynamicObject>(
+    mode: CustomFieldDataMode,
+    data: T,
+  ) {
+    const customFieldData = this._customFieldClient.prepareCustomFieldData(
+      this.docname,
+      mode,
+      this.schema.properties?.more,
+      data.more,
+    );
+
+    (data as any).more = customFieldData;
+    return data;
   }
 
   async getById(id?: string) {

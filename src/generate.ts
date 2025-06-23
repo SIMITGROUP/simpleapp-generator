@@ -427,6 +427,11 @@ const generateSchema = (
             validate: (targetfile: string, isexists: boolean) => {
               return true;
             }
+          },
+          'resource-bridge.editable.service.ts.eta': {
+            to: 'simpleapp/generate/miniApp/bridge/services/editable/resources',
+            as: `${_.kebabCase(resourceName)}-bridge.editable.service.ts`,
+            validate: (targetfile: string, isexists: boolean) => !isexists
           }
         };
 

@@ -3,11 +3,12 @@
     <slot name="default" :data="document.getData()" :getField="getField"></slot>
     <slot name="customField">
       <!-- TODO: TS Error -->
-      <!-- <SimpleAppCustomFieldFormSection
+      <SimpleAppCustomFieldFormSection
+        v-if="document.schema.properties.more"
         :customFieldJsonSchema="document.schema.properties.more"
         :data="document.getData().more"
         :handleGetField="getField"
-      /> -->
+      />
     </slot>
   </form>
 </template>

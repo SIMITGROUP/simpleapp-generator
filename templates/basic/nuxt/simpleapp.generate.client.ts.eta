@@ -22,6 +22,8 @@ import {AxiosResponse} from 'axios'
 <%}%>
 // import { JSONSchema7 } from 'json-schema';
 import * as openapi from '../openapi';
+import { CustomFieldDataModeEnum } from "../features/customField/enums/common";
+
 
 export type {
       <%= it.typename%> ,
@@ -57,7 +59,11 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
     const apiobj = getDocumentApi('<%=it.name %>')
     super(apiobj,'<%= it.doctype %>','<%=it.name %>')
     this.event=$event
-    this.listen=$listen    
+    this.listen=$listen
+
+    // FLAG::CUSTOM_FIELD
+    this.prepareCustomFieldJsonSchema();  
+    
     this.setNew();      
 
     this.processCustomField();  
@@ -78,7 +84,7 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
         this._customFieldWatch = watch(
           [() => $customFieldStore.data, () => $appPluginsStore.installedPlugins],
           ([newCustomField, newPlugins], [oldCustomField, oldPlugins]) => {
-            this.processCustomField();
+            this.prepareCustomFieldJsonSchema();
           },
           { immediate: false, deep: true },
         );
@@ -89,7 +95,14 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
 
   override setNew = ()=>{         
     const newdata = Default<%= it.typename%>(randomUUID())
-    this.setData(newdata)
+
+     // FLAG::CUSTOM_FIELD
+    const dataWithCustomField = this.prepareCustomFieldData(
+      CustomFieldDataModeEnum.DEFAULT,
+      newdata,
+    );
+
+    this.setData(dataWithCustomField);
     this.setWatchChange()
     return true
   }

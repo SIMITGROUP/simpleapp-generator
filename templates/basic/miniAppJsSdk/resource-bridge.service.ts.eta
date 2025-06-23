@@ -14,8 +14,8 @@
   const apiName = it.typename.toUpperCase() + 'Api';
   const typeActionName = pascalName + 'Actions';
 
-  const miniAppWhitelistApis = it.jsonschema['x-simpleapp-config']?.miniApp?.whitelist || [];
-  const hasMiniAppWhitelistedApi = miniAppWhitelistApis.length > 0;
+  const miniAppWhitelistApis = it.jsonschema['x-simpleapp-config']?.miniApp?.whitelist || {};
+  const hasMiniAppWhitelistedApi = Object.keys(miniAppWhitelistApis).length > 0;
 %>
 
 import { MiniAppBridgeService } from "../bridge.service";
@@ -29,10 +29,8 @@ export class MiniApp<%= pascalName %>BridgeService {
     this.bridge = bridge;
   }
 
-  <% for (let i = 0; i < miniAppWhitelistApis.length; i++) { %>
-    <%
-      const action = miniAppWhitelistApis[i];
-    %>
+  <% Object.entries(miniAppWhitelistApis).forEach(([action, value]) => { %>
+    <% if (value !== true && typeof value !== 'object') { return; } %>
 
     <% if(action === 'list') { %>
       async list() {
@@ -64,6 +62,10 @@ export class MiniApp<%= pascalName %>BridgeService {
           query,
           body: data,
         });
+      }
+    <% } else if(action === 'current') { %>
+      async <%= action %>() {
+        return this.bridge.callApi(this.resourceName, "<%= action %>");
       }
     <% } else { %>
       <% const apiSetting = it.apiSettings.find(item => item.action === action); %>
@@ -107,7 +109,7 @@ export class MiniApp<%= pascalName %>BridgeService {
         }
       <% } %>
     <% } %>
-  <% } %>
+  <% }) %>
 
   openOnScreenForm(id?: string) {
     this.bridge.openOnScreenResourceForm(this.resourceName, {

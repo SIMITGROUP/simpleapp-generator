@@ -21,8 +21,8 @@
     const pascalName = upperFirstCase(resourceName);
     const kebabName = camelToKebab(resourceName);
 
-    const miniAppWhitelistApis = config?.miniApp?.whitelist || [];
-    const hasMiniAppWhitelistedApi = miniAppWhitelistApis.length > 0;
+    const miniAppWhitelistApis = config?.miniApp?.whitelist || {};
+    const hasMiniAppWhitelistedApi = Object.keys(miniAppWhitelistApis).length > 0;
 
     return {
       resourceName, 
