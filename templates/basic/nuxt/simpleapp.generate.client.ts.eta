@@ -64,9 +64,7 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
     // FLAG::CUSTOM_FIELD
     this.prepareCustomFieldJsonSchema();  
     
-    this.setNew();      
-
-    this.processCustomField();  
+    this.setNew();
   }
 
   override setWatchChange = ()=>{
@@ -79,6 +77,7 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
     },{deep:true})
 
     <% if(!['Plugins', 'Plugininstallations', 'Customfield'].includes(capitalizeFirstLetter(it.name))) { %>
+      // FLAG::CUSTOM_FIELD
       const { $customFieldStore, $appPluginsStore } = useNuxtApp();
       if (!this._customFieldWatch) {
         this._customFieldWatch = watch(

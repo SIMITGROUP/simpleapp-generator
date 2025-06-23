@@ -23,6 +23,7 @@ import {
   CustomFieldDataMode,
   CustomFieldMoreSchema,
 } from "../features/customField/types/common";
+import { CustomFieldDataModeEnum } from "../features/customField/enums/common";
 
 // import { useToast, } from 'primevue/usetoast';
 // import type {  ToastMessageOptions } from 'primevue/toast';
@@ -84,26 +85,8 @@ export class SimpleAppClient<
     return false;
   } //if there is readonly attribute in data, will override it at processor and client
   setData = (data: any) => {
-    // this.data.value = data;
-
-    // TODO: Will Cause Docno Format Broken
-    // data.more = this._customFieldClient.formCustomFieldData(
-    //   this.doctype,
-    //   this.schema.properties?.more,
-    //   data.createdBy == "",
-    //   data.more,
-    // );
-
     Object.assign(this.data.value, data);
   };
-
-  async processCustomField() {
-    // const resp = this._customFieldClient.formCustomFieldJsonSchema(
-    //   this.doctype,
-    // );
-    // this.schema.properties.more = resp;
-    // this.setData(this.data.value);
-  }
 
   prepareCustomFieldJsonSchema() {
     const resp = this._customFieldClient.prepareCustomFieldJsonSchema(
@@ -136,7 +119,11 @@ export class SimpleAppClient<
         // if(this.event){this.event('info:getById',res.data)}
         // this.data.value = {} as TData;
         // Object.assign(this.data.value, res.data);
-        this.setData(res.data);
+        const dataWithCustomField = this.prepareCustomFieldData(
+          CustomFieldDataModeEnum.EXISTING,
+          res.data,
+        );
+        this.setData(dataWithCustomField);
         this.setWatchChange();
         setTimeout(() => {
           this.ready = true;
