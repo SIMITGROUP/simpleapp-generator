@@ -9,16 +9,7 @@ export const customfield: SchemaType = {
     uniqueKey: 'collectionName',
     documentTitle: 'collectionName',
     pageType: 'pageType',
-    additionalApis: [
-      {
-        action: 'getCompleteCustomFieldResources',
-        entryPoint: 'complete-custom-field-resources',
-        requiredRole: ['Customfield_search'],
-        responseType: '[CompleteCustomFieldResource]',
-        method: RESTMethods.get,
-        description: 'Get complete custom field resources'
-      }
-    ]
+    resourceName: 'customField'
   },
   properties: {
     _id: { type: 'string' },
