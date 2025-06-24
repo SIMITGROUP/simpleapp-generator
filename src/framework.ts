@@ -298,7 +298,7 @@ export const prettyNuxt = () => {
     `cd ${config.frontendFolder};npx prettier --write "./pages/**/*.vue" "./components/**/*.vue" "./generate/*/*.ts" `
   );
   exec(
-    `npx prettier --write ${config.frontendFolder}/simpleapp/generate/clients/*.ts ${config.frontendFolder}/simpleapp/generate/miniApp/**/*.ts`
+    `npx prettier --write ${config.frontendFolder}/simpleapp/generate/clients/*.ts ${config.frontendFolder}/simpleapp/generate/jsonSchemas/*.ts ${config.frontendFolder}/simpleapp/generate/miniApp/**/*.ts`
   );
 };
 

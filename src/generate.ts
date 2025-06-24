@@ -432,6 +432,13 @@ const generateSchema = (
             to: 'simpleapp/generate/miniApp/bridge/services/editable/resources',
             as: `${_.kebabCase(resourceName)}-bridge.editable.service.ts`,
             validate: (targetfile: string, isexists: boolean) => !isexists
+          },
+          'jsonschema.ts.eta': {
+            to: 'simpleapp/generate/jsonSchemas',
+            as: `${doctype}.jsonschema.ts`,
+            validate: (targetfile: string, isexists: boolean) => {
+              return true;
+            }
           }
         };
 
