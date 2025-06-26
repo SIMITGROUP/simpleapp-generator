@@ -27,21 +27,20 @@ export const customfield: SchemaType = {
     form: {
       type: 'object',
       properties: {
-        schema: {
+        jsonSchema: {
           type: 'object',
-          properties: {},
-          examples: [
-            {
-              type: 'object',
-              required: ['hello'],
-              properties: {
-                hello: {
-                  type: 'string',
-                  minLength: 2
-                }
-              }
-            }
-          ]
+          properties: {}
+        }
+      }
+    },
+    list: {
+      type: 'object',
+      properties: {
+        fields: {
+          type: 'array',
+          items: {
+            type: 'string'
+          }
         }
       }
     }

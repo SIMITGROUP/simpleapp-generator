@@ -101,6 +101,9 @@ export type TypeGenerateDocumentVariable = {
   isolationtype: string;
   hasdocformat: boolean;
   foreignkeys: MyForeignKey;
+  customField: {
+    isEnable: boolean;
+  };
 };
 
 // export type DocSetting = {
@@ -201,6 +204,9 @@ export type SchemaConfig = {
     whitelist: {
       [key: string]: true | {};
     };
+  };
+  customField?: {
+    isEnable?: boolean;
   };
 };
 

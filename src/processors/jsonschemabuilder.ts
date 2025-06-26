@@ -177,10 +177,12 @@ const genSchema = async (
 
   if (schematype === 'object' && !_.isEmpty(jsondata) && _.isEmpty(parentObj)) {
     if (!parentObj[FOREIGNKEY_PROPERTY]) {
-      jsondata['more'] = {
-        type: 'object',
-        properties: {}
-      };
+      if (schemaconfigs?.customField?.isEnable) {
+        jsondata['more'] = {
+          type: 'object',
+          properties: {}
+        };
+      }
     }
   }
 

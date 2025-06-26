@@ -230,7 +230,11 @@ const generateSchema = (
     apiSettings: currentmodel.apiSettings ?? [],
     isolationtype: currentmodel.isolationtype,
     hasdocformat: currentmodel.hasdocformat,
-    foreignkeys: currentmodel.foreignkeys ?? {}
+    foreignkeys: currentmodel.foreignkeys ?? {},
+    customField: {
+      isEnable:
+        jsonschemas[docname][X_SIMPLEAPP_CONFIG]?.customField?.isEnable ?? false
+    }
   };
 
   const templatefolder = `${constants.templatedir}/${rendertype}`;
