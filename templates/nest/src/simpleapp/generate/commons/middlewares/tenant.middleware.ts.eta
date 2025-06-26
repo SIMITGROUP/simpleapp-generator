@@ -13,6 +13,7 @@ import { Model } from 'mongoose';
 import { Permission } from '../../types/perm.type';
 import { User } from '../../types/user.type';
 import { Appintegration } from '../../types/appintegration.type';
+import { Webhook } from '../../types/Webhook.type';
 import { UserContext } from '../user.context';
 
 @Injectable()
@@ -27,6 +28,7 @@ export class TenantMiddleware implements NestMiddleware {
     @InjectModel('User') private readonly userModel: Model<User>,
     @InjectModel('Permission') private readonly permModel: Model<Permission>,
     @InjectModel('Appintegration') private readonly appModel: Model<Appintegration>,
+    @InjectModel('Webhook') private readonly webhookModel: Model<Webhook>,
   ) {}
 
   requireXOrg(baseurl: string): boolean {
@@ -53,7 +55,7 @@ export class TenantMiddleware implements NestMiddleware {
 
     if (req.baseUrl == '/graphql') {
       if (tokenStr) {
-        await user.setCurrentUserInfo(tokenStr, xOrg);
+        await user.setCurrentUserInfo(tokenStr, xOrg,this.webhookModel);
       }
       req['sessionuser'] = user;
       next();
@@ -88,7 +90,7 @@ export class TenantMiddleware implements NestMiddleware {
     }
 
     try {
-      await user.setCurrentUserInfo(tokenStr, xOrg);
+      await user.setCurrentUserInfo(tokenStr, xOrg,this.webhookModel);
       if (user.getId() == '' && this.requireXOrg(req.baseUrl)) {
         this.logger.log('Access deny for user:', req.baseUrl);
         return res.status(401).send('Access deny for user');
