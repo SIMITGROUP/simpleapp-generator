@@ -86,7 +86,7 @@ export class SimpleAppClient<
 
   prepareCustomFieldJsonSchema() {
     const resp = this._customFieldService.prepareCustomFieldJsonSchema(
-      this.doctype,
+      this.docname,
     );
     this.schema.properties.more = resp;
   }
