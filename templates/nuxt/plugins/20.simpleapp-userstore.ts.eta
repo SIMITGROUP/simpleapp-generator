@@ -5,361 +5,336 @@
  * Author: Ks Tan
  */
 import { defineNuxtPlugin } from "#app";
-import {PROFILEApi} from '../simpleapp/generate/openapi'
-import {UserProfile} from '~/types'
-import axios, { Axios, AxiosError, AxiosResponse } from 'axios'
-import _ from 'lodash'
+import { PROFILEApi } from "../simpleapp/generate/openapi";
+import { UserProfile } from "~/types";
+import axios, { Axios, AxiosError, AxiosResponse } from "axios";
+import _ from "lodash";
 import { group } from "console";
 import { HIGH_PRIVILEGE_ROLES } from "~/data/constant";
 
+export default defineNuxtPlugin(async (nuxtApp) => {
+  const useUserStore = defineStore("userstore", {
+    state: () => ({
+      _id: ref(""),
+      sessionId: ref(""),
+      tenantId: ref(0),
+      orgId: ref(0),
+      branchId: ref(0),
+      branchRecordId: ref(""),
+      branchCode: ref(""),
+      branchName: ref(""),
+      orgRecordId: ref(""),
+      orgCode: ref(""),
+      orgName: ref(""),
+      timeZone: ref(""),
+      currency: ref(""),
+      country: ref(""),
+      offsetMinute: ref(0),
+      uid: ref(""),
+      email: ref(""),
+      fullName: ref(""),
+      roles: ref<string[]>([]),
+      groups: ref<string[]>([]),
+      currentGroup: ref(""),
+      branches: ref([]),
+      invites: ref([]),
+      time: ref(""),
+      moreProps: ref(),
+      package: ref(),
+      appintegration: ref({
+        einvoice: false,
+        simbiz6: false,
+      }),
+    }),
 
-export default defineNuxtPlugin( async(nuxtApp) => {
-    const useUserStore = defineStore('userstore', {
-        state: ()=>({      
-          _id: ref(''),  
-          sessionId:ref(''),
-          tenantId:ref(0),
-          orgId:ref(0),
-          branchId:ref(0),
-          branchRecordId:ref(''),
-          branchCode:ref(''),
-          branchName:ref(''),
-          orgRecordId:ref(''),
-          orgCode:ref(''),
-          orgName:ref(''),
-          timeZone:ref(''),
-          currency:ref(''),
-          country: ref(''),
-          offsetMinute: ref(0),
-          uid: ref(''),
-          email: ref(''),
-          fullName: ref(''),
-          roles:ref<string[]>([]),
-          groups:ref<string[]>([]),
-          currentGroup:ref(''),
-          branches:ref([]),
-          invites : ref([]),
-          time:ref(''),
-          moreProps:ref(),
-          package: ref(),
-          appintegration: ref({
-            einvoice: false,
-            simbiz6: false
-          })
-        }),
-        
-        actions:{    
-          async loadRemoteUserInfo(){
-            // console.log('loadRemoteUserInfo')
-            
-            const { $axios, $appPluginsStore, $customFieldStore } = useNuxtApp()
-            const route = useRoute();
-            let xorg = this.getCurrentXorg()            
-            
-            let apiurl=''
-            if(xorg===undefined){
-              apiurl = `${useRuntimeConfig().public.appUrl}/api`
-            }else{
-              apiurl = `${useRuntimeConfig().public.appUrl}/api/${xorg}`
-            }
+    actions: {
+      async loadRemoteUserInfo() {
+        // console.log('loadRemoteUserInfo')
 
-            $appPluginsStore.loadInstalledPlugins();
-            $customFieldStore.fetchList();
-          
-            return await new PROFILEApi(undefined,apiurl,$axios).getProfile().then((res:AxiosResponse)=>{            
-              if(!res){
-                return
-              }
-              this._id = res.data._id
-              this.sessionId = res.data.sessionId
-              this.tenantId = res.data.tenantId              
-              this.orgId = res.data.orgId
-              this.orgRecordId = res.data.orgRecordId
-              this.branchId = res.data.branchId
-              this.branchRecordId = res.data.branchRecordId
-              this.branchCode = res.data.branchCode
-              this.branchName = res.data.branchName
-              this.orgCode = res.data.orgCode
-              this.orgName = res.data.orgName
-              this.timeZone = res.data.timeZone
-              this.currency = res.data.currency
-              this.country = res.data.country
-              this.offsetMinute = res.data.offsetMinute
-              this.uid = res.data.uid
-              this.email = res.data.email
-              this.fullName = res.data.fullName              
-              this.branches = res.data.branches
-              this.groups = res.data.groups                            
-              this.roles = res.data.roles
-              this.time = res.data.time              
-              this.invites = res.data.invites
-              this.moreProps = res.data.moreProps
-              this.package = res.data.moreProps.package;
-              this.appintegration.einvoice = res.data.appintegration.einvoice;
-              this.appintegration.simbiz6 = res.data.appintegration.simbiz6;
-              let cachegroup = useCookie('currentGroup').value  ?? ''                            
-              if(!this.groups || !this.groups.includes(cachegroup)){
-                cachegroup=''                
-              }
-              this.currentGroup = cachegroup
-              useNuxtApp().$event('pickGroup',cachegroup)
-              return Promise.resolve(true)
-                // return true
-            }).catch((err:any)=>{            
-                return Promise.reject(err)
-            })            
-          },                  
-          getCurrentXorg(){
-            return  (useRoute().params.xorg) ? <String>useRoute().params.xorg : undefined           
-          },
-          async pingSession():Promise<string>{
-            let xorg = this.getCurrentXorg() 
-            let apiurl=''
-            
-            if(!xorg){
-              apiurl = `${useRuntimeConfig().public.appUrl}/api`
-            }else{
-              try{
-                const xorgdecode = atob(<string>xorg)
-                if(xorgdecode.includes('-')){
-                  apiurl = `${useRuntimeConfig().public.appUrl}/api/${xorg}`
-                }else{                 
-                  return Promise.reject('wrongxorg')
-                }
-              }catch(e){
-                return Promise.reject('wrongxorg')
-              }
-              
-            
-            }
-            const {$axios} = useNuxtApp()
-            try{
-              const pingresult = await new PROFILEApi(undefined,apiurl).getSession()
-              if(pingresult.status<300)
-                return Promise.resolve('ok')
-              else
-                return Promise.reject('relogin')  
-            }catch(e){
-              return Promise.reject(e)  
-            }
-            
-          },
-          async decideInvitation(id:string,decision:string){
-            const apiurl = `${useRuntimeConfig().public.appUrl}/api`
-            const {$axios} = useNuxtApp()
-            // console.log("decideInvitation",id,decision)
-            const result = await new PROFILEApi(undefined,apiurl,$axios).decideInvitation(id,decision)
-            
-            if(result){
-              // console.log(result)
-            }else{
-              // console.log(result)
-            }
-            //().then((res:AxiosResponse)=>{ }
-          },
-          checkHasHighPrivilege(){
-            return HIGH_PRIVILEGE_ROLES.some(permission =>  this.roles.includes(permission))
-          },
-          canPerform(resourcename:string,action:string):boolean{
+        const { $axios, $appPluginsStore, $customFieldStore } = useNuxtApp();
+        const route = useRoute();
+        let xorg = this.getCurrentXorg();
 
-            if(
-              this.roles.includes('superadmin') ||
-              this.roles.includes('tenantowner') ||
-              this.roles.includes('superuser') 
-              ){
-              return true
-            }else if( resourcename == 'Paymentverify'){
-              if (
-                this.roles.includes('admin') ||
-              this.roles.includes('manager') 
-              ){
-                return true;
-              }
-            }
-            else if( resourcename == 'Reminder'){
-              if (
-                this.roles.includes('admin') ||
-              this.roles.includes('manager') 
-              ){
-                return true;
-              }
-            }
-            else if( resourcename == 'Generateinvoice'){
-              if (
-                this.roles.includes('admin') ||
-                this.roles.includes('manager') ||
-                this.roles.includes('executive')
-              ){
-                return true;
-              }
-            }
-            else if( resourcename == 'Upgradelevel'){
-              if (
-                this.roles.includes('admin') ||
-                this.roles.includes('manager') ||
-                this.roles.includes('executive')
-              ){
-                return true;
-              }
-            }
-            else if( resourcename == 'Appintegration'){
-              if (
-                this.roles.includes('admin') ||
-                this.roles.includes('manager')
-              ){
-                return true;
-              }
-            }
-            else if( resourcename == 'Postingtosimbiz'){
-              if (
-                this.roles.includes('admin')
-              ){
-                return true;
-              }
-            }
-            else if( resourcename == 'Studentdescription'){
-              if (
-                this.roles.includes('admin') ||
-                this.roles.includes('manager') ||
-                this.roles.includes('executive')
-              ){
-                return true;
-              }
-            }
-            else{
-              const checkstr= `${resourcename}:${action}`
-              // console.log("verify",checkstr)
-              return this.roles.includes(checkstr)
-            }
-            return false;
-          },
-          haveAccess(resourcename:string){          
-            //super admin always full access right
-            resourcename = _.upperFirst(resourcename)
-            // console.log("have access",resourcename)
-            if(
-              this.roles.includes('superadmin') ||
-              this.roles.includes('tenantowner') ||
-              this.roles.includes('superuser') 
-              ){
-              return true
-            }
-            else if( resourcename == 'Paymentverify'){
-              if (
-                this.roles.includes('admin') ||
-              this.roles.includes('manager') 
-              ){
-                return true;
-              }
-            }
-            for(let i=0; i< this.roles.length; i++){
-            const role:string = this.roles[i]
-             if(role.includes(resourcename)){
-                return true
-              }
-            }
-            return false                        
-          },
-          async logout (redirecturl:string){
-            const redirectdata = encodeURIComponent(redirecturl)
-            const { signOut } = useAuth();    
-            const { data } = await <any>useFetch('/api/auth/logout');    
-            // remove session
-            await signOut({redirect:false});
-            let addPath = encodeURIComponent(`/login?callbackUrl=${redirectdata}`);    
-            const tourl= `${data.value.path}${addPath}`            
-            navigateTo(tourl,{external:true})
-          },
-          getUserInfo(){
-            const userinfo:UserProfile = {
-              _id : this._id,
-              sessionId : this.sessionId,
-              tenantId : this.tenantId,
-              orgId : this.orgId,
-              branchId : this.branchId,
-              orgRecordId: this.orgRecordId,
-              branchRecordId: this.branchRecordId,
-              uid : this.uid,
-              email : this.email,
-              branchCode: this.branchCode,
-              branchName: this.branchName,
-              orgCode: this.orgCode,
-              orgName: this.orgName,
-              currency: this.currency,
-              timeZone: this.timeZone,
-              country: this.country,
-              offsetMinute: this.offsetMinute,
-              fullName : this.fullName,        
-              branches:this.branches??[],
-              invites: this.invites ?? [],
-              roles:this.roles,
-              groups:this.groups,
-              currentGroup:this.currentGroup,
-              time:this.time,
-              moreProps: this.moreProps,
-              package: this.package,
-              appintegration: this.appintegration
-            }
-            return userinfo
-          },
-          isExecutive() {
-            return this.currentGroup == 'executive';
-          },
-        }        
-      })
-     
-     
-      try{
-        const pingsessionres = await useUserStore().pingSession()
-        
-        if(pingsessionres){
-          await useUserStore().loadRemoteUserInfo()        
+        let apiurl = "";
+        if (xorg === undefined) {
+          apiurl = `${useRuntimeConfig().public.appUrl}/api`;
+        } else {
+          apiurl = `${useRuntimeConfig().public.appUrl}/api/${xorg}`;
         }
-        
-      }catch(e:any){              
-          
-          //server down, stop page
-          if(e == 'wrongxorg'){
-            navigateTo('/picktenant',{external:true})
-          }
-          else if(e?.code=='ERR_BAD_RESPONSE'){                
-                 throw createError({
-                  statusCode:e.code,
-                  statusMessage:e.message,
-                  fatal:true
-                })           
-          }else if(e?.response?.status==302){ //no session            
-            //need authentication, relogin
-            if( useRoute().meta.auth !==false){              
-              await useUserStore().logout(useRoute().path)
-            }
-            else {
-              //pulic page, do nothing`
-              return    {
-                 provide: {
-                  userstore:useUserStore()
-                 }
-              }
-              
-            }
-          }
-            // else
-            //   
-      }
-      
 
+        await $appPluginsStore.loadInstalledPlugins();
+        await $customFieldStore.fetchList();
 
-      return {        
+        return await new PROFILEApi(undefined, apiurl, $axios)
+          .getProfile()
+          .then((res: AxiosResponse) => {
+            if (!res) {
+              return;
+            }
+            this._id = res.data._id;
+            this.sessionId = res.data.sessionId;
+            this.tenantId = res.data.tenantId;
+            this.orgId = res.data.orgId;
+            this.orgRecordId = res.data.orgRecordId;
+            this.branchId = res.data.branchId;
+            this.branchRecordId = res.data.branchRecordId;
+            this.branchCode = res.data.branchCode;
+            this.branchName = res.data.branchName;
+            this.orgCode = res.data.orgCode;
+            this.orgName = res.data.orgName;
+            this.timeZone = res.data.timeZone;
+            this.currency = res.data.currency;
+            this.country = res.data.country;
+            this.offsetMinute = res.data.offsetMinute;
+            this.uid = res.data.uid;
+            this.email = res.data.email;
+            this.fullName = res.data.fullName;
+            this.branches = res.data.branches;
+            this.groups = res.data.groups;
+            this.roles = res.data.roles;
+            this.time = res.data.time;
+            this.invites = res.data.invites;
+            this.moreProps = res.data.moreProps;
+            this.package = res.data.moreProps.package;
+            this.appintegration.einvoice = res.data.appintegration.einvoice;
+            this.appintegration.simbiz6 = res.data.appintegration.simbiz6;
+            let cachegroup = useCookie("currentGroup").value ?? "";
+            if (!this.groups || !this.groups.includes(cachegroup)) {
+              cachegroup = "";
+            }
+            this.currentGroup = cachegroup;
+            useNuxtApp().$event("pickGroup", cachegroup);
+            return Promise.resolve(true);
+            // return true
+          })
+          .catch((err: any) => {
+            return Promise.reject(err);
+          });
+      },
+      getCurrentXorg() {
+        return useRoute().params.xorg
+          ? <String>useRoute().params.xorg
+          : undefined;
+      },
+      async pingSession(): Promise<string> {
+        let xorg = this.getCurrentXorg();
+        let apiurl = "";
+
+        if (!xorg) {
+          apiurl = `${useRuntimeConfig().public.appUrl}/api`;
+        } else {
+          try {
+            const xorgdecode = atob(<string>xorg);
+            if (xorgdecode.includes("-")) {
+              apiurl = `${useRuntimeConfig().public.appUrl}/api/${xorg}`;
+            } else {
+              return Promise.reject("wrongxorg");
+            }
+          } catch (e) {
+            return Promise.reject("wrongxorg");
+          }
+        }
+        const { $axios } = useNuxtApp();
+        try {
+          const pingresult = await new PROFILEApi(
+            undefined,
+            apiurl,
+          ).getSession();
+          if (pingresult.status < 300) return Promise.resolve("ok");
+          else return Promise.reject("relogin");
+        } catch (e) {
+          return Promise.reject(e);
+        }
+      },
+      async decideInvitation(id: string, decision: string) {
+        const apiurl = `${useRuntimeConfig().public.appUrl}/api`;
+        const { $axios } = useNuxtApp();
+        // console.log("decideInvitation",id,decision)
+        const result = await new PROFILEApi(
+          undefined,
+          apiurl,
+          $axios,
+        ).decideInvitation(id, decision);
+
+        if (result) {
+          // console.log(result)
+        } else {
+          // console.log(result)
+        }
+        //().then((res:AxiosResponse)=>{ }
+      },
+      checkHasHighPrivilege() {
+        return HIGH_PRIVILEGE_ROLES.some((permission) =>
+          this.roles.includes(permission),
+        );
+      },
+      canPerform(resourcename: string, action: string): boolean {
+        if (
+          this.roles.includes("superadmin") ||
+          this.roles.includes("tenantowner") ||
+          this.roles.includes("superuser")
+        ) {
+          return true;
+        } else if (resourcename == "Paymentverify") {
+          if (this.roles.includes("admin") || this.roles.includes("manager")) {
+            return true;
+          }
+        } else if (resourcename == "Reminder") {
+          if (this.roles.includes("admin") || this.roles.includes("manager")) {
+            return true;
+          }
+        } else if (resourcename == "Generateinvoice") {
+          if (
+            this.roles.includes("admin") ||
+            this.roles.includes("manager") ||
+            this.roles.includes("executive")
+          ) {
+            return true;
+          }
+        } else if (resourcename == "Upgradelevel") {
+          if (
+            this.roles.includes("admin") ||
+            this.roles.includes("manager") ||
+            this.roles.includes("executive")
+          ) {
+            return true;
+          }
+        } else if (resourcename == "Appintegration") {
+          if (this.roles.includes("admin") || this.roles.includes("manager")) {
+            return true;
+          }
+        } else if (resourcename == "Postingtosimbiz") {
+          if (this.roles.includes("admin")) {
+            return true;
+          }
+        } else if (resourcename == "Studentdescription") {
+          if (
+            this.roles.includes("admin") ||
+            this.roles.includes("manager") ||
+            this.roles.includes("executive")
+          ) {
+            return true;
+          }
+        } else {
+          const checkstr = `${resourcename}:${action}`;
+          // console.log("verify",checkstr)
+          return this.roles.includes(checkstr);
+        }
+        return false;
+      },
+      haveAccess(resourcename: string) {
+        //super admin always full access right
+        resourcename = _.upperFirst(resourcename);
+        // console.log("have access",resourcename)
+        if (
+          this.roles.includes("superadmin") ||
+          this.roles.includes("tenantowner") ||
+          this.roles.includes("superuser")
+        ) {
+          return true;
+        } else if (resourcename == "Paymentverify") {
+          if (this.roles.includes("admin") || this.roles.includes("manager")) {
+            return true;
+          }
+        }
+        for (let i = 0; i < this.roles.length; i++) {
+          const role: string = this.roles[i];
+          if (role.includes(resourcename)) {
+            return true;
+          }
+        }
+        return false;
+      },
+      async logout(redirecturl: string) {
+        const redirectdata = encodeURIComponent(redirecturl);
+        const { signOut } = useAuth();
+        const { data } = await (<any>useFetch("/api/auth/logout"));
+        // remove session
+        await signOut({ redirect: false });
+        let addPath = encodeURIComponent(`/login?callbackUrl=${redirectdata}`);
+        const tourl = `${data.value.path}${addPath}`;
+        navigateTo(tourl, { external: true });
+      },
+      getUserInfo() {
+        const userinfo: UserProfile = {
+          _id: this._id,
+          sessionId: this.sessionId,
+          tenantId: this.tenantId,
+          orgId: this.orgId,
+          branchId: this.branchId,
+          orgRecordId: this.orgRecordId,
+          branchRecordId: this.branchRecordId,
+          uid: this.uid,
+          email: this.email,
+          branchCode: this.branchCode,
+          branchName: this.branchName,
+          orgCode: this.orgCode,
+          orgName: this.orgName,
+          currency: this.currency,
+          timeZone: this.timeZone,
+          country: this.country,
+          offsetMinute: this.offsetMinute,
+          fullName: this.fullName,
+          branches: this.branches ?? [],
+          invites: this.invites ?? [],
+          roles: this.roles,
+          groups: this.groups,
+          currentGroup: this.currentGroup,
+          time: this.time,
+          moreProps: this.moreProps,
+          package: this.package,
+          appintegration: this.appintegration,
+        };
+        return userinfo;
+      },
+      isExecutive() {
+        return this.currentGroup == "executive";
+      },
+    },
+  });
+
+  try {
+    const pingsessionres = await useUserStore().pingSession();
+
+    if (pingsessionres) {
+      await useUserStore().loadRemoteUserInfo();
+    }
+  } catch (e: any) {
+    //server down, stop page
+    if (e == "wrongxorg") {
+      navigateTo("/picktenant", { external: true });
+    } else if (e?.code == "ERR_BAD_RESPONSE") {
+      throw createError({
+        statusCode: e.code,
+        statusMessage: e.message,
+        fatal: true,
+      });
+    } else if (e?.response?.status == 302) {
+      //no session
+      //need authentication, relogin
+      if (useRoute().meta.auth !== false) {
+        await useUserStore().logout(useRoute().path);
+      } else {
+        //pulic page, do nothing`
+        return {
           provide: {
-              userstore:useUserStore()
-          }
+            userstore: useUserStore(),
+          },
+        };
       }
-    // }else{
-      
-    //     console.log("No need auth")
-    //     return true
-    // }
-    
-    
-    
+    }
+    // else
+    //
+  }
+
+  return {
+    provide: {
+      userstore: useUserStore(),
+    },
+  };
+  // }else{
+
+  //     console.log("No need auth")
+  //     return true
+  // }
 });
