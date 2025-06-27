@@ -20,7 +20,6 @@ import {AxiosResponse} from 'axios'
       import * as <%=libs[l].importAs %> from '<%=libs[l].importFrom %>'
   <%}%>
 <%}%>
-// import { JSONSchema7 } from 'json-schema';
 import * as openapi from '../openapi';
 import { CustomFieldDataModeEnum } from "../features/customField/enums/common";
 
@@ -60,10 +59,12 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
     super(apiobj,'<%= it.doctype %>','<%=it.name %>')
     this.event=$event
     this.listen=$listen
-
-    // FLAG::CUSTOM_FIELD
-    this.prepareCustomFieldJsonSchema();  
     
+    <% if(it.customField.isEnable) { %>
+      // FLAG::CUSTOM_FIELD
+      this.prepareCustomFieldJsonSchema(); 
+    <% } %>
+     
     this.setNew();
   }
 
@@ -76,7 +77,8 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
       }               
     },{deep:true})
 
-    <% if(!['Plugins', 'Plugininstallations', 'Customfield'].includes(capitalizeFirstLetter(it.name))) { %>
+
+    <% if(it.customField.isEnable) { %>
       // FLAG::CUSTOM_FIELD
       const { $customFieldStore, $appPluginsStore } = useNuxtApp();
       if (!this._customFieldWatch) {
@@ -93,15 +95,19 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
   }
 
   override setNew = ()=>{         
-    const newdata = Default<%= it.typename%>(randomUUID())
+    const defaultData = Default<%= it.typename%>(randomUUID())
+    
+    <% if(it.customField.isEnable) { %>
+      // FLAG::CUSTOM_FIELD
+      const data = this.prepareCustomFieldData(
+        CustomFieldDataModeEnum.DEFAULT,
+        defaultData,
+      );
+    <% } else { %>
+      const data = defaultData;
+    <% } %>
 
-     // FLAG::CUSTOM_FIELD
-    const dataWithCustomField = this.prepareCustomFieldData(
-      CustomFieldDataModeEnum.DEFAULT,
-      newdata,
-    );
-
-    this.setData(dataWithCustomField);
+    this.setData(data);
     this.setWatchChange()
     return true
   }

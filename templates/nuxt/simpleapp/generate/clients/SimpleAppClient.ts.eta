@@ -16,13 +16,9 @@ import {
   DynamicObject,
 } from "~/types";
 import { getValidateService } from "~/simpleapp/generate/sharelibs/validate";
-import { SimpleAppCustomFieldClient } from "./SimpleAppCustomFieldClient";
 import { WatchHandle } from "vue";
-import { CustomFieldClient } from "../features/customField/services/CustomFieldClient";
-import {
-  CustomFieldDataMode,
-  CustomFieldMoreSchema,
-} from "../features/customField/types/common";
+import { CustomFieldService } from "../features/customField/services/CustomFieldService";
+import { CustomFieldDataMode } from "../features/customField/types/common";
 import { CustomFieldDataModeEnum } from "../features/customField/enums/common";
 
 // import { useToast, } from 'primevue/usetoast';
@@ -60,7 +56,7 @@ export class SimpleAppClient<
 
   // FLAG::CUSTOM_FIELD
   protected _customFieldWatch: WatchHandle | null = null;
-  private _customFieldClient = new CustomFieldClient();
+  private _customFieldService = new CustomFieldService();
 
   constructor(apiobj: TApi, doctype: string, docname: string) {
     this.docapi = apiobj;
@@ -89,8 +85,8 @@ export class SimpleAppClient<
   };
 
   prepareCustomFieldJsonSchema() {
-    const resp = this._customFieldClient.prepareCustomFieldJsonSchema(
-      this.doctype,
+    const resp = this._customFieldService.prepareCustomFieldJsonSchema(
+      this.docname,
     );
     this.schema.properties.more = resp;
   }
@@ -99,7 +95,7 @@ export class SimpleAppClient<
     mode: CustomFieldDataMode,
     data: T,
   ) {
-    const customFieldData = this._customFieldClient.prepareCustomFieldData(
+    const customFieldData = this._customFieldService.prepareCustomFieldData(
       this.docname,
       mode,
       this.schema.properties?.more,
@@ -116,9 +112,6 @@ export class SimpleAppClient<
     return await this.docapi
       .runFindOne(id, this.axios)
       .then((res: AxiosResponse) => {
-        // if(this.event){this.event('info:getById',res.data)}
-        // this.data.value = {} as TData;
-        // Object.assign(this.data.value, res.data);
         const dataWithCustomField = this.prepareCustomFieldData(
           CustomFieldDataModeEnum.EXISTING,
           res.data,

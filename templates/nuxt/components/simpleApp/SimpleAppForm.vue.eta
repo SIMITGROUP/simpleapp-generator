@@ -2,8 +2,7 @@
   <form class="simpleapp-form" @submit.prevent="true">
     <slot name="default" :data="document.getData()" :getField="getField"></slot>
     <slot name="customField">
-      <!-- TODO: TS Error -->
-      <SimpleAppCustomFieldFormSection
+      <CustomFieldFormSection
         v-if="document.schema.properties.more"
         :customFieldJsonSchema="document.schema.properties.more"
         :data="document.getData().more"
@@ -24,6 +23,7 @@ import { SimpleAppClient } from "~/simpleapp/generate/clients/SimpleAppClient";
 import type { JSONSchema7, JSONSchema7Definition } from "json-schema";
 import * as alldefaults from "~/simpleapp/generate/defaults";
 import _, { upperFirst } from "lodash";
+import CustomFieldFormSection from "~/simpleapp/generate/features/customField/components/CustomFieldFormSection.vue";
 const props = defineProps<{
   document: SimpleAppClient<any, any>;
   readonly?: boolean;

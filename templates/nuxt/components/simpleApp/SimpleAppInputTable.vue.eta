@@ -58,7 +58,6 @@ const addNew = () => {
   if (props.setting.document[`add${field}`]) {
     props.setting.document[`add${field}`]();
   } else {
-    console.log("customfield", modelValue.value);
     modelValue.value?.push({});
   }
 };
