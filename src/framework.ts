@@ -95,7 +95,7 @@ export const prepareNest = (callback: Function) => {
     //@nestjs/graphql @nestjs/apollo graphql apollo-server-express apollo-server-core
     //@nestjs/graphql graphql-tools graphql apollo-server-express
     exec(
-      `cd ${targetfolder};pnpm install --save @nestjs/graphql mustache country-to-currency  graphql-type-json countries-and-timezones @nestjs/apollo @apollo/server graphql @nestjs/event-emitter dayjs bpmn-server@2.1.7 @casl/ability jsonpath yaml lodash @types/lodash nest-keycloak-connect keycloak-connect bpmn-client @nestjs/serve-static jsonwebtoken axios @darkwolf/base64url json-schema @wearenova/mongoose-tenant @nestjs/swagger @nestjs/mongoose mongoose  ajv ajv-formats ajv-errors @nestjs/config`,
+      `cd ${targetfolder};pnpm install --save @nestjs/graphql mustache json-templates country-to-currency  graphql-type-json countries-and-timezones @nestjs/apollo @apollo/server graphql @nestjs/event-emitter dayjs bpmn-server@2.1.7 @casl/ability jsonpath yaml lodash @types/lodash nest-keycloak-connect keycloak-connect bpmn-client @nestjs/serve-static jsonwebtoken axios @darkwolf/base64url json-schema @wearenova/mongoose-tenant @nestjs/swagger @nestjs/mongoose mongoose  ajv ajv-formats ajv-errors @nestjs/config`,
       async (error, stdout, stderr) => {
         // log.info(`dependency installed`)
         if (!error) {
@@ -184,12 +184,12 @@ export const prepareNuxt = (callback: Function) => {
   if (!fs.existsSync(`${targetfolder}/.env`)) {
     //asume no environment. prepare now
     exec(
-      `cd ${targetfolder};pnpm install;pnpm install -D @nuxtjs/apollo@next dayjs-nuxt @nuxtjs/device @nuxtjs/color-mode @types/json-schema @nuxtjs/i18n@next @nuxtjs/tailwindcss @types/jsonpath @sidebase/nuxt-auth @types/node @vueuse/nuxt @sidebase/nuxt-auth @vueuse/core prettier @primevue/core primevue tailwindcss-primeui`,
+      `cd ${targetfolder};pnpm install;pnpm install -D @nuxtjs/apollo@next @types/json-templates  dayjs-nuxt @nuxtjs/device @nuxtjs/color-mode @types/json-schema @nuxtjs/i18n@next @nuxtjs/tailwindcss @types/jsonpath @sidebase/nuxt-auth @types/node @vueuse/nuxt @sidebase/nuxt-auth @vueuse/core prettier @primevue/core primevue tailwindcss-primeui`,
       (error, stdout, stderr) => {
         //;pnpm install
         console.log(error, stdout, stderr);
-        exec(
-          `cd ${targetfolder};pnpm install --save vue-camera-lib vue-pdf-embed dayjs pusher-js country-code-dateformat chart.js tailwind-merge @iconify-json/heroicons  json-schema @vueuse/core ts-md5 primeicons memory-cache jsonpath pinia @pinia/nuxt @nuxt/kit lodash @types/lodash @darkwolf/base64url next-auth@4.21.1 @darkwolf/base64url @nuxt/ui ajv ajv-formats ajv-errors dotenv @fullcalendar/core @fullcalendar/vue3 quill prettier axios json-schema mitt @primevue/nuxt-module lru-cache vue-advanced-cropper@vue-3`,
+        exec( 
+          `cd ${targetfolder};pnpm install --save json-templates vue-camera-lib vue-pdf-embed dayjs pusher-js country-code-dateformat chart.js tailwind-merge @iconify-json/heroicons  json-schema @vueuse/core ts-md5 primeicons memory-cache jsonpath pinia @pinia/nuxt @nuxt/kit lodash @types/lodash @darkwolf/base64url next-auth@4.21.1 @darkwolf/base64url @nuxt/ui ajv ajv-formats ajv-errors dotenv @fullcalendar/core @fullcalendar/vue3 quill prettier axios json-schema mitt @primevue/nuxt-module lru-cache vue-advanced-cropper@vue-3`,
           (error, stdout, stderr) => {
             console.log(error, stdout, stderr);
 

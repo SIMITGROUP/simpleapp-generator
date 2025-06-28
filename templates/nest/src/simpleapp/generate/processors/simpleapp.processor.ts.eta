@@ -35,6 +35,7 @@ import { UserContext } from '../commons/user.context';
 import { CloudApiService } from 'src/cloudapi/cloudapi.service';
 import { PrintApiService } from 'src/printapi/printapi.service';
 import { DocNumberFormatGenerator } from '../commons/docnogenerator.service';
+import { RunWebhookService } from '../commons/runwebhook.service';
 import {
   IsolationType,
   DefaultHooks,
@@ -54,6 +55,8 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   protected cloudapi: CloudApiService;
   @Inject(PrintApiService)
   protected printapi: PrintApiService;
+  @Inject(RunWebhookService)
+  protected runWebHook:RunWebhookService;
   protected hooks: DefaultHooks<T> = {};
   protected logger = new Logger();
   protected strictIsolation = true;
@@ -490,7 +493,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         try {
           if (this.hooks.afterCreate)
             await this.hooks.afterCreate(appuser, result);
-          this.callWebhook(appuser, 'create', result);
+          await this.callWebhook(appuser, 'create', result);
 
           // return result as T;
         } catch (err) {
@@ -608,7 +611,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
 
     try {
       if (this.hooks.afterCreate) await this.hooks.afterCreate(appuser, result);
-      this.callWebhook(appuser, 'create', result);
+      await this.callWebhook(appuser, 'create', result);
       return result as T;
     } catch (err) {
       throw new InternalServerErrorException(
@@ -690,7 +693,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
 
     try {
       if (this.hooks.afterCreate) await this.hooks.afterCreate(appuser, result);
-      this.callWebhook(appuser, 'create', result);
+      await this.callWebhook(appuser, 'create', result);
       return result as T;
     } catch (err) {
       throw new InternalServerErrorException(
@@ -863,7 +866,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         if (this.hooks.afterDelete)
           await this.hooks.afterDelete(appuser, deleteresult, id);
         //this.doc.findByIdAndDelete(id);
-        this.callWebhook(appuser, 'delete', deletedata);
+        await this.callWebhook(appuser, 'delete', deletedata);
         return deleteresult;
       } else {
         this.logger.debug('reject query', dependency);
@@ -956,7 +959,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       appuser.addUpdatedRecordId(this.documentName, data._id);
       if (this.hooks.afterUpdate)
         await this.hooks.afterUpdate(appuser, id, existingdata, result);
-      this.callWebhook(appuser, 'update', result);
+      await this.callWebhook(appuser, 'update', result);
       return result; // await this.findById(appuser, id);
     } catch (err) {
       this.logger.error(err);
@@ -1033,7 +1036,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       appuser.addUpdatedRecordId(this.documentName, data._id);
       if (this.hooks.afterUpdate)
         await this.hooks.afterUpdate(appuser, id, existingdata, result);
-      this.callWebhook(appuser, 'update', result);
+      await this.callWebhook(appuser, 'update', result);
       return result; // await this.findById(appuser, id);
     } catch (err) {
       this.logger.error(err);
@@ -1102,7 +1105,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
 
       if (this.hooks.afterUpdate)
         await this.hooks.afterUpdate(appuser, id, existingdata, result);
-      this.callWebhook(appuser, 'update', result);
+      await this.callWebhook(appuser, 'update', result);
       return result; //await this.findById(appuser, id);
     } catch (err) {
       throw new InternalServerErrorException(err.message);
@@ -1224,7 +1227,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         data,
       );
 
-      this.callWebhook(appuser, docstatus, finaldata);
+      await this.callWebhook(appuser, docstatus, finaldata);
       return updateresult;
     }
   }
@@ -1482,13 +1485,16 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     return pipelines;
   }
 
-  callWebhook(appuser: UserContext, actionName: string, data: any) {
-    this.eventEmitter.emit(
-      'webhook',
-      appuser,
-      this.documentName,
-      actionName,
-      data,
-    );
+
+  //only realtime webhook supported at this moment
+  async callWebhook(appuser: UserContext, actionName: string, data: any) {
+    try{
+      await this.runWebHook.run(appuser,this.documentName, actionName,data)
+    }
+    catch(e)
+    {
+      throw new InternalServerErrorException(e);
+    }
+    
   }
 }

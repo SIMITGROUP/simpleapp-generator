@@ -6,14 +6,17 @@
  * 2.
  */
 import Base64URL from '@darkwolf/base64url';
+import { InjectModel } from '@nestjs/mongoose';
 import { BadRequestException, ForbiddenException, Injectable, Logger, Scope } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { ClientSession, Model, PipelineStage } from 'mongoose';
-import { Branch, Organization, Permission, Tenant, TenantClientSetting, User, Appintegration } from 'src/simpleapp/generate/types';
+import { Branch, Organization, Permission, Tenant, TenantClientSetting, User, Appintegration, Webhook } from 'src/simpleapp/generate/types';
 import { ProfileUserBranch, ProfileUserInvites } from '../../profile/profile.types';
 import { ModifiedRecords } from '../types';
 import { Role } from './roles/roles.enum';
+import systemWebHooks from '../../webhooks';
 import * as rolegroups from './roles/roles.group';
+
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserContext {
@@ -89,6 +92,7 @@ export class UserContext {
 
   protected package: string = '';
 
+  protected webhooks: Webhook[] = systemWebHooks
   protected clientSetting: TenantClientSetting = {
     auditTrail: false,
     support: false,
@@ -97,7 +101,7 @@ export class UserContext {
   };
 
   private dbsession: ClientSession;
-
+  
   protected modifiedRecords: ModifiedRecords = {
     createds: {},
     updateds: {},
@@ -110,7 +114,7 @@ export class UserContext {
   } = { simbiz6: false, einvoice: false };
 
   constructor(
-    private readonly userModel: Model<User>,
+    private readonly userModel: Model<User>,    
     private readonly permModel: Model<Permission>,
     private readonly appModel: Model<Appintegration>,
   ) {}
@@ -202,9 +206,14 @@ export class UserContext {
     return data;
   };
 
-  setCurrentUserInfo = async (tokenstr: string, xOrg: string) => {
+  
+  setCurrentUserInfo = async (tokenstr: string, xOrg: string,webhookModel:Model<Webhook>) => {
     this.setXOrg(xOrg);
-    await this.setUserToken(tokenstr);
+    await this.setUserToken(tokenstr);   
+    const wh = await webhookModel.find({branchId:this.getBranchId(),active:true})
+
+    if(Array.isArray(wh) && wh.length>0)
+      this.webhooks = this.webhooks.concat(wh)
   };
 
   /**
@@ -258,6 +267,7 @@ export class UserContext {
               as: 'currentTenant',
             },
           },
+          
           {
             $unwind: '$currentTenant',
           },
@@ -391,7 +401,8 @@ export class UserContext {
       orgId: this.orgId,
     };
   };
-
+  getWebHooks = ()=> this.webhooks
+  
   getWorkflowTaskFilter() {
     return {
       'data.tenantId': this.tenantId,
@@ -720,7 +731,6 @@ export class UserContext {
     return results;
   }
 
-
   setAsStaticUser = (uid: string, uname: string, name: string, email: string, xorg: string) => {
     // Define token info
     this.token = '';
@@ -757,13 +767,12 @@ export class UserContext {
     const appintegration = await this.appModel.aggregate(extension);
     if (appintegration && appintegration.length > 0) {
       appintegration.forEach((item) => {
-      if (item.appId === 'simbiz6') this.appintegration.simbiz6 = true;
-      if (item.appId === 'einvoice') this.appintegration.einvoice = true;
-    });
+        if (item.appId === 'simbiz6') this.appintegration.simbiz6 = true;
+        if (item.appId === 'einvoice') this.appintegration.einvoice = true;
+      });
+    }
+    return this.appintegration;
   }
-  return this.appintegration;
-
-}
   /**
    * Define additional properties from user into moreProps
    */

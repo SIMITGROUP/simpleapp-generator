@@ -1,3 +1,9 @@
+[1.6.6s-alpha]
+1. Fix wrong typo cause backend middleware build error
+
+[1.6.6r-alpha]
+1. Make webhook working
+
 [1.6.6o-alpha]
 1. Fix Auto Complete Type
 
