@@ -55,6 +55,8 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   protected cloudapi: CloudApiService;
   @Inject(PrintApiService)
   protected printapi: PrintApiService;
+  @Inject(RunWebhookService)
+  protected runWebHook:RunWebhookService;
   protected hooks: DefaultHooks<T> = {};
   protected logger = new Logger();
   protected strictIsolation = true;
@@ -1483,15 +1485,6 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     return pipelines;
   }
 
-  callWebhook(appuser: UserContext, actionName: string, data: any) {
-    this.eventEmitter.emit(
-      'webhook',
-      appuser,
-      this.documentName,
-      actionName,
-      data,
-    );
-  }
 
   //only realtime webhook supported at this moment
   async callWebhook(appuser: UserContext, actionName: string, data: any) {

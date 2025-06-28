@@ -1,6 +1,6 @@
 import { SchemaType, RESTMethods, IsolationType } from '../type';
 
-export const webhook: SchemaType = {
+export const webhooklog: SchemaType = {
   "type": "object",
   "x-simpleapp-config": {
     "documentType": "webhooklog",

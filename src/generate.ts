@@ -654,11 +654,11 @@ const generateSystemFiles = (modules: ModuleObject[], allbpmn) => {
           mkdirSync(foldername, { recursive: true });
         }
         // const templatename = `${frameworkfolder}/${longfilename}`.replace(".eta","").replace('._eta','')
-        // log.info("Write template:",targetfilename)
+        log.info("Write template:",targetfilename)
         const txt = eta.render(longfilename, renderProperties);
         writeFileSync(targetfilename, txt);
       } else {
-        // log.warn("skip: ",longfilename)
+        log.warn("skip: ",longfilename)
       }
     }
   });

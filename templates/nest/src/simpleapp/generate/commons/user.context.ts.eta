@@ -14,7 +14,7 @@ import { Branch, Organization, Permission, Tenant, TenantClientSetting, User, Ap
 import { ProfileUserBranch, ProfileUserInvites } from '../../profile/profile.types';
 import { ModifiedRecords } from '../types';
 import { Role } from './roles/roles.enum';
-import systemWebHhooks from '../webhooks';
+import systemWebHooks from '../../webhooks';
 import * as rolegroups from './roles/roles.group';
 
 
@@ -92,7 +92,7 @@ export class UserContext {
 
   protected package: string = '';
 
-  protected webhooks: Webhook[] = systemWebHhooks
+  protected webhooks: Webhook[] = systemWebHooks
   protected clientSetting: TenantClientSetting = {
     auditTrail: false,
     support: false,

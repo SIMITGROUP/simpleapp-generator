@@ -7,5 +7,6 @@ export { docnoformat } from './docnoformat';
 export { systemmessage } from './systemmessage';
 export { keyvaluepair } from './keyvaluepair';
 export { webhook } from './webhook';
+export { webhooklog } from './webhooklog';
 export { documentevent } from './documentevent';
 export { customfield } from './customfield';

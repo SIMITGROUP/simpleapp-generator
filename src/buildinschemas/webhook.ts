@@ -119,7 +119,7 @@ export const webhook: SchemaType = {
     },
     "eventType": {
       "type": "string",
-      "minLength": 5
+      "minLength": 2
     },
      "jobType":{
       "type": "string",

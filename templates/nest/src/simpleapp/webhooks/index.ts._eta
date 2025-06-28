@@ -5,21 +5,17 @@
  * Author: Ks Tan
  */
 
-import { Webhook } from '../types';
-//import student_hooks from './student'
+import { Webhook } from "../generate/types";
+import branch_hooks from './branch'
 
-const systemWebHhooks:Webhook[] = []
+const systemWebHooks:Webhook[] = []
 function addMore(hooks:Webhook[]){
     hooks.forEach(h=>{
-        if(h.active) systemWebHhooks.push(h)    
+        if(h.active) systemWebHooks.push(h)    
     })    
 }
 
-
-//addMore(student_hooks)
-
+addMore(branch_hooks)
 
 
-
-
-export default systemWebHhooks
+export default systemWebHooks
