@@ -26,18 +26,9 @@ export class RunWebhookService {
     if (process.env.WEBHOOK_ONOFF && process.env.WEBHOOK_ONOFF.toLowerCase() == 'on') return await this.runRealtimeWebHook(appuser, documentName, actionName, data);
     else this.logger.warn(`Webhook off, not run for ${documentName}:${actionName}`);
   }
-  /**
-   * get/delete
-   * http://myendpoint.com/{orgid}/invoice/{documentid}/delete
-   * http://myendpoint.com/{orgid}/invoice/{documentid}?action=delete
-   *
-   * post/put/patch
-   * http://myendpoint.com/{orgid}/invoice/{documentid}
-   * {json body}
-   */
+
   async runRealtimeWebHook(appuser: UserContext, documentName: string, actionName: string, data: any) {
     this.logger.debug(`Run webhook ${documentName}, ${actionName}`);
-    // console.log(`Run webhook ${documentName}, ${actionName}`);
 
     const webhooks = appuser.getWebHooks().filter((wh) => wh.resourceName == documentName && wh.eventType == actionName);
     // console.log(webhooks);
@@ -50,11 +41,15 @@ export class RunWebhookService {
       $uid: appuser.getUid(),
       $resourceName: documentName,
       $actionName: actionName,
+      $url: process.env.APP_URL ?? 'http://localhost:8080',
     };
 
     //same resource,actionName may have multiple webhook, run 1 by 1
     for (let whNo = 0; whNo < webhooks.length; whNo++) {
       const webhook = webhooks[whNo];
+      //danger!! system webhook, only private webhook will allow access
+      if (webhook._id.includes('private.')) systemVars['$automationApiKey'] = process.env.DEFAULT_AUTOMATION_API_KEY ?? '';
+
       const reqMethod = webhook.requestMethod;
       let webhookUrl = webhook.url;
       // this.logger.verbose(webhook);
@@ -66,7 +61,7 @@ export class RunWebhookService {
 
       if (Array.isArray(webhook.headers)) {
         webhook.headers.forEach((h) => {
-          let headerValue = h.value;
+          let headerValue = h.value ?? '';
           Object.keys(systemVars).forEach((k) => {
             headerValue = headerValue.replace('{{' + k + '}}', systemVars[k]);
           });
@@ -79,17 +74,18 @@ export class RunWebhookService {
 
       if (webhook.authentication == 'basic') headers['Authorization'] = 'Basic ' + Buffer.from(webhook.basicAuth.user + ':' + webhook.basicAuth.password).toString('base64');
 
-      // console.log(webhook)
-
       let tries: number = webhook.retryAttemps ?? 0;
-      //first try need + 1
+
       tries = tries + 1;
-      //hardcode max retries
+
       if (tries > this.maxRetries) tries = this.maxRetries;
+      const maxtries = tries;
       const options: RequestInit = {
         method: reqMethod.toUpperCase(),
         headers: headers,
       };
+
+      // console.log("options",options)
 
       if (['POST', 'PUT', 'PATCH'].includes(options.method)) {
         options.body = this.prepareBody(appuser, webhook, data, systemVars);
@@ -101,23 +97,23 @@ export class RunWebhookService {
         let req: Response;
         let msg = '';
         let statusCode = 0;
+        const tryno = maxtries - tries;
         try {
           req = await fetch(webhookUrl, options);
           statusCode = req.status;
           //sucess, break and no more retry
+          msg = `Try: ${tryno}/${maxtries} ${documentName}:${actionName}, ${reqMethod} ${webhookUrl}, ${statusCode},${req.statusText}`;
           if (statusCode >= 200 && statusCode <= 300) {
             //success, continue next webhook
-            msg = `webhook triggered successfully for ${documentName}:${actionName}. ${reqMethod} ${webhookUrl}, try:${tries}, ${statusCode},${req.statusText}`;
             this.addLog(appuser, documentName, webhook, actionName, data, options, 'success', statusCode, msg);
             break;
           } else {
             //common error like 404
-            msg = `webhook ${statusCode} failed, ${documentName}:${actionName}. ${reqMethod} ${webhookUrl}, try:${tries}, ${statusCode},${req.statusText}`;
             this.addLog(appuser, documentName, webhook, actionName, data, options, 'failed', statusCode, msg);
           }
         } catch (e) {
           // exception, usually server not accessible. use error 500
-          msg = `Webhook error ${documentName}:${actionName}  (${webhook._id}) ${e} at ${webhookUrl}`;
+          msg = `Try: ${tryno}/${maxtries}, error ${documentName}:${actionName}  (${webhook._id}) ${e} at ${webhookUrl}`;
           this.addLog(appuser, documentName, webhook, actionName, data, options, 'failed', 500, msg);
         }
 
@@ -138,7 +134,7 @@ export class RunWebhookService {
       this.logger.warn(msg);
     }
     const logbody = options.body;
-    let body = JSON.stringify(logbody, null, 4);
+    let body = JSON.stringify(logbody, );
 
     const whlog: Webhooklog = {
       _id: crypto.randomUUID(),
@@ -153,7 +149,7 @@ export class RunWebhookService {
       actionName: actionName,
       status: status,
       statusCode: statusCode,
-      body: body,
+      body: logbody,
       msg: msg,
     };
 

@@ -1,3 +1,7 @@
+[1.6.6w-alpha]
+1. Beautify webhooklog body histories
+
+
 [1.6.6v-alpha]
 1. Fix webhook no store logs, and add api to obtain webhook execution histories
 
