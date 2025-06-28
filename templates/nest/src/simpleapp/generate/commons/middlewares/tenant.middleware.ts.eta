@@ -13,7 +13,7 @@ import { Model } from 'mongoose';
 import { Permission } from '../../types/perm.type';
 import { User } from '../../types/user.type';
 import { Appintegration } from '../../types/appintegration.type';
-import { Webhook } from '../../types/Webhook.type';
+import { Webhook } from '../../types';
 import { UserContext } from '../user.context';
 
 @Injectable()

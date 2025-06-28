@@ -1,3 +1,7 @@
+[1.6.6u-alpha]
+1. Fix repo crash
+
+
 [1.6.6s-alpha]
 1. Fix wrong typo cause backend middleware build error
 
