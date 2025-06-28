@@ -8,7 +8,16 @@ export const webhook: SchemaType = {
     "isolationType":IsolationType.branch,
     "uniqueKey": "title",
     "documentTitle": "title",
-    "resourceName": "webhook"
+    "resourceName": "webhook",
+     additionalApis: [
+      {
+        action: 'getHistories',
+        entryPoint: ':id/histories',
+        requiredRole: ["Admin"],
+        method: RESTMethods.get,
+        responseType: '[Webhooklog]',
+        description: 'Get webhook execute histories'
+      }]
   },
   "required": [
     "title",

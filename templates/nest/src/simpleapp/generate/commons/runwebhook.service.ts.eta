@@ -4,10 +4,10 @@
  * last change 2024-03-17
  * Author: Ks Tan
  */
-import { BadRequestException, Injectable,Inject, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Inject, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { UserContext } from './user.context';
-import { Webhook,Webhooklog } from '../types';
+import { Webhook, Webhooklog } from '../types';
 import { alldocuments } from 'src/simpleapp/generate/commons/dicts/documents';
 
 @Injectable()
@@ -16,22 +16,21 @@ export class RunWebhookService {
   protected eventEmitter: EventEmitter2;
 
   protected logger = new Logger();
-  protected maxRetries = 5
+  protected maxRetries = 5;
   public constructor() {}
-
-
 
   /**
    * trigger
    */
   async run(appuser: UserContext, documentName: string, actionName: string, data: any) {
-    return await this.runRealtimeWebHook(appuser,documentName,actionName,data)
+    if (process.env.WEBHOOK_ONOFF && process.env.WEBHOOK_ONOFF.toLowerCase() == 'on') return await this.runRealtimeWebHook(appuser, documentName, actionName, data);
+    else this.logger.warn(`Webhook off, not run for ${documentName}:${actionName}`);
   }
   /**
    * get/delete
    * http://myendpoint.com/{orgid}/invoice/{documentid}/delete
    * http://myendpoint.com/{orgid}/invoice/{documentid}?action=delete
-   * 
+   *
    * post/put/patch
    * http://myendpoint.com/{orgid}/invoice/{documentid}
    * {json body}
@@ -40,131 +39,138 @@ export class RunWebhookService {
     this.logger.debug(`Run webhook ${documentName}, ${actionName}`);
     // console.log(`Run webhook ${documentName}, ${actionName}`);
 
-
-    const webhooks = appuser.getWebHooks().filter(wh=>
-      wh.resourceName==documentName && wh.eventType==actionName 
-      )
+    const webhooks = appuser.getWebHooks().filter((wh) => wh.resourceName == documentName && wh.eventType == actionName);
     // console.log(webhooks);
-    
-    //same resource,actionName may have multiple webhook, run 1 by 1
-    for(let whNo=0;whNo<webhooks.length;whNo++){    
 
-      const webhook = webhooks[whNo]
-      const reqMethod = webhook.requestMethod
-      this.logger.verbose(webhook)
+    const systemVars = {
+      $xOrg: appuser.getXOrg(),
+      $accessToken: appuser.getUserToken(),
+      $fullName: appuser.getFullname(),
+      $email: appuser.getEmail(),
+      $uid: appuser.getUid(),
+      $resourceName: documentName,
+      $actionName: actionName,
+    };
+
+    //same resource,actionName may have multiple webhook, run 1 by 1
+    for (let whNo = 0; whNo < webhooks.length; whNo++) {
+      const webhook = webhooks[whNo];
+      const reqMethod = webhook.requestMethod;
+      let webhookUrl = webhook.url;
+      // this.logger.verbose(webhook);
       const headers = {};
-      
+
+      Object.keys(systemVars).forEach((k) => {
+        webhookUrl = webhookUrl.replace('{{' + k + '}}', systemVars[k]);
+      });
+
       if (Array.isArray(webhook.headers)) {
         webhook.headers.forEach((h) => {
-          h.value = h.value.replace('{{access_token}}',appuser.getUserToken())          
-          headers[h.name] = h.value;
+          let headerValue = h.value;
+          Object.keys(systemVars).forEach((k) => {
+            headerValue = headerValue.replace('{{' + k + '}}', systemVars[k]);
+          });
+
+          headers[h.name] = headerValue;
         });
       }
       headers['accept'] = 'application/json';
       headers['content-type'] = 'application/json';
-      headers['x-org']=appuser.getXOrg()
-      headers['x-resource-name']=documentName
-      headers['x-action-name']=actionName
 
-      if(webhook.authentication=='basic')
-      headers['Authorization']= 'Basic ' + Buffer.from(webhook.basicAuth.user + ":" + webhook.basicAuth.password).toString('base64');
+      if (webhook.authentication == 'basic') headers['Authorization'] = 'Basic ' + Buffer.from(webhook.basicAuth.user + ':' + webhook.basicAuth.password).toString('base64');
 
-      let tries = webhook.retryAttemps ?? 0
+      // console.log(webhook)
+
+      let tries: number = webhook.retryAttemps ?? 0;
       //first try need + 1
-      tries = tries+1
+      tries = tries + 1;
       //hardcode max retries
-      if(tries > this.maxRetries) tries = this.maxRetries
-      const options:RequestInit = {
+      if (tries > this.maxRetries) tries = this.maxRetries;
+      const options: RequestInit = {
         method: reqMethod.toUpperCase(),
         headers: headers,
-
       };
-      try {
-        if(['POST','PUT','PATCH'].includes(options.method)){
-          options.body= this.prepareBody(webhook,data)
-        }
 
-
-
-        
-        while(tries>0){
-          tries--
-          console.log("Excute webhook id",webhook._id)
-          const req = await fetch(webhook.url, options);
-          const statusCode = req.status;        
-           
-
-          
-          if (statusCode >= 200 && statusCode <= 300) {
-            //success, continue next webhook
-            const msg = `webhook triggered successfully for ${documentName}:${actionName}. ${reqMethod} ${webhook.url}, try:${tries}, ${statusCode},${req.statusText}`
-            this.addLog(appuser,documentName,webhook,actionName,data,options,"success",statusCode,msg)          
-            break;
-          }else if(tries<=0 && webhook.jobType=='roll-back-when-failed'){          
-            //failed, trigger server error for roll back
-            const msg = `webhook faied, data roll back ${documentName}:${actionName}. ${reqMethod} ${webhook.url}, try:${tries}, ${statusCode},${req.statusText}`
-            this.addLog(appuser,documentName,webhook,actionName,data,options,'failed',statusCode,msg)          
-            throw new InternalServerErrorException(msg);
-          }else if(tries<=0 && webhook.jobType=='realtime'){
-            //failed, but no need to trigger server error/rollback
-            const msg = `webhook failed, ${documentName}:${actionName}. ${reqMethod} ${webhook.url}, try:${tries},  ${statusCode},${req.statusText}`
-            this.addLog(appuser,documentName,webhook,actionName,data,options,'failed',statusCode,msg)            
-          }else{
-            //failed, but still continue retry
-            const msg = `webhook ${documentName}:${actionName}. ${reqMethod} ${webhook.url}, try:${tries},  ${statusCode},${req.statusText}`
-            this.addLog(appuser,documentName,webhook,actionName,data,options,'warn',statusCode,msg)
-          }
-          
-        }
-
-        // const body = req.body;
-      } catch (e) {
-        throw new InternalServerErrorException(e);
+      if (['POST', 'PUT', 'PATCH'].includes(options.method)) {
+        options.body = this.prepareBody(appuser, webhook, data, systemVars);
       }
 
-    }
+      while (tries > 0) {
+        // console.log(`Excute webhook id ${webhook._id} max ${tries}`);
+        tries--;
+        let req: Response;
+        let msg = '';
+        let statusCode = 0;
+        try {
+          req = await fetch(webhookUrl, options);
+          statusCode = req.status;
+          //sucess, break and no more retry
+          if (statusCode >= 200 && statusCode <= 300) {
+            //success, continue next webhook
+            msg = `webhook triggered successfully for ${documentName}:${actionName}. ${reqMethod} ${webhookUrl}, try:${tries}, ${statusCode},${req.statusText}`;
+            this.addLog(appuser, documentName, webhook, actionName, data, options, 'success', statusCode, msg);
+            break;
+          } else {
+            //common error like 404
+            msg = `webhook ${statusCode} failed, ${documentName}:${actionName}. ${reqMethod} ${webhookUrl}, try:${tries}, ${statusCode},${req.statusText}`;
+            this.addLog(appuser, documentName, webhook, actionName, data, options, 'failed', statusCode, msg);
+          }
+        } catch (e) {
+          // exception, usually server not accessible. use error 500
+          msg = `Webhook error ${documentName}:${actionName}  (${webhook._id}) ${e} at ${webhookUrl}`;
+          this.addLog(appuser, documentName, webhook, actionName, data, options, 'failed', 500, msg);
+        }
 
-    return true
+        //finish tries, throw error
+        if (tries == 0 && webhook.jobType == 'roll-back-when-failed') {
+          throw new InternalServerErrorException(msg);
+        }
+      } //end retries
+    } //next webhook
+
+    return true;
   }
 
-
-  addLog(appuser: UserContext, documentName: string, webhook:Webhook, actionName: string, data: any,options,status:string,statusCode:number,msg:string){
-
-
-    if(status=='warn'){
-      status="failed"
-      this.logger.warn(msg)
+  addLog(appuser: UserContext, documentName: string, webhook: Webhook, actionName: string, data: any, options, status: string, statusCode: number, msg: string) {
+    if (status == 'success') {
+      this.logger.debug(msg);
+    } else {
+      this.logger.warn(msg);
     }
-    else if(status=='success')
-      this.logger.debug(msg)
-    else 
-      this.logger.error (msg)
+    const logbody = options.body;
+    let body = JSON.stringify(logbody, null, 4);
 
-    let body = JSON.stringify(options,null,4)
-    
     const whlog: Webhooklog = {
+      _id: crypto.randomUUID(),
+      tenantId: appuser.getTenantId(),
+      orgId: appuser.getOrgId(),
+      branchId: appuser.getBranchId(),
+      webHookId: webhook._id,
+      created: new Date().toISOString(),
+      createdBy: appuser.getUid(),
       title: `${webhook.requestMethod} ${webhook.url}`,
       resource: documentName,
       actionName: actionName,
       status: status,
       statusCode: statusCode,
-      body:  body,
-      msg:msg
-    }
+      body: body,
+      msg: msg,
+    };
 
-    this.eventEmitter.emit('webhooklog.add', appuser,whlog);
+    this.eventEmitter.emit('webhooklog.add', appuser, whlog);
   }
-  prepareBody(webhook:Webhook,data:any){
-    const cleandata = JSON.parse(JSON.stringify(data))
+  prepareBody(appuser: UserContext, webhook: Webhook, data: any, systemVars: any) {
+    const cleandata = JSON.parse(JSON.stringify(data));
 
-    if(webhook.body?.trim()=='*'){
-      return JSON.stringify(cleandata)
+    if (webhook.body?.trim() == '*') {
+      return JSON.stringify(cleandata);
     }
-    const parse = require('json-templates');    
-    const template = parse(webhook.body);    
-    const x:BodyInit =template(cleandata)
-    // this.logger.log(x)    
-    return JSON.parse(JSON.stringify(x))
-  }  
-  
+    const finaldata = { ...cleandata, ...systemVars };
+
+    const parse = require('json-templates');
+    const template = parse(webhook.body);
+    const x: BodyInit = template(finaldata);
+    // this.logger.log(x)
+    return JSON.parse(JSON.stringify(x));
+  }
 }

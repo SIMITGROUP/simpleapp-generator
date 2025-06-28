@@ -11,6 +11,7 @@ export const webhooklog: SchemaType = {
   },
   "required": [
     "title",
+    "webHookId",
     "body",
     "msg"
   ],
@@ -18,6 +19,9 @@ export const webhooklog: SchemaType = {
     "_id": {
       "type": "string"
     },
+    "webHookId": {
+      "type": "string"
+    },    
     "created": {
       "type": "string"
     },

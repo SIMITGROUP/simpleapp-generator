@@ -5,33 +5,40 @@
  * Author: Ks Tan
  */
 
-import { Webhook } from "../generate/types";
-const branch_hooks:Webhook[] = []
+import { Webhook } from '../generate/types';
+const branch_hooks: Webhook[] = [];
 
- branch_hooks.push({
-  "_id": "branch.update",
-  "title": "branch_update",
-  "url": "https://localhost:8080",
-  "requestMethod": "post",
-  "authentication": "none",
-  "description": "aa",
-  "body": '{ "id":"{{_id}}", "code":"{{branchCode}}","name":"{{branchName}}" }',
-  "active": false,
-  "resourceName": "branch",
-  "eventType": "update",
-  "jobType": "realtime",
-  "retryAttemps": 2,
-  "basicAuth": {
-    "user": "",
-    "password": ""
+
+
+branch_hooks.push({
+  _id: 'branch.create.welcome-msg',
+  title: 'branch first send well come message',
+  url: 'https://mywebhook.app.com/init-new-branch',
+  requestMethod: 'post',
+  authentication: 'none',
+  description: '',
+  body: `{
+    "email":"{{email}}",
+    "name":"{{$fullName}}",
+    "centerName":"{{branchName}}",
+    "centerUrl":"https://myurl.com"
+  }`,
+  active: false,
+  resourceName: 'branch',
+  eventType: 'update',
+  // jobType: 'roll-back-when-failed',
+  jobType: 'realtime',
+  retryAttemps: 2,
+  basicAuth: {
+    user: '',
+    password: '',
   },
-  "headers": [
+  headers: [
     {
-      "name": "token",
-      "value": "{{access_token}}"
-    }
-  ]
-}) 
+      name: 'x-api-key',
+      value: 'xxxxxxxxxx',
+    },
+  ],
+});
 
-
-export default branch_hooks
+export default branch_hooks;
