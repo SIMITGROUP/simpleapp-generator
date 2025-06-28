@@ -13,6 +13,7 @@ export const webhooklog: SchemaType = {
     "title",
     "webHookId",
     "body",
+    "dataId",
     "msg"
   ],
   "properties": {
@@ -20,6 +21,9 @@ export const webhooklog: SchemaType = {
       "type": "string"
     },
     "webHookId": {
+      "type": "string"
+    },    
+    "dataId": {
       "type": "string"
     },    
     "created": {

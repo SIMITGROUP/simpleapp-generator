@@ -29,7 +29,7 @@ export class WebhookService extends WebhookProcessor {
   
 
   async runGetHistories(appuser: UserContext, id: string) {
-    const results = await this.webhooklogService.search(appuser, { webHookId: id });
+    const results = await this.webhooklogService.search(appuser, { webHookId: id }, ['created', 'body', 'status', 'title', 'msg', 'dataId'], [['created', 'desc']]);
     return results;
   }
 

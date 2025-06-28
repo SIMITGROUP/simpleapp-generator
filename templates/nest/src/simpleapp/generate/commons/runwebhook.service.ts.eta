@@ -134,7 +134,7 @@ export class RunWebhookService {
       this.logger.warn(msg);
     }
     const logbody = options.body;
-    let body = JSON.stringify(logbody, );
+    let body = typeof logbody == 'string' ? logbody : JSON.stringify(logbody, null, 4);
 
     const whlog: Webhooklog = {
       _id: crypto.randomUUID(),
@@ -145,11 +145,12 @@ export class RunWebhookService {
       created: new Date().toISOString(),
       createdBy: appuser.getUid(),
       title: `${webhook.requestMethod} ${webhook.url}`,
+      dataId: data._id,
       resource: documentName,
       actionName: actionName,
       status: status,
       statusCode: statusCode,
-      body: logbody,
+      body: body,
       msg: msg,
     };
 
