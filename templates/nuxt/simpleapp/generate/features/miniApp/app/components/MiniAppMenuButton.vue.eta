@@ -1,0 +1,104 @@
+<template>
+  <div>
+    <template v-if="$miniAppStore.isFetchingInstalledMiniApps">
+      <i class="pi pi-spinner animate-spin mx-3.5 mt-2 text-gray-300" />
+    </template>
+    <template v-else>
+      <template
+        v-for="miniApp in top3MenuItems"
+        :key="'app-miniApps-page-' + miniApp._id"
+      >
+        <div class="relative group">
+          <div
+            v-if="miniApp.pages.length > 1"
+            class="absolute -top-1 right-0.5 pointer-events-none"
+          >
+            <i class="pi pi-chevron-down text-[0.5rem] text-gray-500" />
+          </div>
+
+          <MainmenuButton
+            :id="'mainmenu-app-miniApps-item-' + miniApp._id"
+            icon=""
+            :to="
+              miniApp.pages[0]?.code === 'setting'
+                ? $miniAppStore.getMiniAppSettingPageUrl(miniApp.code)
+                : $miniAppStore.getMiniAppPageUrl(
+                    miniApp.code,
+                    miniApp.pages[0]?.code ?? '',
+                  )
+            "
+            :title="miniApp.name"
+          >
+            <template #icon>
+              <img
+                :src="miniApp.logo"
+                class="size-6 rounded-md object-contain"
+              />
+            </template>
+            <template #title>
+              <p class="line-clamp-1">
+                {{ miniApp.name }}
+              </p>
+            </template>
+          </MainmenuButton>
+
+          <div
+            v-if="miniApp.pages.length > 1"
+            class="absolute z-50 top-0 left-14 w-0 group-hover:w-[18.1rem] text-sm transition-all duration-100 ease-out overflow-hidden"
+          >
+            <div class="flex flex-wrap gap-2 w-[18.1rem]">
+              <div
+                class="flex flex-wrap gap-x-1 gap-y-3 bg-gray-50 border-2 border-gray-100 px-3 py-5 rounded-lg shadow-lg"
+              >
+                <template v-for="page in miniApp.pages" :key="page._id">
+                  <div
+                    class="shrink-0 flex flex-col items-center gap-2 w-[3.8rem] cursor-pointer text-gray-500 hover:text-cyan-500"
+                    @click="
+                      $miniAppStore.navigateToMiniAppPage(
+                        miniApp.code,
+                        page.code,
+                      )
+                    "
+                  >
+                    <MiniAppPageIcon
+                      :iconType="page.iconType"
+                      :icon="page.icon ?? ''"
+                    />
+                    <p
+                      class="text-[0.5rem] line-clamp-2 leading-none text-center"
+                    >
+                      {{ page.title }}
+                    </p>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template v-if="$miniAppStore.isShowMiniAppMoreMenuButton">
+        <MainmenuButton
+          :id="'mainmenu-app-miniApps-page-more'"
+          :to="getDocumentUrl('miniApps')"
+          :title="t('miniAppLang.myminiApp')"
+          v-tooltip.right="t('miniAppLang.myminiApp')"
+        >
+          <template #icon>
+            <IconPuzzle class="size-7" />
+          </template>
+        </MainmenuButton>
+      </template>
+    </template>
+  </div>
+</template>
+
+<script setup lang="ts">
+import IconPuzzle from "~/components/icon/IconPuzzle.vue";
+import MiniAppPageIcon from "./MiniAppPageIcon.vue";
+
+const { $miniAppStore } = useNuxtApp();
+const displayItemCount = 3;
+const items = computed(() => $miniAppStore.getMenuItems());
+const top3MenuItems = computed(() => items.value.slice(0, displayItemCount));
+</script>

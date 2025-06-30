@@ -426,14 +426,14 @@ const generateSchema = (
           },
 
           'resource-bridge.service.ts.eta': {
-            to: 'simpleapp/generate/miniApp/bridge/services/resources',
+            to: 'simpleapp/generate/features/miniApp/bridge/services/resources',
             as: `${_.kebabCase(resourceName)}-bridge.service.ts`,
             validate: (targetfile: string, isexists: boolean) => {
               return true;
             }
           },
           'resource-bridge.editable.service.ts.eta': {
-            to: 'simpleapp/generate/miniApp/bridge/services/editable/resources',
+            to: 'simpleapp/generate/features/miniApp/bridge/services/editable/resources',
             as: `${_.kebabCase(resourceName)}-bridge.editable.service.ts`,
             validate: (targetfile: string, isexists: boolean) => !isexists
           },
@@ -654,11 +654,11 @@ const generateSystemFiles = (modules: ModuleObject[], allbpmn) => {
           mkdirSync(foldername, { recursive: true });
         }
         // const templatename = `${frameworkfolder}/${longfilename}`.replace(".eta","").replace('._eta','')
-        log.info("Write template:",targetfilename)
+        log.info('Write template:', targetfilename);
         const txt = eta.render(longfilename, renderProperties);
         writeFileSync(targetfilename, txt);
       } else {
-        log.warn("skip: ",longfilename)
+        log.warn('skip: ', longfilename);
       }
     }
   });

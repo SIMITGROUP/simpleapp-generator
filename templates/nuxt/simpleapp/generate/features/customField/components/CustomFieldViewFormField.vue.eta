@@ -1,0 +1,96 @@
+<template>
+  <template v-if="validJsonSchema">
+    <template v-if="_.isArray(validJsonSchema)"> </template>
+    <template v-else>
+      <template v-if="validJsonSchema.type === 'object'">
+        <template v-if="validJsonSchema['x-foreignkey']">
+          <CustomFieldViewFormFieldInput
+            :jsonSchema="validJsonSchema"
+            :hierarchy="hierarchy"
+            :schemaSource="schemaSource"
+            v-model="data[schemaName]"
+          />
+        </template>
+        <template v-else>
+          <Fieldset class="col-span-2 rounded-xl">
+            <template #legend>
+              <span
+                :class="{
+                  'mx-2': legendTitle && legendTitle !== '',
+                }"
+              >
+                {{ legendTitle }}
+              </span>
+            </template>
+
+            <div
+              class="grid grid-cols-2 gap-4 p-2"
+              :class="{
+                'pt-4': legendTitle === undefined || legendTitle === '',
+              }"
+            >
+              <template
+                v-if="validJsonSchema.properties"
+                v-for="(subSchema, subSchemaName) in validJsonSchema.properties"
+                :key="subSchemaName"
+              >
+                <CustomFieldViewFormField
+                  :jsonSchema="subSchema"
+                  :data="data[schemaName]"
+                  :schemaSource="schemaSource"
+                  :schemaName="subSchemaName as string"
+                  :hierarchy="
+                    hierarchy === '' || hierarchy === undefined
+                      ? (subSchemaName as string)
+                      : `${hierarchy}.${subSchemaName}`
+                  "
+                />
+              </template>
+            </div>
+          </Fieldset>
+        </template>
+      </template>
+      <template v-else>
+        <CustomFieldViewFormFieldInput
+          :jsonSchema="validJsonSchema"
+          :hierarchy="hierarchy"
+          :schemaSource="schemaSource"
+          v-model="data[schemaName]"
+        />
+      </template>
+    </template>
+  </template>
+</template>
+
+<script setup lang="ts">
+import _ from "lodash";
+import { SimpleAppJSONSchema7Definition } from "~/types";
+import { SchemaSource } from "~/types/customField.type";
+import CustomFieldViewFormFieldInput from "./CustomFieldViewFormFieldInput.vue";
+
+const props = defineProps<{
+  jsonSchema?: SimpleAppJSONSchema7Definition | undefined;
+  data: any;
+  hierarchy: string;
+  schemaName: string;
+  schemaSource: SchemaSource;
+  isHideFieldsetLegend?: boolean;
+}>();
+
+const legendTitle = computed(() => {
+  if (props.isHideFieldsetLegend) return "";
+
+  return (
+    (props.jsonSchema &&
+      typeof props.jsonSchema !== "boolean" &&
+      props.jsonSchema?.title) ??
+    props.schemaName
+  );
+});
+const validJsonSchema = computed(() => {
+  if (props.jsonSchema !== undefined && typeof props.jsonSchema === "object") {
+    return props.jsonSchema;
+  }
+  return false;
+});
+</script>

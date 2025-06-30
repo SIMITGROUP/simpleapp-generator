@@ -1,0 +1,48 @@
+<template>
+  <div
+    class="relative rounded-lg h-50 p-4 border-2 flex flex-col items-center transition-all hover:border-primary-500"
+    :class="{
+      'opacity-40 cursor-not-allowed ': item.status === 'upcoming',
+      'cursor-pointer': item.status !== 'upcoming',
+    }"
+    @click="handleMiniAppClick(item)"
+  >
+    <div class="absolute top-2 right-2 flex space-x-1">
+      <MiniAppIntegrationItemBadge :item="item" />
+    </div>
+
+    <div class="text-lg font-semibold text-center">
+      {{ item.name }}
+    </div>
+
+    <div class="p-4">
+      <img :src="item.logo" class="size-16 object-contain" />
+    </div>
+
+    <div class="text-sm text-gray-600 text-center line-clamp-2">
+      {{ item.description }}
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { MiniappStatusEnum } from "~/enums/enums.generate";
+import { Miniapp } from "~/simpleapp/generate/openapi";
+import MiniAppIntegrationItemBadge from "./MiniAppIntegrationItemBadge.vue";
+
+defineProps<{
+  item: Miniapp;
+}>();
+
+const emits = defineEmits<{
+  (event: "miniAppClick", item: Miniapp): void;
+}>();
+
+function handleMiniAppClick(item: Miniapp) {
+  if (item.status === MiniappStatusEnum.UPCOMING) return;
+
+  if (item._id) {
+    emits("miniAppClick", item);
+  }
+}
+</script>

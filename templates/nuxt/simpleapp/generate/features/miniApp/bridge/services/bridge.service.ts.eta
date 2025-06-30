@@ -27,15 +27,15 @@ export class MiniAppBridgeService extends MiniAppBridgeResourceAccessor {
 
   handleBridgeNavigateCurrentMiniApp(
     message: MiniAppBridgeMessageNavigateCurrentMiniApp,
-    pluginCode: string,
+    miniAppCode: string,
   ) {
     const target = message.params.target;
-    const { $appPluginsStore } = useNuxtApp();
+    const { $miniAppStore } = useNuxtApp();
     let targetUrl = "";
     if (target === "setting") {
-      targetUrl = $appPluginsStore.getPluginSettingPath(pluginCode);
+      targetUrl = $miniAppStore.getMiniAppSettingPath(miniAppCode);
     } else {
-      targetUrl = $appPluginsStore.getPluginPageUrlPath(pluginCode, "");
+      targetUrl = $miniAppStore.getMiniAppPageUrlPath(miniAppCode, "");
       targetUrl = targetUrl.replace(/^\/|\/$/g, "");
       targetUrl = `${targetUrl}/${message.params.target}`;
     }

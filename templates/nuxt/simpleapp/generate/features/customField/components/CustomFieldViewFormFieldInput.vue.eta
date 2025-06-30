@@ -1,0 +1,100 @@
+<template>
+  <div>
+    <label class="text-gray-400 text-sm truncate">
+      {{ label }}
+    </label>
+    <div>
+      <template v-if="jsonSchema.type !== 'array'">
+        <PageDocListColumnItem
+          :col="columnName"
+          :data="{
+            [columnName]: model,
+          }"
+          :schemacols="schemaCols"
+          :uniqueKey="''"
+          :documentTitle="''"
+          :resourcename="''"
+        />
+      </template>
+      <template
+        v-else-if="
+          jsonSchema.type === 'array' &&
+          jsonSchema.items &&
+          _.isObject(jsonSchema.items) &&
+          !Array.isArray(jsonSchema.items)
+        "
+      >
+        <template v-if="jsonSchema.items.type === 'object'">
+          {{ model }}
+        </template>
+        <template v-else-if="jsonSchema.items.type === 'string'">
+          {{ model }}
+        </template>
+      </template>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import _ from "lodash";
+import PageDocListColumnItem from "~/components/page/PageDocListColumnItem.vue";
+import {
+  SchemaFields,
+  SimpleAppInputType,
+  SimpleAppJSONSchema7,
+} from "~/types";
+import { SchemaSource } from "~/types/customField.type";
+
+const props = defineProps<{
+  jsonSchema: SimpleAppJSONSchema7;
+  hierarchy: string;
+  schemaSource: SchemaSource;
+}>();
+
+const model = defineModel<any>();
+
+const columnName = computed(() => {
+  return props.hierarchy.split(".").pop() ?? "";
+});
+
+const schemaCols = computed(() => {
+  return {
+    [columnName.value]: props.jsonSchema,
+  } as SchemaFields;
+});
+
+const label = computed(() => {
+  return props.jsonSchema.title ?? props.hierarchy.split(".").pop();
+});
+
+const fieldPath = computed(() => {
+  const hierarchies = props.hierarchy.split(".");
+
+  const path = (getFieldPathPrefix() + hierarchies.join("/properties/"))
+    .replace("properties/*", "items")
+    .replace("*", "items");
+
+  // if (props.schemaSource === "miniAppSetting") {
+  //   return path.replace("/properties/setting", "");
+  // }
+
+  return path;
+});
+
+const inputType = computed(() => {
+  return getInputType(props.jsonSchema);
+});
+
+const isParentIsArray = computed(() => {
+  const hierarchies = props.hierarchy.split(".");
+  return hierarchies[hierarchies.length - 2] == "*";
+});
+
+function getFieldPathPrefix() {
+  if (props.schemaSource === "customField") {
+    return "#/properties/more/properties/";
+  }
+
+  return "#/properties/";
+}
+</script>

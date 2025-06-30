@@ -1,0 +1,4 @@
+export enum CustomFieldDataModeEnum {
+  DEFAULT = "DEFAULT",
+  EXISTING = "EXISTING",
+}

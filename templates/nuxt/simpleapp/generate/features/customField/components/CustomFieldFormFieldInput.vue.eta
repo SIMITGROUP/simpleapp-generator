@@ -1,0 +1,121 @@
+<template>
+  <template v-if="jsonSchema.type !== 'array'">
+    <SimpleAppInput
+      v-if="fieldPath"
+      :setting="handleGetField(fieldPath)"
+      :inputType="inputType"
+      :hidelabel="isParentIsArray"
+      v-model="model"
+    />
+  </template>
+  <template
+    v-else-if="
+      jsonSchema.type === 'array' &&
+      jsonSchema.items &&
+      _.isObject(jsonSchema.items) &&
+      !Array.isArray(jsonSchema.items)
+    "
+  >
+    <template v-if="jsonSchema.items.type === 'object'">
+      <div class="col-span-2">
+        <SimpleAppInputTable
+          :getField="handleGetField"
+          class="col-span-4"
+          :setting="handleGetField(fieldPath)"
+          v-model="model"
+        >
+          <Column
+            v-if="
+              jsonSchema.items &&
+              typeof jsonSchema.items === 'object' &&
+              'properties' in jsonSchema.items
+            "
+            v-for="(subSchema, subSchemaName) in jsonSchema.items.properties"
+            :key="subSchemaName"
+            :field="subSchemaName.toString()"
+            #body="{ index }"
+            :header="camelCaseToWords(subSchemaName.toString())"
+          >
+            <CustomFieldFormFieldInput
+              v-if="typeof subSchema === 'object' && subSchema !== null"
+              :jsonSchema="subSchema"
+              :hierarchy="
+                hierarchy === '' || hierarchy === undefined
+                  ? (subSchemaName as string)
+                  : `${hierarchy}.*.${subSchemaName}`
+              "
+              :schemaSource="schemaSource"
+              :handleGetField="handleGetField"
+              v-model="model[index][subSchemaName]"
+            />
+          </Column>
+
+          <Column #body="{ index }" header="Delete">
+            <Button
+              class="btn-danger"
+              type="button"
+              @click="model.splice(index, 1)"
+            >
+              X
+            </Button>
+          </Column>
+        </SimpleAppInputTable>
+      </div>
+    </template>
+    <template v-else-if="jsonSchema.items.type === 'string'">
+      <SimpleAppInput
+        v-if="fieldPath"
+        :setting="handleGetField(fieldPath)"
+        :inputType="SimpleAppInputType.chip"
+        :hidelabel="isParentIsArray"
+        v-model="model"
+      />
+    </template>
+  </template>
+</template>
+
+<script setup lang="ts">
+import _ from "lodash";
+import { SimpleAppInputType, SimpleAppJSONSchema7 } from "~/types";
+import { SchemaSource } from "~/types/customField.type";
+
+const props = defineProps<{
+  jsonSchema: SimpleAppJSONSchema7;
+  hierarchy: string;
+  handleGetField: any;
+  schemaSource: SchemaSource;
+}>();
+
+const model = defineModel<any>();
+
+const fieldPath = computed(() => {
+  const hierarchies = props.hierarchy.split(".");
+
+  const path = (getFieldPathPrefix() + hierarchies.join("/properties/"))
+    .replace("properties/*", "items")
+    .replace("*", "items");
+
+  // if (props.schemaSource === "miniAppSetting") {
+  //   return path.replace("/properties/setting", "");
+  // }
+
+  return path;
+});
+
+const inputType = computed(() => {
+  return getInputType(props.jsonSchema);
+});
+
+const isParentIsArray = computed(() => {
+  const hierarchies = props.hierarchy.split(".");
+  return hierarchies[hierarchies.length - 2] == "*";
+});
+
+function getFieldPathPrefix() {
+  if (props.schemaSource === "customField") {
+    return "#/properties/more/properties/";
+  }
+
+  return "#/properties/";
+}
+</script>

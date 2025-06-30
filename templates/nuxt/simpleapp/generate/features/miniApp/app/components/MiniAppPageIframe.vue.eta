@@ -1,0 +1,73 @@
+<template>
+  <div class="app-mini-app-iframe-container">
+    <iframe
+      v-if="pageInfo.source !== ''"
+      :ref="(el) => (iframeRef = el as HTMLIFrameElement)"
+      :src="
+        generateIframeSource(pageInfo.source, {
+          miniAppInstallationId: miniAppInstallationId,
+        })
+      "
+      :title="pageInfo.title || t('miniAppLang.content')"
+      sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-modals"
+      referrerpolicy="origin"
+      loading="lazy"
+      @error="handleError"
+      class="w-full h-full pb-7"
+      @load="onIframeLoad"
+    />
+    <div v-if="hasError" class="error-message">
+      {{ t("miniAppLang.ERR_FAILED_LOAD_CONTENT") }}
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { MiniappIntegrationPages } from "~/simpleapp/generate/openapi";
+
+const props = defineProps<{
+  pageInfo: MiniappIntegrationPages;
+  miniAppCode: string;
+  miniAppInstallationId: string;
+}>();
+
+const _xOrg = getPathPara("xorg", "");
+const hasError = ref(false);
+
+const handleError = () => {
+  hasError.value = true;
+};
+
+type Option = {
+  [key: string]: any;
+};
+
+function generateIframeSource(template: string, options: Option = {}) {
+  return template.replace(/{(\w+)}/g, (_, key) => {
+    return options[key] ?? `{${key}}`;
+  });
+}
+
+const { iframeRef, onIframeLoad } = useMiniAppBridge(
+  props.miniAppInstallationId,
+  props.pageInfo,
+  props.miniAppCode,
+);
+</script>
+
+<style scoped>
+.app-mini-app-iframe-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.app-mini-app-iframe-container .error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #666;
+  text-align: center;
+}
+</style>

@@ -1,0 +1,25 @@
+import type {
+  MiniAppDetail,
+  MiniappIntegrationForms,
+  MiniappIntegrationPages,
+} from "~/simpleapp/generate/openapi";
+
+export enum MiniAppFrameworkCompatibility {
+  "COMPATIBLE" = "COMPATIBLE",
+  "TO_BE_DEPRECATED" = "TO_BE_DEPRECATED", // Still compatible, but will be deprecated in the future.
+  "DEPRECATED" = "DEPRECATED",
+}
+
+export type MiniAppPageWithMiniAppCode = MiniappIntegrationPages & {
+  miniAppCode: string;
+};
+
+export type MiniAppFormWithMiniAppCode = MiniappIntegrationForms & {
+  miniAppCode: string;
+};
+
+export type CategorizedMiniApp = {
+  installedMiniApps: MiniAppDetail[];
+  upcomingMiniApps: MiniAppDetail[];
+  availableMiniApps: MiniAppDetail[];
+};

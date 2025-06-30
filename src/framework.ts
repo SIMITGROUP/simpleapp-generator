@@ -188,7 +188,7 @@ export const prepareNuxt = (callback: Function) => {
       (error, stdout, stderr) => {
         //;pnpm install
         console.log(error, stdout, stderr);
-        exec( 
+        exec(
           `cd ${targetfolder};pnpm install --save json-templates vue-camera-lib vue-pdf-embed dayjs pusher-js country-code-dateformat chart.js tailwind-merge @iconify-json/heroicons  json-schema @vueuse/core ts-md5 primeicons memory-cache jsonpath pinia @pinia/nuxt @nuxt/kit lodash @types/lodash @darkwolf/base64url next-auth@4.21.1 @darkwolf/base64url @nuxt/ui ajv ajv-formats ajv-errors dotenv @fullcalendar/core @fullcalendar/vue3 quill prettier axios json-schema mitt @primevue/nuxt-module lru-cache vue-advanced-cropper@vue-3`,
           (error, stdout, stderr) => {
             console.log(error, stdout, stderr);
@@ -298,7 +298,7 @@ export const prettyNuxt = () => {
     `cd ${config.frontendFolder};npx prettier --write "./pages/**/*.vue" "./components/**/*.vue" "./generate/*/*.ts" `
   );
   exec(
-    `npx prettier --write ${config.frontendFolder}/simpleapp/generate/clients/*.ts ${config.frontendFolder}/simpleapp/generate/jsonSchemas/*.ts ${config.frontendFolder}/simpleapp/generate/miniApp/**/*.ts`
+    `npx prettier --write ${config.frontendFolder}/simpleapp/generate/clients/*.ts ${config.frontendFolder}/simpleapp/generate/jsonSchemas/*.ts ${config.frontendFolder}/simpleapp/generate/features/**/*.{ts,vue}`
   );
 };
 

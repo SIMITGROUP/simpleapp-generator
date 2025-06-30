@@ -1,0 +1,17 @@
+<template>
+  <MiniAppRestrictedWarning
+    v-if="!actionAccess.isAllow"
+    :reason="actionAccess.reason"
+    class="flex items-center justify-center mt-10"
+  />
+  <slot v-else />
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  actionAccess: {
+    isAllow: boolean;
+    reason: string;
+  };
+}>();
+</script>

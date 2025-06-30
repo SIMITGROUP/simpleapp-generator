@@ -1,0 +1,25 @@
+<template>
+  <div class="flex items-center gap-4">
+    <span
+      class="px-3 py-1 text-sm font-semibold rounded bg-yellow-100 text-yellow-800"
+    >
+      {{ t(`miniAppLang.${reason}`) }}
+    </span>
+
+    <ButtonPrimary
+      v-if="reason === 'packageTypeRestricted'"
+      :label="t('miniAppLang.upgradePlan')"
+      @click="handleUpgradePlan"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  reason: string;
+}>();
+
+function handleUpgradePlan() {
+  window.open("https://simitgroup.com/simtraineco/#simtrain-price", "_blank");
+}
+</script>

@@ -1,0 +1,38 @@
+<template>
+  <section v-if="validProperties" class="space-y-4">
+    <template
+      v-for="(groupJsonSchema, groupName) in validProperties"
+      :key="groupName"
+    >
+      <CustomFieldViewFormField
+        v-if="isValidSchema(groupJsonSchema)"
+        :jsonSchema="groupJsonSchema"
+        :data="data"
+        :schemaName="groupName.toString()"
+        :hierarchy="groupName.toString()"
+        schemaSource="customField"
+      />
+    </template>
+  </section>
+</template>
+
+<script setup lang="ts">
+import _ from 'lodash';
+import { CustomFieldMoreSchema } from '~/simpleapp/generate/features/customField/types/common';
+import CustomFieldViewFormField from './CustomFieldViewFormField.vue';
+
+const props = defineProps<{
+  customFieldJsonSchema: CustomFieldMoreSchema;
+  data: any;
+}>();
+
+const validProperties = computed(() => {
+  if (
+    props.customFieldJsonSchema.properties !== undefined &&
+    typeof props.customFieldJsonSchema.properties === 'object'
+  ) {
+    return props.customFieldJsonSchema.properties;
+  }
+  return false;
+});
+</script>

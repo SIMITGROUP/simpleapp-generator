@@ -1,0 +1,37 @@
+<template>
+  <div class="py-2 border-b border-dashed">
+    <div
+      class="flex flex-col gap-1 px-3 py-1 hover:bg-slate-100 h-full rounded-lg cursor-pointer text-surface-700"
+      :class="{
+        'bg-slate-100': isActive,
+      }"
+      @click="goTo(`customfield/${resource.name}`)"
+    >
+      <div class="text-sm font-medium">{{ t(resource.name) }}</div>
+      <div class="flex items-center gap-2">
+        <CustomFieldMenuItemBadge
+          :isActive="resource.hasCustomFieldFormSetting"
+          :title="t('customFieldLang.formSettingBadgeLabel')"
+        />
+        <CustomFieldMenuItemBadge
+          :isActive="resource.hasCustomFieldListSetting"
+          :title="t('customFieldLang.listSettingBadgeLabel')"
+        />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { CustomFieldPageMenuResourceItem } from "../types/page";
+import CustomFieldMenuItemBadge from "./CustomFieldMenuItemBadge.vue";
+
+const props = defineProps<{
+  activeResource: string;
+  resource: CustomFieldPageMenuResourceItem;
+}>();
+
+const isActive = computed(() => {
+  return props.activeResource === props.resource.name;
+});
+</script>

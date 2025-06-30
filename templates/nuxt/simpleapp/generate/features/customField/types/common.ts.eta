@@ -1,0 +1,16 @@
+import { SimpleAppJSONSchema7, SimpleAppJSONSchema7Definition } from '~/types';
+import { CustomFieldDataModeEnum } from '../enums/common';
+
+export type CustomFieldDataMode = CustomFieldDataModeEnum;
+
+export type CustomFieldMore = {
+  more?: CustomFieldMoreSchema;
+};
+
+export type CustomFieldMoreSchema = SimpleAppJSONSchema7 & {
+  properties: CustomFieldMoreSchemaGroup;
+};
+
+export type CustomFieldMoreSchemaGroup = {
+  [key: string]: SimpleAppJSONSchema7Definition;
+};

@@ -1,0 +1,69 @@
+<template>
+  <LoadingLine :loading="isFetching" />
+  <SimpleAppJsonSchemaForm
+    v-if="!_.isEmpty(schema)"
+    :schema="schema"
+    :data="data"
+    #default="o"
+  >
+    <MiniAppSettingLayout :isFetching="isFetching" :miniAppTitle="miniAppTitle">
+      <template #action>
+        <Button class="btn-primary" @click="o.validate(validateCallBack)">
+          {{ t('miniAppLang.saveSetting') }}
+        </Button>
+      </template>
+
+      <template #default>
+        <div class="space-y-4" v-if="!_.isEmpty(schema)">
+          <p
+            v-if="miniApp?.integration?.settings?.note"
+            class="text-sm text-gray-600 whitespace-pre-line"
+          >
+            {{
+              t('miniAppLang.miniAppSettingNote', {
+                miniAppNote: miniApp.integration.settings.note ?? ''
+              })
+            }}
+          </p>
+          <CustomFieldFormField
+            :jsonSchema="settingSchema"
+            :data="data"
+            :handleGetField="o.getField"
+            schemaName="setting"
+            hierarchy="setting"
+            schemaSource="miniAppSetting"
+            :isShowFieldset="false"
+            :isHideFieldsetLegend="true"
+          />
+        </div>
+      </template>
+    </MiniAppSettingLayout>
+  </SimpleAppJsonSchemaForm>
+</template>
+
+<script setup lang="ts" generic="T">
+import _ from 'lodash';
+import MiniAppSettingLayout from './MiniAppSettingLayout.vue';
+import CustomFieldFormField from '../../../customField/components/CustomFieldFormField.vue';
+
+const props = defineProps<{
+  miniAppCode?: string;
+}>();
+
+const _miniAppCode = props.miniAppCode ?? getPathPara('miniAppCode');
+
+const {
+  isFetching,
+  miniApp,
+  miniAppTitle,
+  schema,
+  settingSchema,
+  data,
+  loadMiniAppDetail,
+  validateCallBack
+} = useMiniAppSetting(_miniAppCode);
+
+onMounted(async () => {
+  await loadMiniAppDetail();
+});
+</script>

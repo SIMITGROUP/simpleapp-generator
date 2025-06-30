@@ -1,0 +1,156 @@
+<template>
+  <title>{{ miniApp?.name }} - {{ t('miniAppLang.miniApp') }}</title>
+  <LoadingLine :loading="isFetching" />
+
+  <div
+    v-if="miniApp && !_.isEmpty(miniApp)"
+    class="p-8 max-w-4xl mx-auto mb-10 space-y-4"
+  >
+    <div class="flex items-start">
+      <img :src="miniApp.logo" class="size-16 mr-8 object-contain" />
+
+      <div class="space-y-1">
+        <h1 class="text-3xl font-bold mb-1">{{ miniApp.name }}</h1>
+        <div class="text-gray-400 text-sm flex items-center gap-2">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-user" />
+            <span>{{ miniApp.author }}</span>
+          </div>
+          <span>|</span>
+          <div>v {{ miniApp.version }}</div>
+        </div>
+        <p class="text-gray-600">{{ miniApp.intro.description }}</p>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      <template v-if="$miniAppStore.isFetchingInstalledMiniApps">
+        <div class="flex items-center h-10">
+          <i class="pi pi-spinner animate-spin" />
+        </div>
+      </template>
+      <MiniAppPermissionWrapper
+        v-else
+        :actionAccess="$miniAppStore.getActionAccess('plan')"
+      >
+        <div class="flex space-x-2">
+          <template v-if="$miniAppStore.checkIsMiniAppInstalled(miniApp.code)">
+            <!-- Installed -->
+            <MiniAppPermissionWrapper
+              :actionAccess="$miniAppStore.getActionAccess('uninstall')"
+            >
+              <ButtonDefault
+                :label="t('miniAppLang.uninstallApp')"
+                :loading="isAppInstallationInProgress"
+                :disabled="isAppInstallationInProgress"
+                @click="handleUninstallApp"
+              />
+            </MiniAppPermissionWrapper>
+
+            <MiniAppPermissionWrapper
+              v-if="
+                miniApp.integration.settings &&
+                !_.isEmpty(miniApp.integration.settings)
+              "
+              :actionAccess="$miniAppStore.getActionAccess('updateSetting')"
+            >
+              <ButtonSecondary
+                :label="t('miniAppLang.openSetting')"
+                :disabled="isAppInstallationInProgress"
+                icon="pi pi-cog"
+                @click="handleOpenSetting"
+              />
+            </MiniAppPermissionWrapper>
+          </template>
+          <template v-else>
+            <!-- Not yet install -->
+            <MiniAppPermissionWrapper
+              :actionAccess="$miniAppStore.getActionAccess('install')"
+            >
+              <ButtonPrimary
+                :label="t('miniAppLang.installApp')"
+                :loading="isAppInstallationInProgress"
+                :disabled="isAppInstallationInProgress"
+                @click="handleInstallApp"
+              />
+            </MiniAppPermissionWrapper>
+          </template>
+        </div>
+      </MiniAppPermissionWrapper>
+
+      <div v-if="miniApp.intro.previewImages.length > 0">
+        <h2 class="text-xl font-semibold mb-2">Overview:</h2>
+        <div class="card flex justify-center py-4">
+          <Galleria
+            :value="miniApp.intro.previewImages"
+            :numVisible="5"
+            containerStyle="max-width: 640px"
+            :showThumbnails="false"
+            :showIndicators="true"
+          >
+            <template #item="slotProps">
+              <img
+                :src="slotProps.item"
+                :alt="miniApp.name"
+                style="width: 100%; display: block"
+              />
+            </template>
+          </Galleria>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="text-xl font-semibold mb-2">Key Features:</h2>
+        <div class="mt-6 space-y-2 text-gray-700">
+          <div
+            v-for="feature in miniApp.intro.features"
+            :key="feature.title"
+            class="flex space-x-2"
+          >
+            <div>✅</div>
+            <div>
+              <div>
+                <span class="font-semibold">{{ feature.title }}</span> -
+                {{ feature.description }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div v-else>
+    <template v-if="!isFetching"> Not found... </template>
+  </div>
+</template>
+
+<script setup lang="ts">
+import _ from 'lodash';
+import { MiniAppDetail } from '~/simpleapp/generate/openapi';
+import MiniAppPermissionWrapper from '../MiniAppPermissionWrapper.vue';
+
+defineProps<{
+  miniApp?: MiniAppDetail;
+  isFetching: boolean;
+  isAppInstallationInProgress: boolean;
+}>();
+
+const emits = defineEmits<{
+  (e: 'installApp'): void;
+  (e: 'uninstallApp'): void;
+  (e: 'openSetting'): void;
+  (e: 'upgradePlan'): void;
+}>();
+
+function handleInstallApp() {
+  emits('installApp');
+}
+
+function handleUninstallApp() {
+  emits('uninstallApp');
+}
+
+function handleOpenSetting() {
+  emits('openSetting');
+}
+</script>

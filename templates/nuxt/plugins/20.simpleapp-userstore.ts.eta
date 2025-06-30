@@ -51,7 +51,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       async loadRemoteUserInfo() {
         // console.log('loadRemoteUserInfo')
 
-        const { $axios, $appPluginsStore, $customFieldStore } = useNuxtApp();
+        const { $axios, $miniAppStore, $customFieldStore } = useNuxtApp();
         const route = useRoute();
         let xorg = this.getCurrentXorg();
 
@@ -62,8 +62,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           apiurl = `${useRuntimeConfig().public.appUrl}/api/${xorg}`;
         }
 
-        if(xorg !== undefined) {
-          await $appPluginsStore.loadInstalledPlugins();
+        if (xorg !== undefined) {
+          await $miniAppStore.loadInstalledMiniApps();
           await $customFieldStore.fetchList();
         }
 

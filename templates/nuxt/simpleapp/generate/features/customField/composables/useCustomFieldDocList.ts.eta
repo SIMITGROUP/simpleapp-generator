@@ -1,0 +1,48 @@
+export const useCustomFieldDocList = () => {
+  function isCustomField(jsonSchema: any, col: string): boolean {
+    return (
+      col.startsWith("more.default.") &&
+      !!getCustomFieldSchemaItem(jsonSchema, col)
+    );
+  }
+
+  function getCustomFieldSchemaItem(jsonSchema: any, col: string): any {
+    const key = col.replace("more.default.", "");
+    return jsonSchema?.more?.properties?.default?.properties?.[key];
+  }
+
+  function getCustomFieldSchema(jsonSchema: any, col: string): any {
+    return jsonSchema?.more?.properties?.default?.properties ?? {};
+  }
+
+  function getCustomFieldSchemaKey(jsonSchema: any, col: string): any {
+    const key = col.replace("more.default.", "");
+    return key;
+  }
+
+  function getCustomFieldData(data: any): any {
+    return data?.more?.default;
+  }
+
+  function getCustomFieldTitle(jsonSchema: any, col: string): string {
+    return (
+      getCustomFieldSchemaItem(jsonSchema, col)?.title ??
+      col.split(".").pop() ??
+      col
+    );
+  }
+
+  function getCustomFieldField(jsonSchema: any, col: string): string {
+    const schema = getCustomFieldSchemaItem(jsonSchema, col);
+    return schema?.["x-foreignkey"] ? `${col}.label` : col;
+  }
+
+  return {
+    isCustomField,
+    getCustomFieldSchema,
+    getCustomFieldSchemaKey,
+    getCustomFieldData,
+    getCustomFieldTitle,
+    getCustomFieldField,
+  };
+};

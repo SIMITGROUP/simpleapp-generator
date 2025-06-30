@@ -1,0 +1,20 @@
+<template>
+  <template v-if="icon === '' || !['class', 'imageSource'].includes(iconType)">
+    <i :class="'pi pi-file'" />
+  </template>
+  <template v-else>
+    <template v-if="iconType === 'class'">
+      <i :class="icon || 'pi pi-file'" />
+    </template>
+    <template v-else-if="iconType === 'imageSource'">
+      <img :src="icon" class="size-3.5 pointer-events-none object-contain" />
+    </template>
+  </template>
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  iconType: "class" | "imageSource" | string;
+  icon: string;
+}>();
+</script>

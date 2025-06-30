@@ -1,0 +1,34 @@
+<template>
+  <div
+    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
+  >
+    <MiniAppIntegrationItem
+      v-if="items && items.length > 0"
+      v-for="item in items"
+      :key="item._id"
+      :item="item"
+      @miniAppClick="handleMiniAppClick"
+    />
+    <div
+      v-else
+      class="flex justify-center items-center bg-gray-50 rounded-lg p-4 h-48 col-span-full"
+    >
+      <NodataLarge :label="t('noDataFound')" :icon="UndrawNodata" />
+    </div>
+  </div>
+</template>
+<script setup lang="ts">
+import UndrawNodata from '~/components/icon/UndrawNodata.vue';
+import { Miniapp } from '~/simpleapp/generate/openapi';
+import MiniAppIntegrationItem from './MiniAppIntegrationItem.vue';
+
+defineProps<{ items: Miniapp[] | undefined }>();
+
+const emits = defineEmits<{
+  (event: 'miniAppClick', item: Miniapp): void;
+}>();
+
+function handleMiniAppClick(item: Miniapp) {
+  emits('miniAppClick', item);
+}
+</script>

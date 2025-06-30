@@ -1,0 +1,231 @@
+import _ from 'lodash';
+import {
+  CustomFieldDataMode,
+  CustomFieldMoreSchema,
+  CustomFieldMoreSchemaGroup
+} from '../types/common';
+import { CustomFieldDataModeEnum } from '../enums/common';
+import { DynamicObject, SimpleAppJSONSchema7Definition } from '~/types';
+
+export class CustomFieldService {
+  // =============================== Prepare Schema Function ===============================
+  prepareCustomFieldJsonSchema(collectionName: string) {
+    const customFieldFromDB = this.findCustomFieldSchemaFromDB(collectionName);
+    const customFieldFromMiniApp =
+      this.findCustomFieldSchemaFromMiniApp(collectionName);
+
+    if (customFieldFromDB && !_.isEmpty(customFieldFromDB)) {
+    }
+
+    const schema: CustomFieldMoreSchema = {
+      type: 'object',
+      properties: {
+        ...customFieldFromDB,
+        ...customFieldFromMiniApp
+      }
+    };
+
+    return schema;
+  }
+
+  private findCustomFieldSchemaFromDB(collectionName: string) {
+    const { $customFieldStore } = useNuxtApp();
+    if (!$customFieldStore.data || _.isEmpty($customFieldStore.data)) {
+      return {};
+    }
+
+    const customField = $customFieldStore.findByCollectionName(collectionName);
+    if (!customField) {
+      return {};
+    }
+
+    if (
+      !customField?.form?.jsonSchema ||
+      _.isEmpty(customField?.form?.jsonSchema)
+    ) {
+      return {};
+    }
+
+    const schema: CustomFieldMoreSchemaGroup = {
+      default: {
+        title: 'Custom Field',
+        ...customField.form.jsonSchema
+      }
+    };
+
+    return schema;
+  }
+
+  private findCustomFieldSchemaFromMiniApp(collectionName: string) {
+    const schema: CustomFieldMoreSchemaGroup = {};
+
+    const { $miniAppStore } = useNuxtApp();
+
+    const miniAppForms = $miniAppStore.getForm(collectionName);
+    if (!miniAppForms || miniAppForms.length <= 0) {
+      return schema;
+    }
+
+    for (let i = 0; i < miniAppForms.length; i++) {
+      const miniAppItem = miniAppForms[i];
+      const { miniAppCode, jsonSchema } = miniAppItem;
+
+      schema[miniAppCode] = jsonSchema as SimpleAppJSONSchema7Definition;
+    }
+
+    return schema;
+  }
+
+  // ================================ Prepare Data Function ================================
+  prepareCustomFieldData<T extends DynamicObject>(
+    collectionName: string,
+    mode: CustomFieldDataMode,
+    customSchema: CustomFieldMoreSchema | undefined,
+    resourceData: T | undefined
+  ): T | undefined {
+    if (
+      !customSchema ||
+      !customSchema?.properties ||
+      _.isEmpty(customSchema.properties)
+    ) {
+      return resourceData;
+    }
+
+    switch (mode) {
+      case CustomFieldDataModeEnum.DEFAULT:
+        return this.prepareCustomFieldWithDefaultData<T>(customSchema);
+        break;
+
+      case CustomFieldDataModeEnum.EXISTING:
+        if (!resourceData) {
+          return this.prepareCustomFieldWithDefaultData<T>(customSchema);
+        }
+
+        return this.prepareCustomFieldWithExistingData(
+          customSchema,
+          resourceData
+        );
+        break;
+    }
+  }
+
+  private prepareCustomFieldWithDefaultData<T extends DynamicObject>(
+    customSchema: CustomFieldMoreSchema
+  ) {
+    const data: DynamicObject = {};
+    for (const [groupName, groupItem] of Object.entries(
+      customSchema.properties
+    )) {
+      const defaultData = this.generateDefaultData(groupItem);
+
+      data[groupName] = defaultData;
+    }
+
+    return data as T;
+  }
+
+  private prepareCustomFieldWithExistingData<T extends DynamicObject>(
+    customSchema: CustomFieldMoreSchema,
+    resourceData: T
+  ) {
+    const data: DynamicObject = {};
+    for (const [groupName, groupItem] of Object.entries(
+      customSchema.properties
+    )) {
+      const defaultData = this.generateDefaultData(groupItem);
+      const mergedData = this.mergeWithDefault(
+        defaultData,
+        resourceData?.[groupName]
+      );
+
+      data[groupName] = mergedData;
+    }
+
+    return data as T;
+  }
+
+  private generateDefaultData(schema: SimpleAppJSONSchema7Definition): any {
+    if (!_.isObject(schema)) {
+      return '';
+    }
+
+    if (schema.type === 'object') {
+      const result: any = {};
+
+      if (schema?.['x-foreignkey']) {
+        return undefined;
+      }
+
+      const properties = schema.properties || {};
+      for (const key of Object.keys(properties)) {
+        result[key] = this.generateDefaultData(properties[key]);
+      }
+      return result;
+    }
+
+    if (schema.type === 'array') {
+      const itemSchema = schema.items;
+      const minItems = schema.minItems || 0;
+      const arr = [];
+      const itemsCount = minItems > 0 ? 1 : 0;
+      for (let i = 0; i < itemsCount; i++) {
+        arr.push(
+          this.generateDefaultData(itemSchema as SimpleAppJSONSchema7Definition)
+        );
+      }
+      return arr;
+    }
+
+    if (typeof schema.default !== 'undefined') {
+      return schema.default;
+    }
+
+    // handle primitive types fallback
+    switch (schema.type) {
+      case 'string':
+        return '';
+      case 'number':
+      case 'integer':
+        return 0;
+      case 'boolean':
+        return false;
+      default:
+        return null;
+    }
+  }
+
+  private mergeWithDefault<T extends DynamicObject>(
+    defaultData: T,
+    collectionData: T | undefined
+  ) {
+    if (Array.isArray(defaultData)) {
+      if (Array.isArray(collectionData)) {
+        if (_.isEmpty(collectionData)) {
+          return [];
+        }
+        // Merge each item
+        const mergedArray = collectionData.map((collectionItem, index) => {
+          const defaultItem = defaultData[index] ?? defaultData[0]; // use first default if index out of bound
+          return this.mergeWithDefault<T>(defaultItem, collectionItem);
+        }) as any;
+        return mergedArray;
+      } else {
+        // return defaultData;
+        return [];
+      }
+    } else if (typeof defaultData === 'object' && defaultData !== null) {
+      const result: any = {};
+      for (const key of Object.keys(defaultData)) {
+        result[key] = this.mergeWithDefault(
+          defaultData[key],
+          collectionData?.[key]
+        );
+      }
+      return result;
+    } else {
+      return typeof collectionData !== 'undefined'
+        ? collectionData
+        : defaultData;
+    }
+  }
+}

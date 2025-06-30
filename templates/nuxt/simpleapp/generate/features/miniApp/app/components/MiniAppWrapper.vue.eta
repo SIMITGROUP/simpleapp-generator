@@ -1,0 +1,39 @@
+<template>
+  <LoadingLine :loading="$miniAppStore.isFetchingInstalledMiniApps" />
+
+  <MiniAppPermissionWrapper
+    v-if="!$miniAppStore.isFetchingInstalledMiniApps"
+    :actionAccess="$miniAppStore.getActionAccess('plan')"
+  >
+    <MiniAppPermissionWrapper
+      :actionAccess="{
+        isAllow: $miniAppStore.checkIsMiniAppInstalled(miniAppCode),
+        reason: 'notYetInstall'
+      }"
+    >
+      <MiniAppPermissionWrapper
+        v-if="pageCode !== ''"
+        :actionAccess="{
+          isAllow: $miniAppStore.checkIsAllowAccessMiniAppPage(
+            miniAppCode,
+            pageCode
+          ),
+          reason: 'insufficientAccessPermission'
+        }"
+      >
+        <slot />
+      </MiniAppPermissionWrapper>
+
+      <slot v-else />
+    </MiniAppPermissionWrapper>
+  </MiniAppPermissionWrapper>
+</template>
+
+<script setup lang="ts">
+import MiniAppPermissionWrapper from './MiniAppPermissionWrapper.vue';
+
+defineProps<{
+  miniAppCode: string;
+  pageCode: string;
+}>();
+</script>

@@ -80,11 +80,11 @@ export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<
 
     <% if(it.customField.isEnable) { %>
       // FLAG::CUSTOM_FIELD
-      const { $customFieldStore, $appPluginsStore } = useNuxtApp();
+      const { $customFieldStore, $miniAppStore } = useNuxtApp();
       if (!this._customFieldWatch) {
         this._customFieldWatch = watch(
-          [() => $customFieldStore.data, () => $appPluginsStore.installedPlugins],
-          ([newCustomField, newPlugins], [oldCustomField, oldPlugins]) => {
+          [() => $customFieldStore.data, () => $miniAppStore.installedMiniApps],
+          ([newCustomField, newMiniApps], [oldCustomField, oldMiniApps]) => {
             this.prepareCustomFieldJsonSchema();
           },
           { immediate: false, deep: true },
