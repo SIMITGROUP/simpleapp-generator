@@ -47,6 +47,8 @@ import { MiniAppResourceMap } from "../types/resource-mapper.type";
 export class MiniAppBridgeResourceAccessor {
   protected instances: Partial<MiniAppResourceMap> = {};
 
+  protected miniAppCode: string = "";
+
   <% for (let i = 0; i < it.modules.length; i++) { %>
     <%
       const { resourceName, pascalName, kebabName, hasMiniAppWhitelistedApi } = getMiniAppInfo(it.modules[i]);
@@ -54,7 +56,7 @@ export class MiniAppBridgeResourceAccessor {
     <% if(hasMiniAppWhitelistedApi) { %>
       get <%= resourceName %>() {
         if (!this.instances.<%= resourceName %>) {
-          this.instances.<%= resourceName %> = new MiniApp<%= pascalName %>BridgeEditableService();
+          this.instances.<%= resourceName %> = new MiniApp<%= pascalName %>BridgeEditableService(this.miniAppCode);
         }
         return this.instances.<%= resourceName %>;
       }

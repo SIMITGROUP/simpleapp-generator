@@ -28,8 +28,17 @@ export type <%= typeActionName %> = (typeof actions)[number];
 export class MiniApp<%= pascalName %>BridgeService {
   protected api!: <%= apiName %>;
 
-  constructor() {
-    this.api = new <%= apiName %>(getAxiosConfig());
+  constructor(miniAppCode: string) {
+    const config = getAxiosConfig();
+    if(miniAppCode !== ""){
+      config.baseOptions = {
+        headers: {
+          "x-mini-app-code": miniAppCode
+        }
+      }
+    }
+   
+    this.api = new <%= apiName %>(config);
   }
 
   async handleApi(message: MiniAppBridgeMessageApi<<%= typeActionName %>>) {
