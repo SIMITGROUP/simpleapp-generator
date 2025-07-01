@@ -38,6 +38,8 @@ export default defineNuxtPlugin(async () => {
 
   const miniAppManager = new MINIAPPMANAGERApi(config);
 
+  const MINI_APP_BUILT_IN_SETTING_NAME = "mini-app-setting";
+
   const useMiniAppStore = defineStore("mini-app", {
     state: () => ({
       actionAccess: {} as MiniAppDetailActionAccess,
@@ -105,11 +107,14 @@ export default defineNuxtPlugin(async () => {
               !_.isEmpty(miniApp.integration.settings.jsonSchema)
             ) {
               pages.push({
-                code: "setting",
+                code: MINI_APP_BUILT_IN_SETTING_NAME,
                 title: t("miniAppLang.setting"),
                 description: "",
                 sourceType: "",
-                source: "",
+                sources: {
+                  development: "",
+                  production: "",
+                },
                 requiredPermissions: [],
                 iconType: "class",
                 icon: "pi pi-cog",
@@ -235,7 +240,7 @@ export default defineNuxtPlugin(async () => {
       },
 
       navigateToMiniAppPage(miniAppCode: string, pageCode: string) {
-        if (pageCode === "setting") {
+        if (pageCode === MINI_APP_BUILT_IN_SETTING_NAME) {
           goTo(this.getMiniAppSettingPath(miniAppCode));
         } else {
           goTo(this.getMiniAppPageUrlPath(miniAppCode, pageCode));
@@ -352,7 +357,10 @@ export default defineNuxtPlugin(async () => {
 
       openMiniAppSetting(miniAppCode: string | undefined) {
         if (miniAppCode && miniAppCode != "") {
-          this.navigateToMiniAppPage(miniAppCode, "setting");
+          this.navigateToMiniAppPage(
+            miniAppCode,
+            MINI_APP_BUILT_IN_SETTING_NAME,
+          );
         }
       },
     },
