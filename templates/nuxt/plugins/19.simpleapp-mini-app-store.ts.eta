@@ -9,6 +9,7 @@ import {
   Miniapp,
   MiniAppDetail,
   MiniAppDetailActionAccess,
+  MiniappIntegrationPages,
   MINIAPPMANAGERApi,
 } from "~/simpleapp/generate/openapi";
 import {
@@ -98,7 +99,7 @@ export default defineNuxtPlugin(async () => {
       getMenuItems() {
         return this.installedMiniApps.flatMap((miniApp) => {
           const pages = miniApp.integration.pages.filter((page) => {
-            return this.checkIsAllowAccessMiniAppPage(miniApp.code, page.code);
+            return this.checkIsAllowAccessMiniAppPage(miniApp.code, page.code) && this.isRequiredToShowOnMenu(page);
           });
 
           if (this.isCanUpdateSetting) {
@@ -135,6 +136,10 @@ export default defineNuxtPlugin(async () => {
             pages,
           };
         });
+      },
+
+      isRequiredToShowOnMenu(page: MiniappIntegrationPages){
+        return page.isHideOnMenu !== true;
       },
 
       // ============================ Load Function ============================
