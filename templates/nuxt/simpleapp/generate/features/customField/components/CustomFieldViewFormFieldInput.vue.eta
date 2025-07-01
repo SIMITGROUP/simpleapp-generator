@@ -1,10 +1,10 @@
 <template>
-  <div>
-    <label class="text-gray-400 text-sm truncate">
-      {{ label }}
-    </label>
+  <template v-if="jsonSchema.type !== 'array'">
     <div>
-      <template v-if="jsonSchema.type !== 'array'">
+      <label v-if="!isParentIsArray" class="text-gray-400 text-sm truncate">
+        {{ label }}
+      </label>
+      <div>
         <PageDocListColumnItem
           :col="columnName"
           :data="{
@@ -15,24 +15,74 @@
           :documentTitle="''"
           :resourcename="''"
         />
-      </template>
-      <template
-        v-else-if="
-          jsonSchema.type === 'array' &&
-          jsonSchema.items &&
-          _.isObject(jsonSchema.items) &&
-          !Array.isArray(jsonSchema.items)
-        "
-      >
-        <template v-if="jsonSchema.items.type === 'object'">
-          {{ model }}
-        </template>
-        <template v-else-if="jsonSchema.items.type === 'string'">
-          {{ model }}
-        </template>
-      </template>
+      </div>
     </div>
-  </div>
+  </template>
+  <template
+    v-else-if="
+      jsonSchema.type === 'array' &&
+      jsonSchema.items &&
+      _.isObject(jsonSchema.items) &&
+      !Array.isArray(jsonSchema.items)
+    "
+  >
+    <template v-if="jsonSchema.items.type === 'object'">
+      <div class="col-span-2">
+        <SimpleAppInputTable
+          :getField="() => {}"
+          class="col-span-4"
+          :setting="{
+            readonly: true,
+          }"
+          v-model="model"
+        >
+          <Column
+            v-if="
+              jsonSchema.items &&
+              typeof jsonSchema.items === 'object' &&
+              'properties' in jsonSchema.items
+            "
+            v-for="(subSchema, subSchemaName) in jsonSchema.items.properties"
+            :key="subSchemaName"
+            :field="subSchemaName.toString()"
+            #body="{ index }"
+            :header="camelCaseToWords(subSchemaName.toString())"
+          >
+            <CustomFieldViewFormFieldInput
+              v-if="typeof subSchema === 'object' && subSchema !== null"
+              :jsonSchema="subSchema"
+              :hierarchy="
+                hierarchy === '' || hierarchy === undefined
+                  ? (subSchemaName as string)
+                  : `${hierarchy}.*.${subSchemaName}`
+              "
+              :schemaSource="schemaSource"
+              v-model="model[index][subSchemaName]"
+            />
+          </Column>
+        </SimpleAppInputTable>
+      </div>
+    </template>
+    <template v-else-if="jsonSchema.items.type === 'string'">
+      <div>
+        <label v-if="!isParentIsArray" class="text-gray-400 text-sm truncate">
+          {{ label }}
+        </label>
+        <div>
+          <PageDocListColumnItem
+            :col="columnName"
+            :data="{
+              [columnName]: model,
+            }"
+            :schemacols="schemaCols"
+            :uniqueKey="''"
+            :documentTitle="''"
+            :resourcename="''"
+          />
+        </div>
+      </div>
+    </template>
+  </template>
 </template>
 
 <script setup lang="ts">
