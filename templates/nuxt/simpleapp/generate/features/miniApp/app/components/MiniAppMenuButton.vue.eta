@@ -20,7 +20,7 @@
             :id="'mainmenu-app-miniApps-item-' + miniApp._id"
             icon=""
             :to="
-              miniApp.pages[0]?.code === 'setting'
+              miniApp.pages[0]?.code === 'mini-app-setting'
                 ? $miniAppStore.getMiniAppSettingPageUrl(miniApp.code)
                 : $miniAppStore.getMiniAppPageUrl(
                     miniApp.code,
@@ -80,9 +80,9 @@
       <template v-if="$miniAppStore.isShowMiniAppMoreMenuButton">
         <MainmenuButton
           :id="'mainmenu-app-miniApps-page-more'"
-          :to="getDocumentUrl('miniApps')"
-          :title="t('miniAppLang.myminiApp')"
-          v-tooltip.right="t('miniAppLang.myminiApp')"
+          :to="getDocumentUrl('miniapp')"
+          :title="t('miniAppLang.myMiniApp')"
+          v-tooltip.right="t('miniAppLang.myMiniApp')"
         >
           <template #icon>
             <IconPuzzle class="size-7" />

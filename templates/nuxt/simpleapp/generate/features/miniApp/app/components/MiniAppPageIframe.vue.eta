@@ -1,10 +1,10 @@
 <template>
   <div class="app-mini-app-iframe-container">
     <iframe
-      v-if="pageInfo.source !== ''"
+      v-if="iframeSource !== ''"
       :ref="(el) => (iframeRef = el as HTMLIFrameElement)"
       :src="
-        generateIframeSource(pageInfo.source, {
+        generateIframeSource(iframeSource, {
           miniAppInstallationId: miniAppInstallationId,
         })
       "
@@ -53,6 +53,12 @@ const { iframeRef, onIframeLoad } = useMiniAppBridge(
   props.pageInfo,
   props.miniAppCode,
 );
+
+const iframeSource = computed(() => {
+  return isDevMode()
+    ? props.pageInfo.sources.development
+    : props.pageInfo.sources.production;
+});
 </script>
 
 <style scoped>
