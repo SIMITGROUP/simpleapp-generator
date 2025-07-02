@@ -1,3 +1,7 @@
+[1.6.7b-alpha]
+
+1. Fix Missing Import
+
 [1.6.7a-alpha]
 
 1. Add Mini App
