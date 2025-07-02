@@ -8,6 +8,8 @@
 </template>
 
 <script setup lang="ts">
+import MiniAppRestrictedWarning from "./MiniAppRestrictedWarning.vue";
+
 defineProps<{
   actionAccess: {
     isAllow: boolean;
