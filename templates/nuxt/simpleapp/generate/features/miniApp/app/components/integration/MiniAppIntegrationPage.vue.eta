@@ -1,5 +1,5 @@
 <template>
-  <title>{{ miniApp?.name }} - {{ t('miniAppLang.miniApp') }}</title>
+  <title>{{ miniApp?.name }} - {{ t("miniAppLang.miniApp") }}</title>
   <LoadingLine :loading="isFetching" />
 
   <div
@@ -18,6 +18,28 @@
           </div>
           <span>|</span>
           <div>v {{ miniApp.version }}</div>
+
+          <div
+            v-if="!_.isEmpty(miniApp.requiredPlans)"
+            class="flex items-center gap-2"
+          >
+            <span>|</span>
+            <span
+              v-for="permission in miniApp.requiredPlans ?? []"
+              class="px-3 py-0.5 bg-slate-100 text-surface-500 font-semibold text-xs rounded uppercase"
+            >
+              {{ permission }}
+            </span>
+          </div>
+          <div v-else class="flex items-center gap-2">
+            <span>|</span>
+            <span
+              v-for="permission in ['lite', 'pro', 'enterprise']"
+              class="px-3 py-0.5 bg-slate-100 text-surface-500 font-semibold text-xs rounded uppercase"
+            >
+              {{ permission }}
+            </span>
+          </div>
         </div>
         <p class="text-gray-600">{{ miniApp.intro.description }}</p>
       </div>
@@ -31,13 +53,14 @@
       </template>
       <MiniAppPermissionWrapper
         v-else
-        :actionAccess="$miniAppStore.getActionAccess('plan')"
+        :permission="$miniAppStore.checkHasFeature()"
       >
-        <div class="flex space-x-2">
-          <template v-if="$miniAppStore.checkIsMiniAppInstalled(miniApp.code)">
+        <div class="flex items-center space-x-2">
+          <template v-if="$miniAppStore.isMiniAppInstalled(miniApp.code)">
             <!-- Installed -->
             <MiniAppPermissionWrapper
-              :actionAccess="$miniAppStore.getActionAccess('uninstall')"
+              :permission="$miniAppStore.checkCanUninstall(miniApp)"
+              class="!mt-0"
             >
               <ButtonDefault
                 :label="t('miniAppLang.uninstallApp')"
@@ -52,7 +75,8 @@
                 miniApp.integration.settings &&
                 !_.isEmpty(miniApp.integration.settings)
               "
-              :actionAccess="$miniAppStore.getActionAccess('updateSetting')"
+              :permission="$miniAppStore.checkCanUpdateSetting(miniApp)"
+              class="!mt-0"
             >
               <ButtonSecondary
                 :label="t('miniAppLang.openSetting')"
@@ -65,7 +89,8 @@
           <template v-else>
             <!-- Not yet install -->
             <MiniAppPermissionWrapper
-              :actionAccess="$miniAppStore.getActionAccess('install')"
+              :permission="$miniAppStore.checkCanInstall(miniApp)"
+              class="!mt-0"
             >
               <ButtonPrimary
                 :label="t('miniAppLang.installApp')"
@@ -125,9 +150,9 @@
 </template>
 
 <script setup lang="ts">
-import _ from 'lodash';
-import { MiniAppDetail } from '~/simpleapp/generate/openapi';
-import MiniAppPermissionWrapper from '../MiniAppPermissionWrapper.vue';
+import _ from "lodash";
+import { MiniAppDetail } from "~/simpleapp/generate/openapi";
+import MiniAppPermissionWrapper from "../MiniAppPermissionWrapper.vue";
 
 defineProps<{
   miniApp?: MiniAppDetail;
@@ -136,21 +161,21 @@ defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: 'installApp'): void;
-  (e: 'uninstallApp'): void;
-  (e: 'openSetting'): void;
-  (e: 'upgradePlan'): void;
+  (e: "installApp"): void;
+  (e: "uninstallApp"): void;
+  (e: "openSetting"): void;
+  (e: "upgradePlan"): void;
 }>();
 
 function handleInstallApp() {
-  emits('installApp');
+  emits("installApp");
 }
 
 function handleUninstallApp() {
-  emits('uninstallApp');
+  emits("uninstallApp");
 }
 
 function handleOpenSetting() {
-  emits('openSetting');
+  emits("openSetting");
 }
 </script>

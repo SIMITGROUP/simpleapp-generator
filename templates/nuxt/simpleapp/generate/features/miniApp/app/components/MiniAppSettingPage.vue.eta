@@ -6,10 +6,14 @@
     :data="data"
     #default="o"
   >
-    <MiniAppSettingLayout :isFetching="isFetching" :miniAppTitle="miniAppTitle">
+    <MiniAppSettingLayout
+      :isFetching="isFetching"
+      :miniAppCode="_miniAppCode"
+      :miniAppTitle="miniAppTitle"
+    >
       <template #action>
         <Button class="btn-primary" @click="o.validate(validateCallBack)">
-          {{ t('miniAppLang.saveSetting') }}
+          {{ t("miniAppLang.saveSetting") }}
         </Button>
       </template>
 
@@ -20,8 +24,8 @@
             class="text-sm text-gray-600 whitespace-pre-line"
           >
             {{
-              t('miniAppLang.miniAppSettingNote', {
-                miniAppNote: miniApp.integration.settings.note ?? ''
+              t("miniAppLang.miniAppSettingNote", {
+                miniAppNote: miniApp.integration.settings.note ?? "",
               })
             }}
           </p>
@@ -42,15 +46,15 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import _ from 'lodash';
-import MiniAppSettingLayout from './MiniAppSettingLayout.vue';
-import CustomFieldFormField from '../../../customField/components/CustomFieldFormField.vue';
+import _ from "lodash";
+import MiniAppSettingLayout from "./MiniAppSettingLayout.vue";
+import CustomFieldFormField from "../../../customField/components/CustomFieldFormField.vue";
 
 const props = defineProps<{
   miniAppCode?: string;
 }>();
 
-const _miniAppCode = props.miniAppCode ?? getPathPara('miniAppCode');
+const _miniAppCode = props.miniAppCode ?? getPathPara("miniAppCode");
 
 const {
   isFetching,
@@ -60,7 +64,7 @@ const {
   settingSchema,
   data,
   loadMiniAppDetail,
-  validateCallBack
+  validateCallBack,
 } = useMiniAppSetting(_miniAppCode);
 
 onMounted(async () => {

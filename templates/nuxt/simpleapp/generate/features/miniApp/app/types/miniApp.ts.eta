@@ -23,3 +23,8 @@ export type CategorizedMiniApp = {
   upcomingMiniApps: MiniAppDetail[];
   availableMiniApps: MiniAppDetail[];
 };
+
+export type MiniAppPermissionResult = {
+  status: boolean;
+  reason?: string;
+};

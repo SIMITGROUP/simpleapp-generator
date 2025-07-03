@@ -4,7 +4,7 @@
  * last change 2025-06-09
  */
 
-import _ from "lodash";
+import _, { min } from "lodash";
 import {
   Miniapp,
   MiniAppDetail,
@@ -15,6 +15,7 @@ import {
 import {
   MiniAppFormWithMiniAppCode,
   MiniAppFrameworkCompatibility,
+  MiniAppPermissionResult,
 } from "~/simpleapp/generate/features/miniApp/app/types/miniApp";
 
 export default defineNuxtPlugin(async () => {
@@ -40,6 +41,17 @@ export default defineNuxtPlugin(async () => {
   const miniAppManager = new MINIAPPMANAGERApi(config);
 
   const MINI_APP_BUILT_IN_SETTING_NAME = "mini-app-setting";
+
+  const _ERROR = {
+    MISSING_REQUIRED_PLAN: "missingRequiredPlan",
+    INSUFFICIENT_ACCESS_PERMISSION: "insufficientAccessPermission",
+    INSUFFICIENT_INSTALL_PERMISSION: "insufficientInstallPermission",
+    INSUFFICIENT_UNINSTALL_PERMISSION: "insufficientUninstallPermission",
+    INSUFFICIENT_CHANGE_SETTING_PERMISSION:
+      "insufficientChangeSettingPermission",
+    NO_MINI_APP_FEATURE: "packageTypeRestricted",
+    NOT_YET_INSTALL: "notYetInstall",
+  };
 
   const useMiniAppStore = defineStore("mini-app", {
     state: () => ({
@@ -99,7 +111,10 @@ export default defineNuxtPlugin(async () => {
       getMenuItems() {
         return this.installedMiniApps.flatMap((miniApp) => {
           const pages = miniApp.integration.pages.filter((page) => {
-            return this.checkIsAllowAccessMiniAppPage(miniApp.code, page.code) && this.isRequiredToShowOnMenu(page);
+            return (
+              this.isAllowAccessMiniAppPage(miniApp.code, page.code) &&
+              this.isRequiredToShowOnMenu(page)
+            );
           });
 
           if (this.isCanUpdateSetting) {
@@ -138,7 +153,7 @@ export default defineNuxtPlugin(async () => {
         });
       },
 
-      isRequiredToShowOnMenu(page: MiniappIntegrationPages){
+      isRequiredToShowOnMenu(page: MiniappIntegrationPages) {
         return page.isHideOnMenu !== true;
       },
 
@@ -185,34 +200,81 @@ export default defineNuxtPlugin(async () => {
 
       // ================================ Permission ===============================
 
-      getActionAccess(
-        type: "install" | "uninstall" | "updateSetting" | "plan",
-      ) {
-        switch (type) {
-          case "install":
-            return {
-              isAllow: this.isCanInstall,
-              reason: "insufficientInstallPermission",
-            };
+      hasRequiredPlan(miniApp: Miniapp) {
+        const currentPlan = getUserProfile().package ?? "";
+        const requiredPlans = miniApp.requiredPlans ?? [];
+        if (_.isEmpty(requiredPlans)) return true;
 
-          case "uninstall":
-            return {
-              isAllow: this.isCanUninstall,
-              reason: "insufficientUninstallPermission",
-            };
+        return requiredPlans.includes(currentPlan);
+      },
 
-          case "updateSetting":
-            return {
-              isAllow: this.isCanUpdateSetting,
-              reason: "insufficientChangeSettingPermission",
-            };
+      checkHasFeature() {
+        return this._check([
+          [() => this.isHasMiniAppFeature, _ERROR.NO_MINI_APP_FEATURE],
+        ]);
+      },
 
-          case "plan":
-            return {
-              isAllow: this.isHasMiniAppFeature,
-              reason: "packageTypeRestricted",
-            };
+      checkHasRequiredPlan(miniApp: Miniapp) {
+        return this._check([
+          [() => this.hasRequiredPlan(miniApp), _ERROR.MISSING_REQUIRED_PLAN],
+        ]);
+      },
+
+      checkIsInstalled(miniAppCode: string) {
+        return this._check([
+          [() => this.isMiniAppInstalled(miniAppCode), _ERROR.NOT_YET_INSTALL],
+        ]);
+      },
+
+      checkCanAccess(miniAppCode: string, pageCode: string) {
+        if (pageCode === MINI_APP_BUILT_IN_SETTING_NAME) {
+          return this._check([
+            [
+              () => this.isCanUpdateSetting,
+              _ERROR.INSUFFICIENT_ACCESS_PERMISSION,
+            ],
+          ]);
         }
+
+        return this._check([
+          [
+            () => this.isAllowAccessMiniAppPage(miniAppCode, pageCode),
+            _ERROR.INSUFFICIENT_ACCESS_PERMISSION,
+          ],
+        ]);
+      },
+
+      checkCanInstall(miniApp: Miniapp) {
+        return this._check([
+          [() => this.hasRequiredPlan(miniApp), _ERROR.MISSING_REQUIRED_PLAN],
+          [() => this.isCanInstall, _ERROR.INSUFFICIENT_INSTALL_PERMISSION],
+        ]);
+      },
+
+      checkCanUninstall(miniApp: Miniapp) {
+        return this._check([
+          [() => this.isCanUninstall, _ERROR.INSUFFICIENT_UNINSTALL_PERMISSION],
+        ]);
+      },
+
+      checkCanUpdateSetting(miniApp: Miniapp) {
+        return this._check([
+          [() => this.hasRequiredPlan(miniApp), _ERROR.MISSING_REQUIRED_PLAN],
+          [
+            () => this.isCanUpdateSetting,
+            _ERROR.INSUFFICIENT_CHANGE_SETTING_PERMISSION,
+          ],
+        ]);
+      },
+
+      _check(checks: [() => boolean, string][]): MiniAppPermissionResult {
+        for (const [checkFn, reason] of checks) {
+          if (!checkFn()) {
+            return { status: false, reason };
+          }
+        }
+
+        return { status: true };
       },
 
       // ============================ Path & Navigation ============================
@@ -254,7 +316,7 @@ export default defineNuxtPlugin(async () => {
 
       // ============================ Validation ============================
 
-      checkIsMiniAppInstalled(miniAppCode: string) {
+      isMiniAppInstalled(miniAppCode: string) {
         const miniApp = this.installedMiniApps.find(
           (item) => item.code === miniAppCode,
         );
@@ -262,7 +324,7 @@ export default defineNuxtPlugin(async () => {
         return miniApp ? true : false;
       },
 
-      checkIsAllowAccessMiniAppPage(miniAppCode: string, pageCode: string) {
+      isAllowAccessMiniAppPage(miniAppCode: string, pageCode: string) {
         const miniApp = this.installedMiniApps.find(
           (item) => item.code === miniAppCode,
         );

@@ -1,19 +1,17 @@
 <template>
   <MiniAppRestrictedWarning
-    v-if="!actionAccess.isAllow"
-    :reason="actionAccess.reason"
+    v-if="!permission.status"
+    :reason="permission.reason ?? ''"
     class="flex items-center justify-center mt-10"
   />
   <slot v-else />
 </template>
 
 <script setup lang="ts">
+import { MiniAppPermissionResult } from "../types/miniApp";
 import MiniAppRestrictedWarning from "./MiniAppRestrictedWarning.vue";
 
 defineProps<{
-  actionAccess: {
-    isAllow: boolean;
-    reason: string;
-  };
+  permission: MiniAppPermissionResult;
 }>();
 </script>

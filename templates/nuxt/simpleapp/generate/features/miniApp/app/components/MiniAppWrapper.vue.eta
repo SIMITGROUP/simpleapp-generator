@@ -3,37 +3,47 @@
 
   <MiniAppPermissionWrapper
     v-if="!$miniAppStore.isFetchingInstalledMiniApps"
-    :actionAccess="$miniAppStore.getActionAccess('plan')"
+    :permission="permission"
   >
-    <MiniAppPermissionWrapper
-      :actionAccess="{
-        isAllow: $miniAppStore.checkIsMiniAppInstalled(miniAppCode),
-        reason: 'notYetInstall'
-      }"
-    >
-      <MiniAppPermissionWrapper
-        v-if="pageCode !== ''"
-        :actionAccess="{
-          isAllow: $miniAppStore.checkIsAllowAccessMiniAppPage(
-            miniAppCode,
-            pageCode
-          ),
-          reason: 'insufficientAccessPermission'
-        }"
-      >
-        <slot />
-      </MiniAppPermissionWrapper>
-
-      <slot v-else />
-    </MiniAppPermissionWrapper>
+    <slot />
   </MiniAppPermissionWrapper>
 </template>
 
 <script setup lang="ts">
-import MiniAppPermissionWrapper from './MiniAppPermissionWrapper.vue';
+import MiniAppPermissionWrapper from "./MiniAppPermissionWrapper.vue";
 
-defineProps<{
+const props = defineProps<{
   miniAppCode: string;
   pageCode: string;
 }>();
+
+const { $miniAppStore } = useNuxtApp();
+
+const miniApp = computed(() => {
+  return $miniAppStore.installedMiniApps.find(
+    (item) => item.code === props.miniAppCode,
+  );
+});
+
+const permission = computed(() => {
+  const checkHasFeature = $miniAppStore.checkHasFeature();
+  if (!checkHasFeature.status) return checkHasFeature;
+
+  const checkIsInstalled = $miniAppStore.checkIsInstalled(props.miniAppCode);
+  if (!checkIsInstalled.status) return checkIsInstalled;
+
+  if (!miniApp.value) {
+    return {
+      status: false,
+      reason: "unknownMiniApp",
+    };
+  }
+
+  const checkHasRequiredPlan = $miniAppStore.checkHasRequiredPlan(
+    miniApp.value,
+  );
+  if (!checkHasRequiredPlan.status) return checkHasRequiredPlan;
+
+  return $miniAppStore.checkCanAccess(props.miniAppCode, props.pageCode);
+});
 </script>

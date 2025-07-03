@@ -18,17 +18,17 @@
   </div>
 </template>
 <script setup lang="ts">
-import UndrawNodata from '~/components/icon/UndrawNodata.vue';
-import { Miniapp } from '~/simpleapp/generate/openapi';
-import MiniAppIntegrationItem from './MiniAppIntegrationItem.vue';
+import UndrawNodata from "~/components/icon/UndrawNodata.vue";
+import { Miniapp } from "~/simpleapp/generate/openapi";
+import MiniAppIntegrationItem from "./MiniAppIntegrationItem.vue";
 
 defineProps<{ items: Miniapp[] | undefined }>();
 
 const emits = defineEmits<{
-  (event: 'miniAppClick', item: Miniapp): void;
+  (event: "miniAppClick", item: Miniapp): void;
 }>();
 
 function handleMiniAppClick(item: Miniapp) {
-  emits('miniAppClick', item);
+  emits("miniAppClick", item);
 }
 </script>

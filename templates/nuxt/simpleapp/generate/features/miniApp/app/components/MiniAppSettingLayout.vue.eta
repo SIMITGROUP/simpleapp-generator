@@ -12,7 +12,8 @@
     </div>
 
     <MiniAppPermissionWrapper
-      :actionAccess="$miniAppStore.getActionAccess('updateSetting')"
+      v-if="miniApp"
+      :permission="$miniAppStore.checkCanUpdateSetting(miniApp)"
     >
       <slot />
     </MiniAppPermissionWrapper>
@@ -20,10 +21,18 @@
 </template>
 
 <script setup lang="ts">
-import MiniAppPermissionWrapper from './MiniAppPermissionWrapper.vue';
+import MiniAppPermissionWrapper from "./MiniAppPermissionWrapper.vue";
 
-defineProps<{
+const props = defineProps<{
   isFetching: boolean;
+  miniAppCode: string;
   miniAppTitle: string;
 }>();
+
+const { $miniAppStore } = useNuxtApp();
+const miniApp = computed(() => {
+  return $miniAppStore.installedMiniApps.find(
+    (item) => item.code === props.miniAppCode,
+  );
+});
 </script>

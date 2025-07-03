@@ -1,12 +1,32 @@
 <template>
   <span
-    class="text-white text-xs px-2 font-bold py-0.5 rounded-md shadow uppercase"
+    v-if="badgeType !== 'notAvailable' && badgeType !== 'noFeature'"
+    class="text-white text-[0.65rem] px-2 font-bold py-0.5 rounded-md shadow uppercase"
     :class="{
-      'bg-emerald-500': badgeType === 'free',
+      'bg-emerald-500': badgeType === 'available',
       'bg-yellow-400': badgeType === 'comingSoon',
     }"
   >
-    {{ t(badgeType) }}
+    {{ t(`miniAppLang.${badgeType}`) }}
+  </span>
+  <span
+    v-else
+    class="bg-slate-200/50 text-surface-500 text-[0.65rem] px-2 font-bold py-0.5 rounded-md uppercase"
+  >
+    <template v-if="badgeType === 'notAvailable'">
+      {{
+        t(`miniAppLang.requiredPlansOnly`, {
+          requiredPlans: item.requiredPlans.join(" | "),
+        })
+      }}
+    </template>
+    <template v-else>
+      {{
+        t("miniAppLang.requiredPlansOnly", {
+          requiredPlans: ["lite", "pro", "enterprise"].join(" | "),
+        })
+      }}
+    </template>
   </span>
 </template>
 
@@ -17,15 +37,21 @@ const props = defineProps<{
   item: Miniapp;
 }>();
 
-const badgeType = computed(() => {
-  if (props.item.status === "published" && props.item.pricing === 0) {
-    return "free";
-  }
+const { $miniAppStore } = useNuxtApp();
 
+const badgeType = computed(() => {
   if (props.item.status === "upcoming") {
     return "comingSoon";
   }
 
-  return "";
+  if ($miniAppStore.hasRequiredPlan(props.item)) {
+    if (!$miniAppStore.isHasMiniAppFeature) {
+      return "noFeature";
+    }
+
+    return "available";
+  }
+
+  return "notAvailable";
 });
 </script>

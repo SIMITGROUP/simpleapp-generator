@@ -1,3 +1,7 @@
+[1.6.7c-alpha]
+
+1. Add Require Plan For Mini App
+
 [1.6.7b-alpha]
 
 1. Fix Missing Import
