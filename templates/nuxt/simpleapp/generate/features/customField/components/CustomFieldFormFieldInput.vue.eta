@@ -51,13 +51,13 @@
           </Column>
 
           <Column #body="{ index }" header="Delete">
-            <Button
+            <ButtonDanger
               class="btn-danger"
               type="button"
               @click="model.splice(index, 1)"
             >
               X
-            </Button>
+            </ButtonDanger>
           </Column>
         </SimpleAppInputTable>
       </div>
@@ -76,6 +76,7 @@
 
 <script setup lang="ts">
 import _ from "lodash";
+import ButtonDanger from "~/components/button/ButtonDanger.vue";
 import { SimpleAppInputType, SimpleAppJSONSchema7 } from "~/types";
 import { SchemaSource } from "~/types/customField.type";
 

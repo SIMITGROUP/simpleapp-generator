@@ -1,5 +1,6 @@
 export type CustomFieldPageMenuResourceItem = {
   name: string;
+  title: string;
   hasCustomFieldFormSetting: boolean;
   hasCustomFieldListSetting: boolean;
 };

@@ -1,3 +1,7 @@
+[1.6.7d-alpha]
+
+1. Change Table Remove Button Color
+
 [1.6.7c-alpha]
 
 1. Add Require Plan For Mini App
