@@ -1,8 +1,4 @@
 <% 
-  const upperFirstCase = (value) => {
-    return value.charAt(0).toUpperCase() + value.slice(1);
-  }
-
   const pascalName = upperFirstCase(it.resourceName);
   const apiName = it.typename.toUpperCase() + 'Api';
   const typeActionName = pascalName + 'Actions';

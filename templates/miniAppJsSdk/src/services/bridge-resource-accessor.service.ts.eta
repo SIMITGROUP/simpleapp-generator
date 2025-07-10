@@ -6,15 +6,7 @@
  */
 
 <%
-  const upperFirstCase = (value) => {
-    return value.charAt(0).toUpperCase() + value.slice(1);
-  }
-
-  const camelToKebab = (value) => {
-    return value.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
-  }
-
-  const getMiniAppInfo = (module) => {
+    const getMiniAppInfo = (module) => {
     const config = module.schema['x-simpleapp-config'];
     const resourceName = config?.resourceName ?? config.documentName;
 
