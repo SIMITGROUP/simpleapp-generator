@@ -5,24 +5,38 @@
  * Author: --
  */
 
-import { MINI_APP_BRIDGE_MESSAGES } from './constants/common.constant';
-import { MiniAppBridgeResourceAccessor } from './services/bridge-resource-accessor.service';
-import { MiniAppBridgeMessageNavigate } from './types/bridge.type';
+import { MINI_APP_BRIDGE_MESSAGES } from "./constants/common.constant";
+import { MiniAppBridgeResourceAccessor } from "./services/bridge-resource-accessor.service";
+import {
+  MiniAppBridgeMessageNavigate,
+  MiniAppBridgeMessageNavigateCurrentMiniApp,
+} from "./types/bridge.type";
 
 export class SimtrainEcoMiniAppJsSdk extends MiniAppBridgeResourceAccessor {
   public ui = {
     navigateTo: (target: string, id?: string, query?: string) => {
       const message: MiniAppBridgeMessageNavigate = {
         type: MINI_APP_BRIDGE_MESSAGES.NAVIGATE,
-        params: { target, id, query }
+        params: { target, id, query },
       };
 
-      window.parent.postMessage(message, '*');
-    }
+      window.parent.postMessage(message, "*");
+    },
+  };
+
+  public current = {
+    navigateTo: (target: string, query?: string) => {
+      const message: MiniAppBridgeMessageNavigateCurrentMiniApp = {
+        type: MINI_APP_BRIDGE_MESSAGES.NAVIGATE_CURRENT_MINI_APP,
+        params: { target, query },
+      };
+
+      window.parent.postMessage(message, "*");
+    },
   };
 
   constructor() {
     super();
-    console.log('Hello from SimtrainEcoMiniAppJsSdk !!!');
+    console.log("Hello from SimtrainEcoMiniAppJsSdk !!!");
   }
 }
