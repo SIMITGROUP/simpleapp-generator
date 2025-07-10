@@ -104,6 +104,12 @@ export type TypeGenerateDocumentVariable = {
   customField: {
     isEnable: boolean;
   };
+  miniApp: {
+    whitelistApis: {
+      [key: string]: any;
+    };
+    hasMiniAppWhitelistedApi: boolean;
+  };
 };
 
 // export type DocSetting = {

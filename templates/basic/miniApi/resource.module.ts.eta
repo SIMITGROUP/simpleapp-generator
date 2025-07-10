@@ -1,0 +1,16 @@
+<%
+  const pascalName = upperFirstCase(it.resourceName);
+  const kebabName = camelToKebab(it.resourceName);
+%>
+
+import { Module } from '@nestjs/common';
+import { <%= pascalName %>Controller } from './<%= kebabName %>.controller';
+import { <%= pascalName %>Service } from './<%= kebabName %>.service';
+
+@Module({
+  imports: [],
+  controllers: [<%= pascalName %>Controller],
+  providers: [<%= pascalName %>Service],
+  exports: [<%= pascalName %>Service],
+})
+export class <%= pascalName %>Module {}

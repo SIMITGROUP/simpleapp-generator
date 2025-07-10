@@ -1,0 +1,109 @@
+<%
+  const pascalName = upperFirstCase(it.resourceName);
+  const apiName = it.typename.toUpperCase() + 'Api';
+%>
+
+import { BadRequestException, Injectable } from '@nestjs/common';
+import _ from 'lodash';
+import { <%= apiName %> } from 'src/openapi/backend-api';
+import { ApiHeader } from 'src/types/api';
+import { getOpenApiConfig } from 'src/utils/api';
+
+@Injectable()
+export class <%= pascalName %>Service {
+  protected guards = {
+    read: [],
+    create: [],
+    update: [],
+  };
+
+  constructor() {}
+
+  private getApi(headers: Record<string, string>) {
+    return new <%= apiName %>(getOpenApiConfig(headers));
+  }
+
+  <% Object.entries(it.miniApp.whitelistApis).forEach(([action, value]) => { %>
+    <% if (value !== true && typeof value !== 'object') { return; } %>
+    
+    <% if(action === 'list') { %>
+      async findAll(headers: ApiHeader) {
+        const api = this.getApi(headers);
+        const resp = await api.runSearch({});
+        return resp.data;
+      }
+    <% } else if(action === 'detail') { %>
+      async findOne(headers: ApiHeader, id: string) {
+        const api = this.getApi(headers);
+        const resp = await api.runFindOne(id);
+        return resp.data;
+      }
+    <% } else if(action === 'create') { %>
+      async create(headers: ApiHeader, resourceDto: any) {
+        const api = this.getApi(headers);
+        const resp = await api.runCreate(resourceDto);
+        return resp.data;
+      }
+    <% } else if(action === 'update') { %>
+      async update(headers: ApiHeader, id: string, resourceDto: any) {
+        const api = this.getApi(headers);
+        const resp = await api.runUpdate(id, resourceDto);
+        return resp.data;
+      }
+    <% } else if(action === 'patch') { %>
+      async patch(headers: ApiHeader, id: string, resourceDto: any) {
+        const api = this.getApi(headers);
+        const resp = await api.runPatch(id, resourceDto);
+        return resp.data;
+      }
+    <% } else if(action === 'delete') { %>
+      async delete(headers: ApiHeader, id: string) {
+        const api = this.getApi(headers);
+        const resp = await api.runDelete(id);
+        return resp.data;
+      }
+    <% } else if(action === 'autoComplete') { %>
+      async autocomplete(headers: ApiHeader, query: string, filter: any) {
+        const api = this.getApi(headers);
+        const resp = await api.autoComplete(query, filter);
+        return resp.data;
+      }
+    <% } else if(action === 'current') { %>
+    <% } else { %>
+      <% const apiSetting = it.apiSettings.find(item => item.action === action); %>
+      <% if (apiSetting) { %>
+        <% const hasBody = ['post', 'put', 'patch'].includes(apiSetting.method); %>
+
+        <% 
+          const paramMatches = apiSetting.entryPoint.match(/:([\w]+)/g) || [];
+          const paramNames = paramMatches.map(p => p.replace(':', ''));
+
+          const args = paramNames.map(name => {
+            return `${name}: string`;
+          });
+
+          const output = [];
+          const queryParams = [];
+
+          for (let i = 0; i < paramNames.length; i++) {
+            const name = paramNames[i];
+
+            output.push(name);
+          }
+
+          if (hasBody) {
+            args.push('data: any');
+            output.push('data');
+          }
+        %>
+        
+        async <%= action %>(headers: ApiHeader, <%= args.join(', ') %>) {
+          const api = this.getApi(headers);
+          const resp = await api.run<%= upperFirstCase(action) %>(<%= output.join(', ') %>);
+          return resp.data;
+        }
+      <% } %>
+    <% } %>
+  <% }) %>
+
+}

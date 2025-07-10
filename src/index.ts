@@ -100,6 +100,13 @@ if (continueexecute) {
     });
   };
 
+  const runUpdateMiniApi = async () => {
+    fw.setConfiguration(configs);
+    generate.run(configs, ['miniApi'], () => {
+      fw.prettyMiniApi();
+    });
+  };
+
   const reGenFrontend = async () => {
     fw.setConfiguration(configs);
     generate.run(configs, ['nuxt'], () => {
@@ -156,6 +163,9 @@ if (continueexecute) {
       break;
     case 'updateMiniAppStreamlitSdk':
       runUpdateMiniAppStreamlitSdk();
+      break;
+    case 'updateMiniApi':
+      runUpdateMiniApi();
       break;
     case 'all':
       run();

@@ -1,0 +1,139 @@
+<%
+  const pascalName = upperFirstCase(it.resourceName);
+  const kebabName = camelToKebab(it.resourceName);
+  const apiName = it.typename.toUpperCase() + 'Api';
+  const titleName = titleCase(pascalName);
+
+  const serviceVariable = it.resourceName + 'Service';
+%>
+
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Put,
+  Patch,
+  Param,
+  Delete,
+  Headers,
+  Query,
+} from '@nestjs/common';
+import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiHeader } from 'src/types/api';
+import { <%= pascalName %>Service } from 'src/resources/<%= kebabName %>/<%= kebabName %>.service';
+
+@ApiTags('<%= titleName %>')
+@Controller('<%= kebabName %>')
+export class <%= pascalName %>Controller {
+    constructor(private readonly <%= serviceVariable %>: <%= pascalName %>Service) {}
+
+    <% Object.entries(it.miniApp.whitelistApis).forEach(([action, value]) => { %>
+        <% if (value !== true && typeof value !== 'object') { return; } %>
+
+        <% if(action === 'list') { %>
+            @Get()
+            findAll(@Headers() headers:ApiHeader) {
+                return this.<%= serviceVariable %>.findAll(headers);
+            }
+        <% } else if(action === 'detail') { %>
+            @Get(':id')
+            findOne(@Headers() headers: ApiHeader, @Param('id') id: string) {
+                return this.<%= serviceVariable %>.findOne(headers, id);
+            }
+        <% } else if(action === 'create') { %>
+            @Post()
+            @ApiBody({})
+            create(
+                @Headers() headers: ApiHeader,
+                @Body() resourceDto: any,
+            ) {
+                return this.<%= serviceVariable %>.create(headers, resourceDto);
+            }
+        <% } else if(action === 'update') { %>
+            @Put(':id')
+            @ApiBody({})
+            update(
+                @Headers() headers: ApiHeader,
+                @Param('id') id: string,
+                @Body() resourceDto: any,
+            ) {
+                return this.<%= serviceVariable %>.update(headers, id, resourceDto);
+            }
+        <% } else if(action === 'patch') { %>
+            @Patch(':id')
+            @ApiBody({})
+            patch(
+                @Headers() headers: ApiHeader,
+                @Param('id') id: string,
+                @Body() resourceDto: any,
+            ) {
+                return this.<%= serviceVariable %>.patch(headers, id, resourceDto);
+            }
+        <% } else if(action === 'delete') { %>
+            @Delete(':id')
+            delete(
+                @Headers() headers: ApiHeader,
+                @Param('id') id: string,
+            ) {
+                return this.<%= serviceVariable %>.delete(headers, id);
+            }
+        <% } else if(action === 'autoComplete') { %>
+            @Post('autocomplete')
+            @ApiQuery({ name: 'query', type: String })
+            @ApiBody({ description: 'Mongo DB Filter', type: () => Object })
+            findAutocomplete(
+                @Headers() headers: ApiHeader,
+                @Query('query') query: string,
+                @Body() filter: any,
+            ) {
+                return this.<%= serviceVariable %>.autocomplete(headers, query, filter);
+            }
+        <% } else if(action === 'current') { %>
+        <% } else { %>
+            <% const apiSetting = it.apiSettings.find(item => item.action === action); %>
+            <% if (apiSetting) { %>
+                <% const hasBody = ['post', 'put', 'patch'].includes(apiSetting.method); %>
+
+                <% 
+                    const paramMatches = apiSetting.entryPoint.match(/:([\w]+)/g) || [];
+                    const paramNames = paramMatches.map(p => p.replace(':', ''));
+
+                    const args = [];
+                    const output = [];
+                    const queryParams = [];
+
+                    for (let i = 0; i < paramNames.length; i++) {
+                        const name = paramNames[i];
+                        args.push(name);
+                        output.push(name);
+                    }
+
+                    if (hasBody) {
+                        output.push('data');
+                    }
+                %>
+
+                @<%= upperFirstCase(apiSetting.method) %>('<%= apiSetting.entryPoint %>')
+                <% if (hasBody) { %>
+                    @ApiBody({ 
+                        description: 'Request Body',
+                    })
+                <% } %>
+
+                <%= action %>(
+                    @Headers() headers: ApiHeader,
+                    <% args.forEach(arg => { %>
+                        @Param('<%= arg %>') <%= arg %>: string,
+                    <% }) %>
+                    <% if (hasBody) { %>
+                        @Body() data: any,
+                    <% } %>
+                ) {
+                    return this.<%= serviceVariable %>.<%= action %>(headers, <%= output.join(', ') %>);
+                }
+            <% } %>
+        <% } %>
+        
+    <% }); %>
+}

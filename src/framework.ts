@@ -24,6 +24,7 @@ let config = {
     js: './miniAppSdk/js',
     streamlit: './miniAppSdk/streamlit'
   },
+  miniApiFolder: './miniApi',
   additionalNestModules: ['cloudapi', 'printapi'],
   oauthSetting: {
     oauthBaseUrl: 'https://keycloak-server-url/',
@@ -287,8 +288,14 @@ export const prettyMiniAppJsSdk = () => {
     `npx prettier --write ${config.miniAppSdkFolder.js}/src/**/* --ignore-path .my-empty-ignore`
   );
 };
+
 export const prettyMiniAppStreamlitSdk = () => {
   exec(`sh ${config.miniAppSdkFolder.streamlit}/format.sh`);
+};
+
+export const prettyMiniApi = () => {
+  console.log(`sh ${config.miniApiFolder}/format.sh`);
+  exec(`sh ${config.miniApiFolder}/format.sh`);
 };
 
 export const prettyNuxt = () => {

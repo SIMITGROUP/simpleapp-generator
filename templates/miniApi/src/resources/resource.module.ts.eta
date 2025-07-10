@@ -1,0 +1,46 @@
+<%
+  const getMiniAppInfo = (module) => {
+    const schema = module.schema; 
+    const simpleAppConfig = schema['x-simpleapp-config'];
+    const miniAppWhitelistApis = simpleAppConfig?.miniApp?.whitelist || {};
+    const hasMiniAppWhitelistedApi = Object.keys(miniAppWhitelistApis).length > 0;
+    const resourcePascalName = upperFirstCase(simpleAppConfig.resourceName);
+    const resourceKebabName = camelToKebab(simpleAppConfig.resourceName);
+    
+    return {
+      hasMiniAppWhitelistedApi,
+      resourceName: simpleAppConfig.resourceName,
+      resourcePascalName,
+      resourceKebabName
+    }
+  }
+
+  const modules = it.modules.sort((a, b) => a.docname.localeCompare(b.docname, undefined, { sensitivity: 'base' }));
+%>
+
+import { Module } from '@nestjs/common';
+<% modules.forEach(module => { %>
+  <% 
+    const { hasMiniAppWhitelistedApi, resourcePascalName, resourceKebabName } = getMiniAppInfo(module); 
+  %>
+  <% if(hasMiniAppWhitelistedApi) { %>
+    import { <%= resourcePascalName %>Module } from './<%= resourceKebabName %>/<%= resourceKebabName %>.module';
+  <% } %>
+<% }); %>
+
+@Module({
+  imports: [
+    <% modules.forEach(module => { %>
+      <% 
+        const { hasMiniAppWhitelistedApi, resourcePascalName } = getMiniAppInfo(module); 
+      %>
+      <% if(hasMiniAppWhitelistedApi) { %>
+        <%= resourcePascalName %>Module,
+      <% } %>
+    <% }); %>
+  ],
+  controllers: [],
+  providers: [],
+  exports: []
+})
+export class ResourceModule {}

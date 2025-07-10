@@ -45,6 +45,7 @@ const docs = [];
 let frontendFolder = '';
 let backendFolder = '';
 let miniAppSdkFolder = {};
+let miniApiFolder = '';
 let frontendpagefolder = '';
 const allroles: any = {};
 let langdata: any = {};
@@ -61,6 +62,7 @@ export const run = async (
   frontendFolder = configs.frontendFolder;
   backendFolder = configs.backendFolder;
   miniAppSdkFolder = configs.miniAppSdkFolder;
+  miniApiFolder = configs.miniApiFolder;
 
   const printformats: SchemaPrintFormat[] = [];
   const groupFolder = configs.groupFolder;
@@ -77,6 +79,9 @@ export const run = async (
   }
   if (genFor.includes('miniAppStreamlitSdk')) {
     generateTypes['miniAppStreamlitSdk'] = miniAppSdkFolder['streamlit'];
+  }
+  if (genFor.includes('miniApi')) {
+    generateTypes['miniApi'] = miniApiFolder;
   }
   // console.log("genForgenForgenForgenFor",genFor,generateTypes)
   //
@@ -207,6 +212,9 @@ const generateSchema = (
     jsonschemas[docname]?.['x-simpleapp-config']?.resourceName ?? docname;
 
   //console.log("---^^^^^------",modelname,docname, doctype, rendertype,currentmodel,allmodels)
+
+  const miniAppWhitelistApis =
+    jsonschemas[docname][X_SIMPLEAPP_CONFIG]?.miniApp?.whitelist || {};
   const variables: TypeGenerateDocumentVariable = {
     resourceName: resourceName,
     name: docname,
@@ -234,6 +242,10 @@ const generateSchema = (
     customField: {
       isEnable:
         jsonschemas[docname][X_SIMPLEAPP_CONFIG]?.customField?.isEnable ?? false
+    },
+    miniApp: {
+      whitelistApis: miniAppWhitelistApis,
+      hasMiniAppWhitelistedApi: Object.keys(miniAppWhitelistApis).length > 0
     }
   };
 
@@ -251,7 +263,6 @@ const generateSchema = (
   const backendTargetFolder = `${backendFolder}/src/simpleapp/generate`;
   const simpleappTargetFolder = `${backendFolder}/src/simpleapp`;
   const backendServiceFolder = `${backendFolder}/src/simpleapp/services`;
-
   Object.keys(generateTypes).forEach((foldertype) => {
     //generate code for every schema
     const generateTemplatefolder = `${constants.templatedir}/basic/${foldertype}`;
@@ -590,9 +601,111 @@ const generateSchema = (
             mkdirSync(path.dirname(targetfile), { recursive: true });
           writeFileSync(targetfile, filecontent);
         }
+      } else if (foldertype === 'miniApi') {
+        processPlatformFileMiniApi(
+          resourceName,
+          docname,
+          {
+            name: filename,
+            platform: foldertype,
+            templatePath: templatepath
+          },
+          variables
+        );
       }
     }
   });
+};
+
+type FileInfo = {
+  name: string;
+  platform: string;
+  templatePath: string;
+};
+
+const processPlatformFileMiniApi = (
+  resourceName: string,
+  docname: string,
+  file: FileInfo,
+  variables: any
+) => {
+  const mapfiles = {
+    'resource.service.ts.eta': {
+      to: `src/resources/${_.kebabCase(resourceName)}`,
+      as: `${_.kebabCase(resourceName)}.service.ts`,
+      validate: (targetfile: string, isexists: boolean) => {
+        const {
+          miniApp: { hasMiniAppWhitelistedApi }
+        } = variables;
+
+        if (!hasMiniAppWhitelistedApi) {
+          return false;
+        }
+
+        return true;
+      }
+    },
+    'resource.controller.ts.eta': {
+      to: `src/resources/${_.kebabCase(resourceName)}`,
+      as: `${_.kebabCase(resourceName)}.controller.ts`,
+      validate: (targetfile: string, isexists: boolean) => {
+        const {
+          miniApp: { hasMiniAppWhitelistedApi }
+        } = variables;
+
+        if (!hasMiniAppWhitelistedApi) {
+          return false;
+        }
+
+        return true;
+      }
+    },
+    'resource.module.ts.eta': {
+      to: `src/resources/${_.kebabCase(resourceName)}`,
+      as: `${_.kebabCase(resourceName)}.module.ts`,
+      validate: (targetfile: string, isexists: boolean) => {
+        const {
+          miniApp: { hasMiniAppWhitelistedApi }
+        } = variables;
+
+        if (!hasMiniAppWhitelistedApi) {
+          return false;
+        }
+
+        return true;
+      }
+    }
+  };
+
+  processPlatformFile(docname, mapfiles, file, variables);
+};
+
+const processPlatformFile = (
+  docname: string,
+  mapfiles: any,
+  file: FileInfo,
+  variables: any
+) => {
+  const eta = new Eta({
+    views: '/',
+    functionHeader: getCodeGenHelper()
+  });
+
+  const target = mapfiles[file.name];
+  const targetfolder = `${generateTypes[file.platform]}/${target.to}`;
+  const targetfile = `${targetfolder}/${target.as}`;
+
+  const isexists = existsSync(targetfile);
+  const iswrite: boolean = target.validate(targetfile, isexists);
+
+  if (iswrite) {
+    if (!existsSync(targetfolder)) {
+      mkdirSync(targetfolder, { recursive: true });
+    }
+
+    const filecontent = eta.render(file.templatePath, variables);
+    writeFileSync(targetfile, filecontent);
+  }
 };
 
 const generateSystemFiles = (modules: ModuleObject[], allbpmn) => {
@@ -682,4 +795,7 @@ const prepareRoles = (groupsettings) => {
 const getCodeGenHelper = () =>
   'const capitalizeFirstLetter = (str) => !str ? `Object` : str.slice(0, 1).toUpperCase() + str.slice(1);' +
   'const initType=(str)=>{return ["string","number","boolean","array","object"].includes(str) ? capitalizeFirstLetter(str) : str;};' +
-  "const camelCaseToWords = (s) => {const result = s.replace(/([A-Z])/g, ' $1');return result.charAt(0).toUpperCase() + result.slice(1);}";
+  "const camelCaseToWords = (s) => {const result = s.replace(/([A-Z])/g, ' $1');return result.charAt(0).toUpperCase() + result.slice(1);};" +
+  'const upperFirstCase = (value) => { return value.charAt(0).toUpperCase() + value.slice(1); };' +
+  'const camelToKebab = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase(); };' +
+  'const titleCase = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1 $2"); }; ';
