@@ -1,3 +1,8 @@
+[1.6.7e-alpha]
+
+1. Add Current Navigation For Mini App JS SDK
+2. Fix Webhook Log Resource Name No Follow Naming Rule
+
 [1.6.7d-alpha]
 
 1. Change Table Remove Button Color

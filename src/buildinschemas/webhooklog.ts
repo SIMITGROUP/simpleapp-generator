@@ -1,83 +1,76 @@
 import { SchemaType, RESTMethods, IsolationType } from '../type';
 
 export const webhooklog: SchemaType = {
-  "type": "object",
-  "x-simpleapp-config": {
-    "documentType": "webhooklog",
-    "documentName": "webhooklog",
-    "isolationType": IsolationType.branch,
-    "uniqueKey": "_id",    
-    "resourceName": "webhooklog"
+  type: 'object',
+  'x-simpleapp-config': {
+    documentType: 'webhooklog',
+    documentName: 'webhooklog',
+    isolationType: IsolationType.branch,
+    uniqueKey: '_id',
+    resourceName: 'webhookLog'
   },
-  "required": [
-    "title",
-    "webHookId",
-    "body",
-    "dataId",
-    "msg"
-  ],
-  "properties": {
-    "_id": {
-      "type": "string"
+  required: ['title', 'webHookId', 'body', 'dataId', 'msg'],
+  properties: {
+    _id: {
+      type: 'string'
     },
-    "webHookId": {
-      "type": "string"
-    },    
-    "dataId": {
-      "type": "string"
-    },    
-    "created": {
-      "type": "string"
+    webHookId: {
+      type: 'string'
     },
-    "updated": {
-      "type": "string"
+    dataId: {
+      type: 'string'
     },
-    "createdBy": {
-      "type": "string"
+    created: {
+      type: 'string'
     },
-    "updatedBy": {
-      "type": "string"
+    updated: {
+      type: 'string'
     },
-    "tenantId": {
-      "type": "integer",
-      "default": 1,
-      "minimum": 0
+    createdBy: {
+      type: 'string'
     },
-    "orgId": {
-      "type": "integer",
-      "default": 1,
-      "minimum": 0
+    updatedBy: {
+      type: 'string'
     },
-    "branchId": {
-      "type": "integer",
-      "default": 1,
-      "minimum": 0
+    tenantId: {
+      type: 'integer',
+      default: 1,
+      minimum: 0
     },
-    "title": {
-      "type": "string",
-      "minLength": 3
-    },  
-    "resource": {
-      "type": "string"     
+    orgId: {
+      type: 'integer',
+      default: 1,
+      minimum: 0
     },
-    "actionName": {
-      "type": "string"      
+    branchId: {
+      type: 'integer',
+      default: 1,
+      minimum: 0
     },
-    "statusCode": {
-      "type": "number"
+    title: {
+      type: 'string',
+      minLength: 3
     },
-    "status": {
-      "type": "string",
-      "enum":["success","failed"]
+    resource: {
+      type: 'string'
     },
-    "body": {
-      "type": "string",
-      "format":"text",
-      "minLength":3
+    actionName: {
+      type: 'string'
     },
-    "msg":{
-      "type":"string"
+    statusCode: {
+      type: 'number'
+    },
+    status: {
+      type: 'string',
+      enum: ['success', 'failed']
+    },
+    body: {
+      type: 'string',
+      format: 'text',
+      minLength: 3
+    },
+    msg: {
+      type: 'string'
     }
- 
   }
-}
+};
