@@ -1,0 +1,76 @@
+<%
+  const getMiniAppInfo = (module) => {
+    const schema = module.schema; 
+    const simpleAppConfig = schema['x-simpleapp-config'];
+    const miniAppWhitelistApis = simpleAppConfig?.miniApp?.whitelist || {};
+    const hasMiniAppWhitelistedApi = Object.keys(miniAppWhitelistApis).length > 0;
+    const resourcePascalName = upperFirstCase(simpleAppConfig.resourceName);
+    const resourceKebabName = camelToKebab(simpleAppConfig.resourceName);
+    const additionalApis = simpleAppConfig?.additionalApis || [];
+    let availableApis = {};
+
+    Object.entries(miniAppWhitelistApis).forEach(([action, value]) => {
+      if (value !== true && typeof value !== 'object') { return; }
+      let method = '';
+      switch(action) {
+        case 'list':
+        case 'detail':
+          method = 'get';
+          break;
+
+        case 'create':
+        case 'autoComplete':
+          method = 'post';
+          break;
+
+        case 'update':
+          method = 'put';
+          break;
+
+        case 'patch':
+          method = 'patch';
+          break;
+
+        case 'delete':
+          method = 'delete';
+          break;
+
+        case 'current':
+          return;
+          break;
+
+        default:
+          method = (additionalApis ?? []).find(item => item.action === action)?.method ?? '';
+          break;
+      }
+
+      availableApis[action] = {
+        method: method
+      }
+    });
+    
+    return {
+      miniAppWhitelistApis,
+      hasMiniAppWhitelistedApi,
+      resourceName: simpleAppConfig.resourceName,
+      resourcePascalName,
+      resourceKebabName,
+      availableApis
+    }
+  }
+
+  const modules = it.modules.sort((a, b) => a.docname.localeCompare(b.docname, undefined, { sensitivity: 'base' }));
+%>
+
+const scopes = {
+  <% modules.forEach(module => { %>
+    <% 
+      const { hasMiniAppWhitelistedApi, resourceName, miniAppWhitelistApis, availableApis } = getMiniAppInfo(module); 
+    %>
+    <% if(hasMiniAppWhitelistedApi) { %>
+      <%= resourceName %>: <%~ JSON.stringify(availableApis) %>,
+    <% } %>
+  <% }); %>
+};
+
+export default scopes;

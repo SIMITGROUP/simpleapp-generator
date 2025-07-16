@@ -21,7 +21,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ApiHeader } from 'src/types/api';
-import { <%= pascalName %>Service } from 'src/resources/<%= kebabName %>/<%= kebabName %>.service';
+import { <%= pascalName %>Service } from 'src/modules/public/resources/<%= kebabName %>/<%= kebabName %>.service';
 
 @ApiTags('<%= titleName %>')
 @Controller('<%= kebabName %>')
