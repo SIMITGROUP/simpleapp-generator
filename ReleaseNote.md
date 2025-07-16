@@ -1,3 +1,7 @@
+[1.6.7f-alpha]
+
+1. Allow Mini App Filter, Sort, And Select Field When Call Resource List Function
+
 [1.6.7e-alpha]
 
 1. Add Current Navigation For Mini App JS SDK
