@@ -14,6 +14,7 @@
   const hasMiniAppWhitelistedApi = Object.keys(miniAppWhitelistApis).length > 0;
 %>
 
+import { MiniAppApiListParam } from "../../types/bridge.type";
 import { MiniAppBridgeService } from "../bridge.service";
 
 export class MiniApp<%= pascalName %>BridgeService {
@@ -29,8 +30,8 @@ export class MiniApp<%= pascalName %>BridgeService {
     <% if (value !== true && typeof value !== 'object') { return; } %>
 
     <% if(action === 'list') { %>
-      async list() {
-        return this.bridge.callApi(this.resourceName, "list");
+      async list(params?: MiniAppApiListParam | undefined) {
+        return this.bridge.callApi(this.resourceName, "list", { body: params });
       }
     <% } else if(action === 'detail') { %>
       async detail(id: string) {

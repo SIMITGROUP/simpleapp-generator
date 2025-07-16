@@ -79,3 +79,23 @@ export type MiniAppBridgeMessageApiResponse<TData> = {
 export type MiniAppBridgeMessageInitResponse = {
   type: typeof MINI_APP_BRIDGE_MESSAGES.INIT_RESPONSE;
 };
+
+export type MiniAppApiListParam = {
+  fields?: string[];
+
+  /**
+   * Same as Mongo DB filter
+   */
+  filters?: {
+    [key: string]: any;
+  };
+
+  /**
+   * Same as Mongo DB sort
+   */
+  sorts?:
+    | {
+        [key: string]: any;
+      }
+    | string[][];
+};

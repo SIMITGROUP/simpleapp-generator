@@ -79,7 +79,11 @@ export class MiniApp<%= pascalName %>BridgeService {
 
     <% if(action === 'list') { %>
       protected async handleList(message: MiniAppBridgeMessageApi<<%= typeActionName %>>) {
-        return (await this.api!.runSearch({})).data;
+        return (await this.api!.runSearch({
+          fields: message.params.body?.fields,
+          sorts: message.params.body?.sorts,
+          filter: message.params.body?.filters,
+        })).data;
       }
     <% } else if(action === 'detail') { %>
       protected async handleDetail(message: MiniAppBridgeMessageApi<<%= typeActionName %>>) {
