@@ -42,6 +42,7 @@ export class RunWebhookService {
       $resourceName: documentName,
       $actionName: actionName,
       $url: process.env.APP_URL ?? 'http://localhost:8080',
+      $apiUrl: process.env.BACKEND_URL ?? "",
     };
 
     //same resource,actionName may have multiple webhook, run 1 by 1
