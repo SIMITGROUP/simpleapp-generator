@@ -631,7 +631,7 @@ const processPlatformFileMiniApi = (
 ) => {
   const mapfiles = {
     'resource.service.ts.eta': {
-      to: `src/modules/public/resources/${_.kebabCase(resourceName)}`,
+      to: `src/modules/resource/resources/${_.kebabCase(resourceName)}`,
       as: `${_.kebabCase(resourceName)}.service.ts`,
       validate: (targetfile: string, isexists: boolean) => {
         const {
@@ -646,7 +646,7 @@ const processPlatformFileMiniApi = (
       }
     },
     'resource.controller.ts.eta': {
-      to: `src/modules/public/resources/${_.kebabCase(resourceName)}`,
+      to: `src/modules/resource/resources/${_.kebabCase(resourceName)}`,
       as: `${_.kebabCase(resourceName)}.controller.ts`,
       validate: (targetfile: string, isexists: boolean) => {
         const {
@@ -661,7 +661,7 @@ const processPlatformFileMiniApi = (
       }
     },
     'resource.module.ts.eta': {
-      to: `src/modules/public/resources/${_.kebabCase(resourceName)}`,
+      to: `src/modules/resource/resources/${_.kebabCase(resourceName)}`,
       as: `${_.kebabCase(resourceName)}.module.ts`,
       validate: (targetfile: string, isexists: boolean) => {
         const {

@@ -24,7 +24,7 @@ import { Module } from '@nestjs/common';
     const { hasMiniAppWhitelistedApi, resourcePascalName, resourceKebabName } = getMiniAppInfo(module); 
   %>
   <% if(hasMiniAppWhitelistedApi) { %>
-    import { <%= resourcePascalName %>Module } from './<%= resourceKebabName %>/<%= resourceKebabName %>.module';
+    import { <%= resourcePascalName %>Module } from './resources/<%= resourceKebabName %>/<%= resourceKebabName %>.module';
   <% } %>
 <% }); %>
 
