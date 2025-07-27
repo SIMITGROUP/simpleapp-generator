@@ -38,7 +38,7 @@ import { UserMongoSchema } from './simpleapp/generate/models/user.model';
 import { PermissionMongoSchema } from './simpleapp/generate/models/perm.model';
 import { ApiEventMongoSchema } from './simpleapp/generate/models/apievent.model';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-
+import { WebhookMongoSchema } from './simpleapp/generate/models/webhook.model';
 
 
   
@@ -90,6 +90,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       { name: 'User', schema: UserMongoSchema },
       { name: 'Permission', schema: PermissionMongoSchema },
       { name: 'ApiEvent', schema: ApiEventMongoSchema },
+      { name: 'Webhook', schema: WebhookMongoSchema },
     ]),    
       ],
   controllers: [AppController],

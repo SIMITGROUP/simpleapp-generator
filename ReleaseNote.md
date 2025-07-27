@@ -1,3 +1,7 @@
+[1.6.7g-alpha]
+1. fix some api schema cause cannot run backend
+
+
 [1.6.7f-alpha]
 
 1. Allow Mini App Filter, Sort, And Select Field When Call Resource List Function

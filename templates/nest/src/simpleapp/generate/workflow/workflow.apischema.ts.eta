@@ -23,9 +23,9 @@ export class WorkflowSettingApiSchema {
   callBackUrl: string;
   @ApiProperty({ type: 'string', required: false, description: 'optional' })
   assignee: string;
-  @ApiProperty({ type: ['string'], required: false, description: 'optional' })
+  @ApiProperty({ type: ()=>['string'], required: false, description: 'optional' })
   candidateUsers: string;
-  @ApiProperty({ type: ['string'], required: false, description: 'optional' })
+  @ApiProperty({ type: ()=>['string'], required: false, description: 'optional' })
   candidateGroups: string;
 }
 export class WorkflowDataApiSchema {
