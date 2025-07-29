@@ -6,9 +6,7 @@
  */
 export const getDocumentUrl = (document:string,id?:string,querystr?:string)=>{
     
-    let path = useRoute().path.includes('/mobile/') || isMobile() ? 
-            `/${getCurrentXorg()}/mobile/${document}`
-                : `/${getCurrentXorg()}/${document}`
+    let path = `/${getCurrentXorg()}/${document}`
     if(id){
         path = path + '/'+id
     }
