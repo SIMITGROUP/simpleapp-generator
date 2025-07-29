@@ -1,6 +1,11 @@
-[1.6.7g-alpha]
-1. fix some api schema cause cannot run backend
+[1.6.7h-alpha]
 
+1. Remove Navigate To Mobile Url
+2. Add Label Value Type
+
+[1.6.7g-alpha]
+
+1. fix some api schema cause cannot run backend
 
 [1.6.7f-alpha]
 
