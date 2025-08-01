@@ -798,4 +798,5 @@ const getCodeGenHelper = () =>
   "const camelCaseToWords = (s) => {const result = s.replace(/([A-Z])/g, ' $1');return result.charAt(0).toUpperCase() + result.slice(1);};" +
   'const upperFirstCase = (value) => { return value.charAt(0).toUpperCase() + value.slice(1); };' +
   'const camelToKebab = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase(); };' +
+  'const removeSuffix = (input, suffix) => { return input.endsWith(suffix) ? input.slice(0, -suffix.length) : input };' +
   'const titleCase = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1 $2"); }; ';

@@ -8,7 +8,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Field, ObjectType,ID } from '@nestjs/graphql';
 import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 
-<% const draw = (it, obj, key) => { %>
+<% const draw = (it, obj, key, currentModelName) => { %>
     <% if(typeof obj == 'string') {%>
         <% // This Is Dynamic Object %>
         <% if(it.models?.[obj] && it.models[obj]?.model && Object.keys(it.models[obj]?.model).length === 0) { %>
@@ -16,8 +16,15 @@ import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
             @ApiProperty({ type:()=>Object,required: false, default: {} })
             <%= key %>: Object;
         <% } else { %>
+            <%
+                let required = false;
+                const currentModel = it.models?.[currentModelName];
+                if (currentModel && (currentModel.required ?? []).includes(key)) {
+                    required = true;
+                }
+            %>
             @Field()
-            @ApiProperty({type: ()=><%=obj%>})
+            @ApiProperty({type: ()=><%=obj%>, required: <%= required %>})
             <%= key %>:  <%= obj %>;
         <% } %>
     <%} else if(typeof obj.default !='undefined' && JSON.stringify(obj.default)=='{}'){%>
@@ -25,8 +32,15 @@ import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
         @ApiProperty({ type:()=>Object,required: false, default: {} })
         <%= key %>: Object;
     <% } else if( Array.isArray( obj)){%>
+        <%
+            let required = false;
+            const currentModel = it.models?.[currentModelName];
+            if (currentModel && (currentModel.required ?? []).includes(key)) {
+                required = true;
+            }
+        %>
         @Field(type=>[<%=initType(obj[0]) %>])
-        @ApiProperty({type: ()=>[<%=initType(obj[0]) %>] })                    
+        @ApiProperty({type: ()=>[<%=initType(obj[0]) %>], required: <%= required %> })                    
         <%= key %>:  <%= obj[0] %>[];
         
     <% }else{%>
@@ -47,14 +61,15 @@ import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 
         <% Object.keys(schema).forEach(function(key) { %>
             <% let obj = schema[key] %>
-            <% draw(it, obj, key) %>
+            <% draw(it, obj, key, name) %>
         <% }) %>
     }
 <%}) %>
 
 /***************************************** Start Auto Complete *****************************************/
+<% const autoCompleteModelName = it.apiSchemaName + 'AutoComplete';  %>
 @ObjectType()
-export class <%= it.apiSchemaName %>AutoComplete {
+export class <%=autoCompleteModelName %> {
     @Field()
     @ApiProperty({ type: 'string', required: true, default: '' })
     _id: string;
@@ -69,7 +84,7 @@ export class <%= it.apiSchemaName %>AutoComplete {
 
     <% if(it.moreAutoComplete && Array.isArray(it.moreAutoComplete)) { %>
         <% it.moreAutoComplete.forEach(function(field){ %>
-            <% draw(it, it.models[it.apiSchemaName].model[field], field) %>
+            <% draw(it, it.models[it.apiSchemaName].model[field], field, autoCompleteModelName) %>
 
         <% }) %>
     <% } %>
