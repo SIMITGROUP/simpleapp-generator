@@ -64,9 +64,12 @@ export class MiniAppBridgeService extends MiniAppBridgeResourceAccessor {
     messageEvent: MessageEvent,
     message: MiniAppBridgeMessageApi<any>,
     miniAppCode: string,
+    developerPortalAppId: string,
   ) {
     try {
       this.miniAppCode = miniAppCode;
+
+      this.developerPortalAppId = developerPortalAppId;
 
       const data = await this.handleBridgeCallApi(message);
 

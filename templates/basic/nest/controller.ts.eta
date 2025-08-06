@@ -34,28 +34,41 @@ import {Role} from '../commons/roles/roles.enum'
 import { Response } from 'express';
 import {AppUser} from '../commons/decorators/appuser.decorator'
 import {UserContext} from '../commons/user.context'
+import { MiniAppScope } from 'src/modules/mini-app/mini-app-scope/mini-app-scope.decorator';
 
+<%
+  const drawMiniAppScope = (actionName) => {
+    if(isWhitelistedMiniApp(actionName, it)){
+      return `@MiniAppScope('${it.resourceName}.${actionName}')`;
+    }
 
-<% const getFieldType =(proptype, typename,actionname)=>{
-  const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
-  if(!typename) throw actionname +" undefine schema";
-  let tmptypename = typename.replace('[','').replace(']','')
-  
-  if(systemtypes.includes(tmptypename)){
-    if(proptype=='type' ) tmptypename =tmptypename.toLowerCase();
-  }else if(proptype=='schema'){
-    tmptypename= 'schemas.'+tmptypename    
-  }else{ //type
-    tmptypename= 'types.'+tmptypename
+    return '';
   }
-
-  if(typename.includes('[')){
-    return  proptype=='schema' ?  `[${tmptypename}]` : `${tmptypename}[]`
-  }else{
-    return tmptypename
-  }
-}
 %>
+
+
+<% 
+  const getFieldType =(proptype, typename,actionname)=>{
+    const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
+    if(!typename) throw actionname +" undefine schema";
+    let tmptypename = typename.replace('[','').replace(']','')
+    
+    if(systemtypes.includes(tmptypename)){
+      if(proptype=='type' ) tmptypename =tmptypename.toLowerCase();
+    }else if(proptype=='schema'){
+      tmptypename= 'schemas.'+tmptypename    
+    }else{ //type
+      tmptypename= 'types.'+tmptypename
+    }
+
+    if(typename.includes('[')){
+      return  proptype=='schema' ?  `[${tmptypename}]` : `${tmptypename}[]`
+    }else{
+      return tmptypename
+    }
+  }
+%>
+
 <% let superadmindoctype = ['tenant','globaluser'] %>
 const apiname = '<%= it.typename %>'.toUpperCase();
 @ApiTags(apiname)
@@ -103,6 +116,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiQuery({ name: 'keyword', type:String})
   @ApiBody({ description: 'Data', type: ()=>Object})
   @ApiOperation({ operationId: 'autoComplete',description:"retrieve array of {_id, code, name}" })
+  <%~ drawMiniAppScope('autoComplete') %>
   async autoComplete(@AppUser() appuser: UserContext,
   @Query('keyword') keyword:string,
   @Body() data: types.<%=it.typename%>,
@@ -127,6 +141,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiResponse({ status: 500, description: 'internal error' })
   @ApiBody({ description: 'Data',type:schemas.<%= it.typename%> })
   @ApiOperation({ operationId: 'runCreate' })
+  <%~ drawMiniAppScope('create') %>
   async create(@AppUser() appuser: UserContext,@Body() data: schemas.<%= it.typename%>) {    
     return await this._create(appuser,data)
   }
@@ -147,6 +162,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiResponse({ status: 500, description: 'internal error' })
   @ApiBody({ description: 'Data', type: schemas.ApiSearchBody })
   @ApiOperation({ operationId: 'runSearch' })
+  <%~ drawMiniAppScope('list') %>
   async search(@AppUser() appuser: UserContext,@Body() data: types.SearchBody) {
     return await this._search(appuser,data)
   }
@@ -207,6 +223,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
         @ApiQuery({name: "<%=api['queryPara'][q]%>",required: false,type: String})
       <%}%> 
   <%}%>  
+  <%~ drawMiniAppScope(api.action) %>
   async <%=capitalizeFirstLetter(api.action) %>(
     @AppUser() appuser: UserContext,
     <%if(['post','put','patch'].includes(api.method.toLowerCase())){%> 
@@ -284,6 +301,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiResponse({ status: 404, description: 'Document not found' })
   @ApiResponse({ status: 500, description: 'Internal error' })
   @ApiOperation({ operationId: 'runFindOne' })
+  <%~ drawMiniAppScope('detail') %>
   async findOne(@AppUser() appuser: UserContext,@Param('id') id: string) {    
     const data = await this._findOne(appuser, id);
      if(!data ){
@@ -308,6 +326,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiResponse({ status: 500, description: 'Internal error' })
   @ApiBody({ description: 'Data',type: schemas.<%= it.typename%> })
   @ApiOperation({ operationId: 'runUpdate' })
+  <%~ drawMiniAppScope('update') %>
   async update(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data: schemas.<%= it.typename%>) {    
     return await this._update(appuser,id, data) ;
   }
@@ -325,6 +344,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiResponse({ status: 500, description: 'Internal error' })
   @ApiBody({ description: 'Data',type: schemas.<%= it.typename%> })
   @ApiOperation({ operationId: 'runPatch' })
+  <%~ drawMiniAppScope('patch') %>
   async patch(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data: schemas.<%= it.typename%>) {    
     return await this._patch(appuser,id, data) ;
   }
@@ -343,6 +363,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiResponse({ status: 404, description: 'Document not found' })
   @ApiResponse({ status: 500, description: 'Internal error' })
   @ApiOperation({ operationId: 'runDelete' })
+  <%~ drawMiniAppScope('delete') %>
   async delete(@AppUser() appuser: UserContext,@Param('id') id: string) {
     return this._delete(appuser,id);
   }

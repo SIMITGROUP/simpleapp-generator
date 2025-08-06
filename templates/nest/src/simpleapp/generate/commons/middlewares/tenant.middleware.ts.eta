@@ -13,8 +13,10 @@ import { Model } from 'mongoose';
 import { Permission } from '../../types/perm.type';
 import { User } from '../../types/user.type';
 import { Appintegration } from '../../types/appintegration.type';
-import { Webhook } from '../../types';
+import { Miniappinstallation, Webhook } from '../../types';
 import { UserContext } from '../user.context';
+import { ApiKeyService } from './api-key/api-key.service';
+import { HEADER_X_API_KEY, HEADER_X_API_SECRET } from '../constants/header';
 
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
@@ -29,6 +31,8 @@ export class TenantMiddleware implements NestMiddleware {
     @InjectModel('Permission') private readonly permModel: Model<Permission>,
     @InjectModel('Appintegration') private readonly appModel: Model<Appintegration>,
     @InjectModel('Webhook') private readonly webhookModel: Model<Webhook>,
+    @InjectModel('Miniappinstallation') private readonly miniAppInstallationModel: Model<Miniappinstallation>,
+    private readonly apiKeyService: ApiKeyService,
   ) {}
 
   requireXOrg(baseurl: string): boolean {
@@ -51,11 +55,11 @@ export class TenantMiddleware implements NestMiddleware {
     tokenStr = tokenStr.replace('Bearer ', '');
     const xOrg = req.get('x-org') ?? this.defaultXOrg;
 
-    const user = new UserContext(this.userModel, this.permModel, this.appModel);
+    const user = new UserContext(this.userModel, this.permModel, this.appModel, this.miniAppInstallationModel);
 
     if (req.baseUrl == '/graphql') {
       if (tokenStr) {
-        await user.setCurrentUserInfo(tokenStr, xOrg,this.webhookModel);
+        await user.setCurrentUserInfo(tokenStr, xOrg, this.webhookModel);
       }
       req['sessionuser'] = user;
       next();
@@ -63,21 +67,36 @@ export class TenantMiddleware implements NestMiddleware {
     }
     this.logger.debug(`Running TenantMiddleware for ${req.baseUrl}`);
 
-    // If X_APIKEY defined, and there is api key and secret supplied. use robot user
-    if (process.env.X_APIKEY && req.get('x-apikey') && req.get('x-apisecret')) {
-      if (req.get('x-apikey') == process.env.X_APIKEY && req.get('x-apisecret') == process.env.X_APISECRET) {
-        user.setAsStaticUser('00000000-0000-0000-0000-000000000000', 'robot', 'Robot', 'robot@a.org', req.get('x-org') ?? this.defaultXOrg);
-        if (req.get('x-guest-accesstoken')) {
-          user.setGuestToken(req.get('x-guest-accesstoken'));
-        }
+    // Request Using API Key & Secret
+    const isApiKeyRequest = process.env.X_APIKEY && req.get(HEADER_X_API_KEY) && req.get(HEADER_X_API_SECRET);
+    if (isApiKeyRequest) {
+      try {
+        await this.apiKeyService.validate(req, user);
+
         req['sessionuser'] = user;
         next();
         return;
-      } else {
-        this.logger.log('Invalid API Key / Secret');
-        throw new BadRequestException('Invalid API Key / Secret');
+      } catch (e) {
+        throw e;
       }
     }
+
+    // If X_APIKEY defined, and there is api key and secret supplied. use robot user
+    // if (process.env.X_APIKEY && req.get('x-apikey') && req.get('x-apisecret')) {
+    //   if (req.get('x-apikey') == process.env.X_APIKEY && req.get('x-apisecret') == process.env.X_APISECRET) {
+    //     user.setAsStaticUser('00000000-0000-0000-0000-000000000000', 'robot', 'Robot', 'robot@a.org', req.get('x-org') ?? this.defaultXOrg);
+    //     if (req.get('x-guest-accesstoken')) {
+    //       user.setGuestToken(req.get('x-guest-accesstoken'));
+    //     }
+
+    //     req['sessionuser'] = user;
+    //     next();
+    //     return;
+    //   } else {
+    //     this.logger.log('Invalid API Key / Secret');
+    //     throw new BadRequestException('Invalid API Key / Secret');
+    //   }
+    // }
 
     if (!req.get('authorization')) {
       this.logger.log('Undefine Bearer Token');
@@ -90,7 +109,8 @@ export class TenantMiddleware implements NestMiddleware {
     }
 
     try {
-      await user.setCurrentUserInfo(tokenStr, xOrg,this.webhookModel);
+      await user.setCurrentUserInfo(tokenStr, xOrg, this.webhookModel);
+      user.detectMiniAppSdkRequest(req);
       if (user.getId() == '' && this.requireXOrg(req.baseUrl)) {
         this.logger.log('Access deny for user:', req.baseUrl);
         return res.status(401).send('Access deny for user');

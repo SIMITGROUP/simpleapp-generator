@@ -10,13 +10,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { BadRequestException, ForbiddenException, Injectable, Logger, Scope } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { ClientSession, Model, PipelineStage } from 'mongoose';
-import { Branch, Organization, Permission, Tenant, TenantClientSetting, User, Appintegration, Webhook } from 'src/simpleapp/generate/types';
+import { Branch, Organization, Permission, Tenant, TenantClientSetting, User, Appintegration, Webhook, Miniappinstallation, TUserType, TMiniApiTokenInfo } from 'src/simpleapp/generate/types';
 import { ProfileUserBranch, ProfileUserInvites } from '../../profile/profile.types';
 import { ModifiedRecords } from '../types';
 import { Role } from './roles/roles.enum';
 import systemWebHooks from '../../webhooks';
 import * as rolegroups from './roles/roles.group';
-
+import { isEmpty } from 'lodash';
+import { Request } from 'express';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserContext {
@@ -62,6 +63,10 @@ export class UserContext {
     email: string;
   } = { uid: '', uname: '', fullname: '', email: '' };
 
+  protected miniApiToken?: string;
+
+  protected miniApiTokenInfo?: TMiniApiTokenInfo;
+
   protected groups: string[] = [];
 
   protected branchCode: string = '';
@@ -92,7 +97,7 @@ export class UserContext {
 
   protected package: string = '';
 
-  protected webhooks: Webhook[] = systemWebHooks
+  protected webhooks: Webhook[] = systemWebHooks;
   protected clientSetting: TenantClientSetting = {
     auditTrail: false,
     support: false,
@@ -101,7 +106,7 @@ export class UserContext {
   };
 
   private dbsession: ClientSession;
-  
+
   protected modifiedRecords: ModifiedRecords = {
     createds: {},
     updateds: {},
@@ -113,10 +118,13 @@ export class UserContext {
     einvoice: boolean;
   } = { simbiz6: false, einvoice: false };
 
+  protected userType: TUserType = 'normal';
+
   constructor(
-    private readonly userModel: Model<User>,    
+    private readonly userModel: Model<User>,
     private readonly permModel: Model<Permission>,
     private readonly appModel: Model<Appintegration>,
+    private readonly miniAppInstallationModel: Model<Miniappinstallation>,
   ) {}
 
   setDBSession = (dbsession: ClientSession) => {
@@ -206,14 +214,27 @@ export class UserContext {
     return data;
   };
 
-  
-  setCurrentUserInfo = async (tokenstr: string, xOrg: string,webhookModel:Model<Webhook>) => {
-    this.setXOrg(xOrg);
-    await this.setUserToken(tokenstr);   
-    const wh = await webhookModel.find({branchId:this.getBranchId(),active:true})
+  getUserToken = () => this.token;
 
-    if(Array.isArray(wh) && wh.length>0)
-      this.webhooks = this.webhooks.concat(wh)
+  getMiniApiToken = () => this.miniApiToken;
+
+  getMiniApiTokenInfo = () => this.miniApiTokenInfo;
+
+  setMiniApiToken = (token: string) => {
+    this.miniApiToken = token;
+  };
+
+  setMiniApiTokenInfo = (miniApiTokenInfo: TMiniApiTokenInfo) => {
+    this.miniApiTokenInfo = miniApiTokenInfo;
+  };
+
+  setCurrentUserInfo = async (tokenstr: string, xOrg: string, webhookModel: Model<Webhook>) => {
+    this.setXOrg(xOrg);
+    await this.setUserToken(tokenstr);
+    this.setUserType('normal');
+    const wh = await webhookModel.find({ branchId: this.getBranchId(), active: true });
+
+    if (Array.isArray(wh) && wh.length > 0) this.webhooks = this.webhooks.concat(wh);
   };
 
   /**
@@ -267,7 +288,7 @@ export class UserContext {
               as: 'currentTenant',
             },
           },
-          
+
           {
             $unwind: '$currentTenant',
           },
@@ -326,8 +347,6 @@ export class UserContext {
 
     return userProfile;
   };
-
-  getUserToken = () => this.token;
 
   setUserToken = async (tokenStr: string) => {
     this.logger.debug(`===setUserToken===`);
@@ -401,8 +420,8 @@ export class UserContext {
       orgId: this.orgId,
     };
   };
-  getWebHooks = ()=> this.webhooks
-  
+  getWebHooks = () => this.webhooks;
+
   getWorkflowTaskFilter() {
     return {
       'data.tenantId': this.tenantId,
@@ -467,6 +486,28 @@ export class UserContext {
     }
   };
 
+  decodeXOrg = (xOrg: string) => {
+    try {
+      const decodedText: string = Base64URL.decodeText(xOrg);
+      const xOrgRealm = decodedText.includes('/') ? decodedText.split('/') : decodedText.split('-');
+
+      const tenantId = Number(xOrgRealm[0]);
+      const orgId = Number(xOrgRealm[1]);
+      const branchId = Number(xOrgRealm[2]);
+      if (xOrgRealm.length == 3 && !isNaN(tenantId) && !isNaN(orgId) && !isNaN(branchId)) {
+        return {
+          tenantId,
+          orgId,
+          branchId,
+        };
+      } else {
+        throw new BadRequestException('invalidXorg');
+      }
+    } catch (err) {
+      throw new BadRequestException(err);
+    }
+  };
+
   async getUserInfo(): Promise<UserInfo> {
     this.logger.debug('===getUserInfo===');
 
@@ -495,6 +536,7 @@ export class UserContext {
       invites: this.getInvites(),
       moreProps: this.getMoreProps(),
       appintegration: this.getAppIntegration(),
+      userType: this.getUserType(),
     };
 
     if (this.getId() != '') {
@@ -749,6 +791,96 @@ export class UserContext {
     this.guestInfo.email = <string>tokeninfo?.email ?? '';
     this.guestInfo.uname = <string>tokeninfo?.preferred_username ?? '';
     this.guestInfo.fullname = <string>tokeninfo?.name ?? '';
+
+    this.setUserType('guest');
+  }
+
+  getUserType = () => this.userType;
+
+  setUserType = (userType: TUserType) => {
+    this.userType = userType;
+  };
+
+  detectMiniAppSdkRequest(req: Request) {
+    if (!isEmpty(req.headers['x-mini-app-dev-portal-app-id'])) {
+      this.setUserType('miniAppSdk');
+    }
+  }
+
+  async setMiniApiUser(tokenStr: string, xOrg: string) {
+    const tokenInfo: TMiniApiTokenInfo = jwt.decode(tokenStr) as TMiniApiTokenInfo;
+    const appId = tokenInfo?.miniAppId ?? '';
+
+    this.setXOrg(xOrg);
+    this.setUserType('miniApi');
+    this.setMiniApiToken(tokenStr);
+    this.setMiniApiTokenInfo(tokenInfo);
+
+    const miniAppInstallation = await this.findIsCentreInstalledMiniApp(appId);
+
+    if (isEmpty(miniAppInstallation.miniApiUser) || isEmpty(miniAppInstallation.miniApiUser.uid)) {
+      throw new ForbiddenException('NOT found connected user');
+    }
+
+    this.token = tokenStr;
+    this.uid = miniAppInstallation.miniApiUser.uid;
+
+    await this.setUserProfileFromDB();
+  }
+
+  async findIsCentreInstalledMiniApp(devServiceAppId: string) {
+    const miniAppInstallation = await this.miniAppInstallationModel.findOne({
+      'miniApp.devServiceAppId': devServiceAppId,
+      isActive: true,
+      tenantId: this.tenantId,
+      orgId: this.orgId,
+      branchId: this.branchId,
+    });
+
+    if (!miniAppInstallation) {
+      throw new ForbiddenException('NOT allowed to access this centre');
+    }
+
+    return miniAppInstallation;
+  }
+
+  async setUserProfileFromDB() {
+    const userProfile = await this.obtainProfileFromDB();
+    if (userProfile) {
+      this.logger.debug(`User ${this.uid} exists in tenant (${this.tenantId})`);
+
+      this._id = userProfile._id.toString();
+      this.email = userProfile.email ?? '';
+      this.uname = userProfile.uname ?? '';
+      this.fullname = userProfile.fullname ?? '';
+
+      this.branchCode = userProfile['branchCode'] ?? '';
+      this.branchName = userProfile['branchName'] ?? '';
+      this.orgCode = userProfile['orgCode'] ?? '';
+      this.orgName = userProfile['orgName'] ?? '';
+      this.timeZone = userProfile['timeZone'] ?? '';
+      this.currency = userProfile['currency'] ?? '';
+      this.country = userProfile['country'] ?? '';
+      this.offsetMinute = userProfile['offsetMinute'] ?? 0;
+      this.orgRecordId = userProfile['orgRecordId'] ?? '';
+      this.branchRecordId = userProfile['branchRecordId'] ?? '';
+      this.groups = userProfile['groups'] ?? [];
+      this.clientSetting = userProfile['clientSetting'] ?? {};
+      this.roles = userProfile['roles'] ?? [Role.Everyone, Role.User];
+      this.moreProps = this.setMoreProps(userProfile);
+      this.package = userProfile['package'];
+      this.appintegration = await this.setAppIntegration();
+    } else {
+      this.logger.debug(`User ${this.uid} not exists in tenant (${this.tenantId})`);
+      this.logger.debug(`Set unknown id of current user`);
+      this.roles = [Role.Everyone, Role.Unknown];
+    }
+
+    if (this.isRealmAdmin() && !this.roles.includes(Role.SuperAdmin)) {
+      this.roles.push(Role.SuperAdmin);
+    }
+
+    this.logger.verbose(`User ${this.uid} have _id (${this.getId()}), groups (${this.groups.join(',')}) and roles (${this.getRoles().join(',')}).`);
   }
 
   getAppIntegration = () => this.appintegration;
@@ -773,6 +905,7 @@ export class UserContext {
     }
     return this.appintegration;
   }
+
   /**
    * Define additional properties from user into moreProps
    */

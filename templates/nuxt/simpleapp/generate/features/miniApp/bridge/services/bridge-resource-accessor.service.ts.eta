@@ -41,6 +41,8 @@ export class MiniAppBridgeResourceAccessor {
 
   protected miniAppCode: string = "";
 
+  protected developerPortalAppId: string = "";
+
   <% for (let i = 0; i < it.modules.length; i++) { %>
     <%
       const { resourceName, pascalName, kebabName, hasMiniAppWhitelistedApi } = getMiniAppInfo(it.modules[i]);
@@ -48,7 +50,7 @@ export class MiniAppBridgeResourceAccessor {
     <% if(hasMiniAppWhitelistedApi) { %>
       get <%= resourceName %>() {
         if (!this.instances.<%= resourceName %>) {
-          this.instances.<%= resourceName %> = new MiniApp<%= pascalName %>BridgeEditableService(this.miniAppCode);
+          this.instances.<%= resourceName %> = new MiniApp<%= pascalName %>BridgeEditableService(this.miniAppCode, this.developerPortalAppId);
         }
         return this.instances.<%= resourceName %>;
       }

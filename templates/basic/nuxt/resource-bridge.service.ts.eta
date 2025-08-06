@@ -24,12 +24,13 @@ export type <%= typeActionName %> = (typeof actions)[number];
 export class MiniApp<%= pascalName %>BridgeService {
   protected api!: <%= apiName %>;
 
-  constructor(miniAppCode: string) {
+  constructor(miniAppCode: string, developerPortalAppId: string) {
     const config = getAxiosConfig();
     if(miniAppCode !== ""){
       config.baseOptions = {
         headers: {
-          "x-mini-app-code": miniAppCode
+          "x-mini-app-code": miniAppCode,
+          "x-mini-app-dev-portal-app-id": developerPortalAppId,
         }
       }
     }

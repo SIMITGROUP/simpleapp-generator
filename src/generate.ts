@@ -799,4 +799,5 @@ const getCodeGenHelper = () =>
   'const upperFirstCase = (value) => { return value.charAt(0).toUpperCase() + value.slice(1); };' +
   'const camelToKebab = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase(); };' +
   'const removeSuffix = (input, suffix) => { return input.endsWith(suffix) ? input.slice(0, -suffix.length) : input };' +
+  'const isWhitelistedMiniApp = (actionName, it) => { return it.miniApp.whitelistApis?.[actionName] === true };' +
   'const titleCase = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1 $2"); }; ';

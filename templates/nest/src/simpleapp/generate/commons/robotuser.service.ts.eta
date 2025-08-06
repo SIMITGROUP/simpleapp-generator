@@ -11,6 +11,7 @@ import { UserContext } from 'src/simpleapp/generate/commons/user.context';
 import { Permission } from 'src/simpleapp/services/perm.service';
 import { User } from 'src/simpleapp/services/user.service';
 import { Appintegration } from 'src/simpleapp/services/appintegration.service';
+import { Miniappinstallation } from '../types';
 const Base64URL = require('@darkwolf/base64url');
 @Injectable()
 export class SimpleAppRobotUserService {
@@ -22,6 +23,7 @@ export class SimpleAppRobotUserService {
   @InjectModel('User') private readonly usermodel: Model<User>;
   @InjectModel('Permission') private readonly permmodel: Model<Permission>;
   @InjectModel('Appintegration') private readonly appmodel: Model<Appintegration>;
+  @InjectModel('Miniappinstallation') private readonly miniAppInstallationModel: Model<Miniappinstallation>;
 
   constructor() {
     this.init();
@@ -91,14 +93,8 @@ export class SimpleAppRobotUserService {
 
   prepareAppUser(data: any) {
     // console.log('prepareAppUserprepareAppUser');
-    const appuser = new UserContext(this.usermodel, this.permmodel, this.appmodel);
-    appuser.setAsStaticUser(
-      '00000000-0000-0000-0000-000000000000',
-      'robot',
-      'Robot',
-      'robot@a.org',
-      Base64URL.encodeText('0-0-0'),
-    );
+    const appuser = new UserContext(this.usermodel, this.permmodel, this.appmodel, this.miniAppInstallationModel);
+    appuser.setAsStaticUser('00000000-0000-0000-0000-000000000000', 'robot', 'Robot', 'robot@a.org', Base64URL.encodeText('0-0-0'));
 
     const tenantId = data?.tenantId ?? 0;
     const orgId = data?.orgId ?? 0;
