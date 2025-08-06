@@ -5,11 +5,12 @@
     :class="{
       'bg-emerald-500': badgeType === 'available',
       'bg-yellow-400': badgeType === 'comingSoon',
+      'bg-slate-400': badgeType === 'dev',
     }"
   >
     {{ t(`miniAppLang.${badgeType}`) }}
   </span>
-  <span
+  <!-- <span
     v-else
     class="bg-slate-200/50 text-surface-500 text-[0.65rem] px-2 font-bold py-0.5 rounded-md uppercase"
   >
@@ -27,28 +28,33 @@
         })
       }}
     </template>
-  </span>
+  </span> -->
 </template>
 
 <script setup lang="ts">
-import { Miniapp } from "~/simpleapp/generate/openapi";
+import { MiniappEnvEnum } from "~/enums/enums.generate";
+import { Miniapp, MiniAppDetail } from "~/simpleapp/generate/openapi";
 
 const props = defineProps<{
-  item: Miniapp;
+  item: MiniAppDetail;
 }>();
 
 const { $miniAppStore } = useNuxtApp();
 
 const badgeType = computed(() => {
+  if (props.item.env === MiniappEnvEnum.DEV) {
+    return "dev";
+  }
+
+  if (!$miniAppStore.hasMiniAppFeature) {
+    return "noFeature";
+  }
+
   if (props.item.status === "upcoming") {
     return "comingSoon";
   }
 
-  if ($miniAppStore.hasRequiredPlan(props.item)) {
-    if (!$miniAppStore.isHasMiniAppFeature) {
-      return "noFeature";
-    }
-
+  if (props.item.hasRequiredPlan) {
     return "available";
   }
 

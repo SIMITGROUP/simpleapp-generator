@@ -23,12 +23,13 @@
 </template>
 
 <script setup lang="ts">
-import { MiniappIntegrationPages } from "~/simpleapp/generate/openapi";
+import { MiniappIntegrationCustomPagePages } from "~/simpleapp/generate/openapi";
 
 const props = defineProps<{
-  pageInfo: MiniappIntegrationPages;
+  pageInfo: MiniappIntegrationCustomPagePages;
   miniAppCode: string;
   miniAppInstallationId: string;
+  developerPortalAppId: string;
 }>();
 
 const _xOrg = getPathPara("xorg", "");
@@ -52,6 +53,7 @@ const { iframeRef, onIframeLoad } = useMiniAppBridge(
   props.miniAppInstallationId,
   props.pageInfo,
   props.miniAppCode,
+  props.developerPortalAppId,
 );
 
 const iframeSource = computed(() => {

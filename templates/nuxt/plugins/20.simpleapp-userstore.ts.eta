@@ -165,7 +165,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         }
         //().then((res:AxiosResponse)=>{ }
       },
-      checkHasHighPrivilege() {
+      hasHighPrivilege() {
         return HIGH_PRIVILEGE_ROLES.some((permission) =>
           this.roles.includes(permission),
         );

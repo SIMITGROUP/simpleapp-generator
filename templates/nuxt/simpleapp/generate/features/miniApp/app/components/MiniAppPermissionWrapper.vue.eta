@@ -1,17 +1,17 @@
 <template>
   <MiniAppRestrictedWarning
-    v-if="!permission.status"
-    :reason="permission.reason ?? ''"
+    v-if="!validation.valid"
+    :type="validation.type ?? ''"
     class="flex items-center justify-center mt-10"
   />
   <slot v-else />
 </template>
 
 <script setup lang="ts">
-import { MiniAppPermissionResult } from "../types/miniApp";
+import { MiniAppValidationResp } from "../types/miniApp";
 import MiniAppRestrictedWarning from "./MiniAppRestrictedWarning.vue";
 
 defineProps<{
-  permission: MiniAppPermissionResult;
+  validation: MiniAppValidationResp;
 }>();
 </script>

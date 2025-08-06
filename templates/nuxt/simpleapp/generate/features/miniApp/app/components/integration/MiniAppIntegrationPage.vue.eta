@@ -14,12 +14,12 @@
         <div class="text-gray-400 text-sm flex items-center gap-2">
           <div class="flex items-center gap-2">
             <i class="pi pi-user" />
-            <span>{{ miniApp.author }}</span>
+            <span>{{ miniApp.author.team ?? miniApp.author.name }}</span>
           </div>
           <span>|</span>
           <div>v {{ miniApp.version }}</div>
 
-          <div
+          <!-- <div
             v-if="!_.isEmpty(miniApp.requiredPlans)"
             class="flex items-center gap-2"
           >
@@ -39,7 +39,7 @@
             >
               {{ permission }}
             </span>
-          </div>
+          </div> -->
         </div>
         <p class="text-gray-600">{{ miniApp.intro.description }}</p>
       </div>
@@ -53,13 +53,13 @@
       </template>
       <MiniAppPermissionWrapper
         v-else
-        :permission="$miniAppStore.checkHasFeature()"
+        :validation="$miniAppStore.validation('miniAppFeature')"
       >
         <div class="flex items-center space-x-2">
           <template v-if="$miniAppStore.isMiniAppInstalled(miniApp.code)">
             <!-- Installed -->
             <MiniAppPermissionWrapper
-              :permission="$miniAppStore.checkCanUninstall(miniApp)"
+              :validation="$miniAppStore.validation('uninstall')"
               class="!mt-0"
             >
               <ButtonDefault
@@ -71,11 +71,8 @@
             </MiniAppPermissionWrapper>
 
             <MiniAppPermissionWrapper
-              v-if="
-                miniApp.integration.settings &&
-                !_.isEmpty(miniApp.integration.settings)
-              "
-              :permission="$miniAppStore.checkCanUpdateSetting(miniApp)"
+              v-if="$miniAppStore.hasSettingPage(miniApp)"
+              :validation="$miniAppStore.validation('updateSetting')"
               class="!mt-0"
             >
               <ButtonSecondary
@@ -89,7 +86,7 @@
           <template v-else>
             <!-- Not yet install -->
             <MiniAppPermissionWrapper
-              :permission="$miniAppStore.checkCanInstall(miniApp)"
+              :validation="$miniAppStore.validation('install')"
               class="!mt-0"
             >
               <ButtonPrimary
@@ -145,7 +142,13 @@
     </div>
   </div>
   <div v-else>
-    <template v-if="!isFetching"> Not found... </template>
+    <template v-if="!isFetching">
+      <NodataLarge
+        :label="t('noDataFound')"
+        :icon="UndrawNodata"
+        class="my-24"
+      />
+    </template>
   </div>
 </template>
 
@@ -153,6 +156,7 @@
 import _ from "lodash";
 import { MiniAppDetail } from "~/simpleapp/generate/openapi";
 import MiniAppPermissionWrapper from "../MiniAppPermissionWrapper.vue";
+import UndrawNodata from "~/components/icon/UndrawNodata.vue";
 
 defineProps<{
   miniApp?: MiniAppDetail;

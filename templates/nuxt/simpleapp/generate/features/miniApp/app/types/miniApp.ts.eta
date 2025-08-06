@@ -1,7 +1,6 @@
 import type {
   MiniAppDetail,
-  MiniappIntegrationForms,
-  MiniappIntegrationPages,
+  MiniappIntegrationCustomFieldFields,
 } from "~/simpleapp/generate/openapi";
 
 export enum MiniAppFrameworkCompatibility {
@@ -10,11 +9,7 @@ export enum MiniAppFrameworkCompatibility {
   "DEPRECATED" = "DEPRECATED",
 }
 
-export type MiniAppPageWithMiniAppCode = MiniappIntegrationPages & {
-  miniAppCode: string;
-};
-
-export type MiniAppFormWithMiniAppCode = MiniappIntegrationForms & {
+export type MiniAppFormWithMiniAppCode = MiniappIntegrationCustomFieldFields & {
   miniAppCode: string;
 };
 
@@ -27,4 +22,9 @@ export type CategorizedMiniApp = {
 export type MiniAppPermissionResult = {
   status: boolean;
   reason?: string;
+};
+
+export type MiniAppValidationResp = {
+  valid: boolean;
+  type: string;
 };

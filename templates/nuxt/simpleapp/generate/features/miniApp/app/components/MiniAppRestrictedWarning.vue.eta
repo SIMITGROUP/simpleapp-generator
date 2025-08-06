@@ -3,11 +3,11 @@
     <span
       class="px-3 py-1 text-sm font-semibold rounded bg-yellow-100 text-yellow-800"
     >
-      {{ t(`miniAppLang.${reason}`) }}
+      {{ t(`miniAppLang.permission.${type}`) }}
     </span>
 
     <ButtonPrimary
-      v-if="reason === 'packageTypeRestricted'"
+      v-if="type === 'miniAppFeature'"
       :label="t('miniAppLang.upgradePlan')"
       @click="handleUpgradePlan"
     />
@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 defineProps<{
-  reason: string;
+  type: string;
 }>();
 
 function handleUpgradePlan() {

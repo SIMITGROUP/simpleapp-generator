@@ -8,15 +8,11 @@ import _, { min } from "lodash";
 import {
   Miniapp,
   MiniAppDetail,
-  MiniAppDetailActionAccess,
-  MiniappIntegrationPages,
+  MiniAppDetailPermission,
+  MiniappIntegrationCustomPagePages,
   MINIAPPMANAGERApi,
 } from "~/simpleapp/generate/openapi";
-import {
-  MiniAppFormWithMiniAppCode,
-  MiniAppFrameworkCompatibility,
-  MiniAppPermissionResult,
-} from "~/simpleapp/generate/features/miniApp/app/types/miniApp";
+import { MiniAppFormWithMiniAppCode } from "~/simpleapp/generate/features/miniApp/app/types/miniApp";
 
 export default defineNuxtPlugin(async () => {
   /**
@@ -24,38 +20,15 @@ export default defineNuxtPlugin(async () => {
    */
   const MINI_APP_PAGE_PATH_PREFIX = "miniapp";
 
-  /**
-   * To totally block mini app. if mini app's framework compability lower than this.
-   * To support backward compatibility, with deprecation notice,
-   * if mini app's framework compability higher than this, but lower than MIN_FRAMEWORK_COMPATIBLE_VERSION.
-   */
-  const MIN_FRAMEWORK_VERSION = "1.0";
-
-  /**
-   * The minimum version that is compatible with the current framework.
-   */
-  const MIN_FRAMEWORK_COMPATIBLE_VERSION = "1.0";
-
   const config = getAxiosConfig();
 
   const miniAppManager = new MINIAPPMANAGERApi(config);
 
   const MINI_APP_BUILT_IN_SETTING_NAME = "mini-app-setting";
 
-  const _ERROR = {
-    MISSING_REQUIRED_PLAN: "missingRequiredPlan",
-    INSUFFICIENT_ACCESS_PERMISSION: "insufficientAccessPermission",
-    INSUFFICIENT_INSTALL_PERMISSION: "insufficientInstallPermission",
-    INSUFFICIENT_UNINSTALL_PERMISSION: "insufficientUninstallPermission",
-    INSUFFICIENT_CHANGE_SETTING_PERMISSION:
-      "insufficientChangeSettingPermission",
-    NO_MINI_APP_FEATURE: "packageTypeRestricted",
-    NOT_YET_INSTALL: "notYetInstall",
-  };
-
   const useMiniAppStore = defineStore("mini-app", {
     state: () => ({
-      actionAccess: {} as MiniAppDetailActionAccess,
+      permissions: {} as MiniAppDetailPermission,
 
       /**
        * Store all installed miniApps
@@ -67,10 +40,11 @@ export default defineNuxtPlugin(async () => {
        */
       isFetchingInstalledMiniApps: true,
     }),
+
     getters: {
       getForm: (state) => (formCode: string) => {
         return state.installedMiniApps.flatMap((miniApp) => {
-          return miniApp.integration.forms
+          return (miniApp.integration?.customField?.fields ?? [])
             .filter((form) => form.code == formCode)
             .map((form) => {
               return {
@@ -81,64 +55,218 @@ export default defineNuxtPlugin(async () => {
         });
       },
 
-      isHaveMiniAppFeature: (state) => {
-        if (state.isFetchingInstalledMiniApps) {
-          // if still fetching, return true 1st, else will immediate show restricted warning
-          return true;
-        }
-
-        return state.actionAccess.isHaveMiniAppFeature ?? false;
-      },
-
-      isShowMiniAppMoreMenuButton: (state) => {
+      showMiniAppMoreMenuButton: (state) => {
         const filtered = state.installedMiniApps.filter(
           (item) =>
-            item.integration?.pages?.length > 0 ||
-            (item.integration?.settings?.jsonSchema &&
-              Object.keys(item.integration.settings.jsonSchema).length > 0),
+            item.integration?.customPage?.pages &&
+            (item.integration?.customPage?.pages?.length > 0 ||
+              (item.integration?.customPage?.setting?.jsonSchema &&
+                Object.keys(item.integration.customPage.setting.jsonSchema)
+                  .length > 0)),
         );
 
         return _.isEmpty(filtered) ? false : true;
       },
 
-      isCanInstall: (state) => state.actionAccess.isAllowInstall,
-      isCanUninstall: (state) => state.actionAccess.isAllowUninstall,
-      isCanUpdateSetting: (state) => state.actionAccess.isAllowUpdateSetting,
-      isHasMiniAppFeature: (state) => state.actionAccess.isHaveMiniAppFeature,
+      // ================================= Permission =================================
+      canInstall: (state) => state.permissions.canInstall,
+      canUninstall: (state) => state.permissions.canUninstall,
+      canUpdateSetting: (state) => state.permissions.canUpdateSetting,
+      hasMiniAppFeature: (state) => state.permissions.hasMiniAppFeature,
     },
 
     actions: {
+      // ================================= Finder =================================
+      findMiniApp(miniApps: MiniAppDetail[], miniAppCode: string) {
+        return miniApps.find((item) => item.code === miniAppCode);
+      },
+
+      findPage(miniApp: MiniAppDetail, pageCode: string) {
+        return miniApp.integration?.customPage?.pages.find(
+          (item) => item.code === pageCode,
+        );
+      },
+
+      // ================================= Permission =================================
+      hasPermission(requiredPermissions: string[]) {
+        const userRoles = getUserProfile().roles ?? [];
+        return requiredPermissions.some((permission) =>
+          userRoles.includes(permission),
+        );
+      },
+
+      validatePageAccess(miniAppCode: string, pageCode: string) {
+        const miniApp = this.findMiniApp(this.installedMiniApps, miniAppCode);
+        if (!miniApp) {
+          return {
+            valid: false,
+            type: "unknownMiniApp",
+          };
+        }
+
+        const page = this.findPage(miniApp, pageCode);
+        if (!page) {
+          return {
+            valid: false,
+            type: "unknownPage",
+          };
+        }
+
+        if (hasHighPrivilege()) {
+          return {
+            valid: true,
+            type: "highPrivilege",
+          };
+        }
+
+        if (!this.isInstalled(miniApp.code)) {
+          return {
+            valid: false,
+            type: "notInstalled",
+          };
+        }
+
+        if (!miniApp.hasRequiredPlan) {
+          return {
+            valid: false,
+            type: "requiredPlan",
+          };
+        }
+
+        if (!this.hasPermission(page.requiredPermissions ?? [])) {
+          return {
+            valid: false,
+            type: "requiredPermission",
+          };
+        }
+
+        return {
+          valid: true,
+          type: "",
+        };
+      },
+
+      validation(type: string) {
+        switch (type) {
+          case "miniAppFeature":
+            return {
+              valid: this.hasMiniAppFeature,
+              type,
+            };
+
+          case "install":
+            return {
+              valid: this.canInstall,
+              type,
+            };
+
+          case "uninstall":
+            return {
+              valid: this.canUninstall,
+              type,
+            };
+
+          case "updateSetting":
+            return {
+              valid: this.canUpdateSetting,
+              type,
+            };
+        }
+
+        return {
+          valid: true,
+          type: "",
+        };
+      },
+
+      isInstalled(miniAppCode: string) {
+        const miniApp = this.installedMiniApps.find(
+          (item) => item.code === miniAppCode,
+        );
+
+        return miniApp?.miniAppInstallation?.isActive === true ? true : false;
+      },
+
+      canAccessPage(miniAppCode: string, pageCode: string): boolean {
+        const validation = this.validatePageAccess(miniAppCode, pageCode);
+
+        return validation.valid;
+      },
+
+      enabledMiniAppFeature(
+        miniApp: MiniAppDetail,
+        feature: keyof MiniAppDetail["integration"]["enabled"],
+      ) {
+        return miniApp.integration.enabled[feature];
+      },
+
+      // ================================= Menu =================================
+
+      hasSettingPage(miniApp: MiniAppDetail) {
+        const enabled = this.enabledMiniAppFeature(miniApp, "customPage");
+        if (!enabled) return false;
+
+        if (_.isEmpty(miniApp.integration?.customPage?.setting?.jsonSchema)) {
+          return false;
+        }
+
+        return true;
+      },
+
+      getSettingPageMenu(miniApp: MiniAppDetail) {
+        if (!this.canUpdateSetting) {
+          return null;
+        }
+
+        if (!this.enabledMiniAppFeature(miniApp, "customPage")) {
+          return null;
+        }
+
+        if (_.isEmpty(miniApp.integration?.customPage?.setting?.jsonSchema)) {
+          return null;
+        }
+
+        return {
+          code: MINI_APP_BUILT_IN_SETTING_NAME,
+          title: t("miniAppLang.setting"),
+          description: "",
+          sources: {
+            development: "",
+            production: "",
+          },
+          requiredPermissions: [],
+          iconType: "class",
+          icon: "pi pi-cog",
+        };
+      },
+
+      shouldShowPageOnMenu(page: MiniappIntegrationCustomPagePages) {
+        return page.isHideOnMenu === true ? false : true;
+      },
+
+      getPages(miniApp: MiniAppDetail, withSettingPage: boolean = true) {
+        const pages = (miniApp.integration?.customPage?.pages ?? []).filter(
+          (page) => {
+            return (
+              this.canAccessPage(miniApp.code, page.code) &&
+              this.shouldShowPageOnMenu(page)
+            );
+          },
+        );
+
+        if (withSettingPage) {
+          const settingPage = this.getSettingPageMenu(miniApp);
+          if (settingPage) {
+            pages.push(settingPage);
+          }
+        }
+
+        return pages ?? [];
+      },
+
       getMenuItems() {
         return this.installedMiniApps.flatMap((miniApp) => {
-          const pages = miniApp.integration.pages.filter((page) => {
-            return (
-              this.isAllowAccessMiniAppPage(miniApp.code, page.code) &&
-              this.isRequiredToShowOnMenu(page)
-            );
-          });
-
-          if (this.isCanUpdateSetting) {
-            if (
-              miniApp.integration.settings?.jsonSchema &&
-              !_.isEmpty(miniApp.integration.settings.jsonSchema)
-            ) {
-              pages.push({
-                code: MINI_APP_BUILT_IN_SETTING_NAME,
-                title: t("miniAppLang.setting"),
-                description: "",
-                sourceType: "",
-                sources: {
-                  development: "",
-                  production: "",
-                },
-                requiredPermissions: [],
-                iconType: "class",
-                icon: "pi pi-cog",
-              });
-            }
-          }
-
-          // Only return mini app if pages not empty
+          const pages = this.getPages(miniApp);
           if (_.isEmpty(pages)) {
             return [];
           }
@@ -153,9 +281,7 @@ export default defineNuxtPlugin(async () => {
         });
       },
 
-      isRequiredToShowOnMenu(page: MiniappIntegrationPages) {
-        return page.isHideOnMenu !== true;
-      },
+      // ================================= Separator =================================
 
       // ============================ Load Function ============================
       async loadInstalledMiniApps() {
@@ -171,7 +297,7 @@ export default defineNuxtPlugin(async () => {
           });
 
         this.installedMiniApps = resp.installedMiniApps;
-        this.actionAccess = resp.actionAccess;
+        this.permissions = resp.permissions;
 
         this.isFetchingInstalledMiniApps = false;
       },
@@ -196,85 +322,6 @@ export default defineNuxtPlugin(async () => {
           .catch((res: any) => {
             return Promise.reject(res);
           });
-      },
-
-      // ================================ Permission ===============================
-
-      hasRequiredPlan(miniApp: Miniapp) {
-        const currentPlan = getUserProfile().package ?? "";
-        const requiredPlans = miniApp.requiredPlans ?? [];
-        if (_.isEmpty(requiredPlans)) return true;
-
-        return requiredPlans.includes(currentPlan);
-      },
-
-      checkHasFeature() {
-        return this._check([
-          [() => this.isHasMiniAppFeature, _ERROR.NO_MINI_APP_FEATURE],
-        ]);
-      },
-
-      checkHasRequiredPlan(miniApp: Miniapp) {
-        return this._check([
-          [() => this.hasRequiredPlan(miniApp), _ERROR.MISSING_REQUIRED_PLAN],
-        ]);
-      },
-
-      checkIsInstalled(miniAppCode: string) {
-        return this._check([
-          [() => this.isMiniAppInstalled(miniAppCode), _ERROR.NOT_YET_INSTALL],
-        ]);
-      },
-
-      checkCanAccess(miniAppCode: string, pageCode: string) {
-        if (pageCode === MINI_APP_BUILT_IN_SETTING_NAME) {
-          return this._check([
-            [
-              () => this.isCanUpdateSetting,
-              _ERROR.INSUFFICIENT_ACCESS_PERMISSION,
-            ],
-          ]);
-        }
-
-        return this._check([
-          [
-            () => this.isAllowAccessMiniAppPage(miniAppCode, pageCode),
-            _ERROR.INSUFFICIENT_ACCESS_PERMISSION,
-          ],
-        ]);
-      },
-
-      checkCanInstall(miniApp: Miniapp) {
-        return this._check([
-          [() => this.hasRequiredPlan(miniApp), _ERROR.MISSING_REQUIRED_PLAN],
-          [() => this.isCanInstall, _ERROR.INSUFFICIENT_INSTALL_PERMISSION],
-        ]);
-      },
-
-      checkCanUninstall(miniApp: Miniapp) {
-        return this._check([
-          [() => this.isCanUninstall, _ERROR.INSUFFICIENT_UNINSTALL_PERMISSION],
-        ]);
-      },
-
-      checkCanUpdateSetting(miniApp: Miniapp) {
-        return this._check([
-          [() => this.hasRequiredPlan(miniApp), _ERROR.MISSING_REQUIRED_PLAN],
-          [
-            () => this.isCanUpdateSetting,
-            _ERROR.INSUFFICIENT_CHANGE_SETTING_PERMISSION,
-          ],
-        ]);
-      },
-
-      _check(checks: [() => boolean, string][]): MiniAppPermissionResult {
-        for (const [checkFn, reason] of checks) {
-          if (!checkFn()) {
-            return { status: false, reason };
-          }
-        }
-
-        return { status: true };
       },
 
       // ============================ Path & Navigation ============================
@@ -322,53 +369,6 @@ export default defineNuxtPlugin(async () => {
         );
 
         return miniApp ? true : false;
-      },
-
-      isAllowAccessMiniAppPage(miniAppCode: string, pageCode: string) {
-        const miniApp = this.installedMiniApps.find(
-          (item) => item.code === miniAppCode,
-        );
-        if (!miniApp) {
-          return false;
-        }
-
-        const page = miniApp.integration.pages.find(
-          (item) => item.code === pageCode,
-        );
-        if (!page) {
-          return false;
-        }
-
-        if (checkHasHighPrivilege()) {
-          return true;
-        }
-
-        const userRoles = getUserProfile().roles;
-
-        if (page.requiredPermissions && !_.isEmpty(page.requiredPermissions)) {
-          return page.requiredPermissions.some((permission) =>
-            userRoles.includes(permission),
-          );
-        }
-        return true;
-      },
-
-      getPageInfo(miniApp: Miniapp, pageCode: string) {
-        return miniApp.integration.pages.find((item) => item.code === pageCode);
-      },
-
-      checkMiniAppFrameworkCompatibility: (
-        miniApp: Miniapp,
-      ): MiniAppFrameworkCompatibility => {
-        if (miniApp.frameworkCompatibility < MIN_FRAMEWORK_VERSION) {
-          return MiniAppFrameworkCompatibility.DEPRECATED;
-        }
-
-        if (miniApp.frameworkCompatibility < MIN_FRAMEWORK_COMPATIBLE_VERSION) {
-          return MiniAppFrameworkCompatibility.TO_BE_DEPRECATED;
-        }
-
-        return MiniAppFrameworkCompatibility.COMPATIBLE;
       },
 
       // ============================ miniApp Action ============================

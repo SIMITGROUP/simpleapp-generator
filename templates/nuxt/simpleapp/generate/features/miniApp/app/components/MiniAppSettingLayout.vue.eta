@@ -6,14 +6,14 @@
         {{ miniAppTitle }}
       </h1>
 
-      <div v-if="$miniAppStore.isHasMiniAppFeature">
-        <slot v-if="$miniAppStore.isCanUpdateSetting" name="action" />
+      <div v-if="$miniAppStore.validation('updateSetting').valid">
+        <slot name="action" />
       </div>
     </div>
 
     <MiniAppPermissionWrapper
       v-if="miniApp"
-      :permission="$miniAppStore.checkCanUpdateSetting(miniApp)"
+      :validation="$miniAppStore.validation('updateSetting')"
     >
       <slot />
     </MiniAppPermissionWrapper>

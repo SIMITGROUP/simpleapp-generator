@@ -77,7 +77,7 @@
         </div>
       </template>
 
-      <template v-if="$miniAppStore.isShowMiniAppMoreMenuButton">
+      <template v-if="$miniAppStore.showMiniAppMoreMenuButton">
         <MainmenuButton
           :id="'mainmenu-app-miniApps-page-more'"
           :to="getDocumentUrl('miniapp')"

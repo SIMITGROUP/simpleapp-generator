@@ -6,82 +6,78 @@
  * Author: Ks Tan
  * Last Modified By: Yong Xiang
  */
-let orgLogo = ""
+let orgLogo = "";
 
-export const getUserStore = ()=>{
-    const {$userstore} = useNuxtApp()
-    return $userstore
-}
-export const reloadUserStore = async () =>{
-    const {$userstore} = useNuxtApp()
-    await $userstore.loadRemoteUserInfo()
-}
-export const getCurrency = () =>getUserStore()?.currency ?? '$$'
-export const getUserProfile = () => getUserStore()?.getUserInfo()
+export const getUserStore = () => {
+  const { $userstore } = useNuxtApp();
+  return $userstore;
+};
+export const reloadUserStore = async () => {
+  const { $userstore } = useNuxtApp();
+  await $userstore.loadRemoteUserInfo();
+};
+export const getCurrency = () => getUserStore()?.currency ?? "$$";
+export const getUserProfile = () => getUserStore()?.getUserInfo();
 
-
-export const isGuideComplete=(guidename: string):boolean=>{    
-    if(useNuxtApp().$userstore.moreProps.completedTours!==undefined){
-        return useNuxtApp().$userstore.moreProps.completedTours.includes(guidename)
-    }
-    else return false        
-}
-export const setGuideComplete= async(guidename:string)=>{
-    const userstore =useNuxtApp().$userstore
-    await getProfileApi().runTourComplete(guidename);
-    if(getUserProfile()!==undefined){
-        if(!Array.isArray(getUserProfile()?.moreProps.completedTours))
-            userstore.moreProps.completedTours=[guidename]
-        else
-            userstore.moreProps.completedTours.push(guidename)
-    }
-}
-export const getCurrentXorg = () =>{
-    return  (useRoute().params.xorg) ? String(useRoute().params.xorg) : undefined            
-}
-export const getPageBaseUrl = (resourcename:string) =>{
-    return `/${getCurrentXorg()}/${resourcename}`;
-}
+export const isGuideComplete = (guidename: string): boolean => {
+  if (useNuxtApp().$userstore.moreProps.completedTours !== undefined) {
+    return useNuxtApp().$userstore.moreProps.completedTours.includes(guidename);
+  } else return false;
+};
+export const setGuideComplete = async (guidename: string) => {
+  const userstore = useNuxtApp().$userstore;
+  await getProfileApi().runTourComplete(guidename);
+  if (getUserProfile() !== undefined) {
+    if (!Array.isArray(getUserProfile()?.moreProps.completedTours))
+      userstore.moreProps.completedTours = [guidename];
+    else userstore.moreProps.completedTours.push(guidename);
+  }
+};
+export const getCurrentXorg = () => {
+  return useRoute().params.xorg ? String(useRoute().params.xorg) : undefined;
+};
+export const getPageBaseUrl = (resourcename: string) => {
+  return `/${getCurrentXorg()}/${resourcename}`;
+};
 /**
  * verify current user can perform specific action base on backend RBAC
  * @param resource:string upper case first letter document name
  * @param action:string action name, can be create/update/delete...
  * @return boolean
  */
-export const canPerform = (resource:string,action:string):boolean =>{
+export const canPerform = (resource: string, action: string): boolean => {
+  return getUserStore().canPerform(upperFirst(resource), action);
+};
+export const haveAccess = (resource: string): boolean => {
+  return getUserStore().haveAccess(upperFirst(resource));
+};
 
-    return getUserStore().canPerform(upperFirst(resource),action)
-}
-export const haveAccess = (resource:string):boolean =>{
-    return getUserStore().haveAccess(upperFirst(resource))
-}
+export const hasHighPrivilege = (): boolean => {
+  return getUserStore().hasHighPrivilege();
+};
 
-export const checkHasHighPrivilege = ():boolean =>{
-    return getUserStore().checkHasHighPrivilege()
-}
-
-
-
-export const getProfileEmail = () => getUserProfile()?.email
-export const getProfileUid = () => getUserProfile()?.uid
-export const getProfileFullName = () => getUserProfile()?.fullName
+export const getProfileEmail = () => getUserProfile()?.email;
+export const getProfileUid = () => getUserProfile()?.uid;
+export const getProfileFullName = () => getUserProfile()?.fullName;
 
 export const refreshOrgLogo = async () => {
-  const logodata = await useNuxtApp().$OrganizationDoc().getApi().runGetlogo()
-  orgLogo = logodata.data
-}
-export const getOrgLogo = ()=> orgLogo
-export const setOrgLogo = (str:string) => orgLogo = str
-export const getCurrentBranch = ()=>{
-    const branchId= getUserStore().branchId
-    const branchinfo = getUserStore().branches.find(item=>item.branch.branchId==branchId)
-    return branchinfo
-}
+  const logodata = await useNuxtApp().$OrganizationDoc().getApi().runGetlogo();
+  orgLogo = logodata.data;
+};
+export const getOrgLogo = () => orgLogo;
+export const setOrgLogo = (str: string) => (orgLogo = str);
+export const getCurrentBranch = () => {
+  const branchId = getUserStore().branchId;
+  const branchinfo = getUserStore().branches.find(
+    (item) => item.branch.branchId == branchId,
+  );
+  return branchinfo;
+};
 
-export const getMySimpleAppUserPicker=()=>{
-    return {
-        _id: getUserProfile()?._id,
-        uid: getUserProfile()?.uid,
-        fullName: getUserProfile()?.fullName
-    }
-}
+export const getMySimpleAppUserPicker = () => {
+  return {
+    _id: getUserProfile()?._id,
+    uid: getUserProfile()?.uid,
+    fullName: getUserProfile()?.fullName,
+  };
+};
