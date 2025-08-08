@@ -23,9 +23,13 @@
 </template>
 
 <script setup lang="ts">
-import { MiniappIntegrationCustomPagePages } from "~/simpleapp/generate/openapi";
+import {
+  MiniAppDetail,
+  MiniappIntegrationCustomPagePages,
+} from "~/simpleapp/generate/openapi";
 
 const props = defineProps<{
+  miniApp: MiniAppDetail;
   pageInfo: MiniappIntegrationCustomPagePages;
   miniAppCode: string;
   miniAppInstallationId: string;
@@ -57,7 +61,7 @@ const { iframeRef, onIframeLoad } = useMiniAppBridge(
 );
 
 const iframeSource = computed(() => {
-  return isDevMode()
+  return props.miniApp.env === "dev"
     ? props.pageInfo.sources.development
     : props.pageInfo.sources.production;
 });

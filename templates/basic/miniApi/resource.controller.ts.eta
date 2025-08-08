@@ -3,6 +3,7 @@
   const kebabName = camelToKebab(it.resourceName);
   const apiName = it.typename.toUpperCase() + 'Api';
   const titleName = titleCase(pascalName);
+  const uglyName = upperFirstCase(it.name ?? '');
 
   const serviceVariable = it.resourceName + 'Service';
 %>
@@ -22,6 +23,8 @@ import {
 import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ApiHeader } from 'src/types/api';
 import { <%= pascalName %>Service } from './<%= kebabName %>.service';
+import { ResourceApiListDto } from '../../dto/resource-api.schema';
+import { <%= uglyName %> } from 'src/openapi/backend-api';
 
 @ApiTags('<%= titleName %>')
 @Controller('resources/<%= kebabName %>')
@@ -32,9 +35,13 @@ export class <%= pascalName %>Controller {
         <% if (value !== true && typeof value !== 'object') { return; } %>
 
         <% if(action === 'list') { %>
-            @Get()
-            findAll(@Headers() headers:ApiHeader) {
-                return this.<%= serviceVariable %>.findAll(headers);
+            @Post('list')
+            @ApiBody({
+                type: ResourceApiListDto<<%= uglyName %>>,
+                required: false,
+            })
+            findAll(@Headers() headers:ApiHeader, @Body() dto?: ResourceApiListDto<<%= uglyName %>>) {
+                return this.<%= serviceVariable %>.findAll(headers, dto);
             }
         <% } else if(action === 'detail') { %>
             @Get(':id')

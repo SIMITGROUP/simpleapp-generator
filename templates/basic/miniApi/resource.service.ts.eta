@@ -1,6 +1,7 @@
 <%
   const pascalName = upperFirstCase(it.resourceName);
   const apiName = it.typename.toUpperCase() + 'Api';
+  const uglyName = upperFirstCase(it.name ?? '');
 %>
 
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -8,6 +9,8 @@ import _ from 'lodash';
 import { <%= apiName %> } from 'src/openapi/backend-api';
 import { ApiHeader } from 'src/types/api';
 import { getOpenApiConfig } from 'src/utils/api';
+import { ResourceApiListDto } from '../../dto/resource-api.schema';
+import { <%= uglyName %> } from 'src/openapi/backend-api';
 
 @Injectable()
 export class <%= pascalName %>Service {
@@ -27,9 +30,13 @@ export class <%= pascalName %>Service {
     <% if (value !== true && typeof value !== 'object') { return; } %>
     
     <% if(action === 'list') { %>
-      async findAll(headers: ApiHeader) {
+      async findAll(headers: ApiHeader, dto?: ResourceApiListDto<<%= uglyName %>>) {
         const api = this.getApi(headers);
-        const resp = await api.runSearch({});
+        const resp = await api.runSearch({
+          fields: dto?.fields,
+          filter: dto?.filters,
+          sorts: dto?.sorts as string[][] | undefined,
+        });
         return resp.data;
       }
     <% } else if(action === 'detail') { %>

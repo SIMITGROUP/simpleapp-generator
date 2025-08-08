@@ -237,6 +237,10 @@ export class UserContext {
     if (Array.isArray(wh) && wh.length > 0) this.webhooks = this.webhooks.concat(wh);
   };
 
+  setPackage = (packageName: string) => {
+    this.package = packageName;
+  };
+
   /**
    * Obtain user profile filter by uid, tenantId, orgId, branchId
    * @returns Promise<User|undefined>
@@ -828,9 +832,9 @@ export class UserContext {
     await this.setUserProfileFromDB();
   }
 
-  async findIsCentreInstalledMiniApp(devServiceAppId: string) {
+  async findIsCentreInstalledMiniApp(developerPortalAppId: string) {
     const miniAppInstallation = await this.miniAppInstallationModel.findOne({
-      'miniApp.devServiceAppId': devServiceAppId,
+      'miniApp.developerPortalAppId': developerPortalAppId,
       isActive: true,
       tenantId: this.tenantId,
       orgId: this.orgId,
