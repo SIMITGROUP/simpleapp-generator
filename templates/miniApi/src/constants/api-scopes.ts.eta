@@ -13,11 +13,11 @@
       if (value !== true && typeof value !== 'object') { return; }
       let method = '';
       switch(action) {
-        case 'list':
         case 'detail':
-          method = 'post';
+          method = 'get';
           break;
 
+        case 'list':
         case 'create':
         case 'autoComplete':
           method = 'post';
