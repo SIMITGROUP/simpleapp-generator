@@ -15,7 +15,7 @@
       switch(action) {
         case 'list':
         case 'detail':
-          method = 'get';
+          method = 'post';
           break;
 
         case 'create':
