@@ -1,0 +1,48 @@
+<template>
+  <div
+    class="drop-shadow-[0_10px_8px_rgba(197,197,197,0.25)]"
+    :class="{
+      'size-20': size === 'xl',
+      'size-16': size === 'lg',
+      'size-14': !size || size === 'normal',
+      'size-8': size === 'xs',
+      'size-7': size === 'tiny',
+    }"
+  >
+    <PrimevueAvatar
+      :image
+      :label="image ? undefined : displayLabel"
+      class="squircle !size-full aspect-square"
+      :class="{
+        'text-xl': size === 'lg',
+        'text-lg': !size || size === 'normal',
+        'text-xs': size === 'xs',
+        'text-6xl': size === 'xl',
+        'text-tiny': size === 'tiny',
+      }"
+      style="background-color: #dee9fc; color: #1a2551"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import _ from "lodash";
+import PrimevueAvatar from "primevue/avatar";
+
+const props = defineProps<{
+  image?: string;
+  label?: string;
+  size?: "lg" | "normal" | "xs" | "xl" | "tiny";
+}>();
+
+const displayLabel = computed(() => {
+  if (!props.label) return undefined;
+
+  return props.label
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join("");
+});
+</script>

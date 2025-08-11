@@ -30,9 +30,10 @@
             :title="miniApp.name"
           >
             <template #icon>
-              <img
-                :src="miniApp.logo"
-                class="size-6 rounded-md object-contain"
+              <MiniAppIcon
+                :image="miniApp.logo"
+                :label="miniApp.name"
+                size="tiny"
               />
             </template>
             <template #title>
@@ -96,6 +97,7 @@
 <script setup lang="ts">
 import IconPuzzle from "~/components/icon/IconPuzzle.vue";
 import MiniAppPageIcon from "./MiniAppPageIcon.vue";
+import MiniAppIcon from "./MiniAppIcon.vue";
 
 const { $miniAppStore } = useNuxtApp();
 const displayItemCount = 3;

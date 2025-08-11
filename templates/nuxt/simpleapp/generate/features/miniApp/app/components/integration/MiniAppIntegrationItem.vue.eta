@@ -16,7 +16,7 @@
     </div>
 
     <div class="p-4">
-      <img :src="item.logo" class="size-16 object-contain" />
+      <MiniAppIcon :image="item.logo" :label="item.name" size="lg" />
     </div>
 
     <div class="text-sm text-gray-600 text-center line-clamp-2">
@@ -27,18 +27,19 @@
 
 <script setup lang="ts">
 import { MiniappStatusEnum } from "~/enums/enums.generate";
-import { Miniapp } from "~/simpleapp/generate/openapi";
+import { MiniAppDetail } from "~/simpleapp/generate/openapi";
 import MiniAppIntegrationItemBadge from "./MiniAppIntegrationItemBadge.vue";
+import MiniAppIcon from "../MiniAppIcon.vue";
 
 defineProps<{
-  item: Miniapp;
+  item: MiniAppDetail;
 }>();
 
 const emits = defineEmits<{
-  (event: "miniAppClick", item: Miniapp): void;
+  (event: "miniAppClick", item: MiniAppDetail): void;
 }>();
 
-function handleMiniAppClick(item: Miniapp) {
+function handleMiniAppClick(item: MiniAppDetail) {
   if (item.status === MiniappStatusEnum.UPCOMING) return;
 
   if (item._id) {

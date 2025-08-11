@@ -1,0 +1,68 @@
+<template>
+  <Tabs value="pages">
+    <TabList>
+      <Tab value="pages">
+        {{ t("pages") }}
+      </Tab>
+      <Tab value="scopes">
+        {{ t("scopes") }}
+      </Tab>
+    </TabList>
+    <TabPanels>
+      <TabPanel value="pages">
+        <div class="flex flex-col gap-2">
+          <div
+            v-for="page in miniApp.integration.customPage?.pages"
+            class="flex flex-col gap-2 bg-slate-100 rounded-xl px-4 py-3"
+          >
+            <div class="flex items-center gap-2">
+              <MiniAppPageIcon
+                :iconType="page.iconType"
+                :icon="page.icon ?? ''"
+                class=""
+              />
+
+              <div class="font-semibold text-surface-700">
+                {{ page.title }}
+              </div>
+            </div>
+            <div class="flex flex-col pl-6">
+              <div class="text-surface-400 text-sm mt-1">
+                {{ page.description }}
+              </div>
+
+              <template v-if="!_.isEmpty(page.requiredPermissions)">
+                <Divider type="dashed" class="!my-3" />
+
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-surface-700 text-sm">
+                    {{ t("miniAppLang.requiredPermissions") }}:
+                  </span>
+                  <div
+                    v-for="requiredPermission in page.requiredPermissions"
+                    class="bg-slate-300 px-2 py-0.5 rounded-md text-xs font-medium text-surface-600"
+                  >
+                    {{ requiredPermission }}
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </TabPanel>
+      <TabPanel value="scopes">
+        <MiniAppFeatureScope :miniApp="miniApp" />
+      </TabPanel>
+    </TabPanels>
+  </Tabs>
+</template>
+<script setup lang="ts">
+import { MiniAppDetail } from "~/simpleapp/generate/openapi";
+import MiniAppPageIcon from "./MiniAppPageIcon.vue";
+import MiniAppFeatureScope from "./MiniAppFeatureScope.vue";
+import _ from "lodash";
+
+const props = defineProps<{
+  miniApp: MiniAppDetail;
+}>();
+</script>

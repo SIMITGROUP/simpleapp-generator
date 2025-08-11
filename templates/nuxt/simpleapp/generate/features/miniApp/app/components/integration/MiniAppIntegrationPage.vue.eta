@@ -7,7 +7,14 @@
     class="p-8 max-w-4xl mx-auto mb-10 space-y-4"
   >
     <div class="flex items-start">
-      <img :src="miniApp.logo" class="size-16 mr-8 object-contain" />
+      <!-- <img :src="miniApp.logo" class="size-16 mr-8 object-contain" /> -->
+
+      <MiniAppIcon
+        :image="miniApp.logo"
+        :label="miniApp.name"
+        size="lg"
+        class="mr-8"
+      />
 
       <div class="space-y-1">
         <h1 class="text-3xl font-bold mb-1">{{ miniApp.name }}</h1>
@@ -51,19 +58,12 @@
           >
             <span
               v-if="enabled"
-              class="px-3 py-0.5 bg-primary-50 text-primary-500 font-semibold text-xs rounded uppercase"
+              class="px-3 py-0.5 bg-primary-50 text-primary-500 font-semibold text-xs rounded uppercase cursor-pointer"
+              @click="() => handleOpenFeatureDialog(feature, enabled)"
             >
               {{ t(`miniAppLang.integrationFeature.${feature}`) }}
             </span>
           </template>
-
-          <ButtonText
-            v-if="!_.isEmpty(miniApp.integration.scopes)"
-            class="!text-primary-500 hover:!underline !text-sm !font-medium"
-            @click="() => (isShowScopeDialog = true)"
-          >
-            {{ t("miniAppLang.integrationFeature.scopes") }}
-          </ButtonText>
         </div>
       </div>
     </div>
@@ -125,19 +125,49 @@
 
       <div v-if="miniApp.intro.previewImages.length > 0">
         <h2 class="text-xl font-semibold mb-2">Overview:</h2>
-        <div class="card flex justify-center py-4">
+        <div class="card flex justify-center py-4 h-96 bg-slate-100 rounded-xl">
           <Galleria
             :value="miniApp.intro.previewImages"
             :numVisible="5"
-            containerStyle="max-width: 640px"
             :showThumbnails="false"
             :showIndicators="true"
+            :showItemNavigators="true"
+            :pt="{
+              root: {
+                class: '!grow !h-full',
+              },
+              content: {
+                class: '!h-full',
+              },
+              itemsContainer: {
+                class: '!h-full',
+              },
+              items: {
+                class: '!grow',
+              },
+              item: {
+                class: '!grow',
+              },
+              prevButton: {
+                class: '!bg-slate-200 cursor-pointer',
+              },
+              prevIcon: {
+                class: 'text-black',
+              },
+              nextButton: {
+                class: '!bg-slate-200 cursor-pointer',
+              },
+              nextIcon: {
+                class: 'text-black',
+              },
+            }"
           >
             <template #item="slotProps">
               <img
                 :src="slotProps.item"
                 :alt="miniApp.name"
-                style="width: 100%; display: block"
+                style="display: block"
+                class="h-80 rounded-xl shadow-md"
               />
             </template>
           </Galleria>
@@ -152,12 +182,12 @@
             :key="feature.title"
             class="flex space-x-2"
           >
-            <div>✅</div>
-            <div>
-              <div>
-                <span class="font-semibold">{{ feature.title }}</span> -
-                {{ feature.description }}
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <i class="pi pi-check-circle text-primary" />
+                <span class="font-semibold">{{ feature.title }}</span>
               </div>
+              <div class="pl-6 text-slate-400">{{ feature.description }}</div>
             </div>
           </div>
         </div>
@@ -165,32 +195,33 @@
     </div>
 
     <Dialog
-      v-model:visible="isShowScopeDialog"
+      v-model:visible="isShowApiAccessFeature"
       :modal="true"
       maximizable
       :header="t('scopes')"
       class="!w-1/2 !h-2/3"
     >
-      <div class="mb-8">
-        {{ t("miniAppLang.scopeDescription") }}
-      </div>
-      <div class="space-y-3">
-        <div
-          v-for="(scopeList, resourceName) in scopes"
-          class="bg-slate-100 rounded-lg px-4 py-3 space-y-2"
-        >
-          <div class="font-semibold">
-            {{ t(resourceName.toLowerCase()) }}
-          </div>
+      <MiniAppFeatureScope :miniApp="miniApp" />
+    </Dialog>
 
-          <div class="grid grid-cols-2 gap-2">
-            <div v-for="scope in scopeList" class="space-x-2 text-sm">
-              <i class="pi pi-check text-primary-500" />
-              <span>{{ _.startCase(scope) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <Dialog
+      v-model:visible="isShowCustomPageFeature"
+      :modal="true"
+      maximizable
+      :header="t('customPage')"
+      class="!w-1/2 !h-2/3"
+    >
+      <MiniAppFeatureCustomPage :miniApp="miniApp" />
+    </Dialog>
+
+    <Dialog
+      v-model:visible="isShowCustomFieldFeature"
+      :modal="true"
+      maximizable
+      :header="t('customField')"
+      class="!w-1/2 !h-2/3"
+    >
+      <MiniAppFeatureCustomField :miniApp="miniApp" />
     </Dialog>
   </div>
   <div v-else>
@@ -209,6 +240,10 @@ import _, { min } from "lodash";
 import { MiniAppDetail } from "~/simpleapp/generate/openapi";
 import MiniAppPermissionWrapper from "../MiniAppPermissionWrapper.vue";
 import UndrawNodata from "~/components/icon/UndrawNodata.vue";
+import MiniAppIcon from "../MiniAppIcon.vue";
+import MiniAppFeatureCustomPage from "../MiniAppFeatureCustomPage.vue";
+import MiniAppFeatureCustomField from "../MiniAppFeatureCustomField.vue";
+import MiniAppFeatureScope from "../MiniAppFeatureScope.vue";
 
 const props = defineProps<{
   miniApp?: MiniAppDetail;
@@ -223,25 +258,9 @@ const emits = defineEmits<{
   (e: "upgradePlan"): void;
 }>();
 
-const isShowScopeDialog = ref(false);
-
-const scopes = computed(() => {
-  if (!props?.miniApp?.integration?.scopes) {
-    return {};
-  }
-
-  const grouped: Record<string, string[]> = {};
-
-  for (const item of props?.miniApp?.integration?.scopes) {
-    const [prefix, suffix] = item.split(".");
-    if (!grouped[prefix]) {
-      grouped[prefix] = [];
-    }
-    grouped[prefix].push(suffix);
-  }
-
-  return grouped;
-});
+const isShowApiAccessFeature = ref(false);
+const isShowCustomPageFeature = ref(false);
+const isShowCustomFieldFeature = ref(false);
 
 function handleInstallApp() {
   emits("installApp");
@@ -253,5 +272,21 @@ function handleUninstallApp() {
 
 function handleOpenSetting() {
   emits("openSetting");
+}
+
+function handleOpenFeatureDialog(feature: string, enabled: boolean) {
+  if (enabled) {
+    switch (feature) {
+      case "miniApi":
+        isShowApiAccessFeature.value = true;
+        break;
+      case "customField":
+        isShowCustomFieldFeature.value = true;
+        break;
+      case "customPage":
+        isShowCustomPageFeature.value = true;
+        break;
+    }
+  }
 }
 </script>

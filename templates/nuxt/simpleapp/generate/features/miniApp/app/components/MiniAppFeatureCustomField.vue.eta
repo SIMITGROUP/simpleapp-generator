@@ -1,0 +1,34 @@
+<template>
+  <div
+    v-if="miniApp.integration.enabled.customField"
+    class="flex flex-col gap-2"
+  >
+    <div
+      v-for="field in miniApp.integration.customField?.fields"
+      class="flex gap-2 bg-slate-100 rounded-xl px-4 py-3"
+    >
+      <div>
+        <div class="flex items-center gap-2 font-semibold text-surface-700">
+          <span
+            class="text-xs bg-primary-100 text-primary-500 px-4 py-1 rounded-md"
+            >{{ t(`${field.code}`) }}
+          </span>
+          <span>
+            {{ field.title }}
+          </span>
+        </div>
+
+        <div class="text-surface-400 text-sm mt-1">
+          {{ field.description }}
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script setup lang="ts">
+import { MiniAppDetail } from "~/simpleapp/generate/openapi";
+
+const props = defineProps<{
+  miniApp: MiniAppDetail;
+}>();
+</script>

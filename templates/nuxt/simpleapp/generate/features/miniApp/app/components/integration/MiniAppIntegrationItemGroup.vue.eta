@@ -19,16 +19,16 @@
 </template>
 <script setup lang="ts">
 import UndrawNodata from "~/components/icon/UndrawNodata.vue";
-import { Miniapp } from "~/simpleapp/generate/openapi";
+import { MiniAppDetail } from "~/simpleapp/generate/openapi";
 import MiniAppIntegrationItem from "./MiniAppIntegrationItem.vue";
 
-defineProps<{ items: Miniapp[] | undefined }>();
+defineProps<{ items: MiniAppDetail[] | undefined }>();
 
 const emits = defineEmits<{
-  (event: "miniAppClick", item: Miniapp): void;
+  (event: "miniAppClick", item: MiniAppDetail): void;
 }>();
 
-function handleMiniAppClick(item: Miniapp) {
+function handleMiniAppClick(item: MiniAppDetail) {
   emits("miniAppClick", item);
 }
 </script>

@@ -13,6 +13,7 @@ import {
   MINIAPPMANAGERApi,
 } from "~/simpleapp/generate/openapi";
 import { MiniAppFormWithMiniAppCode } from "~/simpleapp/generate/features/miniApp/app/types/miniApp";
+import { MiniappEnvEnum } from "~/enums/enums.generate";
 
 export default defineNuxtPlugin(async () => {
   /**
@@ -43,6 +44,10 @@ export default defineNuxtPlugin(async () => {
 
     getters: {
       getForm: (state) => (formCode: string) => {
+        if (!state.permissions.hasMiniAppFeature) {
+          return [];
+        }
+
         return state.installedMiniApps.flatMap((miniApp) => {
           return (miniApp.integration?.customField?.fields ?? [])
             .filter((form) => form.code == formCode)
@@ -56,6 +61,10 @@ export default defineNuxtPlugin(async () => {
       },
 
       showMiniAppMoreMenuButton: (state) => {
+        if (!state.permissions.hasMiniAppFeature) {
+          return false;
+        }
+
         const filtered = state.installedMiniApps.filter(
           (item) =>
             item.integration?.customPage?.pages &&
@@ -82,13 +91,25 @@ export default defineNuxtPlugin(async () => {
       },
 
       findPage(miniApp: MiniAppDetail, pageCode: string) {
+        if (pageCode === MINI_APP_BUILT_IN_SETTING_NAME) {
+          return this.getSettingPageMenu(miniApp);
+        }
+
         return miniApp.integration?.customPage?.pages.find(
           (item) => item.code === pageCode,
         );
       },
 
       // ================================= Permission =================================
-      hasPermission(requiredPermissions: string[]) {
+      hasPermission(requiredPermissions: string[], env: MiniappEnvEnum) {
+        if (env === MiniappEnvEnum.DEV) {
+          return true;
+        }
+
+        if (_.isEmpty(requiredPermissions)) {
+          return true;
+        }
+
         const userRoles = getUserProfile().roles ?? [];
         return requiredPermissions.some((permission) =>
           userRoles.includes(permission),
@@ -109,6 +130,13 @@ export default defineNuxtPlugin(async () => {
           return {
             valid: false,
             type: "unknownPage",
+          };
+        }
+
+        if (!this.hasMiniAppFeature) {
+          return {
+            valid: false,
+            type: "miniAppFeature",
           };
         }
 
@@ -133,7 +161,12 @@ export default defineNuxtPlugin(async () => {
           };
         }
 
-        if (!this.hasPermission(page.requiredPermissions ?? [])) {
+        if (
+          !this.hasPermission(
+            page.requiredPermissions ?? [],
+            miniApp.env as MiniappEnvEnum,
+          )
+        ) {
           return {
             valid: false,
             type: "requiredPermission",
@@ -245,6 +278,10 @@ export default defineNuxtPlugin(async () => {
       },
 
       getPages(miniApp: MiniAppDetail, withSettingPage: boolean = true) {
+        if (!this.hasMiniAppFeature) {
+          return [];
+        }
+
         const pages = (miniApp.integration?.customPage?.pages ?? []).filter(
           (page) => {
             return (
