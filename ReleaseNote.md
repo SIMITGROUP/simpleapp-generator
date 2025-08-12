@@ -1,5 +1,11 @@
 [1.6.7h-alpha]
 
+1. Restructure Mini App
+2. Support Mini Api Access
+3. Validate Mini App Scope
+
+[1.6.7h-alpha]
+
 1. Remove Navigate To Mobile Url
 2. Add Label Value Type
 
