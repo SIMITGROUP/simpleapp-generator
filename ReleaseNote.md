@@ -1,4 +1,4 @@
-[1.6.7h-alpha]
+[1.6.7i-alpha]
 
 1. Restructure Mini App
 2. Support Mini Api Access
