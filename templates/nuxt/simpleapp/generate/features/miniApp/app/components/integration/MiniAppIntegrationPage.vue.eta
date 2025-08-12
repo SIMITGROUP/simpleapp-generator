@@ -187,7 +187,9 @@
                 <i class="pi pi-check-circle text-primary" />
                 <span class="font-semibold">{{ feature.title }}</span>
               </div>
-              <div class="pl-6 text-slate-400">{{ feature.description }}</div>
+              <div class="pl-6 text-slate-400 text-sm">
+                {{ feature.description }}
+              </div>
             </div>
           </div>
         </div>

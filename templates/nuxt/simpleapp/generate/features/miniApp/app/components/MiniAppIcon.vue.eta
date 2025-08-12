@@ -7,6 +7,7 @@
       'size-14': !size || size === 'normal',
       'size-8': size === 'xs',
       'size-7': size === 'tiny',
+      'size-6': size === 'tiny-1',
     }"
   >
     <PrimevueAvatar
@@ -18,7 +19,7 @@
         'text-lg': !size || size === 'normal',
         'text-xs': size === 'xs',
         'text-6xl': size === 'xl',
-        'text-tiny': size === 'tiny',
+        'text-tiny': size === 'tiny' || size === 'tiny-1',
       }"
       style="background-color: #dee9fc; color: #1a2551"
     />
@@ -32,7 +33,7 @@ import PrimevueAvatar from "primevue/avatar";
 const props = defineProps<{
   image?: string;
   label?: string;
-  size?: "lg" | "normal" | "xs" | "xl" | "tiny";
+  size?: "lg" | "normal" | "xs" | "xl" | "tiny" | "tiny-1";
 }>();
 
 const displayLabel = computed(() => {
