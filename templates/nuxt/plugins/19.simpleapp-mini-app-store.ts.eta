@@ -49,6 +49,10 @@ export default defineNuxtPlugin(async () => {
         }
 
         return state.installedMiniApps.flatMap((miniApp) => {
+          if (miniApp.integration.enabled.customField !== true) {
+            return [];
+          }
+
           return (miniApp.integration?.customField?.fields ?? [])
             .filter((form) => form.code == formCode)
             .map((form) => {
