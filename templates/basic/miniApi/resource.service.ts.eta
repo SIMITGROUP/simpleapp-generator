@@ -2,6 +2,25 @@
   const pascalName = upperFirstCase(it.resourceName);
   const apiName = it.typename.toUpperCase() + 'Api';
   const uglyName = upperFirstCase(it.name ?? '');
+  const schemaName = `SimtrainSchema.${uglyName}`;
+  const schemaAutoCompleteName = `SimtrainSchema.${uglyName}AutoComplete`;
+
+  const getTypeName = (typeName) => {
+    const systemTypes = ['boolean', 'string', 'number', 'object', 'integer'];
+    let tmpTypeName = typeName.replace('[','').replace(']','');
+
+    if(systemTypes.includes(tmpTypeName.toLowerCase())){
+        tmpTypeName = upperFirstCase(tmpTypeName.toLowerCase());
+    } else {
+        tmpTypeName = `SimtrainSchema.${tmpTypeName}`;
+    }
+
+    if(typeName.includes('[')){
+        return `[${tmpTypeName}]`;
+    }
+
+    return tmpTypeName;
+  }
 %>
 
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -10,7 +29,7 @@ import { <%= apiName %> } from 'src/openapi/backend-api';
 import { ApiHeader } from 'src/types/api';
 import { getOpenApiConfig } from 'src/utils/api';
 import { ResourceApiListDto } from '../../dto/resource-api.schema';
-import { <%= uglyName %> } from 'src/openapi/backend-api';
+import * as SimtrainSchema from '../../simtrain-schema';
 
 @Injectable()
 export class <%= pascalName %>Service {
@@ -30,7 +49,7 @@ export class <%= pascalName %>Service {
     <% if (value !== true && typeof value !== 'object') { return; } %>
     
     <% if(action === 'list') { %>
-      async findAll(headers: ApiHeader, dto?: ResourceApiListDto<<%= uglyName %>>) {
+      async findAll(headers: ApiHeader, dto?: ResourceApiListDto<<%= schemaName %>>) {
         const api = this.getApi(headers);
         const resp = await api.runSearch({
           fields: dto?.fields,
@@ -77,38 +96,48 @@ export class <%= pascalName %>Service {
       }
     <% } else if(action === 'current') { %>
     <% } else { %>
-      <% const apiSetting = it.apiSettings.find(item => item.action === action); %>
-      <% if (apiSetting) { %>
-        <% const hasBody = ['post', 'put', 'patch'].includes(apiSetting.method); %>
+      <% const api = it.apiSettings.find(item => item.action === action); %>
+      <% if (api) { %>
+        <% const hasBody = ['post', 'put', 'patch'].includes(api.method); %>
 
-        <% 
-          const paramMatches = apiSetting.entryPoint.match(/:([\w]+)/g) || [];
-          const paramNames = paramMatches.map(p => p.replace(':', ''));
+        <%
+          const paramsWithType = [];
+          const paramsWithoutType = [];
 
-          const args = paramNames.map(name => {
-            return `${name}: string`;
-          });
-
-          const output = [];
-          const queryParams = [];
-
-          for (let i = 0; i < paramNames.length; i++) {
-            const name = paramNames[i];
-
-            output.push(name);
+          if(api.entryPoint && api.entryPoint.includes(':')) {
+            let subpath = api.entryPoint.split('/');
+            for(let a = 0; a < subpath.length; a++) {
+              const partstr = subpath[a];
+              if(partstr.includes(':')) {
+                const paraname = partstr.replace(':','');
+                paramsWithType.push(`${paraname}: string`);
+                paramsWithoutType.push(paraname);
+              }
+            }
           }
 
-          if (hasBody) {
-            args.push('data: any');
-            output.push('data');
+          if(api.queryPara && api.queryPara.length > 0) {
+            for(let q=0; q < api.queryPara.length; q++) {
+              const qp = api['queryPara'][q];
+              paramsWithType.push(`${qp}: string`);
+              paramsWithoutType.push(qp);
+            }
+          }
+
+          if(hasBody) {
+            paramsWithType.push(`data: ${getTypeName(api.schema)}`);
+            paramsWithoutType.push('data');
           }
         %>
-        
-        async <%= action %>(headers: ApiHeader, <%= args.join(', ') %>) {
+
+        async <%= action %>(
+          headers: ApiHeader,
+          <%= paramsWithType.join(',') %>
+        ){
           const api = this.getApi(headers);
-          const resp = await api.run<%= upperFirstCase(action) %>(<%= output.join(', ') %>);
+          const resp = await api.run<%= upperFirstCase(action) %>(<%= paramsWithoutType.join(', ') %>);
           return resp.data;
-        }
+        } 
       <% } %>
     <% } %>
   <% }) %>
