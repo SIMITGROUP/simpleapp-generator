@@ -44,10 +44,6 @@ export default defineNuxtPlugin(async () => {
 
     getters: {
       getForm: (state) => (formCode: string) => {
-        if (!state.permissions.hasMiniAppFeature) {
-          return [];
-        }
-
         return state.installedMiniApps.flatMap((miniApp) => {
           if (miniApp.integration.enabled.customField !== true) {
             return [];
