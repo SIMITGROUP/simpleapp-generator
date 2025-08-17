@@ -1,3 +1,9 @@
+[1.6.7j-alpha]
+
+1. Add Custom Field Constant File For Mini Api
+2. Update Scope Constant File
+3. Implement read/write split. for read data mongoose preferable go secondary server, which hope can reduce primary server load
+
 [1.6.7i-alpha]
 
 1. Restructure Mini App
