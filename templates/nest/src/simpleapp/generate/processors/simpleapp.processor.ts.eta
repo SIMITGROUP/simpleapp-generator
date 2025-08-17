@@ -4,48 +4,25 @@
  * last change 2024-01-27
  * Author: Ks Tan
  */
-import { Injectable, Logger, Inject } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import jsonpath from 'jsonpath';
 import _ from 'lodash';
 
+import { BadRequestException, ForbiddenException, HttpExceptionOptions, InternalServerErrorException, NotFoundException } from '@nestjs/common/exceptions';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import Ajv from 'ajv';
+import addErrors from 'ajv-errors';
+import addFormats from 'ajv-formats';
+import { FilterQuery, Model, PipelineStage, mongo } from 'mongoose';
+import { CloudApiService } from 'src/cloudapi/cloudapi.service';
+import { CustomException } from 'src/customexception';
+import { PrintApiService } from 'src/printapi/printapi.service';
 import { AuditTrail } from '../commons/audittrail.service';
 import { foreignkeys } from '../commons/dicts/foreignkeys';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import {
-  Model,
-  Types,
-  PipelineStage,
-  mongo,
-  FilterQuery,
-  ProjectionType,
-} from 'mongoose';
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
-import addErrors from 'ajv-errors';
-import {
-  NotFoundException,
-  HttpException,
-  BadRequestException,
-  ForbiddenException,
-  InternalServerErrorException,
-  HttpExceptionOptions,
-} from '@nestjs/common/exceptions';
-import { UserContext } from '../commons/user.context';
-import { CloudApiService } from 'src/cloudapi/cloudapi.service';
-import { PrintApiService } from 'src/printapi/printapi.service';
 import { DocNumberFormatGenerator } from '../commons/docnogenerator.service';
 import { RunWebhookService } from '../commons/runwebhook.service';
-import {
-  IsolationType,
-  DefaultHooks,
-  MoreProjectionType,
-  DeleteResultType,
-  WorkflowName,
-  TextSearchBody,
-  CheckMutipleUnionExistResponse,
-} from '../types';
-import { CustomException } from 'src/customexception';
+import { UserContext } from '../commons/user.context';
+import { CheckMutipleUnionExistResponse, DefaultHooks, DeleteResultType, IsolationType, MoreProjectionType, TextSearchBody, WorkflowName } from '../types';
 
 @Injectable()
 export class SimpleAppService<T extends { _id?: string; __v?: number }> {
@@ -56,7 +33,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   @Inject(PrintApiService)
   protected printapi: PrintApiService;
   @Inject(RunWebhookService)
-  protected runWebHook:RunWebhookService;
+  protected runWebHook: RunWebhookService;
   protected hooks: DefaultHooks<T> = {};
   protected logger = new Logger();
   protected strictIsolation = true;
@@ -88,12 +65,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
 
   // protected userprovider = new UserContext() ;
 
-  constructor(
-    doctype: string,
-    docname: string,
-    newdoc: Model<T>,
-    isolationtype: IsolationType = IsolationType.org,
-  ) {
+  constructor(doctype: string, docname: string, newdoc: Model<T>, isolationtype: IsolationType = IsolationType.org) {
     // console.log("-------init simpleapp service abstract class -------userprovider=",typeof this.userprovider)
     this.documentType = doctype.toUpperCase();
     this.documentName = docname;
@@ -104,8 +76,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     // this.tenantdoc = tenantdoc
   }
   getDocumentType = () => this.documentType;
-  getDocumentName = (capFirst: boolean = false) =>
-    capFirst ? _.upperFirst(this.documentName) : this.documentName;
+  getDocumentName = (capFirst: boolean = false) => (capFirst ? _.upperFirst(this.documentName) : this.documentName);
   getRecordId = (): string => this.data._id;
   setSchema = (newschema) => (this.jsonschema = newschema);
   getSchema = () => this.doc.schema.obj;
@@ -125,7 +96,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   public isReadOnly(): boolean {
     return false;
   }
-  reCalculateValue(data: T) {}
+  reCalculateValue(data: T) { }
   getIsolationFilter = (appuser: UserContext) => {
     let isolationFilter = {};
     switch (this.isolationtype) {
@@ -173,10 +144,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       const filter1 = {};
       const filter2 = {};
       const filters: any[] = [];
-      if (
-        this.jsonschema.properties[this.documentIdentityCode]['type'] ==
-        'string'
-      ) {
+      if (this.jsonschema.properties[this.documentIdentityCode]['type'] == 'string') {
         filter1[this.documentIdentityCode] = { $regex: keyword, $options: 'i' };
         filters.push(filter1);
       }
@@ -213,14 +181,12 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
    */
   async searchNoIsolation(appuser: UserContext, filters: FilterQuery<T>) {
     try {
-      if (this.hooks.beforeSearch)
-        await this.hooks.beforeSearch(appuser, filters);
+      if (this.hooks.beforeSearch) await this.hooks.beforeSearch(appuser, filters);
       const products = await this.doc.find(filters);
       const productlist = products.map((p) => {
         return p;
       });
-      if (this.hooks.afterSearch)
-        await this.hooks.afterSearch(appuser, productlist);
+      if (this.hooks.afterSearch) await this.hooks.afterSearch(appuser, productlist);
 
       //   console.log(products);
       return productlist;
@@ -241,9 +207,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         throw new InternalServerErrorException(err);
       }
     } else {
-      throw new InternalServerErrorException(
-        'first aggregate pipelinestage shall use $match',
-      );
+      throw new InternalServerErrorException('first aggregate pipelinestage shall use $match');
     }
   }
   async aggregate(appuser: UserContext, pipeline: PipelineStage[]) {
@@ -261,18 +225,10 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         throw new InternalServerErrorException(err);
       }
     } else {
-      throw new InternalServerErrorException(
-        'first aggregate pipelinestage shall use $match',
-      );
+      throw new InternalServerErrorException('first aggregate pipelinestage shall use $match');
     }
   }
-  async search(
-    appuser: UserContext,
-    filters: FilterQuery<T>,
-    projection: string[] = undefined,
-    sort: any = undefined,
-    lookup: { [key: string]: string } = undefined,
-  ) {
+  async search(appuser: UserContext, filters: FilterQuery<T>, projection: string[] = undefined, sort: any = undefined, lookup: { [key: string]: string } = undefined) {
     try {
       const isolationFilter = { ...this.getIsolationFilter(appuser) };
       this.polishIsolationFilter(isolationFilter);
@@ -280,24 +236,15 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       // console.log("initial search",filters)
       const newfilters: FilterQuery<T> = { ...filters, ...isolationFilter };
 
-      if (this.hooks.beforeSearch)
-        await this.hooks.beforeSearch(appuser, newfilters);
+      if (this.hooks.beforeSearch) await this.hooks.beforeSearch(appuser, newfilters);
       // console.log("before _find",newfilters)
       // console.log("this.doc",this.doc)
       let searchResults: T[] = [];
       if (lookup === undefined) {
         this.logger.debug('after search', newfilters);
-        searchResults = await this.doc
-          .find(newfilters, projection, { session: appuser.getDBSession() })
-          .sort(sort);
+        searchResults = await this.doc.find(newfilters, projection, { session: appuser.getDBSession() }).sort(sort);
       } else {
-        const pipelines = this.searchToAggregate(
-          appuser,
-          newfilters,
-          projection,
-          sort,
-          lookup,
-        );
+        const pipelines = this.searchToAggregate(appuser, newfilters, projection, sort, lookup);
         this.logger.debug('after aggregate', pipelines);
         searchResults = await this.aggregate(appuser, pipelines);
       }
@@ -326,20 +273,12 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       const orConditions: any[] = [];
       if (body.fields && body.fields.length > 0) {
         body.fields.forEach((field: string) => {
-          if (
-            field != 'defaultPrice' &&
-            field != 'amount' &&
-            field != 'active' &&
-            field != 'updated'
-          ) {
+          if (field != 'defaultPrice' && field != 'amount' && field != 'active' && field != 'updated') {
             orConditions.push({
               [field]: { $regex: keyword, $options: 'i' },
             });
           } else {
-            if (
-              !isNaN(Number(keyword)) &&
-              (field == 'defaultPrice' || field == 'amount')
-            ) {
+            if (!isNaN(Number(keyword)) && (field == 'defaultPrice' || field == 'amount')) {
               orConditions.push({
                 [field]: { $gte: keyword },
               });
@@ -360,10 +299,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       const sorts = body.sorts || {};
 
       // Ensure `this.doc` is a Mongoose model or similar
-      const results = await this.doc
-        .find(newfilters, fields)
-        .sort(sorts)
-        .exec();
+      const results = await this.doc.find(newfilters, fields).sort(sorts).exec();
 
       return results;
     } catch (error) {
@@ -373,12 +309,10 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
   }
   async findById(appuser: UserContext, id: string) {
-    if (this.hooks.beforeFetchRecord)
-      await this.hooks.beforeFetchRecord(appuser, id);
+    if (this.hooks.beforeFetchRecord) await this.hooks.beforeFetchRecord(appuser, id);
 
     const data = await this.search(appuser, { _id: id as any });
-    if (this.hooks.afterFetchRecord)
-      await this.hooks.afterFetchRecord(appuser, data[0]);
+    if (this.hooks.afterFetchRecord) await this.hooks.afterFetchRecord(appuser, data[0]);
 
     if (data.length == 1) {
       // console.log('data0', data[0]);
@@ -389,12 +323,10 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   }
 
   async findByIdNoIsolation(appuser: UserContext, id: string) {
-    if (this.hooks.beforeFetchRecord)
-      await this.hooks.beforeFetchRecord(appuser, id);
+    if (this.hooks.beforeFetchRecord) await this.hooks.beforeFetchRecord(appuser, id);
 
     const data = await this.searchNoIsolation(appuser, { _id: id as any });
-    if (this.hooks.afterFetchRecord)
-      await this.hooks.afterFetchRecord(appuser, data[0]);
+    if (this.hooks.afterFetchRecord) await this.hooks.afterFetchRecord(appuser, data[0]);
 
     if (data.length == 1) {
       // console.log('data0', data[0]);
@@ -418,17 +350,10 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       }
 
       const result = await this.doc.insertMany(datas);
-      await this.audittrail.addManyEvents(
-        appuser,
-        this.documentName,
-        'createMany',
-        datas,
-      );
+      await this.audittrail.addManyEvents(appuser, this.documentName, 'createMany', datas);
       return result;
     } else {
-      throw new BadRequestException(
-        this.getDocumentType() + ': create many only support array',
-      );
+      throw new BadRequestException(this.getDocumentType() + ': create many only support array');
     }
   }
 
@@ -445,7 +370,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         let result;
         const dbsession = appuser.getDBSession();
         if (dbsession && !dbsession.inTransaction()) {
-          dbsession.startTransaction();
+          dbsession.startTransaction({ readPreference: 'primary' });
         }
 
         if (this.withDocNumberFormat && !data[this.documentIdentityCode]) {
@@ -459,29 +384,18 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         this.reCalculateValue(data);
         await this.validateData(appuser, data);
         this.applyNestedDateTime(appuser, data, 'create');
-        if (this.hooks.beforeCreate)
-          await this.hooks.beforeCreate(appuser, data);
+        if (this.hooks.beforeCreate) await this.hooks.beforeCreate(appuser, data);
         const newdoc = new this.doc(data);
 
         try {
           result = await newdoc.save({ session: dbsession });
-          await this.audittrail.addEvent(
-            appuser,
-            this.documentName,
-            result._id,
-            'create',
-            data,
-          );
+          await this.audittrail.addEvent(appuser, this.documentName, result._id, 'create', data);
           appuser.addInsertedRecordId(this.documentName, result._id);
         } catch (err) {
           this.logger.error(err);
-          const processdata = await this.runWorker(
-            appuser,
-            'processdata.processError',
-            {
-              err: err,
-            },
-          );
+          const processdata = await this.runWorker(appuser, 'processdata.processError', {
+            err: err,
+          });
 
           if (!processdata) {
             throw new InternalServerErrorException(err);
@@ -491,22 +405,16 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         }
 
         try {
-          if (this.hooks.afterCreate)
-            await this.hooks.afterCreate(appuser, result);
+          if (this.hooks.afterCreate) await this.hooks.afterCreate(appuser, result);
           await this.callWebhook(appuser, 'create', result);
 
           // return result as T;
         } catch (err) {
-          throw new InternalServerErrorException(
-            `createHook ${this.documentType} error: ${JSON.stringify(err)}`,
-            `${this.documentType} createHook error`,
-          );
+          throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
         }
       }
     } else {
-      throw new BadRequestException(
-        this.getDocumentType() + ': create many only support array',
-      );
+      throw new BadRequestException(this.getDocumentType() + ': create many only support array');
     }
     return 'ok';
   }
@@ -530,17 +438,10 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       }
 
       const result = await this.doc.insertMany(datas);
-      await this.audittrail.addManyEvents(
-        appuser,
-        this.documentName,
-        'createMany',
-        datas,
-      );
+      await this.audittrail.addManyEvents(appuser, this.documentName, 'createMany', datas);
       return result;
     } else {
-      throw new BadRequestException(
-        this.getDocumentType() + ': create many only support array',
-      );
+      throw new BadRequestException(this.getDocumentType() + ': create many only support array');
     }
   }
   async createWithId(appuser: UserContext, data: T) {
@@ -551,16 +452,10 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
-      dbsession.startTransaction();
+      dbsession.startTransaction({ readPreference: 'primary' });
     }
 
-    this.logger.debug(
-      'this.withDocNumberFormat :' +
-        this.withDocNumberFormat +
-        '  && ' +
-        '!data[this.documentIdentityCode] ==' +
-        !data[this.documentIdentityCode],
-    );
+    this.logger.debug('this.withDocNumberFormat :' + this.withDocNumberFormat + '  && ' + '!data[this.documentIdentityCode] ==' + !data[this.documentIdentityCode]);
     if (this.withDocNumberFormat && !data[this.documentIdentityCode]) {
       await this.genNewDocNo(appuser, data);
     }
@@ -584,23 +479,13 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     await this.identifyForeignKeys(appuser, data);
     try {
       result = await newdoc.save({ session: dbsession });
-      await this.audittrail.addEvent(
-        appuser,
-        this.documentName,
-        result._id,
-        'create',
-        data,
-      );
+      await this.audittrail.addEvent(appuser, this.documentName, result._id, 'create', data);
       appuser.addInsertedRecordId(this.documentName, result._id);
     } catch (err) {
       this.logger.error(err);
-      const processdata = await this.runWorker(
-        appuser,
-        'processdata.processError',
-        {
-          err: err,
-        },
-      );
+      const processdata = await this.runWorker(appuser, 'processdata.processError', {
+        err: err,
+      });
 
       if (!processdata) {
         throw new InternalServerErrorException(err);
@@ -614,18 +499,11 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       await this.callWebhook(appuser, 'create', result);
       return result as T;
     } catch (err) {
-      throw new InternalServerErrorException(
-        `createHook ${this.documentType} error: ${JSON.stringify(err)}`,
-        `${this.documentType} createHook error`,
-      );
+      throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
     }
   }
 
-  async create(
-    appuser: UserContext,
-    data: T,
-    noStartTransaction: boolean = false,
-  ) {
+  async create(appuser: UserContext, data: T, noStartTransaction: boolean = false) {
     let result;
 
     if (!data._id) {
@@ -633,16 +511,10 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction() && !noStartTransaction) {
-      dbsession.startTransaction();
+      dbsession.startTransaction({ readPreference: 'primary' });
     }
 
-    this.logger.debug(
-      'this.withDocNumberFormat :' +
-        this.withDocNumberFormat +
-        '  && ' +
-        '!data[this.documentIdentityCode] ==' +
-        !data[this.documentIdentityCode],
-    );
+    this.logger.debug('this.withDocNumberFormat :' + this.withDocNumberFormat + '  && ' + '!data[this.documentIdentityCode] ==' + !data[this.documentIdentityCode]);
     if (this.withDocNumberFormat && !data[this.documentIdentityCode]) {
       await this.genNewDocNo(appuser, data);
     }
@@ -666,23 +538,13 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     await this.identifyForeignKeys(appuser, data);
     try {
       result = await newdoc.save({ session: dbsession });
-      await this.audittrail.addEvent(
-        appuser,
-        this.documentName,
-        result._id,
-        'create',
-        data,
-      );
+      await this.audittrail.addEvent(appuser, this.documentName, result._id, 'create', data);
       appuser.addInsertedRecordId(this.documentName, result._id);
     } catch (err) {
       this.logger.error(err);
-      const processdata = await this.runWorker(
-        appuser,
-        'processdata.processError',
-        {
-          err: err,
-        },
-      );
+      const processdata = await this.runWorker(appuser, 'processdata.processError', {
+        err: err,
+      });
 
       if (!processdata) {
         throw new InternalServerErrorException(err);
@@ -696,40 +558,23 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       await this.callWebhook(appuser, 'create', result);
       return result as T;
     } catch (err) {
-      throw new InternalServerErrorException(
-        `createHook ${this.documentType} error: ${JSON.stringify(err)}`,
-        `${this.documentType} createHook error`,
-      );
+      throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
     }
   }
 
-  applyNestedDateTime = (
-    appuser: UserContext,
-    data: any,
-    transtype: string,
-  ) => {
+  applyNestedDateTime = (appuser: UserContext, data: any, transtype: string) => {
     const props = Object.getOwnPropertyNames(data);
     for (let i = 0; i < props.length; i++) {
       const key = props[i];
       //need to apply nested
-      if (
-        Array.isArray(data[key]) &&
-        data[key].length > 0 &&
-        typeof data[key][0] == 'object'
-      ) {
+      if (Array.isArray(data[key]) && data[key].length > 0 && typeof data[key][0] == 'object') {
         for (let j = 0; j < data[key].length; j++) {
           this.applyNestedDateTime(appuser, data[key][j], transtype);
         }
       } else if (key == 'created') {
-        data['created'] =
-          transtype == 'create' || !data['created']
-            ? new Date().toISOString()
-            : data['created'];
+        data['created'] = transtype == 'create' || !data['created'] ? new Date().toISOString() : data['created'];
       } else if (key == 'createdBy') {
-        data['createdBy'] =
-          transtype == 'create' || !data['createdBy']
-            ? appuser.getUid()
-            : data['createdBy'];
+        data['createdBy'] = transtype == 'create' || !data['createdBy'] ? appuser.getUid() : data['createdBy'];
       } else if (key == 'updated') {
         data['updated'] = new Date().toISOString();
       } else if (key == 'updatedBy') {
@@ -764,10 +609,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         errormsg.push(this.errorlist[i].message);
       }
 
-      throw new BadRequestException(
-        'Before validation hook failed',
-        errormsg as HttpExceptionOptions,
-      );
+      throw new BadRequestException('Before validation hook failed', errormsg as HttpExceptionOptions);
     }
 
     let validate;
@@ -781,14 +623,10 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     if (!valid) {
       this.logger.error(JSON.stringify(data));
       this.logger.error(JSON.stringify(validate.errors), 'validate errors:');
-      throw new BadRequestException(
-        'Data validation failed',
-        validate.errors as HttpExceptionOptions,
-      );
+      throw new BadRequestException('Data validation failed', validate.errors as HttpExceptionOptions);
     }
     //no check for duplicate those
-    if (this.hooks.afterValidation)
-      await this.hooks.afterValidation(appuser, data, _id);
+    if (this.hooks.afterValidation) await this.hooks.afterValidation(appuser, data, _id);
   }
 
   polishIsolationFilter = (filterIsolation: any, data: any = {}) => {
@@ -825,13 +663,12 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
-      dbsession.startTransaction();
+      dbsession.startTransaction({ readPreference: 'primary' });
     }
 
     let dependency;
     try {
-      if (this.hooks.beforeDelete)
-        await this.hooks.beforeDelete(appuser, id, deletedata);
+      if (this.hooks.beforeDelete) await this.hooks.beforeDelete(appuser, id, deletedata);
       this.logger.debug('delete record', this.documentName, id);
       dependency = await this.getRelatedRecords(appuser, id);
       //console.log('dependency', dependency);
@@ -841,40 +678,25 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
 
         filterIsolation['_id'] = id;
         this.logger.debug('delete filter', filterIsolation);
-        const result = await this.doc
-          .deleteOne(filterIsolation)
-          .session(dbsession);
-        await this.audittrail.addEvent(
-          appuser,
-          this.documentName,
-          id,
-          'delete',
-          deletedata,
-        );
+        const result = await this.doc.deleteOne(filterIsolation).session(dbsession);
+        await this.audittrail.addEvent(appuser, this.documentName, id, 'delete', deletedata);
 
         appuser.addDeletedRecordId(this.documentName, id);
         const deleteresult: DeleteResultType<T> = {
           result: result,
           data: deletedata,
         };
-        this.logger.debug(
-          deleteresult,
-          ' delete result' + this.doc.collection.name,
-        );
+        this.logger.debug(deleteresult, ' delete result' + this.doc.collection.name);
         // this.doc.findByIdAndDelete(id)
 
-        if (this.hooks.afterDelete)
-          await this.hooks.afterDelete(appuser, deleteresult, id);
+        if (this.hooks.afterDelete) await this.hooks.afterDelete(appuser, deleteresult, id);
         //this.doc.findByIdAndDelete(id);
         await this.callWebhook(appuser, 'delete', deletedata);
         return deleteresult;
       } else {
         this.logger.debug('reject query', dependency);
 
-        throw new ForbiddenException(
-          `This system detected that the [${this.documentName}] data has been used in other record`,
-          'Foreignkey constraint',
-        );
+        throw new ForbiddenException(`This system detected that the [${this.documentName}] data has been used in other record`, 'Foreignkey constraint');
       }
     } catch (err) {
       if (err instanceof ForbiddenException) {
@@ -889,29 +711,15 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   //   this.doc.updateOne(data);
   // };
 
-  findIdThenUpdate = async (
-    appuser: UserContext,
-    id: string,
-    data: T,
-    noStartTransaction: boolean = false,
-  ) => {
+  findIdThenUpdate = async (appuser: UserContext, id: string, data: T, noStartTransaction: boolean = false) => {
     try {
       //version exists, need ensure different only 1
       const existingdata = await this.findById(appuser, id);
-      if (!existingdata)
-        throw new NotFoundException(
-          `${this.documentName} findIdThenUpdate:  _id:${id} not found`,
-          'not found',
-        );
+      if (!existingdata) throw new NotFoundException(`${this.documentName} findIdThenUpdate:  _id:${id} not found`, 'not found');
 
-      this.logger.debug(
-        'update id:' + id,
-        this.documentName + ' findIdThenUpdate',
-      );
+      this.logger.debug('update id:' + id, this.documentName + ' findIdThenUpdate');
       if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
-        throw new BadRequestException(
-          `You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`,
-        );
+        throw new BadRequestException(`You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`);
       }
       // this.logger.debug('warn1', existingdata);
       data.__v = existingdata.__v + 1;
@@ -919,15 +727,14 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       //   throw new NotFoundException(`${id} not found`, 'not found');
       // }
       // this.logger.debug('warn2');
-      
+
       await this.identifyForeignKeys(appuser, data);
 
-      if (this.hooks.beforeUpdate)
-        await this.hooks.beforeUpdate(appuser, id, existingdata, data);
+      if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appuser, id, existingdata, data);
 
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction() && !noStartTransaction) {
-        dbsession.startTransaction();
+        dbsession.startTransaction({ readPreference: 'primary' });
       }
       // try {
       Object.assign(data, appuser.getUpdateFilter());
@@ -948,17 +755,10 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         session: dbsession,
         new: true,
       });
-      await this.audittrail.addEvent(
-        appuser,
-        this.documentName,
-        id,
-        'update',
-        data,
-      );
+      await this.audittrail.addEvent(appuser, this.documentName, id, 'update', data);
 
       appuser.addUpdatedRecordId(this.documentName, data._id);
-      if (this.hooks.afterUpdate)
-        await this.hooks.afterUpdate(appuser, id, existingdata, result);
+      if (this.hooks.afterUpdate) await this.hooks.afterUpdate(appuser, id, existingdata, result);
       await this.callWebhook(appuser, 'update', result);
       return result; // await this.findById(appuser, id);
     } catch (err) {
@@ -967,28 +767,15 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
   };
 
-  findIdThenUpdateNoIsolation = async (
-    appuser: UserContext,
-    id: string,
-    data: T,
-  ) => {
+  findIdThenUpdateNoIsolation = async (appuser: UserContext, id: string, data: T) => {
     try {
       //version exists, need ensure different only 1
       const existingdata = await this.findByIdNoIsolation(appuser, id);
-      if (!existingdata)
-        throw new NotFoundException(
-          `${this.documentName} findIdThenUpdate:  _id:${id} not found`,
-          'not found',
-        );
+      if (!existingdata) throw new NotFoundException(`${this.documentName} findIdThenUpdate:  _id:${id} not found`, 'not found');
 
-      this.logger.debug(
-        'update id:' + id,
-        this.documentName + ' findIdThenUpdate',
-      );
+      this.logger.debug('update id:' + id, this.documentName + ' findIdThenUpdate');
       if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
-        throw new BadRequestException(
-          `You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`,
-        );
+        throw new BadRequestException(`You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`);
       }
       // this.logger.debug('warn1', existingdata);
       data.__v = existingdata.__v + 1;
@@ -996,15 +783,14 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       //   throw new NotFoundException(`${id} not found`, 'not found');
       // }
       // this.logger.debug('warn2');
-      
+
       await this.identifyForeignKeys(appuser, data);
 
-      if (this.hooks.beforeUpdate)
-        await this.hooks.beforeUpdate(appuser, id, existingdata, data);
+      if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appuser, id, existingdata, data);
 
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction()) {
-        dbsession.startTransaction();
+        dbsession.startTransaction({ readPreference: 'primary' });
       }
       // try {
       // Object.assign(data, appuser.getUpdateFilter());
@@ -1025,17 +811,10 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         session: dbsession,
         new: true,
       });
-      await this.audittrail.addEvent(
-        appuser,
-        this.documentName,
-        id,
-        'update',
-        data,
-      );
+      await this.audittrail.addEvent(appuser, this.documentName, id, 'update', data);
 
       appuser.addUpdatedRecordId(this.documentName, data._id);
-      if (this.hooks.afterUpdate)
-        await this.hooks.afterUpdate(appuser, id, existingdata, result);
+      if (this.hooks.afterUpdate) await this.hooks.afterUpdate(appuser, id, existingdata, result);
       await this.callWebhook(appuser, 'update', result);
       return result; // await this.findById(appuser, id);
     } catch (err) {
@@ -1044,32 +823,24 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
   };
 
-  findIdThenPatch = async (
-    appuser: UserContext,
-    id: string,
-    data: T,
-    session: mongo.ClientSession = undefined,
-  ) => {
+  findIdThenPatch = async (appuser: UserContext, id: string, data: T, session: mongo.ClientSession = undefined) => {
     const existingdata = await this.findById(appuser, id);
     if (!existingdata) {
       throw new NotFoundException(`${id} not found`, 'not found');
     }
     if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
-      throw new BadRequestException(
-        `You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`,
-      );
+      throw new BadRequestException(`You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`);
     }
 
     data.__v = existingdata.__v + 1;
-    
+
     await this.identifyForeignKeys(appuser, data);
 
-    if (this.hooks.beforeUpdate)
-      await this.hooks.beforeUpdate(appuser, id, existingdata, data);
+    if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appuser, id, existingdata, data);
 
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
-      dbsession.startTransaction();
+      dbsession.startTransaction({ readPreference: 'primary' });
     }
     // try {
     Object.assign(data, appuser.getUpdateFilter());
@@ -1094,17 +865,10 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         session: dbsession,
         new: true,
       });
-      await this.audittrail.addEvent(
-        appuser,
-        this.documentName,
-        id,
-        'patch',
-        data,
-      );
+      await this.audittrail.addEvent(appuser, this.documentName, id, 'patch', data);
       appuser.addUpdatedRecordId(this.documentName, data._id);
 
-      if (this.hooks.afterUpdate)
-        await this.hooks.afterUpdate(appuser, id, existingdata, result);
+      if (this.hooks.afterUpdate) await this.hooks.afterUpdate(appuser, id, existingdata, result);
       await this.callWebhook(appuser, 'update', result);
       return result; //await this.findById(appuser, id);
     } catch (err) {
@@ -1144,10 +908,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
             session: appuser.getDBSession(),
           });
           if (result) {
-            this.logger.error(
-              result,
-              `related result found in ${collectionname} ${fkey} = ${id}`,
-            );
+            this.logger.error(result, `related result found in ${collectionname} ${fkey} = ${id}`);
             return result;
           }
         }
@@ -1170,62 +931,34 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
    * @param docstatus
    * @returns Promise
    */
-  async setDocumentStatus(
-    appuser: UserContext,
-    id: string,
-    data: T,
-    docstatus: string,
-  ) {
+  async setDocumentStatus(appuser: UserContext, id: string, data: T, docstatus: string) {
     id = id.trim();
 
     if (!id) {
-      throw new BadRequestException(
-        'undefined path para "id"',
-        'undefined "id"',
-      );
+      throw new BadRequestException('undefined path para "id"', 'undefined "id"');
     }
     if (data['_id'] && data['_id'] != id) {
-      throw new BadRequestException(
-        `_id in data(${data['_id']} different with path param ${id})`,
-        'set documentstatus id not match with submited data',
-      );
+      throw new BadRequestException(`_id in data(${data['_id']} different with path param ${id})`, 'set documentstatus id not match with submited data');
     }
     const existdata = await this.findById(appuser, id);
     if (existdata && existdata['documentStatus'] == docstatus) {
-      throw new BadRequestException(
-        `Same document status "${docstatus}" is not allowed`,
-      );
+      throw new BadRequestException(`Same document status "${docstatus}" is not allowed`);
     }
     data['documentStatus'] = docstatus;
     // await this.hook(appuser, HookType.beforeSetStatus, data);
-    if (this.hooks.beforeSetStatus)
-      await this.hooks.beforeSetStatus(appuser, docstatus, data, existdata);
+    if (this.hooks.beforeSetStatus) await this.hooks.beforeSetStatus(appuser, docstatus, data, existdata);
 
     if (data && !data['created']) {
       const createresult = await this.create(appuser, data);
-      if (this.hooks.afterSetStatus)
-        await this.hooks.afterSetStatus(appuser, docstatus, createresult);
-      await this.audittrail.addEvent(
-        appuser,
-        this.documentName,
-        id,
-        docstatus,
-        data,
-      );
+      if (this.hooks.afterSetStatus) await this.hooks.afterSetStatus(appuser, docstatus, createresult);
+      await this.audittrail.addEvent(appuser, this.documentName, id, docstatus, data);
 
       return createresult;
     } else {
       const updateresult = await this.findIdThenPatch(appuser, id, data);
       const finaldata = await this.findById(appuser, id);
-      if (this.hooks.afterSetStatus)
-        await this.hooks.afterSetStatus(appuser, docstatus, finaldata);
-      await this.audittrail.addEvent(
-        appuser,
-        this.documentName,
-        id,
-        docstatus,
-        data,
-      );
+      if (this.hooks.afterSetStatus) await this.hooks.afterSetStatus(appuser, docstatus, finaldata);
+      await this.audittrail.addEvent(appuser, this.documentName, id, docstatus, data);
 
       await this.callWebhook(appuser, docstatus, finaldata);
       return updateresult;
@@ -1274,33 +1007,18 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     if (result?.name && result?.name.includes('Exception')) throw result;
     return result;
   }
-  startWorkflow(
-    appuser: UserContext,
-    processName: WorkflowName,
-    workflowData: any,
-  ) {
-    return this.eventEmitter.emit(
-      'workflow.start',
-      appuser,
-      processName,
-      workflowData,
-    );
+  startWorkflow(appuser: UserContext, processName: WorkflowName, workflowData: any) {
+    return this.eventEmitter.emit('workflow.start', appuser, processName, workflowData);
   }
 
   async genNewDocNo(appuser: UserContext, data: T) {
     this.logger.debug('genNewDocNo');
-    const result = await this.docnogenerator.generateNextNumberFromDocument(
-      appuser,
-      this.documentType,
-      data,
-    );
+    const result = await this.docnogenerator.generateNextNumberFromDocument(appuser, this.documentType, data);
     this.logger.debug(result, 'genNewDocNo');
     data[this.documentIdentityCode] = result;
   }
   async runDefault(appuser: UserContext): Promise<unknown> {
-    return (
-      'Hello this is ' + this.getDocumentType() + ': ' + this.getDocumentName()
-    );
+    return 'Hello this is ' + this.getDocumentType() + ': ' + this.getDocumentName();
   }
   async identifyForeignKeys(appuser: UserContext, data: T) {
     /**
@@ -1322,9 +1040,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       let results: string[] = [];
       fks.forEach((fieldpath) => {
         //console.log("fieldpath:",fieldpath,"vdata",data,vdata)
-        const tmp = jsonpath
-          .query(vdata, fieldpath)
-          .filter((item: string) => item != '');
+        const tmp = jsonpath.query(vdata, fieldpath).filter((item: string) => item != '');
         // console.log("tmp",tmp)
 
         results = results.concat(tmp);
@@ -1342,11 +1058,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         const stagefilter: PipelineStage = {
           $unionWith: {
             coll: collectionname,
-            pipeline: [
-              { $match: { _id: { $in: results } } },
-              addfield,
-              { $project: { collection: 1 } },
-            ],
+            pipeline: [{ $match: { _id: { $in: results } } }, addfield, { $project: { collection: 1 } }],
           },
         };
         pipelines.push(stagefilter);
@@ -1358,10 +1070,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
 
     if (!unionresult) {
       this.logger.error('foreign key control failed ', 'identifyForeignKeys');
-      throw new InternalServerErrorException(
-        'Foreignkey check execution error',
-        pipelines as HttpExceptionOptions,
-      );
+      throw new InternalServerErrorException('Foreignkey check execution error', pipelines as HttpExceptionOptions);
     } else {
       const searchresult: any = {};
       unionresult.forEach((item) => {
@@ -1382,26 +1091,15 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         }
         for (let k = 0; k < keys.length; k++) {
           const key = keys[k];
-          if (
-            searchresult[collectionname] &&
-            searchresult[collectionname].includes(key)
-          ) {
+          if (searchresult[collectionname] && searchresult[collectionname].includes(key)) {
             this.logger.debug(`foreignkey ${collectionname}->${key} exists`);
           } else if (appuser.searchInsertedRecordId(collectionname, key)) {
-            this.logger.debug(
-              `foreignkey ${collectionname} exists in user context which not yet commited`,
-            );
+            this.logger.debug(`foreignkey ${collectionname} exists in user context which not yet commited`);
           } else {
-            this.logger.warn(
-              `${this.documentType}: Foreignkey ${key} at collection ${collectionname} does not exist`,
-              'identifyForeignKeys',
-            );
+            this.logger.warn(`${this.documentType}: Foreignkey ${key} at collection ${collectionname} does not exist`, 'identifyForeignKeys');
             this.logger.debug(appuser.getModifieds, 'appuser.getModifieds');
             const errordata = { key: key, collection: collectionname };
-            throw new BadRequestException(
-              `${this.documentType}: Foreignkey ${key} at collection ${collectionname} does not exist`,
-              JSON.stringify(errordata),
-            );
+            throw new BadRequestException(`${this.documentType}: Foreignkey ${key} at collection ${collectionname} does not exist`, JSON.stringify(errordata));
           }
         }
       }
@@ -1413,10 +1111,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     return pdfresult;
   }
 
-  async checkMultipleUnionExist(
-    appuser: UserContext,
-    data: string[],
-  ): Promise<CheckMutipleUnionExistResponse> {
+  async checkMultipleUnionExist(appuser: UserContext, data: string[]): Promise<CheckMutipleUnionExistResponse> {
     const response: CheckMutipleUnionExistResponse = [];
     const unionKey = this.getDocumentIdentityCode();
     const searchQuery: any = { [unionKey]: { $in: data } };
@@ -1430,13 +1125,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     return response;
   }
 
-  searchToAggregate(
-    appuser: UserContext,
-    filter: FilterQuery<T>,
-    columns: string[],
-    sort: string[][],
-    lookup: { [key: string]: string },
-  ) {
+  searchToAggregate(appuser: UserContext, filter: FilterQuery<T>, columns: string[], sort: string[][], lookup: { [key: string]: string }) {
     const pipelines: PipelineStage[] = [];
     const projection = {};
     // console.log('sortsort', sort);
@@ -1470,8 +1159,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       if (Object.keys(projection).length > 0) projection['_' + to] = 1;
     });
 
-    if (Object.keys(projection).length > 0)
-      pipelines.push({ $project: projection });
+    if (Object.keys(projection).length > 0) pipelines.push({ $project: projection });
 
     if (Array.isArray(sort) && sort.length > 0) {
       const sortobj = {};
@@ -1485,16 +1173,12 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     return pipelines;
   }
 
-
   //only realtime webhook supported at this moment
   async callWebhook(appuser: UserContext, actionName: string, data: any) {
-    try{
-      await this.runWebHook.run(appuser,this.documentName, actionName,data)
-    }
-    catch(e)
-    {
+    try {
+      await this.runWebHook.run(appuser, this.documentName, actionName, data);
+    } catch (e) {
       throw new InternalServerErrorException(e);
     }
-    
   }
 }
