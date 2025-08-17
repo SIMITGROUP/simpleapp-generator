@@ -7,45 +7,63 @@
     const resourcePascalName = upperFirstCase(simpleAppConfig.resourceName);
     const resourceKebabName = camelToKebab(simpleAppConfig.resourceName);
     const additionalApis = simpleAppConfig?.additionalApis || [];
+    const resourceTitleName = titleCase(resourcePascalName);
     let availableApis = {};
 
     Object.entries(miniAppWhitelistApis).forEach(([action, value]) => {
       if (value !== true && typeof value !== 'object') { return; }
       let method = '';
+      let description = '';
+
       switch(action) {
         case 'detail':
           method = 'get';
+          description = `Retrieve a single ${resourceTitleName} record by ID.`;
           break;
 
         case 'list':
+          method = 'post';
+          description = `Retrieve ${resourceTitleName} records with optional filtering, sorting, and field selection.`;
+          break;
+
         case 'create':
+          method = 'post';
+          description = `Create a new ${resourceTitleName} record.`;
+          break;
+
         case 'autoComplete':
           method = 'post';
+          description = `Retrieve a selectable list of ${resourceTitleName} options for dropdowns or autocomplete fields.`;
           break;
 
         case 'update':
           method = 'put';
+          description = `Replace an existing ${resourceTitleName} record with new data.`;
           break;
 
         case 'patch':
           method = 'patch';
+          description = `Update specific fields of an existing ${resourceTitleName} record.`;
           break;
 
         case 'delete':
           method = 'delete';
+          description = `Delete an existing ${resourceTitleName} record.`;
           break;
 
         case 'current':
           return;
-          break;
 
         default:
-          method = (additionalApis ?? []).find(item => item.action === action)?.method ?? '';
+          const additionalApiConfig = (additionalApis ?? []).find(item => item.action === action);
+          method = additionalApiConfig?.method ?? '';
+          description = additionalApiConfig?.description ?? '';
           break;
       }
 
       availableApis[action] = {
-        method: method
+        method: method,
+        description: description,
       }
     });
     

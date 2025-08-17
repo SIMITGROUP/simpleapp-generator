@@ -1,0 +1,22 @@
+<%
+  const modules = it.modules.sort((a, b) => a.docname.localeCompare(b.docname, undefined, { sensitivity: 'base' }));
+%>
+
+const customFields = [
+  <% modules.forEach(module => { %>
+    <%
+      const schema = module.schema; 
+      const simpleAppConfig = schema['x-simpleapp-config'];
+      const isEnabled = simpleAppConfig?.customField?.isEnable || false;
+    %>
+    <% if(isEnabled) { %>
+      {
+        documentType: '<%= simpleAppConfig.documentType%>',
+        documentName: '<%= simpleAppConfig.documentName%>',
+        resourceName: '<%= simpleAppConfig.resourceName%>',
+      },
+    <% } %>
+  <% }); %>
+];
+
+export default customFields;
