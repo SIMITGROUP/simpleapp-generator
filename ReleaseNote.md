@@ -1,3 +1,8 @@
+[1.6.7k-alpha]
+
+1. Add More Setter For User Context
+2. Fix createManyWithId No Use Session
+
 [1.6.7j-alpha]
 
 1. Add Custom Field Constant File For Mini Api
