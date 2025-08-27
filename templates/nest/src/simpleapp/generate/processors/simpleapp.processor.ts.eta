@@ -348,8 +348,13 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         await this.validateData(appuser, data);
         this.applyNestedDateTime(appuser, data, 'create');
       }
+      
+      const dbsession = appuser.getDBSession();
+      if (dbsession && !dbsession.inTransaction()) {
+        dbsession.startTransaction({ readPreference: 'primary' });
+      }
+      const result = await this.doc.insertMany(datas,{session:dbsession});
 
-      const result = await this.doc.insertMany(datas);
       await this.audittrail.addManyEvents(appuser, this.documentName, 'createMany', datas);
       return result;
     } else {
@@ -436,8 +441,11 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         await this.validateData(appuser, data);
         this.applyNestedDateTime(appuser, data, 'create');
       }
-
-      const result = await this.doc.insertMany(datas);
+      const dbsession = appuser.getDBSession();
+      if (dbsession && !dbsession.inTransaction()) {
+        dbsession.startTransaction({ readPreference: 'primary' });
+      }
+      const result = await this.doc.insertMany(datas,{session:dbsession});
       await this.audittrail.addManyEvents(appuser, this.documentName, 'createMany', datas);
       return result;
     } else {
@@ -823,7 +831,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
   };
 
-  findIdThenPatch = async (appuser: UserContext, id: string, data: T, session: mongo.ClientSession = undefined) => {
+  findIdThenPatch = async (appuser: UserContext, id: string, data: T, session: mongo.ClientSession = undefined,skipLog:boolean=false) => {
     const existingdata = await this.findById(appuser, id);
     if (!existingdata) {
       throw new NotFoundException(`${id} not found`, 'not found');
@@ -865,7 +873,10 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         session: dbsession,
         new: true,
       });
-      await this.audittrail.addEvent(appuser, this.documentName, id, 'patch', data);
+      //skip audit trail, useful when want to patch x-foreignkey code,label
+      if(!skipLog) {
+        await this.audittrail.addEvent(appuser, this.documentName, id, 'patch', data);
+      }
       appuser.addUpdatedRecordId(this.documentName, data._id);
 
       if (this.hooks.afterUpdate) await this.hooks.afterUpdate(appuser, id, existingdata, result);

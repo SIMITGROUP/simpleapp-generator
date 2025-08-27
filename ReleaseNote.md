@@ -1,3 +1,6 @@
+[1.6.7k-alpha]
+1. insert many support transaction
+
 [1.6.7j-alpha]
 
 1. Add Custom Field Constant File For Mini Api

@@ -93,21 +93,26 @@ export const run = async (
     // if(_.last(filenamearr)!='json')return
     // .forEach(async(schemaname)=>{
     const cloneschema: JSONSchema7 = { ...buildinschemas[schemaname] };
-    // console.log("=====>>>>>",schemaname,cloneschema)
+    // console.log("=====>>>>>",schemaname)
     await processSchema(schemaname, cloneschema);
   }
 
   //printformats
   const files = readdirSync(configs.jsonschemaFolder);
+  // console.log(files)
   for (let j = 0; j < files.length; j++) {
     const file = files[j];
     const filenamearr = file.split('.');
-    if (_.last(filenamearr) != 'json') return;
-    // log.warn(file)
+    if (_.last(filenamearr) != 'json'){ 
+      log.warn(file," skip")
+      continue;
+    }
+    
     const fullfilename = `${configs.jsonschemaFolder}/${file}`;
     try {
       const jsoncontent = readFileSync(fullfilename, 'utf-8');
       // log.info("Process ",fullfilename)
+      // console.log("=====>>>>>",fullfilename)
       const jsonschema = JSON.parse(jsoncontent);
       const schemaconfig = jsonschema['x-simpleapp-config'];
       if (schemaconfig['printFormats']) {
@@ -119,7 +124,9 @@ export const run = async (
       }
       await processSchema(file.replace('.json', ''), jsonschema);
     } catch (e: any) {
+      // console.log('\nerror File : ' + fullfilename + '\n')
       log.error('\nFile : ' + fullfilename + '\n');
+      // log.error(e);
       throw e;
     }
   }
