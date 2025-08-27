@@ -96,7 +96,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   public isReadOnly(): boolean {
     return false;
   }
-  reCalculateValue(data: T) { }
+  reCalculateValue(data: T) {}
   getIsolationFilter = (appuser: UserContext) => {
     let isolationFilter = {};
     switch (this.isolationtype) {
@@ -338,6 +338,11 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
 
   async createManyWithId(appuser: UserContext, datas: T[]) {
     if (Array.isArray(datas)) {
+      const dbsession = appuser.getDBSession();
+      if (dbsession && !dbsession.inTransaction()) {
+        dbsession.startTransaction({ readPreference: 'primary' });
+      }
+
       for (let i = 0; i < datas.length; i++) {
         const data = datas[i];
         let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
@@ -355,7 +360,11 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
       }
       const result = await this.doc.insertMany(datas,{session:dbsession});
 
+      const result = await this.doc.insertMany(datas, { session: dbsession });
       await this.audittrail.addManyEvents(appuser, this.documentName, 'createMany', datas);
+      for (let i = 0; i < datas.length; i++) {
+        appuser.addInsertedRecordId(this.documentName, datas[i]._id);
+      }
       return result;
     } else {
       throw new BadRequestException(this.getDocumentType() + ': create many only support array');

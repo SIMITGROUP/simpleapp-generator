@@ -241,6 +241,22 @@ export class UserContext {
     this.package = packageName;
   };
 
+  setTimeZone = (timeZone: string) => {
+    this.timeZone = timeZone;
+  };
+
+  setCountry = (country: string) => {
+    this.country = country;
+  };
+
+  setCurrency = (currency: string) => {
+    this.currency = currency;
+  };
+
+  setOffsetMinute = (offsetMinute: number) => {
+    this.offsetMinute = offsetMinute;
+  };
+
   /**
    * Obtain user profile filter by uid, tenantId, orgId, branchId
    * @returns Promise<User|undefined>
