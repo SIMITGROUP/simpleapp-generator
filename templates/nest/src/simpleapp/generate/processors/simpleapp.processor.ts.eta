@@ -337,12 +337,9 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   }
 
   async createManyWithId(appuser: UserContext, datas: T[]) {
-    if (Array.isArray(datas)) {
-      const dbsession = appuser.getDBSession();
-      if (dbsession && !dbsession.inTransaction()) {
-        dbsession.startTransaction({ readPreference: 'primary' });
-      }
 
+    if (Array.isArray(datas)) {      
+      
       for (let i = 0; i < datas.length; i++) {
         const data = datas[i];
         let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
@@ -353,12 +350,11 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         await this.validateData(appuser, data);
         this.applyNestedDateTime(appuser, data, 'create');
       }
-      
+
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction()) {
         dbsession.startTransaction({ readPreference: 'primary' });
       }
-      const result = await this.doc.insertMany(datas,{session:dbsession});
 
       const result = await this.doc.insertMany(datas, { session: dbsession });
       await this.audittrail.addManyEvents(appuser, this.documentName, 'createMany', datas);

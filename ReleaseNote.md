@@ -1,3 +1,6 @@
+[1.6.7m-alpha]
+1. insert many bug fix
+
 [1.6.7l-alpha]
 1. insert many support transaction
 
