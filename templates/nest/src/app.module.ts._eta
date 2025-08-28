@@ -10,6 +10,7 @@ import { MongooseModule,MongooseModuleOptions } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import {GenerateModule} from './simpleapp/simpleapp.module'
+import {EnvironmentMongoSchema} from './simpleapp/maintenance/models/environment.model'
 <% const nestmodules = it.configs.additionalNestModules%>
 <% for(let i=0; i<nestmodules.length;i++){ %>
 <%    const modulename = capitalizeFirstLetter(nestmodules[i]) %>
@@ -91,6 +92,7 @@ import { WebhookMongoSchema } from './simpleapp/generate/models/webhook.model';
       { name: 'Permission', schema: PermissionMongoSchema },
       { name: 'ApiEvent', schema: ApiEventMongoSchema },
       { name: 'Webhook', schema: WebhookMongoSchema },
+      { name: 'Environment', schema: EnvironmentMongoSchema },
     ]),    
       ],
   controllers: [AppController],

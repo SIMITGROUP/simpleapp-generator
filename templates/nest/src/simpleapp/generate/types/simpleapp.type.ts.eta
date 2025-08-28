@@ -47,8 +47,8 @@ export type DefaultHooks<T> = {
   beforeUpdate?: (
     appuser: UserContext,
     id: string,
-    data: T,
     existingdata: T,
+    data: T,    
   ) => Promise<void>;
   afterUpdate?: (appuser: UserContext, id: string, prevdata: T,newdata:T) => Promise<void>;
   beforeDelete?: (

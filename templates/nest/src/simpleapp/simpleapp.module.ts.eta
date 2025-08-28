@@ -10,6 +10,10 @@ import {DocNumberFormatGenerator} from './generate/commons/docnogenerator.servic
 import { AuditTrail } from './generate/commons/audittrail.service';
 import { RunWebhookService } from '../simpleapp/generate/commons/runwebhook.service'
 import { UserResolverService } from './services/userresolver.service';
+import {MaintenanceService} from './maintenance/maintenance.service'
+import {MaintenanceController} from './maintenance/maintenance.controller'
+import {EnvironmentMongoSchema} from './maintenance/models/environment.model'
+
 // auto import modules
 <% for(let i=0;i<it.modules.length; i++){ %>
 <% let obj = it.modules[i]%>
@@ -42,6 +46,7 @@ import additionalModule from './additional.module';
     ...additionalModule.imports,
 
     MongooseModule.forFeature([
+      { name: 'Environment', schema: EnvironmentMongoSchema },
       <% for(let i=0;i<it.modules.length; i++){ %>
         <% let obj = it.modules[i]%>
         { name: '<%= obj.docname %>', schema: <%= obj.docname %>MongoSchema },

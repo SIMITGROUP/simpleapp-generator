@@ -1,3 +1,6 @@
+[1.6.7o-alpha]
+1. exclude findIdThenPatch to execute beforeUpdate and afterUpdate
+
 [1.6.7m-alpha]
 1. insert many bug fix
 

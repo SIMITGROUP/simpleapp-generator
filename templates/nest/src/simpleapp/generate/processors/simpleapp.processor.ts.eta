@@ -836,7 +836,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     }
   };
 
-  findIdThenPatch = async (appuser: UserContext, id: string, data: T, session: mongo.ClientSession = undefined,skipLog:boolean=false) => {
+  findIdThenPatch = async (appuser: UserContext, id: string, data: Partial<T>, session: mongo.ClientSession = undefined, skipLog: boolean = false) => {
     const existingdata = await this.findById(appuser, id);
     if (!existingdata) {
       throw new NotFoundException(`${id} not found`, 'not found');
@@ -849,7 +849,8 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
 
     await this.identifyForeignKeys(appuser, data);
 
-    if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appuser, id, existingdata, data);
+    //patch not suitable trigger afterupdate
+    // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appuser, id, existingdata, data);
 
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
@@ -860,7 +861,8 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
     // Object.assign(existingdata, data);
     delete data['_id'];
 
-    this.reCalculateValue(data);
+    //patch not suitable trigger afterupdate
+    // this.reCalculateValue(data);
 
     // existingdata['_id']=''
     // console.log("newdata",data)
@@ -879,13 +881,14 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
         new: true,
       });
       //skip audit trail, useful when want to patch x-foreignkey code,label
-      if(!skipLog) {
+      if (!skipLog) {
         await this.audittrail.addEvent(appuser, this.documentName, id, 'patch', data);
       }
       appuser.addUpdatedRecordId(this.documentName, data._id);
 
-      if (this.hooks.afterUpdate) await this.hooks.afterUpdate(appuser, id, existingdata, result);
-      await this.callWebhook(appuser, 'update', result);
+      //patch not suitable trigger afterupdate
+      // if (this.hooks.afterUpdate) await this.hooks.afterUpdate(appuser, id, existingdata, result);
+      // await this.callWebhook(appuser, 'update', result);
       return result; //await this.findById(appuser, id);
     } catch (err) {
       throw new InternalServerErrorException(err.message);
@@ -1036,7 +1039,7 @@ export class SimpleAppService<T extends { _id?: string; __v?: number }> {
   async runDefault(appuser: UserContext): Promise<unknown> {
     return 'Hello this is ' + this.getDocumentType() + ': ' + this.getDocumentName();
   }
-  async identifyForeignKeys(appuser: UserContext, data: T) {
+  async identifyForeignKeys(appuser: UserContext, data: Partial<T>) {
     /**
      * 1. looping schemas identify what foreign key exists
      * 2. loop through record obtain all foreign key value
