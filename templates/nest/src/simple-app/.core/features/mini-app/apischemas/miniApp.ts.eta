@@ -1,0 +1,55 @@
+import { Field, ObjectType } from '@nestjs/graphql';
+import { ApiProperty } from '@nestjs/swagger';
+import { Miniapp, Miniappinstallation } from '../../../simpleapp/generate/apischemas';
+
+@ObjectType()
+export class MiniAppDetailPermission {
+  @Field()
+  @ApiProperty({ type: 'boolean', required: true, default: false })
+  hasMiniAppFeature: boolean;
+
+  @Field()
+  @ApiProperty({ type: 'boolean', required: true, default: false })
+  canInstall: boolean;
+
+  @Field()
+  @ApiProperty({ type: 'boolean', required: true, default: false })
+  canUninstall: boolean;
+
+  @Field()
+  @ApiProperty({ type: 'boolean', required: true, default: false })
+  canUpdateSetting: boolean;
+}
+
+@ObjectType()
+export class MiniAppDetail extends Miniapp {
+  @Field(() => Miniappinstallation)
+  @ApiProperty({ type: () => Miniappinstallation, required: false })
+  miniAppInstallation?: Miniappinstallation;
+
+  @Field()
+  @ApiProperty({ type: 'boolean' })
+  hasRequiredPlan: boolean;
+}
+
+@ObjectType()
+export class CategorizedMiniAppDetail {
+  @Field(() => [MiniAppDetail])
+  @ApiProperty({ type: () => [MiniAppDetail] })
+  upcomingMiniApps: MiniAppDetail[];
+
+  @Field(() => [MiniAppDetail])
+  @ApiProperty({ type: () => [MiniAppDetail] })
+  availableMiniApps: MiniAppDetail[];
+}
+
+@ObjectType()
+export class InstalledMiniAppDetail {
+  @Field(() => MiniAppDetailPermission)
+  @ApiProperty({ type: () => MiniAppDetailPermission, required: true })
+  permissions: MiniAppDetailPermission;
+
+  @Field(() => [MiniAppDetail])
+  @ApiProperty({ type: () => [MiniAppDetail] })
+  installedMiniApps: MiniAppDetail[];
+}

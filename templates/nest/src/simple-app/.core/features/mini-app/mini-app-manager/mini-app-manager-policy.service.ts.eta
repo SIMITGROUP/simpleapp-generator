@@ -1,0 +1,43 @@
+import { Injectable } from '@nestjs/common';
+import _ from 'lodash';
+import { MiniappStatusEnum } from 'src/enums/enums.generate';
+import { PolicyService } from 'src/modules/policy/policy.service';
+import { Role } from 'src/simpleapp/generate/commons/roles/roles.enum';
+import { UserContext } from 'src/simpleapp/generate/commons/user.context';
+import { Miniapp } from 'src/simpleapp/generate/types';
+
+@Injectable()
+export class MiniAppManagerPolicyService {
+  readonly _RELEASED_STATUSES = [MiniappStatusEnum.PUBLISHED];
+
+  constructor(private readonly policyService: PolicyService) {}
+
+  canInstall(appUser: UserContext) {
+    return this.policyService.can(appUser, Role.Miniappinstallation_create);
+  }
+
+  canUninstall(appUser: UserContext) {
+    return this.policyService.can(appUser, Role.Miniappinstallation_update);
+  }
+
+  canUpdateSetting(appUser: UserContext) {
+    return this.policyService.can(appUser, Role.Miniappinstallation_update);
+  }
+
+  hasFeature(appUser: UserContext) {
+    return this.policyService.hasFeature(appUser, 'miniApp');
+  }
+
+  hasRequiredPlan(appUser: UserContext, miniApp: Miniapp) {
+    const currentPlan = appUser.getPackage();
+    const requiredPlans = miniApp.access.requiredPlans ?? [];
+
+    if (_.isEmpty(requiredPlans)) return true;
+
+    return requiredPlans.includes(currentPlan);
+  }
+
+  isMiniAppRealeased(status: MiniappStatusEnum) {
+    return this._RELEASED_STATUSES.includes(status);
+  }
+}

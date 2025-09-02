@@ -69,6 +69,8 @@ export type TypeForeignKey = {
 export type ModuleObject = {
   doctype: string;
   docname: string;
+  resourcename:string;
+  typename:string;
   pagetype: string;
   api: DocumentApi[];
   schema: SimpleAppJSONSchema7;

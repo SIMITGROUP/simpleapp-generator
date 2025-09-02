@@ -1,0 +1,18 @@
+import { ApiProperty } from '@nestjs/swagger';
+
+export class DeveloperPortalInstalledXOrgsResponseInstalledXOrg {
+  @ApiProperty({ type: 'string', required: true })
+  branchCode: string;
+  @ApiProperty({ type: 'string', required: true })
+  branchName: string;
+  @ApiProperty({ type: [String], required: true })
+  xOrg: string[];
+}
+
+export class DeveloperPortalInstalledXOrgsResponse {
+  @ApiProperty({ type: 'string', required: true })
+  demoXOrg: string;
+
+  @ApiProperty({ type: [DeveloperPortalInstalledXOrgsResponseInstalledXOrg], required: true })
+  installedXOrgs: DeveloperPortalInstalledXOrgsResponseInstalledXOrg[];
+}

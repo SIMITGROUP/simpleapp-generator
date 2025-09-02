@@ -1,0 +1,59 @@
+# Introduction
+1. all event store here (beforeCreate, afterCreate,...)
+2. 1 resource 1 folder, 1 resource module
+3. keep source code minimal, main source code park at feature instead
+4. steps:
+    a. create resource folder (user)
+    b. create user.event.ts (sample1) and user.module.ts (sample2)
+    c. modify src/simple-app/events/events.module.ts to import user.module
+5. Supported event:
+  - beforeCreate
+  - afterCreate
+  - beforeUpdate
+  - afterUpdate
+  - beforeDelete
+  - afterDelete    
+    
+    
+# sample1: user event
+```ts
+//user.event.ts
+import { BadRequestException, InternalServerErrorException, HttpException, Injectable, Inject } from '@nestjs/common';
+import { UserContext } from 'src/simple-app/.core/commons/user.context';
+import * as schema from 'src/simple-app/.resources/user/user.schema'
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+
+@Injectable()
+export class UserEvent {
+  constructor() {}
+  
+  @OnEvent('user.beforeCreate')
+  async runBeforeCreate(
+    appuser: UserContext,
+    payloads: {    
+        data: schema.User,
+    },
+  ) {
+    console.log("user.beforeCreate")
+  }
+
+}
+```
+
+
+# sample2: user.module.ts
+```ts
+//user.module.ts
+import { Module } from '@nestjs/common';
+
+import { UserEvent } from './user.event';
+
+@Module({
+  imports: [],
+  controllers: [],
+  providers: [UserEvent],
+  exports: [UserEvent],
+})
+export class UserEventModule {}
+
+```

@@ -4,26 +4,31 @@
  * last change 2024-02-23
  * Author: Ks Tan
  */
+import * as schema from './<%= camelToKebab(it.resourceName) %>.schema'
 
 <%Object.keys(it.models).forEach(function(modelname) { %>    
-export const Default<%=modelname%> = (uuid:string)=>{
+
+export const Default<%= toTypeName(it.resourceName ,modelname) %> = (uuid:string)=>{
     // <%~ JSON.stringify(it.models[modelname].model) %>
     <% let model = it.models[modelname].model%>    
     <% if(model['_id'] && model['code'] && model['label']){%>
-      return undefined
+      const  data =  undefined
     <%} else{%>
-    return {
+     
+    const  data  = {
         <% if(it.models?.[modelname] && it.models[modelname]?.model && Object.keys(it.models[modelname]?.model).length === 0) { %>
           // Dynamic Object
-        <% } else { %>
-          _id : uuid,
-        <% } %>
+        <% } else if(modelname.toLowerCase() ==it.resourceName.toLowerCase()){ %>
+            
+              __v:0,
+          <% } %>
 
         <%Object.keys(it.models[modelname].model).forEach(function(key){%>      
           <%let field=it.models[modelname].model[key]%>                
             
           <%if(key=='_id'){ %>
-          // skip cause already hardcoded
+          
+            _id : uuid,
           <%}else if(key=='tenantId'){ %>
             tenantId : 0,//it will override by save handle
           <%}else if(key=='orgId'){ %>
@@ -41,18 +46,20 @@ export const Default<%=modelname%> = (uuid:string)=>{
           <%} else if(field.type=='boolean' ){%> 
               <%=key%> :false ,
           <%} else if(typeof field=='string'){%>
-            <%=key%> :  Default<%= field  %>(''),
+            <%=key%> :  Default<%= toTypeName(it.resourceName ,field)  %>(''),
           <%} else if(field.type=='string'){%>
               <%=key%> : '<%= field.default  %>',
             <%} else if(Array.isArray(field) && ['string','integer','number','boolean'].includes(field[0])) {%>
               <%=key%> : <<%=field[0]%>[]>[],  //typeof field == array     <%~JSON.stringify(field)%>    
             <%} else if(Array.isArray(field)) {%>
-              <%=key%> : [Default<%=field[0]%>(crypto.randomUUID())],  //typeof field == array     <%~JSON.stringify(field)%>    
+              <%=key%> : [Default<%= toTypeName(it.resourceName ,field[0])%>(crypto.randomUUID())],  //typeof field == array     <%~JSON.stringify(field)%>    
             <%} else {%>            
               <%=key%> : <%=field.default%>,  //else <%= typeof field %>
           <%}%>
+           
         <%})%>
     }
   <%}%>
+  return data
 } 
 <%})%>

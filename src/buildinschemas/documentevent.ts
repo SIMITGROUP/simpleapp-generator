@@ -40,6 +40,6 @@ export const documentevent: SchemaType = {
       ],
       examples: ['create', 'delete']
     },
-    eventdata: {}
+    eventData: {}
   }
 };

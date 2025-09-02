@@ -29,6 +29,7 @@ import * as buildinschemas from './buildinschemas';
 import { JSONSchema7 } from 'json-schema';
 import { generatePrintformat } from './processors/jrxmlbuilder';
 
+const systemResources = ['user','tenant','organization','branch','permission','autoincreament','documentevent','webhook','webhooklog','keyvaluepair','docnoformat','customfield','miniapp','miniappinstallation']
 const { Eta } = require('eta');
 const { capitalizeFirstLetter } = require('./libs');
 // const X_DOCUMENT_TYPE='x-document-type'
@@ -170,10 +171,11 @@ const processSchema = async (schemaname: string, jsondata: JSONSchema7) => {
   const config: SchemaConfig = jsondata['x-simpleapp-config'];
   let doctype = config.documentType;
   let docname = config.documentName;
-
+  let resourceName = config.resourceName
   const rendertype = 'basic';
   jsonschemas[docname] = jsondata;
   const copyofjsonschema = { ...jsondata };
+
   const allmodels: ChildModels = await readJsonSchemaBuilder(docname, jsondata);
   generateSchema(docname, doctype, rendertype, allmodels);
   const moduleindex = activatemodules.findIndex(
@@ -182,7 +184,9 @@ const processSchema = async (schemaname: string, jsondata: JSONSchema7) => {
   if (moduleindex < 0) {
     activatemodules.push({
       doctype: doctype,
-      docname: capitalizeFirstLetter(docname),
+      docname: docname,
+      resourcename: resourceName,
+      typename:capitalizeFirstLetter(resourceName),
       pagetype: config.pageType ?? '',
       api: config.additionalApis,
       schema: copyofjsonschema
@@ -217,7 +221,7 @@ const generateSchema = (
 
   const resourceName =
     jsonschemas[docname]?.['x-simpleapp-config']?.resourceName ?? docname;
-
+  const resourceFileName = camelToKebab(resourceName)
   //console.log("---^^^^^------",modelname,docname, doctype, rendertype,currentmodel,allmodels)
 
   const miniAppWhitelistApis =
@@ -232,7 +236,7 @@ const generateSchema = (
     moreAutoComplete: currentmodel.moreAutoComplete ?? [],
     schema: currentmodel.model,
     apiSchemaName: capitalizeFirstLetter(docname), //capitalizeFirstLetter(doctype) + 'ApiSchema',
-    typename: capitalizeFirstLetter(docname),
+    typename: capitalizeFirstLetter(resourceName),
     fullApiSchemaName: doctype + 'apischema.' + capitalizeFirstLetter(docname),
     fullTypeName: doctype + 'type.' + capitalizeFirstLetter(docname),
     jsonschema: jsonschemas[docname],
@@ -267,13 +271,14 @@ const generateSchema = (
     //   'const camelCaseToWords = (s: string) =>{const result = s.replace(/([A-Z])/g, \' $1\');return result.charAt(0).toUpperCase() + result.slice(1);}',
   });
 
-  const backendTargetFolder = `${backendFolder}/src/simpleapp/generate`;
-  const simpleappTargetFolder = `${backendFolder}/src/simpleapp`;
-  const backendServiceFolder = `${backendFolder}/src/simpleapp/services`;
+  const backendTargetFolder = `${backendFolder}/src/simple-app`;
+  const simpleappTargetFolder = `${backendFolder}/src/simple-app`;
+  const backendServiceFolder = `${backendFolder}/src/simple-app/services`;
   Object.keys(generateTypes).forEach((foldertype) => {
     //generate code for every schema
     const generateTemplatefolder = `${constants.templatedir}/basic/${foldertype}`;
     const allfiles = readdirSync(generateTemplatefolder, { recursive: true });
+    
     for (let j = 0; j < allfiles.length; j++) {
       const filename: string = String(allfiles[j]);
       const templatepath = `${generateTemplatefolder}/${filename}`;
@@ -290,20 +295,25 @@ const generateSchema = (
         const filecategory = arrfilename[0];
         const filetype = arrfilename[1];
         const autogeneratetypes = [
-          'apischema',
+          'schema',
           'controller',
           'jsonschema',
           'model',
+          'module',
           'resolver',
-          'processor',
+          'entity',
+          'service',
           'type',
           'default'
         ];
-        // log.info("process nest: ",doctype," :",filename)
+        // log.info("process nest: ",docname," :",filename)
         if (autogeneratetypes.includes(filecategory)) {
           //multiple files in folder, append s at folder name
-          const storein = `${backendTargetFolder}/${filecategory}s`;
-          const targetfile = `${storein}/${doctype}.${filecategory}.${filetype}`;
+          let storein = `${backendTargetFolder}/.resources/${resourceFileName}`;
+          if(systemResources.includes(docname)){
+            storein=`${backendTargetFolder}/.core/resources/${resourceFileName}`
+          }
+          const targetfile = `${storein}/${resourceFileName}.${filecategory}.${filetype}`;
           if (!existsSync(storein)) {
             mkdirSync(storein, { recursive: true });
           }
@@ -311,18 +321,59 @@ const generateSchema = (
           const filecontent = eta.render(templatepath, variables);
           writeFileSync(targetfile, filecontent);
           // console.log("Write complete")
-        } else if (filecategory == 'service') {
-          //service file won't override if exists
-          const targetfolder = `${simpleappTargetFolder}/${filecategory}s`;
-          const targetfile = `${targetfolder}/${doctype}.${filecategory}.${filetype}`;
+        } else if(['api'].includes(filecategory)){
+          //if no define additional api, then no prepare additional api
+          continue
+          if(variables.apiSettings.length==0){            
+             continue;
+          }else{
+            log.info("process additional api",docname);
+          }
+
+          const arrcategory = filename.split('.')
+          // console.log("process",docname, arrcategory);
+          const subcategory = arrcategory[0]
+          const subcategoryscope = arrcategory[1]
+          const subcategorytype = arrcategory[2]
+          
+          const targetfolder = `${simpleappTargetFolder}/${subcategory}s/${resourceFileName}`;
+          const targetfile = `${targetfolder}/${resourceFileName}.${subcategoryscope}.${subcategorytype}`;
           if (!existsSync(targetfolder)) {
             mkdirSync(targetfolder, { recursive: true });
           }
 
-          if (
-            !existsSync(targetfile) ||
+          //if controller will always override
+          if ( targetfile.includes('controller.ts') ||
+            (!existsSync(targetfile) ||
             readFileSync(targetfile, 'utf-8').includes(
-              '--remove-this-line-to-prevent-override--'
+              '--remove-this-line-to-prevent-override--')
+            )
+          ) {
+            // log.info("Write ",targetfile)
+            const filecontent = eta.render(templatepath, variables);
+            writeFileSync(targetfile, filecontent);
+          } else {
+            // log.info("skip ",targetfile)
+          }
+        }else if (['event'].includes(filecategory)) {
+          //service file won't override if exists
+          const arrcategory = filename.split('.')
+          console.log("process",docname, arrcategory);
+          const subcategory = arrcategory[0]
+          const subcategoryscope = arrcategory[1]
+          const subcategorytype = arrcategory[2]
+          
+          const targetfolder = `${simpleappTargetFolder}/${subcategory}s/${resourceFileName}`;
+          const targetfile = `${targetfolder}/${resourceFileName}.${subcategoryscope}.${subcategorytype}`;
+          if (!existsSync(targetfolder)) {
+            mkdirSync(targetfolder, { recursive: true });
+          }
+
+          //if controller will always override
+          if ( targetfile.includes('controller.ts') ||
+            (!existsSync(targetfile) ||
+            readFileSync(targetfile, 'utf-8').includes(
+              '--remove-this-line-to-prevent-override--')
             )
           ) {
             // log.info("Write ",targetfile)
@@ -638,7 +689,7 @@ const processPlatformFileMiniApi = (
 ) => {
   const mapfiles = {
     'resource.service.ts.eta': {
-      to: `src/modules/resource/resources/${_.kebabCase(resourceName)}`,
+      to: `src/mini-app/resource/resources/${_.kebabCase(resourceName)}`,
       as: `${_.kebabCase(resourceName)}.service.ts`,
       validate: (targetfile: string, isexists: boolean) => {
         const {
@@ -653,7 +704,7 @@ const processPlatformFileMiniApi = (
       }
     },
     'resource.controller.ts.eta': {
-      to: `src/modules/resource/resources/${_.kebabCase(resourceName)}`,
+      to: `src/mini-app/resource/resources/${_.kebabCase(resourceName)}`,
       as: `${_.kebabCase(resourceName)}.controller.ts`,
       validate: (targetfile: string, isexists: boolean) => {
         const {
@@ -668,7 +719,7 @@ const processPlatformFileMiniApi = (
       }
     },
     'resource.module.ts.eta': {
-      to: `src/modules/resource/resources/${_.kebabCase(resourceName)}`,
+      to: `src/mini-app/resource/resources/${_.kebabCase(resourceName)}`,
       as: `${_.kebabCase(resourceName)}.module.ts`,
       validate: (targetfile: string, isexists: boolean) => {
         const {
@@ -799,6 +850,12 @@ const prepareRoles = (groupsettings) => {
   return roles;
 };
 
+function camelToKebab(key) {
+   var result = key.replace( /([A-Z])/g, " $1" );
+   return result.split(' ').join('-').toLowerCase();
+}
+
+
 const getCodeGenHelper = () =>
   'const capitalizeFirstLetter = (str) => !str ? `Object` : str.slice(0, 1).toUpperCase() + str.slice(1);' +
   'const initType=(str)=>{return ["string","number","boolean","array","object"].includes(str) ? capitalizeFirstLetter(str) : str;};' +
@@ -807,4 +864,6 @@ const getCodeGenHelper = () =>
   'const camelToKebab = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase(); };' +
   'const removeSuffix = (input, suffix) => { return input.endsWith(suffix) ? input.slice(0, -suffix.length) : input };' +
   'const isWhitelistedMiniApp = (actionName, it) => { return it.miniApp.whitelistApis?.[actionName] === true };' +
-  'const titleCase = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1 $2"); }; ';
+  'const titleCase = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1 $2"); }; '+
+  'const toTypeName = (resName,fieldName)=>{return ["string","number","boolean","array","object"].includes(fieldName.toLowerCase())? capitalizeFirstLetter(fieldName) :upperFirstCase(resName) + fieldName.slice(resName.length)};'+
+  'const getSystemResources = () => '+JSON.stringify(systemResources);

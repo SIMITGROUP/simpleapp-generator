@@ -1,0 +1,22 @@
+import { Field, ObjectType } from '@nestjs/graphql';
+import { ApiProperty } from '@nestjs/swagger';
+import { MiniappAuthor } from 'src/simpleapp/generate/apischemas';
+
+@ObjectType()
+export class DeveloperPortalCreateAppDto {
+  @Field()
+  @ApiProperty({ type: 'string', required: true, default: '' })
+  code: string;
+
+  @Field()
+  @ApiProperty({ type: 'string', required: true, default: '' })
+  name: string;
+
+  @Field()
+  @ApiProperty({ type: 'string', required: true, default: '' })
+  version: string;
+
+  @Field()
+  @ApiProperty({ type: MiniappAuthor, required: true, default: '' })
+  author: MiniappAuthor;
+}

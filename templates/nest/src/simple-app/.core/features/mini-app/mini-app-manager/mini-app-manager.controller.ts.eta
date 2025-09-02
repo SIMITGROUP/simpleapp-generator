@@ -1,0 +1,79 @@
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
+import { AppUser } from 'src/simpleapp/generate/commons/decorators/appuser.decorator';
+import { Roles } from 'src/simpleapp/generate/commons/roles/roles.decorator';
+import { Role } from 'src/simpleapp/generate/commons/roles/roles.enum';
+import { UserContext } from 'src/simpleapp/generate/commons/user.context';
+import * as types from '../../../simpleapp/generate/types';
+import * as schemas from '../../../simpleapp/generate/apischemas';
+import { MiniAppManagerBridgeService } from './mini-app-manager-bridge.service';
+
+@ApiTags('MINIAPPMANAGER')
+@Controller('mini-app-manager')
+export class MiniAppManagerController {
+  constructor(private readonly service: MiniAppManagerBridgeService) {}
+
+  @Put('mini-apps/:miniAppCode/install')
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.Miniappinstallation_create)
+  @ApiResponse({ status: 200, description: 'Install a miniApp', type: schemas.Miniappinstallation })
+  @ApiOperation({ operationId: 'runInstallMiniApp' })
+  async installMiniApp(@AppUser() appUser: UserContext, @Param('miniAppCode') miniAppCode: string) {
+    const res = await this.service.runInstallMiniApp(appUser, miniAppCode);
+    return res;
+  }
+
+  @Put('mini-apps/:miniAppCode/uninstall')
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.Miniappinstallation_update)
+  @ApiResponse({ status: 200, description: 'Uninstall a miniApp', type: schemas.Miniappinstallation })
+  @ApiOperation({ operationId: 'runUninstallMiniApp' })
+  async uninstallMiniApp(@AppUser() appUser: UserContext, @Param('miniAppCode') miniAppCode: string) {
+    const res = await this.service.runUninstallMiniApp(appUser, miniAppCode);
+    return res;
+  }
+
+  @Put('mini-apps/:miniAppCode/update-setting')
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.Miniappinstallation_update)
+  @ApiBody({ description: 'Request Body', type: schemas.DynamicParam })
+  @ApiResponse({ status: 200, description: 'Update miniApp setting', type: schemas.Miniappinstallation })
+  @ApiOperation({ operationId: 'runUpdateMiniAppSetting' })
+  async updateMiniAppSetting(@AppUser() appUser: UserContext, @Body() data: types.DynamicParam, @Param('miniAppCode') miniAppCode: string) {
+    const res = await this.service.runUpdateMiniAppSetting(appUser, miniAppCode, data);
+    return res;
+  }
+
+  @Get('installed-mini-apps')
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.Miniappinstallation_search)
+  @ApiResponse({ status: 200, description: 'Get installed miniApps', type: schemas.InstalledMiniAppDetail })
+  @ApiOperation({ operationId: 'runGetInstalledMiniApps' })
+  async getInstalledMiniApps(@AppUser() appUser: UserContext) {
+    const res = await this.service.runGetInstalledMiniApps(appUser);
+    return res;
+  }
+
+  @Get('categorized-mini-apps')
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.Miniapp_search)
+  @ApiResponse({ status: 200, description: 'Get categorized miniApps', type: schemas.CategorizedMiniAppDetail })
+  @ApiOperation({ operationId: 'runGetCategorizedMiniApps' })
+  async getCategorizedMiniApps(@AppUser() appUser: UserContext) {
+    const res = await this.service.runGetCategorizedMiniApps(appUser);
+    return res;
+  }
+
+  @Get('mini-apps/:miniAppCode')
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.Miniapp_search)
+  @ApiResponse({ status: 200, description: 'Get miniApp detail', type: schemas.MiniAppDetail })
+  @ApiOperation({ operationId: 'runGetMiniAppDetail' })
+  async getMiniAppDetail(@AppUser() appUser: UserContext, @Param('miniAppCode') miniAppCode: string) {
+    const res = await this.service.runGetMiniAppDetail(appUser, miniAppCode);
+    return res;
+  }
+
+  @Post('system-default-mini-apps-migration')
+  @Roles(Role.Everyone)
+  @ApiResponse({ status: 200, description: 'Migrate system default miniApp.', type: [schemas.Miniapp] })
+  @ApiOperation({ operationId: 'runSystemDefaultMiniAppMigration' })
+  async systemDefaultMiniAppMigration(@AppUser() appUser: UserContext) {
+    const res = await this.service.runSystemDefaultMiniAppMigration(appUser);
+    return res;
+  }
+}

@@ -53,19 +53,24 @@
               :action-name="menu.action"
               >{{ menu.label }}</ButtonAction
             >
-            <ButtonAction
-              v-else
-              :disabled="!canPerform(doc.getDocName(true), menu.action)"
-              @click="emitEvent(menu, $event)"
-              :action-name="menu.action"
-              >{{ menu.label }}</ButtonAction
-            >
+            <template v-else>
+              <ButtonAction
+                v-if="!(hideButtons ?? []).includes(menu.action)"
+                :disabled="!canPerform(doc.getDocName(true), menu.action)"
+                @click="emitEvent(menu, $event)"
+                :action-name="menu.action"
+                >{{ menu.label }}</ButtonAction
+              >
+            </template>
           </div>
         </div>
+        <div><slot name="left"></slot></div>
       </div>
 
       <!-- center -->
-      <div class="flex flex-row"></div>
+      <div class="flex flex-row">
+        <div><slot name="center"></slot></div>
+      </div>
       <!-- right -->
       <div class="flex flex-row gap-2">
         <DebugDocumentData v-model="data" :label="t(doc.getDocName())" />
@@ -82,8 +87,11 @@
             >
           </div>
         </div>
+        <div><slot name="right"></slot></div>
+        <slot name="actions"></slot>
       </div>
     </div>
+    <Toast ref="toast" />
   </div>
 
   <OverlayPanelWithToolBar
@@ -98,13 +106,13 @@
     </template>
     <template #headerCenter>
       <div class="flex flex-row gap-2 justify-center">
-        <Dropdown
+        <Select
           :options="printformats"
           option-label="formatName"
           option-value="formatId"
           v-model="currentprintformat"
           @change="printPdf"
-        ></Dropdown>
+        ></Select>
         <ButtonPrimary @click="showPrintFormats"
           ><i class="pi pi-refresh"
         /></ButtonPrimary>
@@ -183,9 +191,11 @@ const pdfReady = ref(false);
 const props = defineProps<{
   document: SimpleAppClient<any, any>;
   disableaction?: string[];
+  hideButtons?: ("create" | "update" | "delete")[];
 }>();
 const doc = props.document;
 const data = doc.getReactiveData();
+const toast = ref(null);
 
 const createData = async () => {
   try {
@@ -213,11 +223,24 @@ const updateData = async () => {
     console.debug("validation error:", e);
   }
 };
+
 const deleteData = async () => {
   try {
     getRecently().delete(data.value._id);
+    // toast.value?.add({
+    //       severity: 'success',
+    //       summary: 'Success',
+    //       detail: 'The data was deleted successfully.',
+    //       life: 4000,
+    //     });
     return await doc.delete();
   } catch (e) {
+    // toast.value?.add({
+    //       severity: 'error',
+    //       summary: 'Action Denied',
+    //       detail: e,
+    //       life: 4000,
+    //     });
     console.debug("validation error:", e);
   }
 };
@@ -340,17 +363,20 @@ const getActions = () => {
 const showPrintFormats = async () => {
   await printPdf();
 };
-const emitEvent = async (menu: FormMenu, clickEvent: Event | MouseEvent) => {
+const emitEvent = async (menu: FormMenu, clickEvent?: Event | MouseEvent) => {
   if (menu.action == "delete") {
     confirm.require({
-      target: clickEvent.target as HTMLElement,
+      target: clickEvent?.target as HTMLElement,
       header: t("deleteRecord"),
       message: `${t("deleteThisRecord?")}`,
 
       // icon: "pi pi-exclamation-triangle gap-4",
       acceptClass: "bg-danger-600 text-white",
       accept: async () => {
-        if (await deleteData()) emits("on", FormCrudEvent.delete);
+        if (await deleteData()) {
+          emits("on", FormCrudEvent.delete);
+          emitEvent({ action: "exit", type: "menu", label: "" }, clickEvent);
+        }
       },
     });
   } else {
@@ -385,16 +411,22 @@ const getDocActions = () => {
   if (allstatus) {
     const stateconfig = allstatus.find((item) => item.status === docstatus);
     docactionmenus =
-      stateconfig?.actions.map((item) => ({
-        action: item,
-        label: statusNames[item],
-        type: "docstatus",
-        icon: getActionIcon(item),
-        command: emitMobileEvent,
-      })) ?? [];
+      stateconfig?.actions
+        .filter(
+          (item) =>
+            !(props.disableaction && props.disableaction.includes(item)),
+        )
+        .map((item) => ({
+          action: item,
+          label: statusNames[item],
+          type: "docstatus",
+          icon: getActionIcon(item),
+          command: emitMobileEvent,
+        })) ?? [];
   }
   return docactionmenus;
 };
+
 const showMenuButton = (menu: FormMenu) => {
   if (menu.separator) return true;
 
@@ -463,6 +495,49 @@ const togglePdfMenu = async () => {
     files: [file],
   });
 };
+
+// onMounted(() => {
+//   document.onkeydown = async function (e) {
+//     const capturekeys = ['s','d','p']
+
+//   //   let capturekey=''
+//   //   switch (props.actionName) {
+//   //   case "create":
+//   //   case "update":
+//   //   capturekey= "s";
+//   //     break;
+//   //   case "delete":
+//   //   capturekey= "d";
+//   //     break;
+//   //   case "print":
+//   //   capturekey= "p";
+//   //     break;
+//   //   case "confirm":
+//   //   capturekey= "enter";
+//   //     break;
+//   //   case "void":
+//   //   capturekey= "";
+//   //     break;
+//   //   case "draft":
+//   //   capturekey= "";
+//   //     break;
+//   // }
+
+//   // console.log("Capture key",e)
+//   //  if (capturekeys.includes(e.key) && (e.ctrlKey || e.metaKey)) {
+//   //     e.preventDefault();
+//   //     let eventdata={} as FormMenu
+//   //     if(e.key=='s' && doc.isNew()) eventdata.action='create'
+//   //     else if(e.key=='s' && !doc.isNew()) eventdata.action='update'
+//   //     else if(e.key=='d' && !doc.isNew()) eventdata.action='delete'
+//   //     else if(e.key=='p' && !doc.isNew()) eventdata.action='print'
+
+//   //     if(eventdata.action) await emitEvent(eventdata)
+
+//   //   }
+
+//   };
+// });
 </script>
 <style>
 .vue-pdf-embed {

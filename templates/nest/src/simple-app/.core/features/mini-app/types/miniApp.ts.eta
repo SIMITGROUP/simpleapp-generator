@@ -1,0 +1,23 @@
+import { Miniapp, Miniappinstallation } from '../../../simpleapp/generate/types';
+
+export type MiniAppDetailPermission = {
+  hasMiniAppFeature: boolean;
+  canInstall: boolean;
+  canUninstall: boolean;
+  canUpdateSetting: boolean;
+};
+
+export type MiniAppDetail = Miniapp & {
+  hasRequiredPlan: boolean;
+  miniAppInstallation?: Miniappinstallation;
+};
+
+export type CategorizedMiniAppDetail = {
+  upcomingMiniApps: MiniAppDetail[];
+  availableMiniApps: MiniAppDetail[];
+};
+
+export type InstalledMiniAppDetail = {
+  installedMiniApps: MiniAppDetail[];
+  permissions: MiniAppDetailPermission;
+};

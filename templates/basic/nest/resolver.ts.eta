@@ -5,12 +5,12 @@
  * Author: Ks Tan
  */
 import { Resolver, Query, Mutation, Args, ID,Context } from '@nestjs/graphql';
-import * as schemas from '../apischemas';
-import { AppUser } from '../commons/decorators/appuser.decorator';
-import { UserContext } from '../commons/user.context';
-import { <%= it.typename %>, <%= it.typename %>Service } from '../../services/<%= it.doctype.toLowerCase() %>.service';
-import { Roles } from '../commons/roles/roles.decorator';
-import { Role } from '../commons/roles/roles.enum';
+import * as schemas from './<%= camelToKebab(it.resourceName) %>.schema';
+import { AppUser } from 'src/simple-app/.core/commons/decorators/appuser.decorator';
+import { UserContext } from 'src/simple-app/.core/commons/user.context';
+import { <%= it.typename %>, <%= it.typename %>Service } from './<%= camelToKebab(it.resourceName) %>.service';
+import { Roles } from 'src/simple-app/.core/commons/roles/roles.decorator';
+import { Role } from 'src/simple-app/.core/commons/roles/roles.enum';
 
 import { Request } from '@nestjs/common';
 
@@ -75,52 +75,5 @@ export class <%= it.typename %>Resolver {
 
     /***************************** begin additionalAPI definations *****************************************/
 
-    <% for(let i=0;i<it.apiSettings.length;i++){%>
-    <% let api = it.apiSettings[i] %>
-    <% if(api.method!='get') continue %>
-    <%if(superadmindoctype.includes(it.doctype)){%>
-    @Roles(Role.SuperAdmin,
-    <%if(api.requiredRole && api.requiredRole.length>0) { %>
-        <% for(let r=0;r<api.requiredRole.length;r++){%>Role.<%=api.requiredRole[r]%>,<%}%>
-        <%}%>
-    )
-    <%}else{%>
-    @Roles(Role.SuperAdmin,Role.SuperUser,
-        <%if(api.requiredRole && api.requiredRole.length>0) { %>
-        <% for(let r=0;r<api.requiredRole.length;r++){%>Role.<%=api.requiredRole[r]%>,<%}%>
-        <%}%>
-        )
-    <%}%>
-      @Query(()=> <%= getFieldType('schema',api.responseType,api.action)%>)  
-
-
-
-      async <%= it.name %><%=capitalizeFirstLetter(api.action) %>(
-        @AppUser() appuser: UserContext,        
-        <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
-              <%let subpath = api.entryPoint.split('/')%>
-              <% for(let a=0;a<subpath.length;a++){%>
-                <%const partstr = subpath[a]%>
-                <%if(partstr.includes(':')){%>
-                  <% const paraname = partstr.replace(':','') %>  
-                  @Args('<%=paraname%>') <%=paraname%>: string,
-                <%}%>    
-              <%}%>  
-            <%}%>
-             ){
-        
-          return await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser,<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
-              <%let subpath = api.entryPoint.split('/')%>
-              <% for(let a=0;a<subpath.length;a++){%>
-                <%const partstr = subpath[a]%>
-                <%if(partstr.includes(':')){%>
-                  <% const paraname = partstr.replace(':','') %>  
-                  <%=paraname%>,
-                <%}%>    
-              <%}%>  
-            <%}%>            
-            )              
-      } 
-    <%}%>
     /***************************** end additionalAPI definitions *****************************************/
 }

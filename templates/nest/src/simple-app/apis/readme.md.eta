@@ -1,0 +1,9 @@
+# Intro
+1. this folder manage none standard api for json schema object, such as:
+    - additional api
+    - print api
+2. design as each json schema object have own dedicated controller, module, service
+3. modify .module/.service to full fill api requirement
+4. keep content of service.ts minimal, you shall store most of the source code/types at src/simple-app/feature/your-function
+5. controller not changable. it will always override by generator, according json schema
+

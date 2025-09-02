@@ -1,0 +1,101 @@
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { UserContext } from 'src/simpleapp/generate/commons/user.context';
+import { Miniapp } from 'src/simpleapp/generate/types';
+import { getEnvironment, getEnvironmentWithApp } from '../utils/mini-app.util';
+import { MiniAppManagerEnvEnum } from '../mini-app-manager/mini-app-manager.enum';
+import { Request } from 'express';
+import _ from 'lodash';
+
+@Injectable()
+export class MiniAppScopeService {
+  constructor(@InjectModel('Miniapp') private readonly miniAppModel: Model<Miniapp>) {}
+
+  /**
+   * Find Mini App From Dev To See Is This A Custom Demo Company
+   * Only env: 'dev' will have development.demoXOrg field
+   * @param developerPortalAppId
+   */
+  async isMiniAppHaveCustomDemoCompany(developerPortalAppId: string) {
+    const miniApp = await this.miniAppModel.findOne({
+      'developerPortal.appId': developerPortalAppId,
+      'development.demoXOrg': { $exists: true, $ne: null },
+      env: MiniAppManagerEnvEnum.DEV,
+    });
+
+    return miniApp;
+  }
+
+  async findMiniAppOrFail(developerPortalAppId: string, env: MiniAppManagerEnvEnum) {
+    const miniApp = await this.miniAppModel.findOne({
+      'developerPortal.appId': developerPortalAppId,
+      env,
+    });
+
+    if (!miniApp) {
+      throw new BadRequestException('Mini App Not Found');
+    }
+
+    return miniApp;
+  }
+
+  getDeveloperPortalAppId(appUser: UserContext, req: Request) {
+    const userType = appUser.getUserType();
+    let developerPortalAppId = '';
+
+    if (userType === 'miniApi') {
+      developerPortalAppId = appUser.getMiniApiTokenInfo().miniAppId;
+    } else if (userType === 'miniAppSdk') {
+      developerPortalAppId = req.headers['x-mini-app-dev-portal-app-id'] as string;
+    }
+
+    if (_.isEmpty(developerPortalAppId)) {
+      throw new BadRequestException('Unknow Mini App App Id');
+    }
+
+    return developerPortalAppId;
+  }
+
+  async assertHasScope(appUser: UserContext, requiredScope: string, req: Request) {
+    const developerPortalAppId = this.getDeveloperPortalAppId(appUser, req);
+
+    const scopes = await this.getScopes(appUser, developerPortalAppId);
+
+    if (!scopes.includes(requiredScope)) {
+      throw new ForbiddenException(`Missing required scope: ${requiredScope}`);
+    }
+  }
+
+  assertEnabledFeature(appUser: UserContext, miniApp: Miniapp) {
+    const userType = appUser.getUserType();
+
+    if (userType === 'miniApi') {
+      if (!miniApp.integration.enabled.miniApi) {
+        throw new BadRequestException('Not enabled api feature');
+      }
+    } else if (userType === 'miniAppSdk') {
+      if (!miniApp.integration.enabled.customPage) {
+        throw new BadRequestException('Not enabled custom page feature');
+      }
+    }
+  }
+
+  async getScopes(appUser: UserContext, developerPortalAppId: string) {
+    let env = getEnvironment(appUser);
+    if (env === MiniAppManagerEnvEnum.PROD) {
+      const customDemoMiniApp = await this.isMiniAppHaveCustomDemoCompany(developerPortalAppId);
+      if (customDemoMiniApp) {
+        // Check Is Current In Custom Demo XOrg
+        env = getEnvironmentWithApp(appUser, customDemoMiniApp);
+      }
+    }
+
+    const miniApp = await this.findMiniAppOrFail(developerPortalAppId, env);
+    this.assertEnabledFeature(appUser, miniApp);
+
+    const scopes = miniApp.integration?.scopes ?? [];
+
+    return scopes;
+  }
+}

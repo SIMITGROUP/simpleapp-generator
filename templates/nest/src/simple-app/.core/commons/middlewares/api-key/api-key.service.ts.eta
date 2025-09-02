@@ -1,0 +1,29 @@
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { Request } from 'express';
+import { UserContext } from '../../user.context';
+import { IApiKeyValidator } from './validators/interface';
+import { StaticApiKeyValidator } from './validators/static-api-key.validator';
+import { MiniApiKeyValidator } from './validators/mini-api-key.validator';
+import { HEADER_X_API_KEY, HEADER_X_API_SECRET } from '../../constants/header';
+
+@Injectable()
+export class ApiKeyService {
+  private readonly validators: IApiKeyValidator[];
+
+  constructor() {
+    this.validators = [new StaticApiKeyValidator(), new MiniApiKeyValidator()];
+  }
+
+  async validate(req: Request, user: UserContext): Promise<void> {
+    if (!req.get(HEADER_X_API_KEY) && !req.get(HEADER_X_API_SECRET)) return;
+
+    for (const validator of this.validators) {
+      if (validator.match(req)) {
+        await validator.apply(req, user);
+        return;
+      }
+    }
+
+    throw new BadRequestException('Invalid API Key / Secret');
+  }
+}

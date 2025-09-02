@@ -1,0 +1,26 @@
+import { HttpException, HttpStatus } from '@nestjs/common';
+
+export class CustomException extends HttpException {
+  constructor(errorCode: string, errorMessage: string, fields: { field: string; message: string }[] = [], status: number = 400) {
+    const errorResponse = {
+      ts: new Date().toISOString(),
+      elapsed: 0,
+      fields: fields,
+      statusCode: errorCode,
+      // statusMessage: errorMessage,
+      message: errorMessage,
+      data: {
+        message: errorMessage,
+        statusCode: errorCode,
+        timestamp: new Date().toISOString(),
+        path: '', // Dynamic path support
+        error: fields.reduce((acc, field) => {
+          acc[field.field] = field.message;
+          return acc;
+        }, {}),
+      },
+    };
+
+    super(errorResponse, status);
+  }
+}

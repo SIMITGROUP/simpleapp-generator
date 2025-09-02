@@ -22,24 +22,21 @@ import {
   HttpCode,
   NotFoundException
 } from '@nestjs/common';
-import { SimpleAppAbstractController } from './simpleapp.controller';
-import { <%= it.typename %>Service } from '../../services/<%= it.doctype %>.service';
-// import * as <%= it.doctype %>type from '../types/<%= it.doctype %>.type';
-import * as types from '../types';
-import * as schemas from '../apischemas';
-//import * as <%= it.doctype %>apischema from '../apischemas/<%= it.doctype %>.apischema';
+import { SimpleAppAbstractController } from 'src/simple-app/.core/commons/bases/simple-app.controller';
+import { <%= it.typename %>Service } from './<%= camelToKebab(it.resourceName) %>.service';
+import * as schemas from './<%= camelToKebab(it.resourceName) %>.schema';
 import { ApiTags, ApiBody, ApiResponse,ApiOperation,ApiQuery } from '@nestjs/swagger';
-import {Roles} from '../commons/roles/roles.decorator'
-import {Role} from '../commons/roles/roles.enum'
+import {Roles} from 'src/simple-app/.core/commons/roles/roles.decorator'
+import {Role} from 'src/simple-app/.core/commons/roles/roles.enum'
 import { Response } from 'express';
-import {AppUser} from '../commons/decorators/appuser.decorator'
-import {UserContext} from '../commons/user.context'
-import { MiniAppScope } from 'src/modules/mini-app/mini-app-scope/mini-app-scope.decorator';
+import {AppUser} from 'src/simple-app/.core/commons/decorators/appuser.decorator'
+import {UserContext} from 'src/simple-app/.core/commons/user.context'
+//import { MiniAppScope } from 'src/modules/mini-app/mini-app-scope/mini-app-scope.decorator';
 
 <%
   const drawMiniAppScope = (actionName) => {
     if(isWhitelistedMiniApp(actionName, it)){
-      return `@MiniAppScope('${it.resourceName}.${actionName}')`;
+      return '' //`@MiniAppScope('${it.resourceName}.${actionName}')`;
     }
 
     return '';
@@ -58,7 +55,7 @@ import { MiniAppScope } from 'src/modules/mini-app/mini-app-scope/mini-app-scope
     }else if(proptype=='schema'){
       tmptypename= 'schemas.'+tmptypename    
     }else{ //type
-      tmptypename= 'types.'+tmptypename
+      tmptypename= 'schemas.'+tmptypename
     }
 
     if(typename.includes('[')){
@@ -76,7 +73,6 @@ const apiname = '<%= it.typename %>'.toUpperCase();
 export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   <%= it.typename %>Service,  
   schemas.<%= it.typename%>,
-  types.<%= it.typename %>
 > {
   constructor(service: <%= it.typename %>Service) {
     super(service);
@@ -119,7 +115,7 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   <%~ drawMiniAppScope('autoComplete') %>
   async autoComplete(@AppUser() appuser: UserContext,
   @Query('keyword') keyword:string,
-  @Body() data: types.<%=it.typename%>,
+  @Body() data: schemas.<%=it.typename%>,
   ) {
     return this._autocomplete(appuser, keyword,data);
   }
@@ -160,10 +156,10 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   })
   @ApiResponse({ status: 400, description: 'bad request' })
   @ApiResponse({ status: 500, description: 'internal error' })
-  @ApiBody({ description: 'Data', type: schemas.ApiSearchBody })
+  @ApiBody({ description: 'Data', type: schemas.SearchBody })
   @ApiOperation({ operationId: 'runSearch' })
   <%~ drawMiniAppScope('list') %>
-  async search(@AppUser() appuser: UserContext,@Body() data: types.SearchBody) {
+  async search(@AppUser() appuser: UserContext,@Body() data: schemas.SearchBody) {
     return await this._search(appuser,data)
   }
 
@@ -183,96 +179,13 @@ export class <%= it.typename %>Controller extends SimpleAppAbstractController<
   @ApiOperation({ operationId: 'runFullTextSearch' })
   async fulltextsearch(
     @AppUser() appuser: UserContext,
-    @Body() data: types.TextSearchBody,
+    @Body() data: schemas.TextSearchBody,
   ) {
     return await this._fulltextsearch(appuser, data);
   }
 <%}%>
 
 
-/***************************** begin additionalAPI definations *****************************************/
-
-<% for(let i=0;i<it.apiSettings.length;i++){%>
-<% let api = it.apiSettings[i] %>
-<%~ `@${capitalizeFirstLetter(api.method)}('${api.entryPoint}')`%>
-  <%if(superadmindoctype.includes(it.doctype)){%>
-  @Roles(Role.SuperAdmin,
-    <%if(api.requiredRole && api.requiredRole.length>0) { %>
-        <% for(let r=0;r<api.requiredRole.length;r++){%>Role.<%=api.requiredRole[r]%>,<%}%>
-      <%}%>
-  )
-  <%}else{%>
-  @Roles(Role.SuperAdmin,Role.SuperUser,
-      <%if(api.requiredRole && api.requiredRole.length>0) { %>
-        <% for(let r=0;r<api.requiredRole.length;r++){%>Role.<%=api.requiredRole[r]%>,<%}%>
-      <%}%>
-      )
-  <%}%>
-  <% if(['post','put','patch'].includes(api.method)){ %>
-    @ApiBody({ description: 'Request Body', 
-        type: <%= getFieldType('schema',api.schema,api.action)%>
-       
-        })
-  <%}%>  
-  @ApiResponse({status: 200,description: '<%=api.description%>' 
-      ,type: <%= getFieldType('schema',api.responseType,api.action)%>
-        })  
-  @ApiOperation({ operationId: 'run<%=capitalizeFirstLetter(api.action)%>' })
-  <% if(api.queryPara && api.queryPara.length>0) {%>
-      <%for(let q=0;q<api.queryPara.length; q++){%>
-        @ApiQuery({name: "<%=api['queryPara'][q]%>",required: false,type: String})
-      <%}%> 
-  <%}%>  
-  <%~ drawMiniAppScope(api.action) %>
-  async <%=capitalizeFirstLetter(api.action) %>(
-    @AppUser() appuser: UserContext,
-    <%if(['post','put','patch'].includes(api.method.toLowerCase())){%> 
-      @Body() data:<%= getFieldType('type',api.schema,api.action)%>,
-      //@Body() data:any,
-    <%}%>
-    <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
-          <%let subpath = api.entryPoint.split('/')%>
-          <% for(let a=0;a<subpath.length;a++){%>
-            <%const partstr = subpath[a]%>
-            <%if(partstr.includes(':')){%>
-              <% const paraname = partstr.replace(':','') %>  
-              @Param('<%=paraname%>') <%=paraname%>: string,
-            <%}%>    
-          <%}%>  
-        <%}%>
-        <% if(api.queryPara && api.queryPara.length>0) {%>
-            <%for(let q=0;q<api.queryPara.length; q++){%>
-              <% const qp = api['queryPara'][q] %>
-              @Query('<%=qp%>') <%=qp%>: string,
-            <%}%>
-        <%}%>
-         ){
-    
-
-      const res:<%= getFieldType('type',api.responseType,api.action)%>  = await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser,<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
-          <%let subpath = api.entryPoint.split('/')%>
-          <% for(let a=0;a<subpath.length;a++){%>
-            <%const partstr = subpath[a]%>
-            <%if(partstr.includes(':')){%>
-              <% const paraname = partstr.replace(':','') %>  
-              <%=paraname%>,
-            <%}%>    
-          <%}%>  
-        <%}%>
-        <% if(api.queryPara && api.queryPara.length>0) {%>
-            <%for(let q=0;q<api.queryPara.length; q++){%>
-              <%= api['queryPara'][q] %>,              
-            <%}%>
-        <%}%>
-        <%if(['post','put','patch'].includes(api.method.toLowerCase())){%>
-          data,
-        <%}%>
-        )
-    return res
-   
-  } 
-<%}%>
-/***************************** end additionalAPI definitions *****************************************/
 
 /***************************** start status control api definitions *****************************************/
 <%for(let s=0; s<it.docStatusSettings.length; s++){ %>

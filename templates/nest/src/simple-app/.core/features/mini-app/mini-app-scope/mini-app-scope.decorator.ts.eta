@@ -1,0 +1,5 @@
+import { SetMetadata } from '@nestjs/common';
+
+export const MINIAPP_SCOPE_KEY = 'miniapp_required_scope';
+
+export const MiniAppScope = (scope: string) => SetMetadata(MINIAPP_SCOPE_KEY, scope);

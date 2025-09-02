@@ -1,0 +1,57 @@
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+// const schemasetting = {
+//   _id: { type: String },
+//   created: { type: String },
+//   updated: { type: String },
+//   duration: { type: Number },
+//   createdBy: { type: String },
+//   path: { type: String },
+//   ip: { type: String },
+//   method: { type: String },
+//   headers: { type: Object },
+//   data: { type: Object },
+//   statusCode: { type: Number },
+//   status: { type: String },
+//   errMsg: { type: String },
+//   errData: { type: Object },
+// };
+@Schema()
+export class ApiEvent {
+  @Prop()
+  _id: string;
+  @Prop()
+  created: string;
+  @Prop()
+  updated?: string;
+  @Prop()
+  duration: number;
+  @Prop()
+  createdBy: string;
+  @Prop()
+  path: string;
+  @Prop()
+  ip: string;
+  @Prop()
+  method: string;
+  @Prop({type:Object})
+  headers: Object;  
+  @Prop({type:Object})
+  data?: Object;
+  @Prop()
+  statusCode: number;
+  @Prop()
+  status: string;
+  @Prop()
+  errMsg?: string;
+  @Prop({type:Object})
+  errData?: Object;
+}
+
+export const ApiEventMongoSchema = SchemaFactory.createForClass(ApiEvent)
+  .pre('save', function (next) {
+    this.increment();
+    return next();
+  })
+
+  .index({ tenantId: 1 })
+  .index({ created: 1 });

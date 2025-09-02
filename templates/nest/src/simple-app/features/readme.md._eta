@@ -1,0 +1,6 @@
+# introduction
+all manual coding place here, such as:
+1. 3party integration modules like e-invoice, accounting
+2. shared source code use by api, queues, events
+3. reporting source code
+4. 1 module 1 folder

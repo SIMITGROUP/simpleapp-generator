@@ -1,0 +1,126 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { Miniapp, MiniappService } from 'src/simpleapp/services/miniapp.service';
+import { MiniappinstallationService } from 'src/simpleapp/services/miniappinstallation.service';
+import { MiniAppManagerPolicyService } from './mini-app-manager-policy.service';
+import { UserContext } from 'src/simpleapp/generate/commons/user.context';
+import { MiniAppManagerProcessor } from './mini-app-manager.processor';
+import { DynamicParam } from 'src/simpleapp/generate/types';
+import { CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail } from '../apischemas/miniApp';
+import { MiniappEnvEnum, MiniappStatusEnum } from 'src/enums/enums.generate';
+import { Model } from 'mongoose';
+import { MiniAppManagerEnvEnum } from './mini-app-manager.enum';
+import _ from 'lodash';
+
+@Injectable()
+export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor {
+  constructor(miniAppService: MiniappService, miniAppInstallationService: MiniappinstallationService, policyService: MiniAppManagerPolicyService, miniAppDoc: Model<Miniapp>) {
+    super(miniAppService, miniAppInstallationService, policyService, miniAppDoc);
+  }
+
+  async runGetInstalledMiniApps(appUser: UserContext): Promise<InstalledMiniAppDetail> {
+    return await this.findInstalledMiniAppsDetail(appUser);
+  }
+
+  async runGetCategorizedMiniApps(appUser: UserContext): Promise<CategorizedMiniAppDetail> {
+    const { installedMiniAppIdArr } = await this.findInstalledMiniAppIds(appUser);
+
+    const filter = {
+      _id: { $nin: installedMiniAppIdArr },
+      env: MiniappEnvEnum.PROD,
+      status: {
+        $in: [MiniappStatusEnum.PUBLISHED, MiniappStatusEnum.UPCOMING, MiniappStatusEnum.BETA],
+      },
+    };
+
+    const miniApps = await this.miniAppService.search(appUser, filter);
+    return this.categorizedMiniApps(appUser, miniApps);
+  }
+
+  async runGetMiniAppDetail(appUser: UserContext, miniApp: Miniapp): Promise<MiniAppDetail> {
+    this.assertEnvironment(appUser, miniApp);
+    this.assertPrivateAppPermission(appUser, miniApp);
+
+    return await this.findMiniAppDetail(appUser, miniApp);
+  }
+
+  async runInstallMiniApp(appUser: UserContext, miniApp: Miniapp) {
+    this.assertEnvironment(appUser, miniApp);
+    this.assertHasMiniAppFeature(appUser);
+    this.assertPrivateAppPermission(appUser, miniApp);
+    this.assertHasRequiredPlan(appUser, miniApp);
+    this.assertIsMiniAppReleased(miniApp);
+
+    return await this.install(appUser, miniApp);
+  }
+
+  async runUninstallMiniApp(appUser: UserContext, miniApp: Miniapp) {
+    this.assertHasMiniAppFeature(appUser);
+
+    return await this.uninstall(appUser, miniApp);
+  }
+
+  async runUpdateMiniAppSetting(appUser: UserContext, miniApp: Miniapp, data: DynamicParam) {
+    this.assertHasMiniAppFeature(appUser);
+    this.assertHasRequiredPlan(appUser, miniApp);
+    this.assertIsMiniAppReleased(miniApp);
+
+    return await this.updateSetting(appUser, miniApp, data);
+  }
+
+  async createMiniApp(appUser: UserContext, developerPortalAppId: string, dto: Miniapp) {
+    this.assertMiniAppCodePattern(dto.code);
+    await this.assertMiniAppCodeUnique(appUser, dto.code);
+
+    const env = MiniAppManagerEnvEnum.PROD;
+    const payload = {
+      code: dto.code,
+      name: dto.name,
+      env: env,
+      version: dto.version,
+      description: dto.description,
+      logo: dto.logo,
+      tags: dto.tags,
+      pricing: 0,
+      status: MiniappStatusEnum.PUBLISHED,
+      author: dto.author,
+      access: dto.access,
+      developerPortal: {
+        appId: developerPortalAppId,
+      },
+      intro: dto.intro,
+      integration: dto.integration,
+    };
+
+    return await this.miniAppService.create(appUser, payload);
+  }
+
+  async updateMiniApp(appUser: UserContext, miniApp: Miniapp, dto: Miniapp) {
+    const payload = {
+      ...miniApp,
+      name: dto.name,
+      version: dto.version,
+      description: dto.description,
+      logo: dto.logo,
+      tags: dto.tags,
+      pricing: dto.pricing,
+      author: dto.author,
+      access: dto.access,
+      intro: dto.intro,
+      integration: dto.integration,
+    };
+
+    return await this.miniAppService.findIdThenUpdate(appUser, miniApp._id, payload);
+  }
+
+  protected assertEnvironment(appUser: UserContext, miniApp: Miniapp) {
+    if (miniApp.env !== MiniAppManagerEnvEnum.PROD) {
+      if (!_.isEmpty(miniApp?.development?.demoXOrg)) {
+        if (miniApp.development.demoXOrg === appUser.getXOrg()) {
+          return true;
+        }
+      }
+
+      throw new BadRequestException('Cannot process dev app in prod env');
+    }
+  }
+}

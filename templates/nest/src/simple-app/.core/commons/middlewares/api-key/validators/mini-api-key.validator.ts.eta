@@ -1,0 +1,30 @@
+import { IApiKeyValidator } from './interface';
+import { Request } from 'express';
+import { UserContext } from '../../../user.context';
+import { BadRequestException } from '@nestjs/common';
+import _ from 'lodash';
+import { HEADER_X_MINI_API_ACCESS_TOKEN, HEADER_X_API_KEY, HEADER_X_API_SECRET, HEADER_X_ORG } from '../../../constants/header';
+
+export class MiniApiKeyValidator implements IApiKeyValidator {
+  match(req: Request): boolean {
+    const apiKey = req.get(HEADER_X_API_KEY);
+    const apiSecret = req.get(HEADER_X_API_SECRET);
+
+    return apiKey === process.env.X_MINI_API_KEY && apiSecret === process.env.X_MINI_API_SECRET;
+  }
+
+  async apply(req: Request, user: UserContext): Promise<void> {
+    const xOrg = req.get(HEADER_X_ORG);
+    const accessToken = req.get(HEADER_X_MINI_API_ACCESS_TOKEN);
+
+    if (_.isEmpty(xOrg)) {
+      throw new BadRequestException('Missing or empty x-org header');
+    }
+
+    if (_.isEmpty(accessToken)) {
+      throw new BadRequestException('Missing or empty x-mini-api-access-token header');
+    }
+
+    await user.setMiniApiUser(accessToken, xOrg);
+  }
+}
