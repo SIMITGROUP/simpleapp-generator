@@ -34,4 +34,4 @@ import { Module } from '@nestjs/common';
     <%}%>
   ],
 })
-export class SimpleAppAdditionalResourceApiModule {}
+export class SimpleAppResourceApiModule {}

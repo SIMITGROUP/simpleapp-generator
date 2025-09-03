@@ -8,7 +8,7 @@
 import { Controller, Get, Put, Patch, Post, Delete, Body, Query, Param, Type, Res, Req, HttpStatus, HttpCode, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
 
-import { SimpleAppController } from 'src/simple-app/.core/features/framework/base/simple-app.controller';
+import { SimpleAppController } from 'src/simple-app/.core/framework/base/simple-app.controller';
 import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { Roles } from 'src/simple-app/.core/features/auth/role-guard/roles.decorator';
 import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';

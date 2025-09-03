@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ForeignKey } from '../framework/schemas';
+import { ForeignKey } from '../../framework/schemas';
 import { Branch } from 'src/simple-app/.core/resources/branch/branch.schema';
 import { Permission } from 'src/simple-app/.core/resources/permission/permission.schema';
 import { Role } from '../auth/role-guard/roles.enum';

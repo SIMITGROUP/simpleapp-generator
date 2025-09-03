@@ -16,7 +16,7 @@ import { ClientSession, Model, PipelineStage } from 'mongoose';
 
 
 // import { Branch, Organization, Permission, Tenant, TenantClientSetting, User, Appintegration, Webhook, Miniappinstallation, TUserType, TMiniApiTokenInfo } from 'src/simpleapp/generate/types';
-import { TUserType, TMiniApiTokenInfo } from 'src/simple-app/.core/features/framework/schemas';
+import { TUserType, TMiniApiTokenInfo } from 'src/simple-app/.core/framework/schemas';
 import { MiniAppInstallation } from 'src/simple-app/.core/resources/mini-app-installation/mini-app-installation.schema';
 
 import { Tenant, TenantClientSetting } from 'src/simple-app/.core/resources/tenant/tenant.schema';
@@ -27,7 +27,7 @@ import { Permission } from 'src/simple-app/.core/resources/permission/permission
 import { User } from 'src/simple-app/.core/resources/user/user.schema';
 import { Webhook } from 'src/simple-app/.core/features/webhook/schemas';
 import { UserContextInfo, ProfileUserBranch, ProfileUserInvites, TenantPermission } from 'src/simple-app/.core/features/profile/profile.schema';
-import { ModifiedRecords } from '../framework/schemas';
+import { ModifiedRecords } from '../../framework/schemas';
 import { Role } from '../auth/role-guard/roles.enum';
 import * as rolegroups from '../auth/role-guard/roles.group';
 

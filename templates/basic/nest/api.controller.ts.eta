@@ -20,8 +20,11 @@
   const getFieldType =(proptype, typename,actionname)=>{
     const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
     if(!typename) throw actionname +" undefine schema";
+
     let tmptypename = typename.replace('[','').replace(']','')
-        
+    if(!systemtypes.includes(tmptypename)){
+      tmptypename = 'schema.'+tmptypename
+    }
     if(typename.includes('[')){
       return  proptype=='schema' ?  `[${tmptypename}]` : `${tmptypename}[]`
     }else{
@@ -31,20 +34,23 @@
 %>
 
 import { Controller, Get, Put, Patch, Post, Delete, Body, Query, Param, Type, Res, Req, HttpStatus, HttpCode, NotFoundException } from '@nestjs/common';
-import { <%= it.typename%>AdditionalService } from './<%= camelToKebab(it.resourceName)%>.additionalservice';
+
 import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { Roles } from 'src/simple-app/.core/commons/roles/roles.decorator';
-import { Role } from 'src/simple-app/.core/commons/roles/roles.enum';
+import { Roles } from 'src/simple-app/.core/features/auth/role-guard/roles.decorator';
+import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';
 import { Response } from 'express';
-import { AppUser } from 'src/simple-app/.core/commons/decorators/appuser.decorator';
-import { UserContext } from 'src/simple-app/.core/commons/user.context';
+import { AppUser } from 'src/simple-app/.core/features/user-context/appuser.decorator';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+
+import { <%= it.typename%>ApiService } from './<%= camelToKebab(it.resourceName)%>-api.service';
+import * as schema from './<%= camelToKebab(it.resourceName)%>-api.schema'
 
 const apiname = '<%= it.doctype%>'.toUpperCase();
 @ApiTags(apiname)
 @Controller(apiname.toLowerCase())
-export class <%= it.typename%>AdditionalController {
+export class <%= it.typename%>ApiController {
   constructor(
-    private service:WebhookAdditionalService
+    private service:<%= it.typename%>ApiService
   ) {}
 
     /***************************** begin additionalAPI definations *****************************************/
@@ -67,7 +73,7 @@ export class <%= it.typename%>AdditionalController {
     <%}%>
     <% if(['post','put','patch'].includes(api.method)){ %>
         @ApiBody({ description: 'Request Body', 
-            type: <%= getFieldType('schema',api.schema,api.action)%>
+            type:  <%= getFieldType('schema',api.schema,api.action)%>
         
             })
     <%}%>  

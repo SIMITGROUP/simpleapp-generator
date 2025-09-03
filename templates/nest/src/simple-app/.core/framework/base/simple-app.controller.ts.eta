@@ -6,7 +6,7 @@
  */
 import { Controller, Get, Put, Post, Delete, Body, Param, Type } from '@nestjs/common';
 // import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
-import { UserContext } from '../../user-context/user.context';
+import { UserContext } from '../../features/user-context/user.context';
 import { SearchBody, TextSearchBody } from '../schemas';
 const doctype = 'person'.toUpperCase();
 type ServiceType = {

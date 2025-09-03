@@ -9,10 +9,10 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { Model, Connection, ClientSession } from 'mongoose';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { UserContext } from '../user-context/user.context';
+import { UserContext } from '../features/user-context/user.context';
 import { ApiEvent } from './schemas';
 @Injectable()
-export class SimpleAppResponseInterceptor implements NestInterceptor {
+export class SimpleAppInterceptor implements NestInterceptor {
   constructor(
     @InjectConnection() private readonly connection: Connection,
     @InjectModel('ApiEvent') private apieventmodel: Model<ApiEvent>,

@@ -21,8 +21,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 
 
 import { SimpleAppModule } from './simple-app/simple-app.module';
-import { SimpleAppResponseInterceptor } from './simple-app/.core/features/framework/response.interceptor';
-import { SimpleAppMiddleware } from './simple-app/.core/features/framework/simple-app.middleware';
+import { SimpleAppInterceptor } from './simple-app/.core/framework/simple-app.interceptor';
+import { SimpleAppMiddleware } from './simple-app/.core/framework/simple-app.middleware';
 import { CustomKeycloakGuard } from './simple-app/.core/features/auth/keycloak/keycloak.guard';
 import { RolesGuard } from './simple-app/.core/features/auth/role-guard/roles.guard';
 
@@ -79,7 +79,7 @@ import { RolesGuard } from './simple-app/.core/features/auth/role-guard/roles.gu
     AppResolver,
     {
       provide: APP_INTERCEPTOR,
-      useClass: SimpleAppResponseInterceptor,
+      useClass: SimpleAppInterceptor,
     },
     { provide: APP_GUARD, useClass: CustomKeycloakGuard },
     // // {provide: APP_GUARD,useClass: AuthGuard,},

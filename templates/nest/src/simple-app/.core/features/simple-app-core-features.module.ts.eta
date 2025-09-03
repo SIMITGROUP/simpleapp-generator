@@ -10,7 +10,6 @@ import { Module } from '@nestjs/common';
 import { SimpleAppAuthModule } from './auth/auth.module';
 import { SimpleAppDocumentManagementModule } from './document-management/document-management.module';
 import { SimpleAppForeignKeyModule } from './foreign-key/foreign-key.module';
-import { SimpleAppFrameworkModule } from './framework/framework.module';
 import { SimpleAppLogModule } from './log/log.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 
@@ -24,7 +23,6 @@ import { SimpleWebhookModule } from './webhook/webhook.module';
     SimpleAppAuthModule,
     SimpleAppDocumentManagementModule,
     SimpleAppForeignKeyModule,
-    SimpleAppFrameworkModule,
     SimpleAppLogModule,
     MaintenanceModule,
     ProfileModule,
@@ -36,7 +34,6 @@ import { SimpleWebhookModule } from './webhook/webhook.module';
   exports: [ SimpleAppAuthModule,
     SimpleAppDocumentManagementModule,
     SimpleAppForeignKeyModule,
-    SimpleAppFrameworkModule,
     SimpleAppLogModule,
     MaintenanceModule,
     ProfileModule,

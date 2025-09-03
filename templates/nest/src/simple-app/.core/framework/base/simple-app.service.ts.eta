@@ -16,11 +16,11 @@ import addFormats from 'ajv-formats';
 import { FilterQuery, Model, PipelineStage, mongo } from 'mongoose';
 // import { CloudApiService } from 'src/cloudapi/cloudapi.service';
 import { CustomException } from '../custom-exception';
-import { SimpleAppLog } from '../../log/log.service';
-import { foreignkeys } from '../../foreign-key/foreignkeys.dict';
-import { DocNumberFormatGenerator } from '../../document-management/doc-no-generator.service';
-import { RunWebhookService } from '../../webhook/run-webhook.service';
-import { UserContext } from '../../user-context/user.context';
+import { SimpleAppLog } from '../../features/log/log.service';
+import { foreignkeys } from '../../features/foreign-key/foreignkeys.dict';
+import { DocNumberFormatGenerator } from '../../features/document-management/doc-no-generator.service';
+import { RunWebhookService } from '../../features/webhook/run-webhook.service';
+import { UserContext } from '../../features/user-context/user.context';
 import { CheckMutipleUnionExistResponse, DeleteResultType, IsolationType, MoreProjectionType, TextSearchBody, SchemaFields } from '../schemas';
 
 @Injectable()

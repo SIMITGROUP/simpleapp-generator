@@ -322,8 +322,8 @@ const generateSchema = (
           writeFileSync(targetfile, filecontent);
           // console.log("Write complete")
         } else if(['api'].includes(filecategory)){
-          //if no define additional api, then no prepare additional api
-          continue
+          //if no define additional api, then no prepare additional api          
+          // continue
           if(variables.apiSettings.length==0){            
              continue;
           }else{
@@ -337,13 +337,13 @@ const generateSchema = (
           const subcategorytype = arrcategory[2]
           
           const targetfolder = `${simpleappTargetFolder}/${subcategory}s/${resourceFileName}`;
-          const targetfile = `${targetfolder}/${resourceFileName}.${subcategoryscope}.${subcategorytype}`;
+          const targetfile = `${targetfolder}/${resourceFileName}-api.${subcategoryscope}.${subcategorytype}`;
           if (!existsSync(targetfolder)) {
             mkdirSync(targetfolder, { recursive: true });
           }
 
           //if controller will always override
-          if ( targetfile.includes('controller.ts') ||
+          if ( targetfile.includes('controller') || targetfile.includes('resolver') ||
             (!existsSync(targetfile) ||
             readFileSync(targetfile, 'utf-8').includes(
               '--remove-this-line-to-prevent-override--')

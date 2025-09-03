@@ -5,41 +5,37 @@
  * Author: Ks Tan
  */
 import { Resolver, Query, Mutation, Args, ID,Context } from '@nestjs/graphql';
-import { AppUser } from 'src/simple-app/.core/decorators/appuser.decorator';
-import { UserContext } from 'src/simple-app/.core/commons/user.context';
-import { <%= it.typename %>, <%= it.typename %>Service } from './<%= camelToKebab(it.resourceName) %>.additionalservice';
-import { Roles } from 'src/simple-app/.core/commons/roles/roles.decorator';
-import { Role } from 'src/simple-app/.core/commons/roles/roles.enum';
-
+import { AppUser } from 'src/simple-app/.core/features/user-context/appuser.decorator';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { <%= it.typename %>ApiService } from './<%= camelToKebab(it.resourceName) %>-api.service';
+import { Roles } from 'src/simple-app/.core/features/auth/role-guard/roles.decorator';
+import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';
 import { Request } from '@nestjs/common';
 
-<% const getFieldType =(proptype, typename,actionname)=>{
+import * as schema from './<%= camelToKebab(it.resourceName)%>-api.schema'
+
+<% 
+  const getFieldType =(proptype, typename,actionname)=>{
     const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
     if(!typename) throw actionname +" undefine schema";
 
     let tmptypename = typename.replace('[','').replace(']','')
-    
-    if(systemtypes.includes(tmptypename)){
-      if(proptype=='type' ) tmptypename =tmptypename.toLowerCase();
-    }else if(proptype=='schema'){
-      tmptypename= 'schemas.'+tmptypename    
-    }else{ //type
-      tmptypename= 'types.'+tmptypename
+    if(!systemtypes.includes(tmptypename)){
+      tmptypename = 'schema.'+tmptypename
     }
-  
     if(typename.includes('[')){
       return  proptype=='schema' ?  `[${tmptypename}]` : `${tmptypename}[]`
     }else{
-      return tmptypename
+      return tmptypename      
     }
   }
-  %>
+%>
 
 
 <% let superadmindoctype = ['tenant','globaluser'] %>
-@Resolver(() => schemas.<%= it.typename %>)
-export class <%= it.typename %>AdditionalResolver {
-    constructor(private readonly service: <%= it.typename %>Service) { }
+@Resolver(() => schema.<%= it.typename %>)
+export class <%= it.typename %>ApiResolver {
+    constructor(private readonly service: <%= it.typename %>ApiService) { }
 
     /***************************** begin additionalAPI definations *****************************************/
 

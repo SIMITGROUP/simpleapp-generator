@@ -10,16 +10,16 @@ import { BadRequestException, Injectable, Logger, NestMiddleware, ServiceUnavail
 import { InjectModel } from '@nestjs/mongoose';
 import { NextFunction, Request, Response } from 'express';
 import { Model } from 'mongoose';
-import { Permission } from '../../resources/permission/permission.schema';
-import { User } from '../../resources/user/user.schema';
+import { Permission } from '../resources/permission/permission.schema';
+import { User } from '../resources/user/user.schema';
 // import { Miniappinstallation } from '../../resources/';
-import { Webhook } from '../webhook/schemas';
+import { Webhook } from '../features/webhook/schemas';
 // import { Appintegration } from '../../types/appintegration.type';
 import { MiniAppInstallation } from 'src/simple-app/.core/resources/mini-app-installation/mini-app-installation.schema';
-import { UserContext } from '../user-context/user.context';
-import { ApiKeyService } from '../auth/api-key/api-key.service';
-import { HEADER_X_API_KEY, HEADER_X_API_SECRET } from '../auth/api-key/api-key.type';
-import { Environment } from '../../features/maintenance/schemas';
+import { UserContext } from '../features/user-context/user.context';
+import { ApiKeyService } from '../features/auth/api-key/api-key.service';
+import { HEADER_X_API_KEY, HEADER_X_API_SECRET } from '../features/auth/api-key/api-key.type';
+import { Environment } from '../features/maintenance/schemas';
 @Injectable()
 export class SimpleAppMiddleware implements NestMiddleware {
   protected defaultXOrg = Base64URL.encodeText('0-0-0');

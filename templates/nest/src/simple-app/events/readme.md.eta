@@ -3,9 +3,9 @@
 2. 1 resource 1 folder, 1 resource module
 3. keep source code minimal, main source code park at feature instead
 4. steps:
-    a. create resource folder (user)
-    b. create user.event.ts (sample1) and user.module.ts (sample2)
-    c. modify src/simple-app/events/events.module.ts to import user.module
+    a. create resource folder (student)
+    b. create student-event.event.ts (sample1) and student-event.module.ts (sample2)
+    c. modify src/simple-app/events/events.module.ts to import & export "StudentEventModule" from student-event.module
 5. Supported event:
   - beforeCreate
   - afterCreate
@@ -15,45 +15,60 @@
   - afterDelete    
     
     
-# sample1: user event
+# sample1: student.event.ts
 ```ts
-//user.event.ts
+//student.event.ts
 import { BadRequestException, InternalServerErrorException, HttpException, Injectable, Inject } from '@nestjs/common';
-import { UserContext } from 'src/simple-app/.core/commons/user.context';
-import * as schema from 'src/simple-app/.resources/user/user.schema'
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import * as schema from 'src/simple-app/.resources/student/student.schema'
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
-export class UserEvent {
+export class StudentEvent {
   constructor() {}
   
-  @OnEvent('user.beforeCreate')
+  @OnEvent('student.beforeCreate')
   async runBeforeCreate(
     appuser: UserContext,
     payloads: {    
-        data: schema.User,
+        data: schema.Student,
     },
   ) {
-    console.log("user.beforeCreate")
+    console.log("student.beforeCreate")
   }
 
 }
 ```
 
 
-# sample2: user.module.ts
+# sample2: student-event.module.ts
 ```ts
-//user.module.ts
+//student-event.module.ts
 import { Module } from '@nestjs/common';
 
-import { UserEvent } from './user.event';
+import { StudentEvent } from './student.event';
 
 @Module({
   imports: [],
   controllers: [],
-  providers: [UserEvent],
-  exports: [UserEvent],
+  providers: [StudentEvent],
+  exports: [StudentEvent],
 })
-export class UserEventModule {}
+export class StudentEventModule {}
+```
+
+
+# sample3: import/export student event module
+```ts
+// events.module.ts
+import { Module } from '@nestjs/common';
+import {StudentEventModule} from './student/student-event.module'
+@Module({
+  imports: [StudentEventModule],
+  controllers: [],
+  providers: [],
+  exports: [StudentEventModule],
+})
+export class SimpleAppEventsModule {}
 
 ```

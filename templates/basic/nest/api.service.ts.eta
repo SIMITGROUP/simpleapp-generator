@@ -6,10 +6,28 @@
  */
 import { Injectable } from '@nestjs/common';
 import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import * as schema from './<%= camelToKebab(it.resourceName)%>-api.schema'
+
+<% 
+  const getFieldType =(proptype, typename,actionname)=>{
+    const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
+    if(!typename) throw actionname +" undefine schema";
+
+    let tmptypename = typename.replace('[','').replace(']','')
+    if(!systemtypes.includes(tmptypename)){
+      tmptypename = 'schema.'+tmptypename
+    }
+    if(typename.includes('[')){
+      return  proptype=='schema' ?  `[${tmptypename}]` : `${tmptypename}[]`
+    }else{
+      return tmptypename      
+    }
+  }
+%>
 
 
 @Injectable()
-export class <%= (it.typename)%>AdditionalService  {
+export class <%= (it.typename)%>ApiService  {
   constructor(
     
   ) {}
@@ -38,16 +56,16 @@ export class <%= (it.typename)%>AdditionalService  {
         <%}%>
             
         <%if(['post','put','patch'].includes(api.method.toLowerCase())){%> 
-              data:<%= api.schema%>,
+              data: <%= getFieldType('schema',api.schema,api.action)%>,
             <%}%>
 
          ){
 
 
             <% if(api.responseType.substring(0,1)== '['){%>
-                const resultResult = [] as <%= api.responseType.replace('[','').replace(']','')%>[]
+                const resultResult = [] as <%= getFieldType('schema',api.responseType,api.action)%>[]
             <%}else{%>
-                const resultResult = {} as <%= api.responseType%>
+                const resultResult = {} as <%= getFieldType('schema',api.responseType,api.action)%>
             <%}%>
 
             return resultResult
