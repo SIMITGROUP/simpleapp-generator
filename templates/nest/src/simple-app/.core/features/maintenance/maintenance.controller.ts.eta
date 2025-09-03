@@ -7,11 +7,11 @@
 import { Controller, Get, Post, Param, Logger, HttpCode } from '@nestjs/common';
 import { MaintenanceService } from './maintenance.service';
 import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { Roles } from 'src/simple-app/.core/commons/roles/roles.decorator';
-import { Role } from 'src/simple-app/.core/commons/roles/roles.enum';
+import { Roles } from 'src/simple-app/.core/features/auth/role-guard/roles.decorator';
+import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';
 import * as schemas from './schemas';
-import { UserContext } from 'src/simple-app/.core/commons/user.context';
-import { AppUser } from 'src/simple-app/.core/commons/decorators/appuser.decorator';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { AppUser } from 'src/simple-app/.core/features/user-context/appuser.decorator';
 @ApiTags('maintenance')
 @Controller('maintenance')
 @Roles(Role.SuperAdmin)

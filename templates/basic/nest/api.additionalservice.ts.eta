@@ -5,7 +5,7 @@
  * Author: Ks Tan
  */
 import { Injectable } from '@nestjs/common';
-import { UserContext } from 'src/simple-app/.core/commons/user.context';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
 
 
 @Injectable()

@@ -10,7 +10,7 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as dbupdate from './dbupdate';
 import * as schemas from './schemas';
-import { UserContext } from 'src/simple-app/.core/commons/user.context';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
 @Injectable()
 export class MaintenanceService {
   constructor(@InjectModel('Environment') private sysEnvdoc: Model<schemas.Environment>) {

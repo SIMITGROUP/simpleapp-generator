@@ -5,38 +5,24 @@
  * last change 2024-02-23
  * Author: Ks Tan
  */
-import {
-  Controller,
-  Get,
-  Put,
-  Patch,
-  Post,
-  Delete,
-  Body,
-  Query,
-  Param,
-  Type,
-  Res,
-  Req,
-  HttpStatus,
-  HttpCode,
-  NotFoundException
-} from '@nestjs/common';
-import { SimpleAppAbstractController } from 'src/simple-app/.core/commons/bases/simple-app.controller';
+import { Controller, Get, Put, Patch, Post, Delete, Body, Query, Param, Type, Res, Req, HttpStatus, HttpCode, NotFoundException } from '@nestjs/common';
+import { Response } from 'express';
+
+import { SimpleAppController } from 'src/simple-app/.core/features/framework/base/simple-app.controller';
+import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { Roles } from 'src/simple-app/.core/features/auth/role-guard/roles.decorator';
+import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';
+import { AppUser } from 'src/simple-app/.core/features/user-context/appuser.decorator';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { MiniAppScope } from 'src/simple-app/.core/features/mini-app/mini-app-scope/mini-app-scope.decorator';
+
 import { <%= it.typename %>Service } from './<%= camelToKebab(it.resourceName) %>.service';
 import * as schemas from './<%= camelToKebab(it.resourceName) %>.schema';
-import { ApiTags, ApiBody, ApiResponse,ApiOperation,ApiQuery } from '@nestjs/swagger';
-import {Roles} from 'src/simple-app/.core/commons/roles/roles.decorator'
-import {Role} from 'src/simple-app/.core/commons/roles/roles.enum'
-import { Response } from 'express';
-import {AppUser} from 'src/simple-app/.core/commons/decorators/appuser.decorator'
-import {UserContext} from 'src/simple-app/.core/commons/user.context'
-//import { MiniAppScope } from 'src/modules/mini-app/mini-app-scope/mini-app-scope.decorator';
 
 <%
   const drawMiniAppScope = (actionName) => {
     if(isWhitelistedMiniApp(actionName, it)){
-      return '' //`@MiniAppScope('${it.resourceName}.${actionName}')`;
+      return `@MiniAppScope('${it.resourceName}.${actionName}')`;
     }
 
     return '';
@@ -70,7 +56,7 @@ import {UserContext} from 'src/simple-app/.core/commons/user.context'
 const apiname = '<%= it.typename %>'.toUpperCase();
 @ApiTags(apiname)
 @Controller(apiname.toLowerCase())
-export class <%= it.typename %>Controller extends SimpleAppAbstractController<
+export class <%= it.typename %>Controller extends SimpleAppController<
   <%= it.typename %>Service,  
   schemas.<%= it.typename%>,
 > {

@@ -1,0 +1,7 @@
+import { Request } from 'express';
+import { UserContext } from '../../../user-context/user.context';
+
+export interface IApiKeyValidator {
+  match(req: Request): boolean;
+  apply(req: Request, user: UserContext): Promise<void>;
+}

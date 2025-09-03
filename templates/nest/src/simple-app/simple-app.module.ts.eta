@@ -7,28 +7,26 @@
 import { Module } from '@nestjs/common';
 import {SimpleAppCoreModule} from './.core/simple-app-core.module'
 import {SimpleAppResourcesModule} from './.resources/resources.module'
-import {SimpleAppEventModule} from './events/events.module'
+import {SimpleAppEventsModule} from './events/events.module'
+import {SimpleAppFeaturesModule} from './features/features.module'
 
-import {SimpleAppResourceAdditionalModule} from './apis/additionalapi.module'
+import {SimpleAppAdditionalResourceApiModule} from './apis/resource-additional-api.module'
 
-import {SimpleAppAdditionalModule} from './additional.module'
 
 @Module({
   imports: [
     SimpleAppCoreModule,
     SimpleAppResourcesModule,
-    SimpleAppEventModule,
-    SimpleAppResourceAdditionalModule,
-    SimpleAppAdditionalModule
+    SimpleAppEventsModule,
+    SimpleAppAdditionalResourceApiModule,
   ],
   controllers: [],
   providers: [],
   exports:[
      SimpleAppCoreModule,
     SimpleAppResourcesModule,
-    SimpleAppEventModule,
-    SimpleAppResourceAdditionalModule,
-    SimpleAppAdditionalModule
+    SimpleAppEventsModule,
+    SimpleAppAdditionalResourceApiModule,
   ]
 })
 export class SimpleAppModule {}

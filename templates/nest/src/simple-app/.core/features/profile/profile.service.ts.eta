@@ -7,7 +7,7 @@
 import countrytimezone from 'countries-and-timezones';
 import countryToCurrency, { Currencies, Countries } from 'country-to-currency';
 import { Injectable, Scope, Inject, Logger, BadRequestException, InternalServerErrorException } from '@nestjs/common';
-import { UserContext } from '../../commons/user.context';
+import { UserContext } from '../user-context/user.context';
 // import { RegTenant } from './profile.types';
 import * as mongoose from 'mongoose';
 import { InjectConnection } from '@nestjs/mongoose';
@@ -16,7 +16,7 @@ import { OrganizationService, Organization } from '../../resources/organization/
 import { BranchService, Branch } from '../../resources/branch/branch.service';
 import { UserService, User } from '../../resources/user/user.service';
 import { PermissionService, Permission } from '../../resources/permission/permission.service';
-
+import {UserContextInfo} from './profile.schema'
 const Base64URL = require('@darkwolf/base64url');
 @Injectable()
 export class ProfileService {
@@ -39,7 +39,7 @@ export class ProfileService {
   async getProfile(appuser: UserContext) {
     const accessTenantId = appuser.getTenantId();
     this.logger.verbose(`get userprofile for ${appuser.getUid()} for tenantId ${accessTenantId}`, 'getProfile');
-    const userinfo = await appuser.getUserInfo();
+    const userinfo:UserContextInfo = await appuser.getUserInfo();
 
     if (userinfo._id == '') {
       this.logger.warn('unknown _id for ', appuser.getUid());
@@ -135,16 +135,16 @@ export class ProfileService {
       branchId: 1,
       branchCode: 'HQ',
       branchName: tenantName,
-      companyName:tenantName,
-      registrationNo:'',
-      paymentRemark:'',
-      invoiceRemark:'',
-      cnRemark:'',
-      refundRemark:'',
-      workStart:'',
-      workEnd:'',
-      workingHours:[],
-      offdays:[],
+      companyName: tenantName,
+      registrationNo: '',
+      paymentRemark: '',
+      invoiceRemark: '',
+      cnRemark: '',
+      refundRemark: '',
+      workStart: '',
+      workEnd: '',
+      workingHours: [],
+      offdays: [],
       street1: '11,my street 1',
       street2: 'my street 2',
       postcode: '11111',

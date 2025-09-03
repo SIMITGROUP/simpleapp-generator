@@ -5,14 +5,17 @@
  * Author: Ks Tan
  */
 import { Resolver, Query, Mutation, Args, ID,Context } from '@nestjs/graphql';
-import * as schemas from './<%= camelToKebab(it.resourceName) %>.schema';
-import { AppUser } from 'src/simple-app/.core/commons/decorators/appuser.decorator';
-import { UserContext } from 'src/simple-app/.core/commons/user.context';
-import { <%= it.typename %>, <%= it.typename %>Service } from './<%= camelToKebab(it.resourceName) %>.service';
-import { Roles } from 'src/simple-app/.core/commons/roles/roles.decorator';
-import { Role } from 'src/simple-app/.core/commons/roles/roles.enum';
-
 import { Request } from '@nestjs/common';
+
+import * as schemas from './<%= camelToKebab(it.resourceName) %>.schema';
+import { <%= it.typename %>, <%= it.typename %>Service } from './<%= camelToKebab(it.resourceName) %>.service';
+
+import { AppUser } from 'src/simple-app/.core/features/user-context/appuser.decorator';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { Roles } from 'src/simple-app/.core/features/auth/role-guard/roles.decorator';
+import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';
+
+
 
 <% const getFieldType =(proptype, typename,actionname)=>{
     const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']

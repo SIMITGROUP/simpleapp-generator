@@ -5,11 +5,10 @@
  * Author: Ks Tan
  */
 import { Module } from '@nestjs/common';
-
 @Module({
   imports: [],
   controllers:[],
   providers: [],
   exports: [],
 })
-export class SimpleAppEventsModule {}
+export class SimpleAppFeaturesModule {}

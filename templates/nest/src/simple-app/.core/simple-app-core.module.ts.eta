@@ -8,11 +8,10 @@ import { Module } from '@nestjs/common';
 
 import { SimpleAppCoreFeaturesModule } from './features/simple-app-core-features.module';
 import { SimpleAppCoreResourcesModule } from './resources/core-resources-module';
-import { SimpleAppCoreCommonsModule } from './commons/simple-app-core-commons.module'
 @Module({
-  imports: [SimpleAppCoreFeaturesModule, SimpleAppCoreResourcesModule,SimpleAppCoreCommonsModule],
+  imports: [SimpleAppCoreFeaturesModule, SimpleAppCoreResourcesModule,],
   controllers: [],
   providers: [],
-  exports: [SimpleAppCoreFeaturesModule, SimpleAppCoreResourcesModule,SimpleAppCoreCommonsModule],
+  exports: [SimpleAppCoreFeaturesModule, SimpleAppCoreResourcesModule,],
 })
 export class SimpleAppCoreModule {}

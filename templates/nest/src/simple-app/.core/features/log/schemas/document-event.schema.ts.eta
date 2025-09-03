@@ -1,0 +1,87 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { Field, ObjectType, ID } from '@nestjs/graphql';
+import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+
+@ObjectType()
+@Schema()
+export class DocumentEvent {
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'string', required: false, format: 'uuid', default: '' })
+  _id: string;
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'string', required: false, default: '' })
+  created: string;
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'string', required: false, default: '' })
+  updated: string;
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'string', required: false, default: '' })
+  createdBy: string;
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'string', required: false, default: '' })
+  updatedBy: string;
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'number', required: false, default: 1 })
+  tenantId: number;
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'number', required: false, default: 1 })
+  orgId: number;
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'number', required: false, default: 1 })
+  branchId: number;
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'string', required: false, default: '' })
+  documentName: string;
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'string', required: false, format: 'uuid', default: '' })
+  documentId: string;
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'string', required: false, example: ['create', 'delete'], default: '' })
+  eventType: string;
+  @Prop({type: ()=>Object})
+  @Field(() => GraphQLJSON)
+  @ApiProperty({ type: () => Object, required: false, default: {} })
+  eventData: Object;
+}
+
+/***************************************** Start Auto Complete *****************************************/
+@ObjectType()
+@Schema()
+export class DocumenteventAutoComplete {
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'string', required: true, default: '' })
+  _id: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'string', required: true, default: '' })
+  code: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: 'string', required: true, default: '' })
+  label: string;
+}
+/****************************************** End Auto Complete ******************************************/
+
+/************************************** Customized Code Begin Here *************************************/
+
+// create mongodb schema
+
+export const DocumentEventMongoSchema = SchemaFactory.createForClass(DocumentEvent).pre('save', function (next) {
+  this.increment();
+  return next();
+});

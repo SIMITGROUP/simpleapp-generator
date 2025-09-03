@@ -6,7 +6,7 @@
  */
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { UserContext } from 'src/simple-app/.core/commons/user.context';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
 import * as api from './api';
 
 @Injectable()
