@@ -1187,8 +1187,8 @@ export class SimpleAppService<T extends SchemaFields> {
     return Promise.resolve('ok');
   }
 
-  async checkMultipleUnionExist(appuser: UserContext, data: string[]): Promise<CheckMutipleUnionExistResponse> {
-    const response: CheckMutipleUnionExistResponse = [];
+  async checkMultipleUnionExist(appuser: UserContext, data: string[]): Promise<CheckMutipleUnionExistResponse[]> {
+    const response:CheckMutipleUnionExistResponse[] =  []
     const unionKey = this.getDocumentIdentityCode();
     const searchQuery: any = { [unionKey]: { $in: data } };
     // search for multiple union exist

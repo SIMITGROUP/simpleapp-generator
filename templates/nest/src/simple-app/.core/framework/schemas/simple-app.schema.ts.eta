@@ -9,9 +9,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { JSONSchema7, JSONSchema7Type, JSONSchema7Version, JSONSchema7TypeName, JSONSchema7Definition } from 'json-schema';
 import { Permission } from 'src/simple-app/.core/resources/permission/permission.schema';
 
-export type CheckMutipleUnionExistResponse = {
-  [code: string]: 0 | 1;
-}[];
+
 
 export class ModifiedCollection {
   [key: string]: string[];

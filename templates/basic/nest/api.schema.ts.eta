@@ -5,7 +5,8 @@
  * Author: Ks Tan
  */
 import { ApiProperty } from '@nestjs/swagger';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Field, ObjectType,ID } from '@nestjs/graphql';
+import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 
 
 <%

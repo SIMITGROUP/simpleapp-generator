@@ -5,11 +5,11 @@
  * Author: Ks Tan
  */
 import { Module } from '@nestjs/common';
-<% const loadapi = false; %>
+<% const loadapi = true; %>
 <% for(let i=0;i<it.modules.length; i++){ %>
 <% let obj = it.modules[i]%>
 <% if(loadapi && obj.api && obj.api.length>0 && !getSystemResources().includes(obj.docname)){%>
-  import { <%= obj.typename %>AdditionalModule } from './<%= camelToKebab(obj.resourcename) %>/<%= camelToKebab(obj.resourcename) %>.additionalmodule';    
+  import { <%= obj.typename %>ApiModule } from './<%= camelToKebab(obj.resourcename) %>/<%= camelToKebab(obj.resourcename) %>-api.module';    
 <%}%>
 <%}%>
 
@@ -19,7 +19,7 @@ import { Module } from '@nestjs/common';
      <% for(let i=0;i<it.modules.length; i++){ %>
       <% let obj = it.modules[i]%>
       <% if( loadapi && obj.api && obj.api.length>0 && !getSystemResources().includes(obj.docname)){%>
-        <%= obj.typename %>AdditionalModule,    
+        <%= obj.typename %>ApiModule,    
       <%}%>
     <%}%>
     ],
@@ -29,7 +29,7 @@ import { Module } from '@nestjs/common';
     <% for(let i=0;i<it.modules.length; i++){ %>
       <% let obj = it.modules[i]%>
       <% if( loadapi && obj.api && obj.api.length>0 && !getSystemResources().includes(obj.docname)){%>
-        <%= obj.typename %>AdditionalModule,    
+        <%= obj.typename %>ApiModule,    
       <%}%>
     <%}%>
   ],

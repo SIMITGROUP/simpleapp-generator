@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
-import {SimpleAppInterceptor} from './simple-app.interceptor'
-import {SimpleAppMiddleware} from './simple-app.middleware'
+import { SimpleAppInterceptor } from './simple-app.interceptor';
+import { SimpleAppMiddleware } from './simple-app.middleware';
+import { SimpleAppCoreFeaturesModule } from '../features/simple-app-core-features.module';
+import {SimpleAppCoreResourcesModule} from '../resources/core-resources.module'
 @Module({
-  imports: [],
+  imports: [SimpleAppCoreFeaturesModule,SimpleAppCoreResourcesModule],
   controllers: [],
-  providers: [SimpleAppMiddleware,SimpleAppInterceptor],
-  exports: [SimpleAppMiddleware,SimpleAppInterceptor],
+  providers: [SimpleAppMiddleware, SimpleAppInterceptor],
+  exports: [SimpleAppCoreFeaturesModule,SimpleAppCoreResourcesModule,SimpleAppMiddleware, SimpleAppInterceptor],
 })
 export class SimpleAppFrameworkModule {}

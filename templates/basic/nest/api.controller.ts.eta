@@ -41,7 +41,7 @@ import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';
 import { Response } from 'express';
 import { AppUser } from 'src/simple-app/.core/features/user-context/appuser.decorator';
 import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
-
+import { MiniAppScope } from 'src/simple-app/.core/features/mini-app/mini-app-scope/mini-app-scope.decorator';
 import { <%= it.typename%>ApiService } from './<%= camelToKebab(it.resourceName)%>-api.service';
 import * as schema from './<%= camelToKebab(it.resourceName)%>-api.schema'
 

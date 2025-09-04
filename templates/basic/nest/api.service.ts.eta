@@ -26,6 +26,7 @@ import * as schema from './<%= camelToKebab(it.resourceName)%>-api.schema'
 %>
 
 
+
 @Injectable()
 export class <%= (it.typename)%>ApiService  {
   constructor(
@@ -37,7 +38,7 @@ export class <%= (it.typename)%>ApiService  {
 <% for(let i=0;i<it.apiSettings.length;i++){%>
 <% let api = it.apiSettings[i] %>
   async run<%= capitalizeFirstLetter(api.action) %>(
-    appuser: UserContext,    
+    appUser: UserContext,    
     <% if(api.entryPoint && api.entryPoint.includes(':')) {%>
           <%let subpath = api.entryPoint.split('/')%>
           <% for(let a=0;a<subpath.length;a++){%>
@@ -56,17 +57,11 @@ export class <%= (it.typename)%>ApiService  {
         <%}%>
             
         <%if(['post','put','patch'].includes(api.method.toLowerCase())){%> 
-              data: <%= getFieldType('schema',api.schema,api.action)%>,
+              data: <%= getFieldType('type',api.schema,api.action)%>,
             <%}%>
 
          ){
-
-
-            <% if(api.responseType.substring(0,1)== '['){%>
-                const resultResult = [] as <%= getFieldType('schema',api.responseType,api.action)%>[]
-            <%}else{%>
-                const resultResult = {} as <%= getFieldType('schema',api.responseType,api.action)%>
-            <%}%>
+            const resultResult = {} as <%= getFieldType('type',api.responseType,api.action)%>            
 
             return resultResult
     
