@@ -16,7 +16,7 @@ import addFormats from 'ajv-formats';
 import { FilterQuery, Model, PipelineStage, mongo } from 'mongoose';
 // import { CloudApiService } from 'src/cloudapi/cloudapi.service';
 import { CustomException } from '../custom-exception';
-import { SimpleAppLog } from '../../features/log/log.service';
+import { SimpleAppLogService } from '../../features/log/log.service';
 import { foreignkeys } from '../../features/foreign-key/foreignkeys.dict';
 import { DocNumberFormatGenerator } from '../../features/document-management/doc-no-generator.service';
 import { RunWebhookService } from '../../features/webhook/run-webhook.service';
@@ -1188,7 +1188,7 @@ export class SimpleAppService<T extends SchemaFields> {
   }
 
   async checkMultipleUnionExist(appuser: UserContext, data: string[]): Promise<CheckMutipleUnionExistResponse[]> {
-    const response:CheckMutipleUnionExistResponse[] =  []
+    const response: CheckMutipleUnionExistResponse[] = [];
     const unionKey = this.getDocumentIdentityCode();
     const searchQuery: any = { [unionKey]: { $in: data } };
     // search for multiple union exist
