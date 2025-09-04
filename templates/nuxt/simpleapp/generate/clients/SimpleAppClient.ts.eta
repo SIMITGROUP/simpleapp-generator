@@ -68,6 +68,7 @@ export class SimpleAppClient<
   getDocType = () => this.doctype;
   getDocName = (capFirst: boolean = false) =>
     capFirst ? upperFirst(this.docname) : this.docname;
+  getResourceName = ()=>upperFirst(this.schema["x-simpleapp-config"]?.resourceName??'');
   setNew = () => {};
   isNew = () => this.data.value?.created == "";
   setSchema = (schema: SchemaType) => (this.schema = schema);

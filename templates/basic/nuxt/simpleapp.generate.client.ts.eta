@@ -11,8 +11,10 @@ import * as sharelibs from '../sharelibs'
 import jsonpath from 'jsonpath'
 import { SimpleAppClient } from "./SimpleAppClient";
 import {
-  <%Object.keys(it.models).forEach(function(modelname) { %>  Default<%=modelname%>,  <%})%>
-} from '../defaults/<%= it.typename%>.default'
+  <%Object.keys(it.models).forEach(function(modelname) {
+    const newmodelname = toTypeName(it.resourceName,modelname)
+     %>  Default<%=newmodelname%>,  <%})%>
+} from '../defaults/<%= upperFirstCase(it.name)%>.default'
 import {AxiosResponse} from 'axios'
 <%if(it.jsonschema['x-import-lib']) {%>
   <%let libs = it.jsonschema['x-import-lib'] %>
@@ -32,7 +34,7 @@ export type {
           <% if(it.models?.[typeKey] && it.models?.[typeKey].type === 'object' &&  Object.keys(it.models?.[typeKey].model).length == 0) { %>
             // <%= key %>, Dynamic Object
           <% } else { %>
-            <%= it.schema[key]  %>,
+            <%=  typeof it.schema[key]=='string' ? toTypeName(it.resourceName,it.schema[key]) +',': ''  %>
           <% } %>
         <%} else {%>
           /*<%~ key + JSON.stringify(it.schema[key])  %>,*/
@@ -41,7 +43,7 @@ export type {
 
     } from '../openapi'
 
-export class <%= capitalizeFirstLetter(it.name)%>Client extends SimpleAppClient<openapi.<%= capitalizeFirstLetter(it.name)%>,openapi.<%= it.name.toUpperCase()%>Api>{
+export class <%= upperFirstCase(it.name)%>Client extends SimpleAppClient<openapi.<%= it.typename%>,openapi.<%= it.name.toUpperCase()%>Api>{
   public override readonly schema= <%~ JSON.stringify(it.jsonschema) %> as SchemaType;
   protected documentIdentityCode='<%~ it.autocompletecode %>'
   protected documentIdentityName='<%~ it.autocompletename %>'  

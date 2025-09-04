@@ -64,6 +64,7 @@ export type SchemaConfig = {
   formulas?: Formula[];
   documentType: string;
   documentName: string;
+  resourceName:string;
   collectionName?: string;
   foreignKeys?: MyForeignKey;
   printFormats?: SchemaPrintFormat[];

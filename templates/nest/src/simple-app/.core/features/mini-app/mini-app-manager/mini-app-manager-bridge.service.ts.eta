@@ -1,16 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { UserContext } from 'src/simpleapp/generate/commons/user.context';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
 import _ from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Miniapp } from 'src/simpleapp/generate/apischemas';
+import { MiniApp , DynamicParam, MiniAppInstallation} from '../dto';
 import { MiniAppError } from './mini-app-manager.error';
 import { MiniAppManagerEnvEnum } from './mini-app-manager.enum';
 import { MiniAppManagerEnvDevelopmentService } from './mini-app-manager-env-development.service';
 import { MiniAppManagerEnvProductionService } from './mini-app-manager-env-production.service';
-import { DynamicParam, Miniappinstallation } from 'src/simpleapp/generate/types';
 import { getEnvironment } from '../utils/mini-app.util';
-import { DEFAULT_MINI_APPS } from 'src/data/miniApps';
+// import { DEFAULT_MINI_APPS } from 'src/data/miniApps';
 
 @Injectable()
 export class MiniAppManagerBridgeService {
@@ -18,8 +17,8 @@ export class MiniAppManagerBridgeService {
     private readonly devService: MiniAppManagerEnvDevelopmentService,
     private readonly prodService: MiniAppManagerEnvProductionService,
 
-    @InjectModel('Miniapp') private readonly miniAppModel: Model<Miniapp>,
-    @InjectModel('Miniappinstallation') private miniAppInstallationModel: Model<Miniappinstallation>,
+    @InjectModel('MiniApp') private readonly miniAppModel: Model<MiniApp>,
+    @InjectModel('MiniAppInstallation') private miniAppInstallationModel: Model<MiniAppInstallation>,
   ) {}
 
   private readonly serviceMap: Record<MiniAppManagerEnvEnum, MiniAppManagerEnvDevelopmentService | MiniAppManagerEnvProductionService> = {
@@ -106,57 +105,57 @@ export class MiniAppManagerBridgeService {
 
   async runSystemDefaultMiniAppMigration(appUser: UserContext) {
     // Step 1: Normalize codes with underscores
-    const renameMap: Record<string, string> = {
-      'simbiz-accounting': 'simbiz_accounting',
-      'e-invoice': 'e_invoice',
-    };
+    // const renameMap: Record<string, string> = {
+    //   'simbiz-accounting': 'simbiz_accounting',
+    //   'e-invoice': 'e_invoice',
+    // };
 
-    for (const [oldCode, newCode] of Object.entries(renameMap)) {
-      await this.miniAppModel.updateOne({ code: oldCode }, { $set: { code: newCode } });
-    }
+    // for (const [oldCode, newCode] of Object.entries(renameMap)) {
+    //   await this.miniAppModel.updateOne({ code: oldCode }, { $set: { code: newCode } });
+    // }
 
-    // Step 2: Remove unused mini apps
-    const allowedCodes = ['simbiz_accounting', 'e_invoice', 'webhook', 'mcplus'];
-    await this.miniAppModel.deleteMany({ code: { $nin: allowedCodes } });
+    // // Step 2: Remove unused mini apps
+    // const allowedCodes = ['simbiz_accounting', 'e_invoice', 'webhook', 'mcplus'];
+    // await this.miniAppModel.deleteMany({ code: { $nin: allowedCodes } });
 
-    // Step 3: Update default data for each mini app
-    const defaultMap: Record<string, any> = {
-      simbiz_accounting: DEFAULT_MINI_APPS.simbizAccounting,
-      e_invoice: DEFAULT_MINI_APPS.eInvoice,
-      webhook: DEFAULT_MINI_APPS.webhook,
-      mcplus: DEFAULT_MINI_APPS.mcplus,
-    };
+    // // Step 3: Update default data for each mini app
+    // const defaultMap: Record<string, any> = {
+    //   simbiz_accounting: DEFAULT_MINI_APPS.simbizAccounting,
+    //   e_invoice: DEFAULT_MINI_APPS.eInvoice,
+    //   webhook: DEFAULT_MINI_APPS.webhook,
+    //   mcplus: DEFAULT_MINI_APPS.mcplus,
+    // };
 
-    for (const [code, defaults] of Object.entries(defaultMap)) {
-      await this.miniAppModel.updateOne({ code }, defaults);
-    }
+    // for (const [code, defaults] of Object.entries(defaultMap)) {
+    //   await this.miniAppModel.updateOne({ code }, defaults);
+    // }
 
-    // Step 4: Fix mini app installations
-    const savePromises = [];
-    const miniAppInstallations = await this.miniAppInstallationModel.find();
+    // // Step 4: Fix mini app installations
+    // const savePromises = [];
+    // const miniAppInstallations = await this.miniAppInstallationModel.find();
 
-    for (const installation of miniAppInstallations) {
-      if (installation.miniApp.code === 'simbiz-accounting') {
-        installation.miniApp.code = 'simbiz_accounting';
-        installation.miniApp.developerPortalAppId = DEFAULT_MINI_APPS.simbizAccounting.developerPortal.appId;
-      } else if (installation.miniApp.code === 'e-invoice') {
-        installation.miniApp.code = 'e_invoice';
-        installation.miniApp.developerPortalAppId = DEFAULT_MINI_APPS.eInvoice.developerPortal.appId;
-      } else if (installation.miniApp.code === 'webhook') {
-        installation.miniApp.code = 'webhook';
-        installation.miniApp.developerPortalAppId = DEFAULT_MINI_APPS.webhook.developerPortal.appId;
-      } else if (installation.miniApp.code === 'mcplus') {
-        installation.miniApp.code = 'mcplus';
-        installation.miniApp.developerPortalAppId = DEFAULT_MINI_APPS.mcplus.developerPortal.appId;
-      }
+    // for (const installation of miniAppInstallations) {
+    //   if (installation.miniApp.code === 'simbiz-accounting') {
+    //     installation.miniApp.code = 'simbiz_accounting';
+    //     installation.miniApp.developerPortalAppId = DEFAULT_MINI_APPS.simbizAccounting.developerPortal.appId;
+    //   } else if (installation.miniApp.code === 'e-invoice') {
+    //     installation.miniApp.code = 'e_invoice';
+    //     installation.miniApp.developerPortalAppId = DEFAULT_MINI_APPS.eInvoice.developerPortal.appId;
+    //   } else if (installation.miniApp.code === 'webhook') {
+    //     installation.miniApp.code = 'webhook';
+    //     installation.miniApp.developerPortalAppId = DEFAULT_MINI_APPS.webhook.developerPortal.appId;
+    //   } else if (installation.miniApp.code === 'mcplus') {
+    //     installation.miniApp.code = 'mcplus';
+    //     installation.miniApp.developerPortalAppId = DEFAULT_MINI_APPS.mcplus.developerPortal.appId;
+    //   }
 
-      installation.miniApp.env = 'prod';
-      installation.markModified('miniApp');
+    //   installation.miniApp.env = 'prod';
+    //   installation.markModified('miniApp');
 
-      savePromises.push(installation.save());
-    }
+    //   savePromises.push(installation.save());
+    // }
 
-    await Promise.all(savePromises);
+    // await Promise.all(savePromises);
 
     return await this.miniAppModel.find();
   }

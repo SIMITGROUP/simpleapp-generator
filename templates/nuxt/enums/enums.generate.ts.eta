@@ -7,7 +7,7 @@
 <% if (module.schema && module.schema.properties) { %>
 <% Object.entries(module.schema.properties).forEach(function([propName, prop]) { %>
 <% if (prop.enum) { %>
-export enum <%= module.docname %><%= propName.charAt(0).toUpperCase() + propName.slice(1) + 'Enum' %> {
+export enum <%=  upperFirstCase(module.docname) %><%= propName.charAt(0).toUpperCase() + propName.slice(1) + 'Enum' %> {
 <% prop.enum.forEach(function(enumValue, index) { %>
 <% if (enumValue === '') { %>
   EMPTY = ''<%= index < prop.enum.length - 1 ? ',' : '' %>

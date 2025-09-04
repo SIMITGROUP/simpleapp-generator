@@ -29,7 +29,7 @@ import * as buildinschemas from './buildinschemas';
 import { JSONSchema7 } from 'json-schema';
 import { generatePrintformat } from './processors/jrxmlbuilder';
 
-const systemResources = ['user','tenant','organization','branch','permission','autoincreament','documentevent','webhook','webhooklog','keyvaluepair','documentnoformat','autoincreament','customfield','miniapp','miniappinstallation']
+const systemResources = ['user','tenant','organization','branch','permission','autoincreament','documentevent','webhook','webhooklog','keyvaluepair','documentnoformat','autoincreament','customfield','miniapp','miniappinstallation','systemmessage']
 const { Eta } = require('eta');
 const { capitalizeFirstLetter } = require('./libs');
 // const X_DOCUMENT_TYPE='x-document-type'
@@ -184,7 +184,7 @@ const processSchema = async (schemaname: string, jsondata: JSONSchema7) => {
   if (moduleindex < 0) {
     activatemodules.push({
       doctype: doctype,
-      docname: docname,
+      docname: capitalizeFirstLetter(docname),
       resourcename: resourceName,
       typename:capitalizeFirstLetter(resourceName),
       pagetype: config.pageType ?? '',
@@ -259,6 +259,7 @@ const generateSchema = (
       hasMiniAppWhitelistedApi: Object.keys(miniAppWhitelistApis).length > 0
     }
   };
+  
 
   const templatefolder = `${constants.templatedir}/${rendertype}`;
   // log.info(`- Generate ${docname}, ${doctype}, ${templatefolder}`)
@@ -300,6 +301,7 @@ const generateSchema = (
           'jsonschema',
           'model',
           'module',
+          'enum',
           'resolver',
           'entity',
           'service',

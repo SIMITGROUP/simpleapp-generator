@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { ApiProperty } from '@nestjs/swagger';
-import { Miniapp, Miniappinstallation } from '../../../simpleapp/generate/apischemas';
+import { MiniApp, MiniAppInstallation } from './imports';
 
 @ObjectType()
 export class MiniAppDetailPermission {
@@ -22,10 +22,10 @@ export class MiniAppDetailPermission {
 }
 
 @ObjectType()
-export class MiniAppDetail extends Miniapp {
-  @Field(() => Miniappinstallation)
-  @ApiProperty({ type: () => Miniappinstallation, required: false })
-  miniAppInstallation?: Miniappinstallation;
+export class MiniAppDetail extends MiniApp {
+  @Field(() => MiniAppInstallation)
+  @ApiProperty({ type: () => MiniAppInstallation, required: false })
+  miniAppInstallation?: MiniAppInstallation;
 
   @Field()
   @ApiProperty({ type: 'boolean' })

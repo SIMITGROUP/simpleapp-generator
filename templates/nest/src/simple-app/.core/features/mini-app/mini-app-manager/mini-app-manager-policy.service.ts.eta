@@ -1,34 +1,34 @@
 import { Injectable } from '@nestjs/common';
 import _ from 'lodash';
-import { MiniappStatusEnum } from 'src/enums/enums.generate';
-import { PolicyService } from 'src/modules/policy/policy.service';
-import { Role } from 'src/simpleapp/generate/commons/roles/roles.enum';
-import { UserContext } from 'src/simpleapp/generate/commons/user.context';
-import { Miniapp } from 'src/simpleapp/generate/types';
+import { MiniAppStatusEnum } from 'src/simple-app/.core/resources/mini-app/mini-app.enum';
+import { PolicyService } from 'src/simple-app/.core/features/policy/policy.service';
+import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { MiniApp } from '../dto';
 
 @Injectable()
 export class MiniAppManagerPolicyService {
-  readonly _RELEASED_STATUSES = [MiniappStatusEnum.PUBLISHED];
+  readonly _RELEASED_STATUSES = [MiniAppStatusEnum.PUBLISHED];
 
   constructor(private readonly policyService: PolicyService) {}
 
   canInstall(appUser: UserContext) {
-    return this.policyService.can(appUser, Role.Miniappinstallation_create);
+    return this.policyService.can(appUser, Role.MiniAppInstallation_create);
   }
 
   canUninstall(appUser: UserContext) {
-    return this.policyService.can(appUser, Role.Miniappinstallation_update);
+    return this.policyService.can(appUser, Role.MiniAppInstallation_update);
   }
 
   canUpdateSetting(appUser: UserContext) {
-    return this.policyService.can(appUser, Role.Miniappinstallation_update);
+    return this.policyService.can(appUser, Role.MiniAppInstallation_update);
   }
 
   hasFeature(appUser: UserContext) {
     return this.policyService.hasFeature(appUser, 'miniApp');
   }
 
-  hasRequiredPlan(appUser: UserContext, miniApp: Miniapp) {
+  hasRequiredPlan(appUser: UserContext, miniApp: MiniApp) {
     const currentPlan = appUser.getPackage();
     const requiredPlans = miniApp.access.requiredPlans ?? [];
 
@@ -37,7 +37,7 @@ export class MiniAppManagerPolicyService {
     return requiredPlans.includes(currentPlan);
   }
 
-  isMiniAppRealeased(status: MiniappStatusEnum) {
+  isMiniAppRealeased(status: MiniAppStatusEnum) {
     return this._RELEASED_STATUSES.includes(status);
   }
 }

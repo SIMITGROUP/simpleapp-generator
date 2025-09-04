@@ -1,12 +1,12 @@
-import { UserContext } from 'src/simpleapp/generate/commons/user.context';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
 import { MiniAppManagerEnvEnum } from '../mini-app-manager/mini-app-manager.enum';
-import { Miniapp } from 'src/simpleapp/generate/types';
+import { MiniApp } from '../dto';
 
 export function isDemoCompany(xOrg: string): boolean {
   return xOrg === process.env.DEMO_COMPANY_XORG;
 }
 
-export function isSemiDevOrg(xOrg: string, miniApp: Miniapp): boolean {
+export function isSemiDevOrg(xOrg: string, miniApp: MiniApp): boolean {
   return xOrg === miniApp?.development?.demoXOrg;
 }
 
@@ -17,7 +17,7 @@ export function getEnvironment(appUser: UserContext) {
   return MiniAppManagerEnvEnum.PROD;
 }
 
-export function getEnvironmentWithApp(appUser: UserContext, miniApp: Miniapp) {
+export function getEnvironmentWithApp(appUser: UserContext, miniApp: MiniApp) {
   const currentXOrg = appUser.getXOrg();
   if (isDemoCompany(currentXOrg)) return MiniAppManagerEnvEnum.DEV;
   if (isSemiDevOrg(currentXOrg, miniApp)) return MiniAppManagerEnvEnum.DEV;

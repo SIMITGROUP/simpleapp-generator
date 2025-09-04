@@ -1,19 +1,18 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Miniapp, MiniappService } from 'src/simpleapp/services/miniapp.service';
-import { MiniappinstallationService } from 'src/simpleapp/services/miniappinstallation.service';
+import { MiniAppService } from 'src/simple-app/.core/resources/mini-app/mini-app.service';
+import { MiniAppInstallationService } from 'src/simple-app/.core/resources/mini-app-installation/mini-app-installation.service';
 import { MiniAppManagerPolicyService } from './mini-app-manager-policy.service';
-import { UserContext } from 'src/simpleapp/generate/commons/user.context';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
 import { MiniAppManagerProcessor } from './mini-app-manager.processor';
-import { DynamicParam } from 'src/simpleapp/generate/types';
-import { CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail } from '../apischemas/miniApp';
-import { MiniappEnvEnum, MiniappStatusEnum } from 'src/enums/enums.generate';
+import { DynamicParam,MiniApp ,CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail } from '../dto';
+import { MiniAppEnvEnum, MiniAppStatusEnum } from 'src/simple-app/.core/resources/mini-app/mini-app.enum';
 import { Model } from 'mongoose';
 import { MiniAppManagerEnvEnum } from './mini-app-manager.enum';
 import _ from 'lodash';
 
 @Injectable()
 export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor {
-  constructor(miniAppService: MiniappService, miniAppInstallationService: MiniappinstallationService, policyService: MiniAppManagerPolicyService, miniAppDoc: Model<Miniapp>) {
+  constructor(miniAppService: MiniAppService, miniAppInstallationService: MiniAppInstallationService, policyService: MiniAppManagerPolicyService, miniAppDoc: Model<MiniApp>) {
     super(miniAppService, miniAppInstallationService, policyService, miniAppDoc);
   }
 
@@ -26,9 +25,9 @@ export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor 
 
     const filter = {
       _id: { $nin: installedMiniAppIdArr },
-      env: MiniappEnvEnum.PROD,
+      env: MiniAppEnvEnum.PROD,
       status: {
-        $in: [MiniappStatusEnum.PUBLISHED, MiniappStatusEnum.UPCOMING, MiniappStatusEnum.BETA],
+        $in: [MiniAppStatusEnum.PUBLISHED, MiniAppStatusEnum.UPCOMING, MiniAppStatusEnum.BETA],
       },
     };
 
@@ -36,14 +35,14 @@ export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor 
     return this.categorizedMiniApps(appUser, miniApps);
   }
 
-  async runGetMiniAppDetail(appUser: UserContext, miniApp: Miniapp): Promise<MiniAppDetail> {
+  async runGetMiniAppDetail(appUser: UserContext, miniApp: MiniApp): Promise<MiniAppDetail> {
     this.assertEnvironment(appUser, miniApp);
     this.assertPrivateAppPermission(appUser, miniApp);
 
     return await this.findMiniAppDetail(appUser, miniApp);
   }
 
-  async runInstallMiniApp(appUser: UserContext, miniApp: Miniapp) {
+  async runInstallMiniApp(appUser: UserContext, miniApp: MiniApp) {
     this.assertEnvironment(appUser, miniApp);
     this.assertHasMiniAppFeature(appUser);
     this.assertPrivateAppPermission(appUser, miniApp);
@@ -53,13 +52,13 @@ export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor 
     return await this.install(appUser, miniApp);
   }
 
-  async runUninstallMiniApp(appUser: UserContext, miniApp: Miniapp) {
+  async runUninstallMiniApp(appUser: UserContext, miniApp: MiniApp) {
     this.assertHasMiniAppFeature(appUser);
 
     return await this.uninstall(appUser, miniApp);
   }
 
-  async runUpdateMiniAppSetting(appUser: UserContext, miniApp: Miniapp, data: DynamicParam) {
+  async runUpdateMiniAppSetting(appUser: UserContext, miniApp: MiniApp, data: DynamicParam) {
     this.assertHasMiniAppFeature(appUser);
     this.assertHasRequiredPlan(appUser, miniApp);
     this.assertIsMiniAppReleased(miniApp);
@@ -67,7 +66,7 @@ export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor 
     return await this.updateSetting(appUser, miniApp, data);
   }
 
-  async createMiniApp(appUser: UserContext, developerPortalAppId: string, dto: Miniapp) {
+  async createMiniApp(appUser: UserContext, developerPortalAppId: string, dto: MiniApp) {
     this.assertMiniAppCodePattern(dto.code);
     await this.assertMiniAppCodeUnique(appUser, dto.code);
 
@@ -81,7 +80,7 @@ export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor 
       logo: dto.logo,
       tags: dto.tags,
       pricing: 0,
-      status: MiniappStatusEnum.PUBLISHED,
+      status: MiniAppStatusEnum.PUBLISHED,
       author: dto.author,
       access: dto.access,
       developerPortal: {
@@ -94,7 +93,7 @@ export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor 
     return await this.miniAppService.create(appUser, payload);
   }
 
-  async updateMiniApp(appUser: UserContext, miniApp: Miniapp, dto: Miniapp) {
+  async updateMiniApp(appUser: UserContext, miniApp: MiniApp, dto: MiniApp) {
     const payload = {
       ...miniApp,
       name: dto.name,
@@ -112,7 +111,7 @@ export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor 
     return await this.miniAppService.findIdThenUpdate(appUser, miniApp._id, payload);
   }
 
-  protected assertEnvironment(appUser: UserContext, miniApp: Miniapp) {
+  protected assertEnvironment(appUser: UserContext, miniApp: MiniApp) {
     if (miniApp.env !== MiniAppManagerEnvEnum.PROD) {
       if (!_.isEmpty(miniApp?.development?.demoXOrg)) {
         if (miniApp.development.demoXOrg === appUser.getXOrg()) {

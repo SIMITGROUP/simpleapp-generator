@@ -1,9 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { MiniappEnvEnum, MiniappStatusEnum } from 'src/enums/enums.generate';
-import { UserContext } from 'src/simpleapp/generate/commons/user.context';
-import { CategorizedMiniAppDetail, DynamicParam, InstalledMiniAppDetail, Miniapp, MiniAppDetail, Miniappinstallation } from 'src/simpleapp/generate/types';
-import { MiniappService } from 'src/simpleapp/services/miniapp.service';
-import { MiniappinstallationService } from 'src/simpleapp/services/miniappinstallation.service';
+
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { CategorizedMiniAppDetail, DynamicParam, InstalledMiniAppDetail, MiniApp, MiniAppDetail, MiniAppInstallation } from '../dto';
+import { MiniAppService } from 'src/simple-app/.core/resources/mini-app/mini-app.service';
+
+import { MiniAppEnvEnum, MiniAppStatusEnum } from 'src/simple-app/.core/resources/mini-app/mini-app.enum';
+import { MiniAppInstallationService } from 'src/simple-app/.core/resources/mini-app-installation/mini-app-installation.service';
 import _ from 'lodash';
 import { MiniAppManagerPolicyService } from './mini-app-manager-policy.service';
 import { MiniAppError } from './mini-app-manager.error';
@@ -11,8 +13,8 @@ import { MiniAppError } from './mini-app-manager.error';
 @Injectable()
 export class MiniAppManagerService {
   constructor(
-    private readonly miniAppService: MiniappService,
-    private readonly miniAppInstallationService: MiniappinstallationService,
+    private readonly miniAppService: MiniAppService,
+    private readonly miniAppInstallationService: MiniAppInstallationService,
     private readonly policyService: MiniAppManagerPolicyService,
   ) {}
 
@@ -114,18 +116,18 @@ export class MiniAppManagerService {
 
     let filter = {
       _id: { $nin: installedMiniAppIdArr },
-      env: MiniappEnvEnum.PROD,
+      env: MiniAppEnvEnum.PROD,
       status: {
-        $in: [MiniappStatusEnum.PUBLISHED, MiniappStatusEnum.UPCOMING, MiniappStatusEnum.BETA],
+        $in: [MiniAppStatusEnum.PUBLISHED, MiniAppStatusEnum.UPCOMING, MiniAppStatusEnum.BETA],
       },
     };
 
     if (isDevEnv) {
       filter = {
         _id: { $nin: installedMiniAppIdArr },
-        env: MiniappEnvEnum.DEV,
+        env: MiniAppEnvEnum.DEV,
         status: {
-          $in: [MiniappStatusEnum.DRAFT],
+          $in: [MiniAppStatusEnum.DRAFT],
         },
       };
     }
@@ -133,7 +135,7 @@ export class MiniAppManagerService {
     const miniApps = await this.miniAppService.search(appUser, filter);
 
     miniApps.forEach((miniApp) => {
-      if (miniApp.status === MiniappStatusEnum.UPCOMING) {
+      if (miniApp.status === MiniAppStatusEnum.UPCOMING) {
         result.upcomingMiniApps.push({
           // @ts-ignore
           ...miniApp.toObject(),
@@ -184,11 +186,11 @@ export class MiniAppManagerService {
 
   // =================================== Finder Function ==================================
 
-  async findMiniAppOrFail(appUser: UserContext, miniAppCode: string): Promise<Miniapp> {
+  async findMiniAppOrFail(appUser: UserContext, miniAppCode: string): Promise<MiniApp> {
     const isDevEnv = this.isDevEnv(appUser);
     const miniApps = await this.miniAppService.search(appUser, {
       code: miniAppCode,
-      env: isDevEnv ? MiniappEnvEnum.DEV : MiniappEnvEnum.PROD,
+      env: isDevEnv ? MiniAppEnvEnum.DEV : MiniAppEnvEnum.PROD,
     });
 
     if (miniApps && miniApps.length > 0) {
@@ -214,7 +216,7 @@ export class MiniAppManagerService {
     return miniAppInstallations;
   }
 
-  async findMiniAppInstallation(appUser: UserContext, miniAppCode: string): Promise<Miniappinstallation | undefined> {
+  async findMiniAppInstallation(appUser: UserContext, miniAppCode: string): Promise<MiniAppInstallation | undefined> {
     const miniAppInstallations = await this.miniAppInstallationService.search(appUser, {
       'miniApp.code': miniAppCode,
     });
@@ -247,21 +249,21 @@ export class MiniAppManagerService {
     }
   }
 
-  assertIsMiniAppReleased(miniApp: Miniapp) {
-    if (!this.policyService.isMiniAppRealeased(miniApp.status as MiniappStatusEnum)) {
+  assertIsMiniAppReleased(miniApp: MiniApp) {
+    if (!this.policyService.isMiniAppRealeased(miniApp.status as MiniAppStatusEnum)) {
       const msg = MiniAppError.format(MiniAppError.ERR.NOT_RELEASED, { status: miniApp.status });
       throw new BadRequestException(msg);
     }
   }
 
-  assertHasRequiredPlan(appUser: UserContext, miniApp: Miniapp) {
+  assertHasRequiredPlan(appUser: UserContext, miniApp: MiniApp) {
     if (!this.policyService.hasRequiredPlan(appUser, miniApp)) {
       const msg = MiniAppError.format(MiniAppError.ERR.PLAN_REQUIRED, { miniAppName: miniApp.name, requiredPlans: miniApp.access.requiredPlans.join(', ') });
       throw new BadRequestException(msg);
     }
   }
 
-  assertPrivateAppPermission(appUser: UserContext, miniApp: Miniapp) {
+  assertPrivateAppPermission(appUser: UserContext, miniApp: MiniApp) {
     if (miniApp.access.visibility === 'private') {
       if (!(miniApp.access.allowEmails ?? []).includes(appUser.getEmail())) {
         const msg = MiniAppError.format(MiniAppError.ERR.PRIVATE_APP);
@@ -272,7 +274,7 @@ export class MiniAppManagerService {
 
   // =================================== Action Function ==================================
 
-  private async installMiniApp(appUser: UserContext, miniAppCode: string, miniApp: Miniapp): Promise<Miniappinstallation> {
+  private async installMiniApp(appUser: UserContext, miniAppCode: string, miniApp: MiniApp): Promise<MiniAppInstallation> {
     const miniAppInstallation = await this.findMiniAppInstallation(appUser, miniAppCode);
     if (!miniAppInstallation) {
       // Install MiniApp
@@ -298,13 +300,13 @@ export class MiniAppManagerService {
     return await this.setMiniAppInstallationSetting(appUser, miniAppInstallation, data);
   }
 
-  private async setMiniAppInstallationSetting(appUser: UserContext, miniAppInstallation: Miniappinstallation, data: DynamicParam) {
+  private async setMiniAppInstallationSetting(appUser: UserContext, miniAppInstallation: MiniAppInstallation, data: DynamicParam) {
     return await this.miniAppInstallationService.findIdThenPatch(appUser, miniAppInstallation._id, {
       settings: data,
-    } as Miniappinstallation);
+    } as MiniAppInstallation);
   }
 
-  private async createMiniAppInstallation(appUser: UserContext, miniApp: Miniapp) {
+  private async createMiniAppInstallation(appUser: UserContext, miniApp: MiniApp) {
     return await this.miniAppInstallationService.create(appUser, {
       apiKey: crypto.randomUUID(),
       isActive: true,
@@ -324,18 +326,18 @@ export class MiniAppManagerService {
     });
   }
 
-  private async reactivateInstalledMiniApp(appUser: UserContext, miniAppInstallation: Miniappinstallation) {
+  private async reactivateInstalledMiniApp(appUser: UserContext, miniAppInstallation: MiniAppInstallation) {
     return this.setMiniAppInstallationActiveStatus(appUser, miniAppInstallation, true);
   }
 
-  private async deactiveInstalledMiniApp(appUser: UserContext, miniAppInstallation: Miniappinstallation) {
+  private async deactiveInstalledMiniApp(appUser: UserContext, miniAppInstallation: MiniAppInstallation) {
     return this.setMiniAppInstallationActiveStatus(appUser, miniAppInstallation, false);
   }
 
-  private async setMiniAppInstallationActiveStatus(appUser: UserContext, miniAppInstallation: Miniappinstallation, isActive: boolean) {
+  private async setMiniAppInstallationActiveStatus(appUser: UserContext, miniAppInstallation: MiniAppInstallation, isActive: boolean) {
     return await this.miniAppInstallationService.findIdThenPatch(appUser, miniAppInstallation._id, {
       isActive,
-    } as Miniappinstallation);
+    } as MiniAppInstallation);
   }
 
   private isDevEnv(appUser: UserContext) {

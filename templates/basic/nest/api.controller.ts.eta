@@ -45,9 +45,9 @@ import { MiniAppScope } from 'src/simple-app/.core/features/mini-app/mini-app-sc
 import { <%= it.typename%>ApiService } from './<%= camelToKebab(it.resourceName)%>-api.service';
 import * as schema from './<%= camelToKebab(it.resourceName)%>-api.schema'
 
-const apiname = '<%= it.doctype%>'.toUpperCase();
+const apiname = '<%= it.typename %>'.toUpperCase();
 @ApiTags(apiname)
-@Controller(apiname.toLowerCase())
+@Controller(apiname.toLowerCase()+'-api')
 export class <%= it.typename%>ApiController {
   constructor(
     private service:<%= it.typename%>ApiService

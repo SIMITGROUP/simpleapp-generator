@@ -1,0 +1,2 @@
+export * from '../../../resources/mini-app-installation/mini-app-installation.schema';
+export * from '../../../resources/mini-app/mini-app.schema';

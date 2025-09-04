@@ -4,8 +4,12 @@
  * last change 2024-02-23
  * Author: Ks Tan
  */
-<%Object.keys(it.models).forEach(function(modelname) { %>    
-export const Default<%=modelname%> = (uuid:string)=>{
+<%
+  Object.keys(it.models).forEach(function(modelname) { 
+    const newmodelname = toTypeName(it.resourceName,modelname)
+  %>  
+
+export const Default<%=newmodelname%> = (uuid:string)=>{
     // <%~ JSON.stringify(it.models[modelname].model) %>
     <% let model = it.models[modelname].model%>    
     <% if(model['_id'] && model['code'] && model['label']){%>
@@ -42,14 +46,14 @@ export const Default<%=modelname%> = (uuid:string)=>{
           <%} else if(field.type=='boolean' ){%> 
               <%=key%> :false ,
           <%} else if(typeof field=='string'){%>
-            <%=key%> : Default<%= field  %>(''), //<%= field%> 
+            <%=key%> : Default<%= toTypeName(it.resourceName,field) %>(''), //<%= field%> 
           <%} else if(field.type=='string'){%>
               <%=key%> : '<%= field.default  %>',
 
             <%} else if(Array.isArray(field) && ['string','integer','number','boolean'].includes(field[0])) {%>
-              <%=key%> : <<%=field[0]%>[]>[],  //typeof field == array     <%~JSON.stringify(field)%> 
+              <%=key%> : <<%=field[0]%>[]>[],  //typeof field == array   %> 
             <%} else if(Array.isArray(field)) {%>
-              <%=key%> : [Default<%=field[0]%>(randomUUID())],  //typeof field == array     <%~JSON.stringify(field)%>    
+              <%=key%> : [Default<%=  toTypeName(it.resourceName,field[0])  %>(randomUUID())],  //typeof field == array   %>    
             <%} else {%>
               <%=key%> : <%=field.default%>,  //else <%= typeof field %>
           <%}%>

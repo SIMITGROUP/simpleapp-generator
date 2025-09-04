@@ -12,8 +12,9 @@ import { SimpleAppDocumentManagementModule } from './document-management/documen
 import { SimpleAppForeignKeyModule } from './foreign-key/foreign-key.module';
 import { SimpleAppLogModule } from './log/log.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
+import {SimpleAppSoftwarePolicyModule} from './policy/policy.module'
 
-// import { MiniAppModule } from './mini-app/mini-app.module';
+import { SimpleAppMiniAppModule } from './mini-app/mini-app.module';
 import { ProfileModule } from './profile/profile.module';
 import { SimpleAppUserContextModule } from './user-context/user-context.module';
 import { SimpleWebhookModule } from './webhook/webhook.module';
@@ -27,7 +28,9 @@ import { SimpleWebhookModule } from './webhook/webhook.module';
     MaintenanceModule,
     ProfileModule,
     SimpleAppUserContextModule,
-    SimpleWebhookModule
+    SimpleWebhookModule,
+    SimpleAppMiniAppModule,
+    SimpleAppSoftwarePolicyModule
   ],
   controllers:[],
   providers: [],
@@ -38,6 +41,9 @@ import { SimpleWebhookModule } from './webhook/webhook.module';
     MaintenanceModule,
     ProfileModule,
     SimpleAppUserContextModule,
-    SimpleWebhookModule],
+    SimpleWebhookModule,
+    SimpleAppMiniAppModule,
+    SimpleAppSoftwarePolicyModule
+  ],
 })
 export class SimpleAppCoreFeaturesModule {}

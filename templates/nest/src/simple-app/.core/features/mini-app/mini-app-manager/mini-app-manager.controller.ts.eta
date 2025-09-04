@@ -1,12 +1,14 @@
 import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
-import { AppUser } from 'src/simpleapp/generate/commons/decorators/appuser.decorator';
-import { Roles } from 'src/simpleapp/generate/commons/roles/roles.decorator';
-import { Role } from 'src/simpleapp/generate/commons/roles/roles.enum';
-import { UserContext } from 'src/simpleapp/generate/commons/user.context';
-import * as types from '../../../simpleapp/generate/types';
-import * as schemas from '../../../simpleapp/generate/apischemas';
+
+import { AppUser } from 'src/simple-app/.core/features/user-context/appuser.decorator';
+import { Roles } from 'src/simple-app/.core/features/auth/role-guard/roles.decorator';
+import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+
+import * as schemas from '../dto';
 import { MiniAppManagerBridgeService } from './mini-app-manager-bridge.service';
+
 
 @ApiTags('MINIAPPMANAGER')
 @Controller('mini-app-manager')
@@ -14,8 +16,8 @@ export class MiniAppManagerController {
   constructor(private readonly service: MiniAppManagerBridgeService) {}
 
   @Put('mini-apps/:miniAppCode/install')
-  @Roles(Role.SuperAdmin, Role.SuperUser, Role.Miniappinstallation_create)
-  @ApiResponse({ status: 200, description: 'Install a miniApp', type: schemas.Miniappinstallation })
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.User)
+  @ApiResponse({ status: 200, description: 'Install a miniApp', type: schemas.MiniAppInstallation })
   @ApiOperation({ operationId: 'runInstallMiniApp' })
   async installMiniApp(@AppUser() appUser: UserContext, @Param('miniAppCode') miniAppCode: string) {
     const res = await this.service.runInstallMiniApp(appUser, miniAppCode);
@@ -23,8 +25,8 @@ export class MiniAppManagerController {
   }
 
   @Put('mini-apps/:miniAppCode/uninstall')
-  @Roles(Role.SuperAdmin, Role.SuperUser, Role.Miniappinstallation_update)
-  @ApiResponse({ status: 200, description: 'Uninstall a miniApp', type: schemas.Miniappinstallation })
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.User)
+  @ApiResponse({ status: 200, description: 'Uninstall a miniApp', type: schemas.MiniAppInstallation })
   @ApiOperation({ operationId: 'runUninstallMiniApp' })
   async uninstallMiniApp(@AppUser() appUser: UserContext, @Param('miniAppCode') miniAppCode: string) {
     const res = await this.service.runUninstallMiniApp(appUser, miniAppCode);
@@ -32,17 +34,17 @@ export class MiniAppManagerController {
   }
 
   @Put('mini-apps/:miniAppCode/update-setting')
-  @Roles(Role.SuperAdmin, Role.SuperUser, Role.Miniappinstallation_update)
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.User)
   @ApiBody({ description: 'Request Body', type: schemas.DynamicParam })
-  @ApiResponse({ status: 200, description: 'Update miniApp setting', type: schemas.Miniappinstallation })
+  @ApiResponse({ status: 200, description: 'Update miniApp setting', type: schemas.MiniAppInstallation })
   @ApiOperation({ operationId: 'runUpdateMiniAppSetting' })
-  async updateMiniAppSetting(@AppUser() appUser: UserContext, @Body() data: types.DynamicParam, @Param('miniAppCode') miniAppCode: string) {
+  async updateMiniAppSetting(@AppUser() appUser: UserContext, @Body() data: schemas.DynamicParam, @Param('miniAppCode') miniAppCode: string) {
     const res = await this.service.runUpdateMiniAppSetting(appUser, miniAppCode, data);
     return res;
   }
 
   @Get('installed-mini-apps')
-  @Roles(Role.SuperAdmin, Role.SuperUser, Role.Miniappinstallation_search)
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.User)
   @ApiResponse({ status: 200, description: 'Get installed miniApps', type: schemas.InstalledMiniAppDetail })
   @ApiOperation({ operationId: 'runGetInstalledMiniApps' })
   async getInstalledMiniApps(@AppUser() appUser: UserContext) {
@@ -51,7 +53,7 @@ export class MiniAppManagerController {
   }
 
   @Get('categorized-mini-apps')
-  @Roles(Role.SuperAdmin, Role.SuperUser, Role.Miniapp_search)
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.User)
   @ApiResponse({ status: 200, description: 'Get categorized miniApps', type: schemas.CategorizedMiniAppDetail })
   @ApiOperation({ operationId: 'runGetCategorizedMiniApps' })
   async getCategorizedMiniApps(@AppUser() appUser: UserContext) {
@@ -60,7 +62,7 @@ export class MiniAppManagerController {
   }
 
   @Get('mini-apps/:miniAppCode')
-  @Roles(Role.SuperAdmin, Role.SuperUser, Role.Miniapp_search)
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.User)
   @ApiResponse({ status: 200, description: 'Get miniApp detail', type: schemas.MiniAppDetail })
   @ApiOperation({ operationId: 'runGetMiniAppDetail' })
   async getMiniAppDetail(@AppUser() appUser: UserContext, @Param('miniAppCode') miniAppCode: string) {
@@ -70,7 +72,7 @@ export class MiniAppManagerController {
 
   @Post('system-default-mini-apps-migration')
   @Roles(Role.Everyone)
-  @ApiResponse({ status: 200, description: 'Migrate system default miniApp.', type: [schemas.Miniapp] })
+  @ApiResponse({ status: 200, description: 'Migrate system default miniApp.', type: [schemas.MiniApp] })
   @ApiOperation({ operationId: 'runSystemDefaultMiniAppMigration' })
   async systemDefaultMiniAppMigration(@AppUser() appUser: UserContext) {
     const res = await this.service.runSystemDefaultMiniAppMigration(appUser);

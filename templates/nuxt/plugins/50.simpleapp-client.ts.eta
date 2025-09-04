@@ -6,7 +6,7 @@
  */
 import { defineNuxtPlugin } from "#app";
 <% for(let i=0;i<it.modules.length; i++){ %>
-  import {<%=it.modules[i].docname%>Doc} from "../simpleapp/docs/<%=it.modules[i].docname%>Doc"  
+  import {<%= upperFirstCase(it.modules[i].docname)%>Doc} from "../simpleapp/docs/<%=it.modules[i].docname%>Doc"  
 <%}%>
 
 export default defineNuxtPlugin((nuxtApp) => {
@@ -14,7 +14,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     return {
         provide: {
           <% for(let i=0;i<it.modules.length; i++){ %>
-          <%=it.modules[i].docname%>Doc:()=>new <%=it.modules[i].docname%>Doc(),
+          <%= it.modules[i].docname%>Doc:()=>new <%= upperFirstCase(it.modules[i].docname)%>Doc(),
           <%}%>
         }
     }

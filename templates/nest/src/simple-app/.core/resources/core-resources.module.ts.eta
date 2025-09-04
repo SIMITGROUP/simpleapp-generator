@@ -9,7 +9,7 @@ import { Module } from '@nestjs/common';
 
 <% for(let i=0;i<it.modules.length; i++){ %>
 <% let obj = it.modules[i]%>
-<% if(getSystemResources().includes(obj.docname)){%>
+<% if(getSystemResources().includes(obj.docname.toLowerCase())){%>
   import { <%= obj.typename %>Module } from './<%= camelToKebab(obj.resourcename) %>/<%= camelToKebab(obj.resourcename) %>.module';    
 <%}%>
 <%}%>
@@ -19,7 +19,7 @@ import { Module } from '@nestjs/common';
   imports: [
     <% for(let i=0;i<it.modules.length; i++){ %>
       <% let obj = it.modules[i]%>
-      <% if(getSystemResources().includes(obj.docname)){%>
+      <% if(getSystemResources().includes(obj.docname.toLowerCase())){%>
         <%= obj.typename %>Module,    
       <%}%>
     <%}%>
@@ -29,7 +29,7 @@ import { Module } from '@nestjs/common';
   exports: [
      <% for(let i=0;i<it.modules.length; i++){ %>
       <% let obj = it.modules[i]%>
-      <% if(getSystemResources().includes(obj.docname)){%>
+      <% if(getSystemResources().includes(obj.docname.toLowerCase())){%>
         <%= obj.typename %>Module,    
       <%}%>
     <%}%>
