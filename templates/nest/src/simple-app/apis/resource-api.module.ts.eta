@@ -9,7 +9,7 @@ import { Module } from '@nestjs/common';
 <% for(let i=0;i<it.modules.length; i++){ %>
 <% let obj = it.modules[i]%>
 <% if(loadapi && obj.api && obj.api.length>0 && !getSystemResources().includes(obj.docname)){%>
-  import { <%= obj.typename %>ApiModule } from './<%= camelToKebab(obj.resourcename) %>/<%= camelToKebab(obj.resourcename) %>-api.module';    
+  import { <%= obj.typename %>ApiModule } from './<%= camelToKebab(obj.resourcename) %>-api/<%= camelToKebab(obj.resourcename) %>-api.module';    
 <%}%>
 <%}%>
 

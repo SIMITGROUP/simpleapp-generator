@@ -29,7 +29,7 @@ import * as buildinschemas from './buildinschemas';
 import { JSONSchema7 } from 'json-schema';
 import { generatePrintformat } from './processors/jrxmlbuilder';
 
-const systemResources = ['user','tenant','organization','branch','permission','autoincreament','documentevent','webhook','webhooklog','keyvaluepair','docnoformat','customfield','miniapp','miniappinstallation']
+const systemResources = ['user','tenant','organization','branch','permission','autoincreament','documentevent','webhook','webhooklog','keyvaluepair','documentnoformat','autoincreament','customfield','miniapp','miniappinstallation']
 const { Eta } = require('eta');
 const { capitalizeFirstLetter } = require('./libs');
 // const X_DOCUMENT_TYPE='x-document-type'
@@ -336,7 +336,7 @@ const generateSchema = (
           const subcategoryscope = arrcategory[1]
           const subcategorytype = arrcategory[2]
           
-          const targetfolder = `${simpleappTargetFolder}/${subcategory}s/${resourceFileName}`;
+          const targetfolder = `${simpleappTargetFolder}/${subcategory}s/${resourceFileName}-api`;
           const targetfile = `${targetfolder}/${resourceFileName}-api.${subcategoryscope}.${subcategorytype}`;
           if (!existsSync(targetfolder)) {
             mkdirSync(targetfolder, { recursive: true });

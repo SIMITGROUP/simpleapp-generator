@@ -6,7 +6,7 @@
  * Last Modified By: Yong Xiang
  */
 import { UserContext } from 'src/simple-app/.core/features/user-context/user.context'
-import * as sharelibs from 'src/simple-app/.core/sharelibs'
+import * as sharelibs from 'src/simple-app/.core/share-libs'
 import { Injectable,Inject,forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import jsonpath from 'jsonpath'

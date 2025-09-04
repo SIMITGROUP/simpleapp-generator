@@ -1,11 +1,11 @@
 import { SchemaType, RESTMethods, IsolationType } from '../type';
 
-export const docnoformat: SchemaType = {
+export const documentnoformat: SchemaType = {
   type: 'object',
   'x-simpleapp-config': {
     isolationType: IsolationType.org,
     documentType: 'docno',
-    documentName: 'docnoformat',
+    documentName: 'documentnoformat',
     pageType: 'crud',
     uniqueKey: 'docNoFormatNo',
     documentTitle: 'docNoFormatName',
@@ -15,7 +15,7 @@ export const docnoformat: SchemaType = {
         action: 'listDocFormats',
         entryPoint: '/listdocformats/:doctype',
         requiredRole: ['User'],
-        responseType: '[Docnoformat]',
+        responseType: '[DocumentNoFormat]',
         method: RESTMethods.get,
         description: 'get list of document format for 1 doctype'
       }

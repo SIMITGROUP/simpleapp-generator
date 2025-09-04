@@ -13,10 +13,10 @@ elif [ $type == 'updatefrontend' ]; then
     cp -a ./sharelibs frontend/simpleapp/generate
 elif [ $type == 'backend' ]; then
     simpleapp-generator -c config.json -g backend
-    cp -a ./sharelibs backend/src/simpleapp/generate
+    cp -a ./share-libs backend/src/simpleapp/generate
 elif [ $type == 'updatebackend' ]; then
     simpleapp-generator -c config.json -g updatebackend
-    cp -a ./sharelibs backend/src/simpleapp/generate
+    cp -a ./share-libs backend/src/simpleapp/generate
 elif [ $type == 'updateMiniAppJsSdk' ]; then
     simpleapp-generator -c config.json -g updateMiniAppJsSdk
 elif [ $type == 'updateMiniAppStreamlitSdk' ]; then

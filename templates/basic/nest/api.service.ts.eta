@@ -4,11 +4,10 @@
  * last change 2025-09-01
  * Author: Ks Tan
  */
-import { Injectable } from '@nestjs/common';
-import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
-import * as schema from './<%= camelToKebab(it.resourceName)%>-api.schema'
+
 
 <% 
+
   const getFieldType =(proptype, typename,actionname)=>{
     const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
     if(!typename) throw actionname +" undefine schema";
@@ -23,17 +22,26 @@ import * as schema from './<%= camelToKebab(it.resourceName)%>-api.schema'
       return tmptypename      
     }
   }
+  
+const kebabname =  camelToKebab(it.resourceName) 
+let filepath = `src/simple-app/.resources/${kebabname}/${kebabname}.service`
+if(getSystemResources().includes(it.resourceName.toLowerCase())){
+    filepath = `src/simple-app/.core/resources/${kebabname}/${kebabname}.service`
+}
 %>
 
 
+import { Injectable } from '@nestjs/common';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import * as schema from './<%= camelToKebab(it.resourceName)%>-api.schema'
+import { <%= it.typename%>Service }from '<%= filepath%>'; 
 
 @Injectable()
 export class <%= (it.typename)%>ApiService  {
   constructor(
-    
+    private service:<%= it.typename%>Service
   ) {}
 
-    /***************************** begin x-document-api definitions *****************************************/
 
 <% for(let i=0;i<it.apiSettings.length;i++){%>
 <% let api = it.apiSettings[i] %>
@@ -61,15 +69,12 @@ export class <%= (it.typename)%>ApiService  {
             <%}%>
 
          ){
-            const resultResult = {} as <%= getFieldType('type',api.responseType,api.action)%>            
+            const resultResult:<%= getFieldType('type',api.responseType,api.action)%> = <%= api.responseType.substr(0,1)=='[' ? '[]' : '{}'%>
 
             return resultResult
     
   } 
 <%}%>
-
-
-/***************************** end x-document-api definitions *****************************************/
     
   
 }

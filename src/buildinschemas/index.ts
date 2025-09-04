@@ -3,7 +3,7 @@ export { organization } from './organization';
 export { branch } from './branch';
 export { permission } from './permission';
 export { autoincreament } from './autoincreament';
-export { docnoformat } from './docnoformat';
+export { documentnoformat } from './documentnoformat';
 export { systemmessage } from './systemmessage';
 export { keyvaluepair } from './keyvaluepair';
 // export { webhook } from './webhook';

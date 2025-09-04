@@ -10,10 +10,9 @@ import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 
 
 <%
-const systemResources = ['user','tenant','organization','branch','permission','autoincreament','documentevent','webhook','webhooklog','keyvaluepair','docnoformat','customfield','miniapp','miniappinstallation']
 const kebabname =  camelToKebab(it.resourceName) 
 let filepath = `src/simple-app/.resources/${kebabname}/${kebabname}.schema`
-if(systemResources.includes(it.resourceName.toLowerCase())){
+if(getSystemResources().includes(it.resourceName.toLowerCase())){
     filepath = `src/simple-app/.core/resources/${kebabname}/${kebabname}.schema`
 }
 %>

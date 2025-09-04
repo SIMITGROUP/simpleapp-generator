@@ -4,14 +4,27 @@
  * last change 2025-09-01
  * Author: Ks Tan
  */
+ 
+
+<%
+
+const kebabname =  camelToKebab(it.resourceName) 
+let filepath = `src/simple-app/.resources/${kebabname}/${kebabname}.module`
+if(getSystemResources().includes(it.resourceName.toLowerCase())){
+    filepath = `src/simple-app/.core/resources/${kebabname}/${kebabname}.module`
+}
+%>
+
+
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { <%= it.typename%>Module }from '<%= filepath%>'; 
 import { <%= it.typename%>ApiService } from './<%= camelToKebab(it.resourceName)%>-api.service';
 import { <%= it.typename%>ApiController } from './<%= camelToKebab(it.resourceName)%>-api.controller';
 import { <%= it.typename%>ApiResolver } from './<%= camelToKebab(it.resourceName)%>-api.resolver';
 
 @Module({
-  imports: [],
+  imports: [<%= it.typename%>Module],
   controllers: [<%= it.typename%>ApiController],
   providers: [<%= it.typename%>ApiService, <%= it.typename%>ApiResolver],
   exports: [<%= it.typename%>ApiService, <%= it.typename%>ApiResolver],
