@@ -1,0 +1,79 @@
+export * from '../../resources/user/user.schema'
+export * from '../../resources/permission/permission.schema'
+export * from '../../resources/mini-app-installation/mini-app-installation.schema'
+export * from 'src/simple-app/.core/resources/queue-job/queue-job.schema'
+
+
+
+export namespace QueuePayload {
+  export type UserContext = {
+    user: {
+      _id: string;
+      uid: string;
+      uname: string;
+      fullName: string;
+      email: string;
+      timeZone: string;
+      currency: string;
+      country: string;
+      offsetMinute: number;
+    };
+    xOrg: string;
+  };
+
+  export type WithUserContext<T> = {
+    userContext: UserContext;
+    payload: T;
+  };
+}
+
+
+
+export type QueuejobJob = {
+  id: string; // {"type":"string","required":true,"default":""}
+  processor: string; // {"type":"string","required":true,"default":""}
+  name: string; // {"type":"string","required":true,"default":""}
+  status: string; // {"type":"string","required":true,"default":""}
+  title?: string; // {"type":"string","required":false,"default":""}
+};
+
+export type QueuejobPayload = {
+  [key: string]: any;
+};
+
+export type QueuejobResult = {
+  [key: string]: any;
+};
+
+export type QueuejobError = {
+  status?: number; // {"type":"number","required":false,"default":0}
+  name?: string; // {"type":"string","required":false,"default":""}
+  message?: string; // {"type":"string","required":false,"default":""}
+};
+
+export type Queuejob = {
+  _id?: string; // {"type":"string","required":false,"format":"uuid","default":""}
+  created?: string; // {"type":"string","required":false,"default":""}
+  updated?: string; // {"type":"string","required":false,"default":""}
+  createdBy?: string; // {"type":"string","required":false,"default":""}
+  updatedBy?: string; // {"type":"string","required":false,"default":""}
+  tenantId?: number; // {"type":"number","required":false,"default":1}
+  orgId?: number; // {"type":"number","required":false,"default":1}
+  branchId?: number; // {"type":"number","required":false,"default":1}
+  job: QueuejobJob; //child object
+
+  payload?: QueuejobPayload; //child object
+
+  result?: QueuejobResult; //child object
+
+  error?: QueuejobError; //child object
+};
+
+
+/***************************************** Start Auto Complete *****************************************/
+export type QueuejobAutoComplete = {
+  _id: string;
+  code: string;
+  label: string;
+};
+/****************************************** End Auto Complete ******************************************/

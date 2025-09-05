@@ -1,0 +1,10 @@
+import { Module } from '@nestjs/common';
+import { CronSystemModule } from './cron-system/cron-system.module';
+
+@Module({
+  imports: [CronSystemModule],
+  controllers: [],
+  providers: [],
+  exports: [CronSystemModule],
+})
+export class SimpleAppCronModule {}

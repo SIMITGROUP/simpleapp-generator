@@ -1,0 +1,139 @@
+import { Injectable } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Job, Queue } from 'bullmq';
+// import { QueueName } from '../queue.enum';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import axios from 'axios';
+import { QueuePayload,QueueJobProducerResponse,QueueJob } from '../queue.type';
+
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { QueueJobService } from 'src/simple-app/.core/resources/queue-job/queue-job.service';
+
+export abstract class QueueBaseProducer {
+  // protected abstract readonly processor: QueueName;
+  protected abstract readonly processor: string;
+
+  constructor(@InjectModel('QueueJob') protected queueJobModel: Model<QueueJob>) {}
+
+  protected buildPayload<T>(appUser: UserContext, payload: T) {
+    const data: QueuePayload.WithUserContext<T> = {
+      userContext: {
+        user: {
+          _id: appUser.getId(),
+          uid: appUser.getUid(),
+          uname: appUser.getUname(),
+          fullName: appUser.getFullname(),
+          email: appUser.getEmail(),
+          timeZone: appUser.getTimeZone(),
+          currency: appUser.getCurrency(),
+          country: appUser.getCountry(),
+          offsetMinute: appUser.getOffsetMinute(),
+        },
+        xOrg: appUser.getXOrg(),
+      },
+      payload,
+    };
+
+    return data;
+  }
+
+  protected buildResponse(job: Job): QueueJobProducerResponse {
+    return {
+      id: job.id,
+      name: job.name,
+      processor: this.processor,
+    };
+  }
+
+  protected async createQueueJob<T>(appUser: UserContext, job: Job, payload: T, title: string) {
+    job.log(`Job Created: ${title}`);
+    this.createQueueJobRecord(appUser, job, payload, title);
+    this.notify(job, 'waiting', title);
+  }
+
+  /**
+   * Note:
+   * We use `queueJobModel.create` directly instead of `queueJobService.create`
+   * because using the service would run inside the active MongoDB transaction,
+   * which can lead to transaction errors.
+   *
+   * Example:
+   * ```
+   * const job = await this.queue.add(QueueTuitionClassJob.GENERATE_SCHEDULE, data);
+   * this.createJob(appUser, job);
+   * ```
+   *
+   * Context:
+   * Creating a tuition class involves multiple steps, all wrapped in a transaction:
+   * 1. Create tuition class
+   * 2. Generate schedule <-- queued
+   *
+   * Problem:
+   * - `queueJobService.create` runs inside the current MongoDB transaction.
+   * - After `this.queue.add(...)`, BullMQ may start processing the job immediately.
+   * - If the worker touches MongoDB while the transaction is still open,
+   *   MongoDB throws: "Transaction with { txnNumber: X } has been committed."
+   *
+   * Solution:
+   * - Write the queue job record directly with `queueJobModel.create`
+   *   (bypasses transaction, no session).
+   * - Ensure the main transaction can commit before the queue worker runs.
+   * - This avoids conflicts between the active transaction and the worker.
+   */
+  protected async createQueueJobRecord<T>(appUser: UserContext, job: Job, payload: T, title: string) {
+    this.queueJobModel.create({
+      _id: crypto.randomUUID(),
+      created: new Date().toISOString(),
+      updated: new Date().toISOString(),
+      createdBy: appUser.getUid(),
+      updatedBy: appUser.getUid(),
+      tenantId: appUser.getTenantId(),
+      orgId: appUser.getOrgId(),
+      branchId: appUser.getBranchId(),
+
+      job: {
+        id: job.id,
+        name: job.name,
+        processor: this.processor,
+        status: 'waiting',
+        title,
+      },
+
+      payload,
+    });
+
+    // this.queueJobService.create(
+    //   appUser,
+    //   {
+    //     job: {
+    //       id: job.id,
+    //       name: job.name,
+    //       processor: QueueName.TUITION_CLASS,
+    //       status: 'pending',
+    //       title: '',
+    //     },
+    //   },
+    //   true,
+    // );
+  }
+
+  async notify(job: Job, status: string, title: string) {
+    const xOrg = job.data?.userContext?.xOrg;
+    if (!xOrg) {
+      job.log('[NOTIFY] Not found X-Org, Failed to notify frontend');
+      return;
+    }
+
+    const url = `${process.env.FRONTEND_URL}/api/${xOrg}/queue/notify`;
+    await axios.post(url, {
+      id: job.id,
+      name: job.name,
+      processor: this.processor,
+      title,
+      status,
+    });
+
+    job.log(`[NOTIFY] Job Created: ${url}`);
+  }
+}

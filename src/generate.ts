@@ -29,7 +29,7 @@ import * as buildinschemas from './buildinschemas';
 import { JSONSchema7 } from 'json-schema';
 import { generatePrintformat } from './processors/jrxmlbuilder';
 
-const systemResources = ['user','tenant','organization','branch','permission','autoincreament','documentevent','webhook','webhooklog','keyvaluepair','documentnoformat','autoincreament','customfield','miniapp','miniappinstallation','systemmessage']
+const systemResources = ['user','tenant','organization','branch','permission','autoincreament','documentevent','webhook','webhooklog','keyvaluepair','documentnoformat','autoincreament','customfield','miniapp','miniappinstallation','systemmessage','queuejob']
 const { Eta } = require('eta');
 const { capitalizeFirstLetter } = require('./libs');
 // const X_DOCUMENT_TYPE='x-document-type'

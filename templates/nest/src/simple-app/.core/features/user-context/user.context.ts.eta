@@ -13,8 +13,6 @@ import { BadRequestException, ForbiddenException, Injectable, Logger, Scope } fr
 import * as jwt from 'jsonwebtoken';
 import { ClientSession, Model, PipelineStage } from 'mongoose';
 
-
-
 // import { Branch, Organization, Permission, Tenant, TenantClientSetting, User, Appintegration, Webhook, Miniappinstallation, TUserType, TMiniApiTokenInfo } from 'src/simpleapp/generate/types';
 import { TUserType, TMiniApiTokenInfo } from 'src/simple-app/.core/framework/schemas';
 import { MiniAppInstallation } from 'src/simple-app/.core/resources/mini-app-installation/mini-app-installation.schema';
@@ -30,8 +28,6 @@ import { UserContextInfo, ProfileUserBranch, ProfileUserInvites, TenantPermissio
 import { ModifiedRecords } from '../../framework/schemas';
 import { Role } from '../auth/role-guard/roles.enum';
 import * as rolegroups from '../auth/role-guard/roles.group';
-
-
 
 // import systemWebHooks from '../../webhooks';
 @Injectable({ scope: Scope.REQUEST })
@@ -526,6 +522,7 @@ export class UserContext extends UserContextInfo {
     if (this.isRealmAdmin() && !this.roles.includes(Role.SuperAdmin)) {
       this.roles.push(Role.SuperAdmin);
     }
+    // console.log('this.roles',this.roles)
     // this.logger.verbose(`User ${this.uid} have _id (${this.getId()}), groups (${this.groups.join(',')}) and roles (${this.getRoles().join(',')}).`);
   };
 

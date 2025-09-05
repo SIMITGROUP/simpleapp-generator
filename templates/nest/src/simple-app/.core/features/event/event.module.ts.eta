@@ -1,0 +1,12 @@
+import { Module } from '@nestjs/common';
+import { UserModule } from '../../resources/user/user.module';
+import { PermissionModule } from '../../resources/permission/permission.module';
+import { MiniAppInstallationModule } from '../../resources/mini-app-installation/mini-app-installation.module';
+
+@Module({
+  imports: [UserModule,PermissionModule,MiniAppInstallationModule],
+  controllers: [],
+  providers: [],
+  exports: [],
+})
+export class SimpleAppEventModule {}

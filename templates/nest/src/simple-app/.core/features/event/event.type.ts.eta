@@ -1,0 +1,24 @@
+export * from '../../resources/user/user.schema'
+export * from '../../resources/permission/permission.schema'
+export * from '../../resources/mini-app-installation/mini-app-installation.schema'
+export namespace EventPayload {
+  export type UserContext = {
+    user: {
+      _id: string;
+      uid: string;
+      uname: string;
+      fullName: string;
+      email: string;
+      timeZone: string;
+      currency: string;
+      country: string;
+      offsetMinute: number;
+    };
+    xOrg: string;
+  };
+
+  export type WithUserContext<T> = {
+    userContext: UserContext;
+    payload: T;
+  };
+}

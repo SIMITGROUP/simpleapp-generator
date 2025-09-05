@@ -1,0 +1,196 @@
+import { OnWorkerEvent, WorkerHost } from '@nestjs/bullmq';
+import { QueueUserContext } from '../queue-user-context/queue-user-context.service';
+import { UserContext } from '../../user-context/user.context';
+import axios from 'axios';
+import { Job } from 'bullmq';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { Connection, Model } from 'mongoose';
+import { Queuejob } from '../queue.type';
+// import { QueueName } from '../queue.enum';
+import _ from 'lodash';
+import { forwardRef, Inject, InternalServerErrorException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
+export abstract class BaseQueueConsumer extends WorkerHost {
+  protected appUser: UserContext;  
+
+  // protected abstract readonly processor: QueueName;
+  protected abstract readonly processor: string;
+
+  constructor(
+    @Inject(forwardRef(() => QueueUserContext)) protected readonly queueUserContext: QueueUserContext,
+    @InjectModel('Queuejob') protected queueJobModel: Model<Queuejob>,
+    @InjectConnection() private readonly connection: Connection,
+    protected eventEmitter: EventEmitter2
+  ) {
+    super();
+  }
+
+  createUserContext() {
+    this.queueUserContext.create();
+    this.appUser = this.queueUserContext.appUser;
+  }
+
+  async startSession() {
+    const session = await this.connection.startSession();
+    this.appUser.setDBSession(session);
+    this.appUser.getDBSession().startTransaction({ readPreference: 'primary' });
+  }
+
+  async process(job: Job) {
+    this.createUserContext();
+    await this.startSession();
+
+    try {
+      const { userContext, payload } = job.data;
+      this.queueUserContext.assign(userContext);
+
+      await this.dispatch(job, payload);
+
+      await this.appUser.getDBSession().commitTransaction();
+      return {
+        success: true,
+      };
+    } catch (e) {
+      await this.appUser.getDBSession().abortTransaction();
+      throw e;
+    } finally {
+      this.appUser.getDBSession().endSession();
+    }
+  }
+
+  private async dispatch(job: Job, payload: any) {
+    const pascalJobName = _.upperFirst(_.camelCase(job.name));
+    const methodName = `handle${pascalJobName}`;
+
+    const handler = (this as any)[methodName];
+    if (typeof handler !== 'function') {
+      job.log(`[WARN] No handler found for job: ${job.name} (expected ${methodName})`);
+      return;
+    }
+
+    await handler.call(this, job, payload);
+  }
+
+  protected async updateQueueJobRecord(job: Job, status: 'completed' | 'failed', result: any) {
+    await this.queueJobModel.updateOne(
+      {
+        'job.id': job.id,
+        'job.name': job.name,
+        'job.processor': this.processor,
+      },
+      {
+        'job.status': status,
+        updated: new Date().toISOString(),
+        result: status === 'completed' ? result : undefined,
+        error: status === 'failed' ? result : undefined,
+      },
+    );
+  }
+
+  @OnWorkerEvent('active')
+  onActive(job: Job) {
+    job.log(`Processing job ${job.id}`);
+  }
+
+  // @OnWorkerEvent('closed')
+  // onClosed() {
+  //   console.log(`closed`);
+  // }
+
+  // @OnWorkerEvent('closing')
+  // onClosing(msg: string) {
+  //   console.log(`closing: ${msg}`);
+  // }
+
+  @OnWorkerEvent('completed')
+  onCompleted(job: Job, result: any, prev: string) {
+    const status = 'completed';
+    job.log('[COMPLETED]');
+    this.updateQueueJobRecord(job, status, result);
+    this.notify(job, status, {});
+  }
+
+  // @OnWorkerEvent('drained')
+  // onDrained() {
+  //   console.log(`drained`);
+  // }
+
+  // @OnWorkerEvent('error')
+  // onError(failedReason: Error) {
+  //   console.log(`Error: ${failedReason}`);
+  // }
+
+  @OnWorkerEvent('failed')
+  onFailed(job: Job, error: Error, prev: string) {
+    const status = 'failed';
+    job.log('[Failed]');
+    const errorData = {
+      // @ts-expect-error Status is valid
+      status: error?.status,
+      name: error?.name,
+      message: error?.message,
+    };
+
+    this.updateQueueJobRecord(job, status, errorData);
+    this.notify(job, status, errorData);
+  }
+
+  // @OnWorkerEvent('paused')
+  // onPaused() {
+  //   console.log(`paused`);
+  // }
+
+  // @OnWorkerEvent('progress')
+  // onProgress(job: Job, progress: JobProgress) {
+  //   console.log(`progress`);
+  // }
+
+  // @OnWorkerEvent('ready')
+  // onReady() {
+  //   console.log(`ready`);
+  // }
+
+  // @OnWorkerEvent('resumed')
+  // onResumed() {
+  //   console.log(`Resumed`);
+  // }
+
+  // @OnWorkerEvent('stalled')
+  // onStalled() {
+  //   console.log(`stalled`);
+  // }
+
+  async notify(job: Job, status: string, data?: any) {
+    const xOrg = job.data?.userContext?.xOrg;
+    if (!xOrg) {
+      job.log('[NOTIFY] Not found X-Org, Failed to notify frontend');
+      return;
+    }
+    const frontendurl = process.env.FRONTEND_URL ?? 'https://localhost:8080';
+    const url = `${frontendurl}/api/${xOrg}/queue/notify`;
+    await axios.post(url, {
+      id: job.id,
+      name: job.name,
+      processor: this.processor,
+      status,
+      data,
+    });
+
+    job.log(`[NOTIFY] Process End ${url}`);
+  }
+
+  async runEvent(appuser: UserContext, eventName: string, payloads: any) {
+    const res = await this.eventEmitter.emitAsync(eventName, appuser, payloads);
+    if (!this.eventEmitter.hasListeners(eventName)) {
+      throw new InternalServerErrorException(`${eventName} seems no listener`);
+    }
+    if (!res) {
+      throw new InternalServerErrorException(`${eventName} is invalid worker`);
+    }
+
+    const result = res[0];
+    if (result?.name && result?.name.includes('Exception')) throw result;
+    return result;
+  }
+}
