@@ -6,21 +6,21 @@
  */
 import { Module } from '@nestjs/common';
 
-
 import { SimpleAppAuthModule } from './auth/auth.module';
 import { SimpleAppDocumentManagementModule } from './document-management/document-management.module';
 import { SimpleAppForeignKeyModule } from './foreign-key/foreign-key.module';
 import { SimpleAppLogModule } from './log/log.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
-import {SimpleAppSoftwarePolicyModule} from './policy/policy.module'
+import { SimpleAppSoftwarePolicyModule } from './policy/policy.module';
 
 import { SimpleAppMiniAppModule } from './mini-app/mini-app.module';
 import { ProfileModule } from './profile/profile.module';
 import { SimpleAppUserContextModule } from './user-context/user-context.module';
 import { SimpleWebhookModule } from './webhook/webhook.module';
-
+import { AutoIncreamentModule } from './auto-increament/auto-increament.module';
 @Module({
-  imports: [    
+  imports: [
+    AutoIncreamentModule,
     SimpleAppAuthModule,
     SimpleAppDocumentManagementModule,
     SimpleAppForeignKeyModule,
@@ -30,11 +30,13 @@ import { SimpleWebhookModule } from './webhook/webhook.module';
     SimpleAppUserContextModule,
     SimpleWebhookModule,
     SimpleAppMiniAppModule,
-    SimpleAppSoftwarePolicyModule
+    SimpleAppSoftwarePolicyModule,
   ],
-  controllers:[],
+  controllers: [],
   providers: [],
-  exports: [ SimpleAppAuthModule,
+  exports: [
+    AutoIncreamentModule,
+    SimpleAppAuthModule,
     SimpleAppDocumentManagementModule,
     SimpleAppForeignKeyModule,
     SimpleAppLogModule,
@@ -43,7 +45,7 @@ import { SimpleWebhookModule } from './webhook/webhook.module';
     SimpleAppUserContextModule,
     SimpleWebhookModule,
     SimpleAppMiniAppModule,
-    SimpleAppSoftwarePolicyModule
+    SimpleAppSoftwarePolicyModule,
   ],
 })
 export class SimpleAppCoreFeaturesModule {}

@@ -1,0 +1,1 @@
+export const camelToKebab = (value) => value.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()

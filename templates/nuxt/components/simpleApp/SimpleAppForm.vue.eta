@@ -47,7 +47,7 @@ const getField = (path: string) => {
   type defaulttype = typeof alldefaults;
   type keytype = keyof defaulttype;
 
-  const x: keytype = ("Default" + props.document.getDocName(true)) as keytype;
+  const x: keytype = ("Default" + props.document.getResourceName()) as keytype;
   const defaultvalue = alldefaults[x](randomUUID());
   return {
     path: path,

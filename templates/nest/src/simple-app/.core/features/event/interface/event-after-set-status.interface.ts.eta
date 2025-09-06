@@ -1,0 +1,5 @@
+import { UserContext } from "../../user-context/user.context"
+import { AfterSetStatusPayload } from "../event.type"
+export interface EventAfterSetStatus<T> {
+    afterCreate(appUser:UserContext,payload: AfterSetStatusPayload<T> ): Promise<void>
+}

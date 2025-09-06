@@ -1,0 +1,15 @@
+import { DocumentNoFormat } from './document-no-format.schema';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import * as mongoose from 'mongoose';
+
+// create mongodb schema
+
+export const DocumentNoFormatMongoSchema = SchemaFactory.createForClass(DocumentNoFormat)
+  .pre('save', function (next) {
+    this.increment();
+    return next();
+  })
+
+  .index({ orgId: 1, docNoFormatNo: 1 }, { unique: true })
+
+  .index({ 'branch._id': 1 });

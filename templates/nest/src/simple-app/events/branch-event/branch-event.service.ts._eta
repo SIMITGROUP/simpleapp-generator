@@ -1,0 +1,32 @@
+import { BadRequestException, InternalServerErrorException, HttpException, Injectable, Inject } from '@nestjs/common';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { Branch } from './branch-event.type';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import {EventBeforeCreate,EventAfterCreate} from 'src/simple-app/.core/features/event/interface';
+import { BranchService } from 'src/simple-app/.core/resources/branch/branch.service';
+import { CreatePayLoad } from 'src/simple-app/.core/features/event/event.type';
+import { AutoIncreamentService } from 'src/simple-app/.core/features/auto-increament/auto-increament.service';
+import {DocNumberFormatGeneratorService} from 'src/simple-app/.core/features/document-management/doc-no-generator.service'
+
+@Injectable()
+export class BranchEventService implements EventBeforeCreate<Branch>,EventAfterCreate<Branch> {
+  constructor(
+    private branchSvc: BranchService,
+    private autoIncreamentSvc: AutoIncreamentService,
+    private docNoGeneratorSvc:DocNumberFormatGeneratorService
+  ) {}
+
+  @OnEvent('branch.beforeCreate')
+  async beforeCreate(appUser: UserContext, payload: CreatePayLoad<Branch>) {
+    const searchresult = await this.autoIncreamentSvc.runGenerateNextNo(appUser, 'branch', 'branchId');
+    payload.data.branchId = searchresult.nextNo;
+  }
+
+  @OnEvent('branch.afterCreate')
+  async afterCreate(appUser: UserContext, payload: CreatePayLoad<Branch>) {
+    console.log("After create branch")
+        await this.docNoGeneratorSvc.generateBranchDefaultDocNumbers(appUser, payload.data);
+  }
+
+
+}

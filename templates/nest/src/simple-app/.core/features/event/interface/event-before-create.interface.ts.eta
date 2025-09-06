@@ -1,0 +1,5 @@
+import { UserContext } from "../../user-context/user.context"
+import {CreatePayLoad} from '../event.type'
+export interface EventBeforeCreate<T> {
+    beforeCreate(appUser:UserContext,payload: CreatePayLoad<T> ): Promise<void>
+}

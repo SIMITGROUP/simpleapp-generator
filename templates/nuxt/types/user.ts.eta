@@ -4,7 +4,7 @@
  * last change 2024-02-23
  * Author: Ks Tan
  */
-import {Branch} from "~/simpleapp/generate/openapi"
+import {Branch, ProfileUserBranch,UserContextInfo} from "~/simpleapp/generate/openapi"
 export type UserListItem = {
     _id: string
     uid?:string
@@ -53,42 +53,43 @@ export type UserListItem = {
   }
 
 
-export type UserProfile = {
-  _id : string
-  sessionId : string
-  tenantId : number
-  orgId : number
-  branchId : number
-  orgRecordId: string
-  branchRecordId: string
-  uid : string
-  email : string
-  branchCode: string
-  branchName: string
-  orgCode: string
-  orgName: string
-  currency:string
-  country:string
-  offsetMinute:number
-  timeZone:string
-  fullName : string
-  branches: UserStoreBranch[]
-  invites: {
-    _id: string;
-    email: string;
-    fullName: string;
-    tenantId: string;
-    tenantName: string;
-    created: string;
-  }[]
-  roles: string[]
-  groups: string[]
+export type UserProfile = UserContextInfo & {
   currentGroup:string
-  time: string
-  moreProps: any
-  package: 'free' | 'lite' | 'pro' | 'enterprise' | 'enterprisePlus'
-  appintegration: {
-    einvoice: boolean
-    simbiz6: boolean
-  }
+  // _id : string
+  // sessionId : string
+  // tenantId : number
+  // orgId : number
+  // branchId : number
+  // orgRecordId: string
+  // branchRecordId: string
+  // uid : string
+  // email : string
+  // branchCode: string
+  // branchName: string
+  // orgCode: string
+  // orgName: string
+  // currency:string
+  // country:string
+  // offsetMinute:number
+  // timeZone:string
+  // fullName : string
+  // branches: UserStoreBranch[]
+  // invites: {
+  //   _id: string;
+  //   email: string;
+  //   fullName: string;
+  //   tenantId: string;
+  //   tenantName: string;
+  //   created: string;
+  // }[]
+  // roles: string[]
+  // groups: string[]
+  // currentGroup:string
+  // time: string
+  // moreProps: any
+  // package: 'free' | 'lite' | 'pro' | 'enterprise' | 'enterprisePlus'
+  // appintegration: {
+  //   einvoice: boolean
+  //   simbiz6: boolean
+  // }
 }

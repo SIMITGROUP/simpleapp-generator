@@ -39,7 +39,10 @@ const getLayout = ()=>{
   // } 
 }
 
-onMounted(()=>{
+onMounted(async()=>{
+  if(!getProfileUid()){
+     await reloadUserStore()
+    }
   const currentgroup = useCookie('currentGroup').value
   //if no xorg, no enforce pick group
   if(getCurrentXorg()){

@@ -18,7 +18,7 @@ import { AppResolver } from './app.resolver';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-
+import { BullModule } from '@nestjs/bullmq';
 
 import { SimpleAppModule } from './simple-app/simple-app.module';
 import { SimpleAppInterceptor } from './simple-app/.core/framework/simple-app.interceptor';
@@ -68,7 +68,14 @@ import { RolesGuard } from './simple-app/.core/features/auth/role-guard/roles.gu
       policyEnforcement: PolicyEnforcementMode.PERMISSIVE,
       tokenValidation: TokenValidation.ONLINE,
     }),
-
+    BullModule.forRoot({
+      connection: {
+        host: process.env.QUEUE_REDIS_HOST,
+        port: process.env.QUEUE_REDIS_PORT ? parseInt(process.env.QUEUE_REDIS_PORT) : undefined,
+        username: process.env.QUEUE_REDIS_USER,
+        password: process.env.QUEUE_REDIS_PASS,
+      },
+    }),
     SimpleAppModule,
   ],
   controllers: [AppController],

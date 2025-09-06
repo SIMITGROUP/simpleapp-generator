@@ -1,0 +1,137 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { Field, ObjectType, ID } from '@nestjs/graphql';
+import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import * as mongoose from 'mongoose';
+
+export * from 'src/simple-app/.core/framework/schemas';
+
+@ObjectType()
+@Schema({ collection: 'documentnoformatbranch' })
+export class DocumentNoFormatBranch {
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => String, required: false })
+  _id?: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => String, required: false })
+  label?: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => Number, required: false })
+  branchId?: number;
+}
+
+@ObjectType()
+@Schema({ collection: 'documentnoformat' })
+export class DocumentNoFormat {
+  __v?: number;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => String, required: false })
+  _id?: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => String, required: false })
+  created?: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => String, required: false })
+  updated?: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => String, required: false })
+  createdBy?: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => String, required: false })
+  updatedBy?: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => Number, required: false })
+  tenantId?: number;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => Number, required: false })
+  orgId?: number;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => Number, required: false })
+  branchId?: number;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => String, required: false })
+  docNoFormatNo?: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => String, required: false })
+  docNoFormatName?: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => Boolean, required: false })
+  active?: boolean;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => Boolean, required: false })
+  default?: boolean;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => String, required: false })
+  docNoType?: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => String, required: false })
+  docNoPattern?: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => Number, required: false })
+  nextNumber?: number;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => DocumentNoFormatBranch, required: false })
+  branch?: DocumentNoFormatBranch;
+}
+
+/***************************************** Start Auto Complete *****************************************/
+@ObjectType()
+@Schema()
+export class DocumentNoFormatAutoComplete {
+  @Prop()
+  @Field()
+  @ApiProperty({ type: String, required: true, default: '' })
+  _id: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: String, required: true, default: '' })
+  code: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: String, required: true, default: '' })
+  label: string;
+
+  @Prop()
+  @Field()
+  @ApiProperty({ type: () => Boolean, required: false })
+  default?: boolean;
+}

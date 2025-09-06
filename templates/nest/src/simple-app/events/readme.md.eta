@@ -7,12 +7,12 @@
     b. create student-event.event.ts (sample1) and student-event.module.ts (sample2)
     c. modify src/simple-app/events/events.module.ts to import & export "StudentEventModule" from student-event.module
 5. Supported event:
-  - beforeCreate
-  - afterCreate
-  - beforeUpdate
-  - afterUpdate
-  - beforeDelete
-  - afterDelete    
+  - before-create
+  - after-create
+  - before-update
+  - after-update
+  - before-delete
+  - after-delete    
     
     
 # sample1: student.event.ts
@@ -23,11 +23,13 @@ import { UserContext } from 'src/simple-app/.core/features/user-context/user.con
 import * as schema from 'src/simple-app/.resources/student/student.schema'
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
+import { EventBeforeCreate } from 'src/simple-app/.core/features/event/interface';
+import { CreatePayLoad } from 'src/simple-app/.core/features/event/event.type';
 @Injectable()
-export class StudentEvent {
+export class StudentEvent implements EventBeforeUpdate<Student>{
   constructor() {}
   
-  @OnEvent('student.beforeCreate')
+  @OnEvent('student.before-create')
   async runBeforeCreate(
     appuser: UserContext,
     payloads: {    

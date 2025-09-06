@@ -1,0 +1,5 @@
+import { UserContext } from "../../user-context/user.context"
+import { UpdatePayload } from "../event.type"
+export interface EventBeforeUpdate<T> {
+    beforeUpdate(appUser:UserContext,payload: UpdatePayload<T>): Promise<void>
+}

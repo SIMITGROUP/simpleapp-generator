@@ -8,7 +8,7 @@
 export type {<%for(let i=0; i<it.modules.length;i++){ %>
     <% const d = it.modules[i] %>      
     <% const conf =  d.schema["x-simpleapp-config"] %>
-    <%= d['docname'] %>,
+    <%= d['typename'] %>,
 <%}%>} from "~/simpleapp/generate/openapi";
 
 

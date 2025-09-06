@@ -5,11 +5,11 @@
  * Author: Ks Tan
  */
 import { Module } from '@nestjs/common';
-
+import {BranchEventModule} from './branch-event/branch-event.module'
 @Module({
-  imports: [],
+  imports: [BranchEventModule],
   controllers:[],
   providers: [],
-  exports: [],
+  exports: [BranchEventModule],
 })
 export class SimpleAppEventsModule {}

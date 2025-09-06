@@ -1,5 +1,5 @@
 <template>
-    <LazyForm<%=it.typename%> :_id="_id" class="w-full" @after="after"/>
+    <LazyForm<%=capitalizeFirstLetter(it.name)%> :_id="_id" class="w-full" @after="after"/>
 </template>
 
 <script setup lang="ts">
@@ -12,7 +12,7 @@
 
 import {<%= it.typename %>} from '~/simpleapp/generate/types'
 import {FormCrudEvent} from "~/types"
-const doc = useNuxtApp().$<%= it.typename %>Doc()
+const doc = useNuxtApp().$<%= capitalizeFirstLetter(it.name) %>Doc()
 const _id = getPathPara('id','')
 
 const after = (actionName: FormCrudEvent, data: <%= it.typename %>) => {    

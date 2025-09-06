@@ -1,0 +1,5 @@
+import { UserContext } from "../../user-context/user.context"
+import { DeletePayLoad } from "../event.type"
+export interface EventAfterDelete<T> {
+    afterDelete(appUser:UserContext,payload: DeletePayLoad<T>): Promise<void>
+}

@@ -9,7 +9,6 @@ import * as schema from './<%= camelToKebab(it.resourceName) %>.schema'
 <%Object.keys(it.models).forEach(function(modelname) { %>    
 
 export const Default<%= toTypeName(it.resourceName ,modelname) %> = (uuid:string)=>{
-    // <%~ JSON.stringify(it.models[modelname].model) %>
     <% let model = it.models[modelname].model%>    
     <% if(model['_id'] && model['code'] && model['label']){%>
       const  data =  undefined

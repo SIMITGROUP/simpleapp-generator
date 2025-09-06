@@ -1,0 +1,10 @@
+import { AutoIncreament } from './auto-increament.schema';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import * as mongoose from 'mongoose';
+
+// create mongodb schema
+
+export const AutoIncreamentMongoSchema = SchemaFactory.createForClass(AutoIncreament).pre('save', function (next) {
+  this.increment();
+  return next();
+});

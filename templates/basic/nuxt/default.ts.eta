@@ -10,7 +10,6 @@
   %>  
 
 export const Default<%=newmodelname%> = (uuid:string)=>{
-    // <%~ JSON.stringify(it.models[modelname].model) %>
     <% let model = it.models[modelname].model%>    
     <% if(model['_id'] && model['code'] && model['label']){%>
       return undefined
@@ -18,8 +17,6 @@ export const Default<%=newmodelname%> = (uuid:string)=>{
     return {
         <% if(it.models?.[modelname] && it.models[modelname]?.model && Object.keys(it.models[modelname]?.model).length === 0) { %>
           // Dynamic Object
-        <% } else { %>
-          _id : uuid,
         <% } %>
 
 
@@ -29,6 +26,7 @@ export const Default<%=newmodelname%> = (uuid:string)=>{
 
           <%if(key=='_id'){ %>
           // skip cause already hardcoded
+            _id : uuid,
           <%}else if(key=='doctype'){ %>
             doctype : '<%=it.doctype.toUpperCase()%>',
           <%}else if(key=='tenantId'){ %>

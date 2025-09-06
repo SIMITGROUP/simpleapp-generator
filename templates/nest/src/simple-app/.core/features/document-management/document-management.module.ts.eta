@@ -1,16 +1,11 @@
 import { Module } from '@nestjs/common';
-// import { MongooseModule } from '@nestjs/mongoose';
-// import { ProfileService } from './profile.service';
-// import { ProfileController } from './profile.controller';
-// import {UserModule} from '../../resources/user/user.module'
-// import {PermissionModule} from '../../resources/permission/permission.module'
-// import {TenantModule} from '../../resources/tenant/tenant.module'
-// import {BranchModule} from '../../resources/branch/branch.module'
-// import {OrganizationModule} from '../../resources/organization/organization.module'
+import { MongooseModule } from '@nestjs/mongoose';
+import { DocumentNoFormatMongoSchema } from './document-no-format.model';
+import { DocNumberFormatGeneratorService } from './doc-no-generator.service';
 @Module({
-  imports: [],
+  imports: [MongooseModule.forFeature([{ name: 'DocumentNoFormat', schema: DocumentNoFormatMongoSchema }])],
   controllers: [],
-  providers: [],
-  exports: [],
+  providers: [DocNumberFormatGeneratorService],
+  exports: [DocNumberFormatGeneratorService],
 })
 export class SimpleAppDocumentManagementModule {}

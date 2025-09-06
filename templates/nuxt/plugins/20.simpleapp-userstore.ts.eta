@@ -39,12 +39,13 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       branches: ref([]),
       invites: ref([]),
       time: ref(""),
+      xOrg: ref(''),
       moreProps: ref(),
-      package: ref(),
-      appintegration: ref({
-        einvoice: false,
-        simbiz6: false,
-      }),
+      // package: ref(),
+      // appintegration: ref({
+      //   einvoice: false,
+      //   simbiz6: false,
+      // }),
     }),
 
     actions: {
@@ -69,7 +70,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
         return await new PROFILEApi(undefined, apiurl, $axios)
           .getProfile()
-          .then((res: AxiosResponse) => {
+          .then((res: AxiosResponse) => {            
             if (!res) {
               return;
             }
@@ -95,11 +96,12 @@ export default defineNuxtPlugin(async (nuxtApp) => {
             this.groups = res.data.groups;
             this.roles = res.data.roles;
             this.time = res.data.time;
+            this.xOrg = res.data.xOrg;
             this.invites = res.data.invites;
             this.moreProps = res.data.moreProps;
-            this.package = res.data.moreProps.package;
-            this.appintegration.einvoice = res.data.appintegration.einvoice;
-            this.appintegration.simbiz6 = res.data.appintegration.simbiz6;
+            // this.package = res.data.moreProps.package;
+            // this.appintegration.einvoice = res.data.appintegration.einvoice;
+            // this.appintegration.simbiz6 = res.data.appintegration.simbiz6;
             let cachegroup = useCookie("currentGroup").value ?? "";
             if (!this.groups || !this.groups.includes(cachegroup)) {
               cachegroup = "";
@@ -114,9 +116,14 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           });
       },
       getCurrentXorg() {
-        return useRoute().params.xorg
-          ? <String>useRoute().params.xorg
-          : undefined;
+        const xorg = useRoute().params.xorg
+        let result = ''
+        if(typeof xorg == 'string'){
+          result = xorg
+        }else{
+          result =''
+        }
+        return result
       },
       async pingSession(): Promise<string> {
         let xorg = this.getCurrentXorg();
@@ -170,7 +177,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           this.roles.includes(permission),
         );
       },
-      canPerform(resourcename: string, action: string): boolean {
+      canPerform(resourcename: string, action: string): boolean {        
         if (
           this.roles.includes("superadmin") ||
           this.roles.includes("tenantowner") ||
@@ -281,11 +288,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           invites: this.invites ?? [],
           roles: this.roles,
           groups: this.groups,
-          currentGroup: this.currentGroup,
-          time: this.time,
+          currentGroup: this.currentGroup,          
           moreProps: this.moreProps,
-          package: this.package,
-          appintegration: this.appintegration,
+          xOrg: this.getCurrentXorg()
+          // package: this.package,
+          // appintegration: this.appintegration,
         };
         return userinfo;
       },

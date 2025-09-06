@@ -146,11 +146,11 @@
  */
  import { SimpleAppInputType,FormCrudEvent } from "~/types";
  import { <%= it.typename %> } from "~/simpleapp/generate/types";
-import { <%= it.typename %>Doc} from "~/simpleapp/docs/<%= it.typename %>Doc"
+import { <%= it.typename %>Doc} from "~/simpleapp/docs/<%= capitalizeFirstLetter(it.name) %>Doc"
 
 
  const props = defineProps<{ _id?: string, doc?: <%= it.typename %>Doc , paras?:<%= it.typename %>}>();
- const doc = props.doc ??  useNuxtApp().$<%= it.typename %>Doc()
+ const doc = props.doc ??  useNuxtApp().$<%= capitalizeFirstLetter(it.name) %>Doc()
  const data = doc.getReactiveData(); 
  const emits = defineEmits(["after"]);
  const id = computed(() => props._id ?? "");

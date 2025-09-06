@@ -1,24 +1,27 @@
-export * from '../../resources/user/user.schema'
-export * from '../../resources/permission/permission.schema'
-export * from '../../resources/mini-app-installation/mini-app-installation.schema'
-export namespace EventPayload {
-  export type UserContext = {
-    user: {
-      _id: string;
-      uid: string;
-      uname: string;
-      fullName: string;
-      email: string;
-      timeZone: string;
-      currency: string;
-      country: string;
-      offsetMinute: number;
-    };
-    xOrg: string;
-  };
+export * from '../../resources/user/user.schema';
+export * from '../../resources/permission/permission.schema';
+export * from '../../resources/mini-app-installation/mini-app-installation.schema';
 
-  export type WithUserContext<T> = {
-    userContext: UserContext;
-    payload: T;
-  };
+export type DeletePayLoad<T>={
+  id:string,
+  deleteData:T
+}
+export type CreatePayLoad<T> = {
+  data:T
+}
+export type UpdatePayload<T> = {
+  id:string
+  prevData:T
+  newData:T
+}
+
+export type BeforeSetStatusPayload<T> = {
+  docStatus: string, 
+  prevData: T, 
+  newData: T
+}
+
+export type AfterSetStatusPayload<T> = {
+  docStatus: string,
+  data: T
 }

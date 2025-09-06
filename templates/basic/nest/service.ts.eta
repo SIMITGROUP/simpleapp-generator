@@ -15,7 +15,7 @@ import {<%= it.typename%>JsonSchema } from './<%= camelToKebab(it.resourceName) 
 import { SimpleAppService } from 'src/simple-app/.core/framework/base/simple-app.service';
 import { IsolationType } from 'src/simple-app/.core/framework/schemas';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import {DocNumberFormatGenerator} from 'src/simple-app/.core/features/document-management/doc-no-generator.service'
+import { DocNumberFormatGeneratorService } from 'src/simple-app/.core/features/document-management/doc-no-generator.service';
 
 import * as defaultValue from './<%= camelToKebab(it.resourceName) %>.default'
 import * as schema from './<%= camelToKebab(it.resourceName) %>.schema';
@@ -40,9 +40,9 @@ export class <%= it.typename %>Service extends SimpleAppService<schema.<%= it.ty
     constructor(
         @InjectModel('<%= it.typename %>')  mydoc: Model<schema.<%= it.typename %>>,
         @Inject(forwardRef(() => EventEmitter2)) event2:EventEmitter2,
-
+        docNoGen:DocNumberFormatGeneratorService
       ) {
-    super('<%= it.doctype.toUpperCase() %>','<%= it.name %>',mydoc,IsolationType.<%=it.isolationtype%>,event2);
+    super('<%= it.doctype.toUpperCase() %>','<%= it.name %>',mydoc,IsolationType.<%=it.isolationtype%>,event2,docNoGen);
     this.setSchema(<%= it.typename%>JsonSchema)
     this.setData(defaultValue.Default<%=it.typename%>(crypto.randomUUID()))
     <%if(it.moreAutoComplete.length>0){%>

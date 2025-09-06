@@ -18,10 +18,11 @@ import { FilterQuery, Model, PipelineStage, mongo } from 'mongoose';
 import { CustomException } from '../custom-exception';
 import { SimpleAppLogService } from '../../features/log/log.service';
 import { foreignkeys } from '../../features/foreign-key/foreignkeys.dict';
-import { DocNumberFormatGenerator } from '../../features/document-management/doc-no-generator.service';
+import { DocNumberFormatGeneratorService } from '../../features/document-management/doc-no-generator.service';
 import { RunWebhookService } from '../../features/webhook/run-webhook.service';
 import { UserContext } from '../../features/user-context/user.context';
 import { CheckMutipleUnionExistResponse, DeleteResultType, IsolationType, MoreProjectionType, TextSearchBody, SchemaFields } from '../schemas';
+import { camelToKebab } from 'src/simple-app/.core/utils/string-utils';
 
 @Injectable()
 export class SimpleAppService<T extends SchemaFields> {
@@ -36,7 +37,7 @@ export class SimpleAppService<T extends SchemaFields> {
   // @Inject(AuditTrail)
   // protected audittrail: AuditTrail;
   // @Inject(DocNumberFormatGenerator)
-  protected docnogenerator: DocNumberFormatGenerator;
+  protected docnogenerator: DocNumberFormatGeneratorService;
   protected logger = new Logger();
   protected strictIsolation = true;
   protected jsonschema: any = {
@@ -63,13 +64,13 @@ export class SimpleAppService<T extends SchemaFields> {
 
   // protected userprovider = new UserContext() ;
 
-  constructor(doctype: string, docname: string, newdoc: Model<T>, isolationtype: IsolationType = IsolationType.org, eventEmitter: EventEmitter2) {
+  constructor(doctype: string, docname: string, newdoc: Model<T>, isolationtype: IsolationType = IsolationType.org, eventEmitter: EventEmitter2, docnogenerator: DocNumberFormatGeneratorService) {
     // console.log("-------init simpleapp service abstract class -------userprovider=",typeof this.userprovider)
     this.eventEmitter = eventEmitter;
     this.documentType = doctype.toUpperCase();
     this.documentName = docname;
     this.doc = newdoc;
-
+    this.docnogenerator = docnogenerator;
     this.isolationtype = isolationtype;
 
     // this.tenantdoc = tenantdoc
@@ -160,6 +161,7 @@ export class SimpleAppService<T extends SchemaFields> {
       if (this.moreAutoCompleteField) {
         Object.assign(projections, this.moreAutoCompleteField);
       }
+
       const products = await this.doc.find(filterobj, projections, {
         // limit: this.LIMITPERPAGE,
       });
@@ -402,10 +404,8 @@ export class SimpleAppService<T extends SchemaFields> {
         this.applyNestedDateTime(appuser, data, 'create');
 
         //new way of hook
-        const beforeHookName = `${this.documentName}.beforeCreate`;
-        await this.runEvent(appuser, beforeHookName, { data: data }, false);
+        await this.runEvent(appuser, this.setHookName('beforeCreate'), { data: data }, false);
 
-        // if (this.hooks.beforeCreate) await this.hooks.beforeCreate(appuser, data);
         const newdoc = new this.doc(data);
 
         try {
@@ -427,8 +427,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
         try {
           //new way of hook
-          await this.runEvent(appuser, `${this.documentName}.afterCreate`, { data: data }, false);
-          // if (this.hooks.afterCreate) await this.hooks.afterCreate(appuser, result);
+          await this.runEvent(appuser, this.setHookName('afterCreate'), { data: data }, false);
           await this.callWebhook(appuser, 'create', result);
 
           // return result as T;
@@ -501,9 +500,8 @@ export class SimpleAppService<T extends SchemaFields> {
 
     //new way of hook
 
-    await this.runEvent(appuser, `${this.documentName}.beforeCreate`, { data: data }, false);
+    await this.runEvent(appuser, this.setHookName('beforeCreate'), { data: data }, false);
 
-    // if (this.hooks.beforeCreate) await this.hooks.beforeCreate(appuser, data);
     this.logger.debug(data, `Create Record ${this.documentName}`);
     const newdoc = new this.doc(data);
     await this.identifyForeignKeys(appuser, data);
@@ -526,9 +524,8 @@ export class SimpleAppService<T extends SchemaFields> {
 
     try {
       //new way of hook
-      await this.runEvent(appuser, `${this.documentName}.afterCreate`, { data: result }, false);
+      await this.runEvent(appuser, this.setHookName('afterCreate'), { data: result }, false);
 
-      // if (this.hooks.afterCreate) await this.hooks.afterCreate(appuser, result);
       await this.callWebhook(appuser, 'create', result);
       return result as T;
     } catch (err) {
@@ -566,9 +563,8 @@ export class SimpleAppService<T extends SchemaFields> {
     this.applyNestedDateTime(appuser, data, 'create');
 
     //new way of hook
-    await this.runEvent(appuser, `${this.documentName}.beforeCreate`, { data: data }, false);
+    await this.runEvent(appuser, this.setHookName('beforeCreate'), { data: data }, false);
 
-    // if (this.hooks.beforeCreate) await this.hooks.beforeCreate(appuser, data);
     this.logger.debug(data, `Create Record ${this.documentName}`);
     const newdoc = new this.doc(data);
     await this.identifyForeignKeys(appuser, data);
@@ -591,9 +587,8 @@ export class SimpleAppService<T extends SchemaFields> {
 
     try {
       //new way of hook
-      await this.runEvent(appuser, `${this.documentName}.beforeCreate`, { data: result }, false);
+      await this.runEvent(appuser, this.setHookName('afterCreate'), { data: result }, false);
 
-      // if (this.hooks.afterCreate) await this.hooks.afterCreate(appuser, result);
       await this.callWebhook(appuser, 'create', result);
       return result as T;
     } catch (err) {
@@ -664,8 +659,6 @@ export class SimpleAppService<T extends SchemaFields> {
       this.logger.error(JSON.stringify(validate.errors), 'validate errors:');
       throw new BadRequestException('Data validation failed', validate.errors as HttpExceptionOptions);
     }
-    //no check for duplicate those
-    // if (this.hooks.afterValidation) await this.hooks.afterValidation(appuser, data, _id);
   }
 
   polishIsolationFilter = (filterIsolation: any, data: any = {}) => {
@@ -733,10 +726,8 @@ export class SimpleAppService<T extends SchemaFields> {
 
         //new way of hook
 
-        await this.runEvent(appuser, `${this.documentName}.afterDelete`, { id: id, deleteResult: deleteresult }, false);
+        await this.runEvent(appuser, this.setHookName('afterDelete'), { id: id, deleteResult: deleteresult }, false);
 
-        // if (this.hooks.afterDelete) await this.hooks.afterDelete(appuser, deleteresult, id);
-        //this.doc.findByIdAndDelete(id);
         await this.callWebhook(appuser, 'delete', deletedata);
         return deleteresult;
       } else {
@@ -807,9 +798,8 @@ export class SimpleAppService<T extends SchemaFields> {
       await this.addAuditEvent(appuser, this.documentName, id, 'update', data);
 
       appuser.addUpdatedRecordId(this.documentName, data._id);
-      await this.runEvent(appuser, `${this.documentName}.afterUpdate`, { id: id, prevData: existingdata, newData: data }, false);
+      await this.runEvent(appuser, this.setHookName('afterUpdate'), { id: id, prevData: existingdata, newData: data }, false);
 
-      // if (this.hooks.afterUpdate) await this.hooks.afterUpdate(appuser, id, existingdata, result);
       await this.callWebhook(appuser, 'update', result);
       return result; // await this.findById(appuser, id);
     } catch (err) {
@@ -866,10 +856,9 @@ export class SimpleAppService<T extends SchemaFields> {
       });
       await this.addAuditEvent(appuser, this.documentName, id, 'update', data);
 
-      const afterHookName = `${this.documentName}.afterUpdate`;
-      await this.runEvent(appuser, afterHookName, { id: id, prevData: existingdata, newData: result }, false);
+      await this.runEvent(appuser, this.setHookName('afterUpdate'), { id: id, prevData: existingdata, newData: result }, false);
       appuser.addUpdatedRecordId(this.documentName, data._id);
-      // if (this.hooks.afterUpdate) await this.hooks.afterUpdate(appuser, id, existingdata, result);
+
       await this.callWebhook(appuser, 'update', result);
       return result; // await this.findById(appuser, id);
     } catch (err) {
@@ -931,9 +920,6 @@ export class SimpleAppService<T extends SchemaFields> {
       }
       appuser.addUpdatedRecordId(this.documentName, data._id);
 
-      //patch not suitable trigger afterupdate
-      // if (this.hooks.afterUpdate) await this.hooks.afterUpdate(appuser, id, existingdata, result);
-      // await this.callWebhook(appuser, 'update', result);
       return result; //await this.findById(appuser, id);
     } catch (err) {
       this.logger.error(err.message, 'findIdThenPath error');
@@ -1012,13 +998,13 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     data['documentStatus'] = docstatus;
     // await this.hook(appuser, HookType.beforeSetStatus, data);
-    await this.runEvent(appuser, `${this.documentName}.beforeSetStatus`, { docStatus: docstatus, prevData: existdata, newData: data }, false);
+    await this.runEvent(appuser, this.setHookName('beforeSetStatus'), { docStatus: docstatus, prevData: existdata, newData: data }, false);
 
     // if (this.hooks.beforeSetStatus) await this.hooks.beforeSetStatus(appuser, docstatus, data, existdata);
 
     if (data && !data['created']) {
       const createresult = await this.create(appuser, data);
-      await this.runEvent(appuser, `${this.documentName}.afterSetStatus`, { docStatus: docstatus, data: createresult }, false);
+      await this.runEvent(appuser, this.setHookName('afterSetStatus'), { docStatus: docstatus, data: createresult }, false);
       // if (this.hooks.afterSetStatus) await this.hooks.afterSetStatus(appuser, docstatus, createresult);
       await this.addAuditEvent(appuser, this.documentName, id, docstatus, data);
 
@@ -1026,8 +1012,7 @@ export class SimpleAppService<T extends SchemaFields> {
     } else {
       const updateresult = await this.findIdThenPatch(appuser, id, data);
       const finaldata = await this.findById(appuser, id);
-      await this.runEvent(appuser, `${this.documentName}.afterSetStatus`, { docStatus: docstatus, data: finaldata }, false);
-      // if (this.hooks.afterSetStatus) await this.hooks.afterSetStatus(appuser, docstatus, finaldata);
+      await this.runEvent(appuser, this.setHookName('afterSetStatus'), { docStatus: docstatus, data: finaldata }, false);
       await this.addAuditEvent(appuser, this.documentName, id, docstatus, data);
 
       await this.callWebhook(appuser, docstatus, finaldata);
@@ -1085,7 +1070,9 @@ export class SimpleAppService<T extends SchemaFields> {
 
   async genNewDocNo(appuser: UserContext, data: T) {
     this.logger.debug('genNewDocNo');
+    console.log('before genNewDocNo');
     const result = await this.docnogenerator.generateNextNumberFromDocument(appuser, this.documentType, data);
+    console.log('after genNewDocNo');
     this.logger.debug(result, 'genNewDocNo');
 
     // been for to convert become object
@@ -1249,6 +1236,10 @@ export class SimpleAppService<T extends SchemaFields> {
     return pipelines;
   }
 
+  setHookName(hookName) {
+    const resourceName = this.jsonschema['x-simpleapp-config']['resourceName'];
+    return camelToKebab(resourceName) + '.' + camelToKebab(hookName);
+  }
   //only realtime webhook supported at this moment
   async callWebhook(appuser: UserContext, actionName: string, data: any) {
     try {
