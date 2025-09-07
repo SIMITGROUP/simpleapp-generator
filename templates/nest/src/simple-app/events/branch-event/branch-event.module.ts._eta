@@ -9,10 +9,10 @@ import { Module } from '@nestjs/common';
 import { BranchModule } from 'src/simple-app/.core/resources/branch/branch.module';
 import { AutoIncreamentModule } from 'src/simple-app/.core/features/auto-increament/auto-increament.module';
 import { BranchEventService } from './branch-event.service';
-import { SimpleAppDocumentManagementModule } from 'src/simple-app/.core/features/document-management/document-management.module';
+import { DocumentNoFormatModule } from 'src/simple-app/.core/features/document-no-format/document-no-format.module';
 
 @Module({
-  imports: [SimpleAppDocumentManagementModule,BranchModule,AutoIncreamentModule],
+  imports: [DocumentNoFormatModule,BranchModule,AutoIncreamentModule],
   controllers: [],
   providers: [BranchEventService],
   exports: [BranchEventService],

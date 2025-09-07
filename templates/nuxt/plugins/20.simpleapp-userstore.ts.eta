@@ -5,7 +5,7 @@
  * Author: Ks Tan
  */
 import { defineNuxtPlugin } from "#app";
-import { PROFILEApi } from "../simpleapp/generate/openapi";
+import { PROFILEApi,ProfileUserBranch,UserContextInfo } from "../simpleapp/generate/openapi";
 import { UserProfile } from "~/types";
 import axios, { Axios, AxiosError, AxiosResponse } from "axios";
 import _ from "lodash";
@@ -33,10 +33,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       uid: ref(""),
       email: ref(""),
       fullName: ref(""),
+      uName: ref(""),
       roles: ref<string[]>([]),
       groups: ref<string[]>([]),
       currentGroup: ref(""),
-      branches: ref([]),
+      branches: ref<ProfileUserBranch[]>([]),
       invites: ref([]),
       time: ref(""),
       xOrg: ref(''),
@@ -72,6 +73,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
               return;
             }
             this._id = res.data._id;
+            this.uName = res.data.uName;
             this.sessionId = res.data.sessionId;
             this.tenantId = res.data.tenantId;
             this.orgId = res.data.orgId;
@@ -271,6 +273,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           orgRecordId: this.orgRecordId,
           branchRecordId: this.branchRecordId,
           uid: this.uid,
+          uName: this.uName,
           email: this.email,
           branchCode: this.branchCode,
           branchName: this.branchName,

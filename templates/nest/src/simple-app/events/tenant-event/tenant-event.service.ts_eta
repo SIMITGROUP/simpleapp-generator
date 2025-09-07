@@ -6,16 +6,12 @@ import { EventBeforeCreate, EventAfterCreate } from 'src/simple-app/.core/featur
 import { TenantService } from 'src/simple-app/.core/resources/tenant/tenant.service';
 import { CreatePayLoad } from 'src/simple-app/.core/features/event/event.type';
 import { AutoIncreamentService } from 'src/simple-app/.core/features/auto-increament/auto-increament.service';
-import { DocNumberFormatGeneratorService } from 'src/simple-app/.core/features/document-management/doc-no-generator.service';
-import { GenerateLogoService } from 'src/simple-app/features/generate-image/generate-logo/generate-logo-service';
 
 @Injectable()
 export class TenantEventService implements EventBeforeCreate<Tenant>, EventAfterCreate<Tenant> {
   constructor(
     private tenantSvc: TenantService,
     private autoIncreamentSvc: AutoIncreamentService,
-    private docNoGeneratorSvc: DocNumberFormatGeneratorService,
-    private generateLogoSvc: GenerateLogoService,
   ) {}
 
   @OnEvent('tenant.before-create')

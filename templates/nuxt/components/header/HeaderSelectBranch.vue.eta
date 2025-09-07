@@ -47,7 +47,8 @@ const getBranchesForOrg = (org: Org) => {
 
   return branchlist;
 };
-const switchXorg = () => {
+const switchXorg = async () => {
   navigateTo(`/${selectedbranch.value}`, { external: true });
+  await reloadUserStore()
 };
 </script>

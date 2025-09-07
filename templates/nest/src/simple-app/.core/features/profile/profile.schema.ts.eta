@@ -73,6 +73,14 @@ export class ProfileUserInvites {
   tenantName: string;
 }
 
+export class BranchMinInfo {
+  @ApiProperty({ type: String })
+  branchId:string
+  @ApiProperty({ type: String })
+  branchCode:string
+  @ApiProperty({ type: String })
+  branchName:string
+}
 export class ProfileUserBranch {
   @ApiProperty({ type: String })
   permissionId: string;
@@ -84,8 +92,8 @@ export class ProfileUserBranch {
   branchId: number;
   @ApiProperty({ type: [String], description: "List of user's group" })
   groups: string[];
-  @ApiProperty({ type: ForeignKey })
-  branch: ForeignKey;
+  @ApiProperty({ type: BranchMinInfo })
+  branch: BranchMinInfo;
   @ApiProperty({ type: String })
   orgRecordId: String;
   @ApiProperty({ type: String })

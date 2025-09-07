@@ -1,0 +1,12 @@
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { DocumentNoFormatMongoSchema } from './document-no-format.model';
+import { DocumentNoFormatService } from './document-no-format.service';
+import {DocumentNoFormatController} from './document-no-format.controller'
+@Module({
+  imports: [MongooseModule.forFeature([{ name: 'DocumentNoFormat', schema: DocumentNoFormatMongoSchema }])],
+  controllers: [DocumentNoFormatController],
+  providers: [DocumentNoFormatService],
+  exports: [DocumentNoFormatService],
+})
+export class DocumentNoFormatModule {}

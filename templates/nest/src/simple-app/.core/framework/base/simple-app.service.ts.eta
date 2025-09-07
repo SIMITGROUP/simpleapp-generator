@@ -18,7 +18,8 @@ import { FilterQuery, Model, PipelineStage, mongo } from 'mongoose';
 import { CustomException } from '../custom-exception';
 import { SimpleAppLogService } from '../../features/log/log.service';
 import { foreignkeys } from '../../features/foreign-key/foreignkeys.dict';
-import { DocNumberFormatGeneratorService } from '../../features/document-management/doc-no-generator.service';
+
+import { DocumentNoFormatService } from '../../features/document-no-format/document-no-format.service';
 import { RunWebhookService } from '../../features/webhook/run-webhook.service';
 import { UserContext } from '../../features/user-context/user.context';
 import { CheckMutipleUnionExistResponse, DeleteResultType, IsolationType, MoreProjectionType, TextSearchBody, SchemaFields } from '../schemas';
@@ -37,7 +38,7 @@ export class SimpleAppService<T extends SchemaFields> {
   // @Inject(AuditTrail)
   // protected audittrail: AuditTrail;
   // @Inject(DocNumberFormatGenerator)
-  protected docnogenerator: DocNumberFormatGeneratorService;
+  protected docnogenerator: DocumentNoFormatService;
   protected logger = new Logger();
   protected strictIsolation = true;
   protected jsonschema: any = {
@@ -64,7 +65,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
   // protected userprovider = new UserContext() ;
 
-  constructor(doctype: string, docname: string, newdoc: Model<T>, isolationtype: IsolationType = IsolationType.org, eventEmitter: EventEmitter2, docnogenerator: DocNumberFormatGeneratorService) {
+  constructor(doctype: string, docname: string, newdoc: Model<T>, isolationtype: IsolationType = IsolationType.org, eventEmitter: EventEmitter2, docnogenerator: DocumentNoFormatService) {
     // console.log("-------init simpleapp service abstract class -------userprovider=",typeof this.userprovider)
     this.eventEmitter = eventEmitter;
     this.documentType = doctype.toUpperCase();

@@ -46,33 +46,32 @@ const errCreateTenant = ref();
 const onhold = ref(false);
 
 const createTenant = async () => {
-  holdScreenStart()
+  holdScreenStart();
   onhold.value = true;
-
-  getProfileApi()
-    .createTenant(data.value)
-    .then((res: AxiosResponse) => {
-      if (res && res.status && res.status == 201) {
+  try{
+    const tmp:AxiosResponse = await getProfileApi().createTenant(data.value)
+    const res = tmp.data
+    await reloadUserStore()
+    if (res && res.status && res.status == 201) {
         if (res.data && res.data["xOrg"]) {
           const xorg = res.data["xOrg"];
-          navigateTo("/" + xorg, { external: true });
+          navigateTo("/" + xorg);
         }
       }
-    })
-    .catch((err) => {
-      errCreateTenant.value = err["message"];
-      console.error("errCreateTenant", err.response.data.data);
+  }catch(e){
+    const err = e as AxiosError
+    errCreateTenant.value = err["message"];
+    console.error("errCreateTenant", err.response?.data?.data);
 
-      useNuxtApp().$event("Notification", {
-        documentName: "tenant",
-        status: NotificationStatus.error,
-        summary: t("createError"),
-        data: err.response?.data?.data,
-      });
-    })
-    .finally(() => {
-      onhold.value = false;
-      holdScreenEnd()
+    useNuxtApp().$event("Notification", {
+      documentName: "tenant",
+      status: NotificationStatus.error,
+      summary: t("createError"),
+      data: err.response?.data?.data,
     });
+  }finally{
+     onhold.value = false;
+      holdScreenEnd();
+  }  
 };
 </script>

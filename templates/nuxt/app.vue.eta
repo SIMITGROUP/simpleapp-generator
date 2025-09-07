@@ -40,15 +40,20 @@ const getLayout = ()=>{
 }
 
 onMounted(async()=>{
-  if(!getProfileUid()){
-     await reloadUserStore()
+    const x = useAuthState()
+  if(x.data.value?.expires && x.data.value?.expires > new Date().toISOString()){
+    await reloadUserStore()
+    const currentgroup = useCookie('currentGroup').value
+    //if no xorg, no enforce pick group
+    if(getCurrentXorg()){
+      if (!currentgroup)goTo('pickgroup')
+      setGraphqlServer()
     }
-  const currentgroup = useCookie('currentGroup').value
-  //if no xorg, no enforce pick group
-  if(getCurrentXorg()){
-    if (!currentgroup)goTo('pickgroup')
-    setGraphqlServer()
-  }
+  }else{
+    if(useRoute().path!='/login'){
+      navigateTo("/login");
+    }    
+  } 
     
 })
 </script>

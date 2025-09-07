@@ -6,7 +6,7 @@ import { EventBeforeCreate, EventAfterCreate } from 'src/simple-app/.core/featur
 import { BranchService } from 'src/simple-app/.core/resources/branch/branch.service';
 import { CreatePayLoad } from 'src/simple-app/.core/features/event/event.type';
 import { AutoIncreamentService } from 'src/simple-app/.core/features/auto-increament/auto-increament.service';
-import { DocNumberFormatGeneratorService } from 'src/simple-app/.core/features/document-management/doc-no-generator.service';
+import { DocumentNoFormatService } from 'src/simple-app/.core/features/document-no-format/document-no-format.service';
 import { GenerateLogoService } from 'src/simple-app/features/generate-image/generate-logo/generate-logo-service';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class BranchEventService implements EventBeforeCreate<Branch>, EventAfter
   constructor(
     private branchSvc: BranchService,
     private autoIncreamentSvc: AutoIncreamentService,
-    private docNoGeneratorSvc: DocNumberFormatGeneratorService,
+    private docNoGeneratorSvc: DocumentNoFormatService,
     private generateLogoSvc: GenerateLogoService,
   ) {}
 

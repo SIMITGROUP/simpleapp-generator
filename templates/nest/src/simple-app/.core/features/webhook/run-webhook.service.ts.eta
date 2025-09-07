@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, Inject, InternalServerErrorException, 
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { UserContext } from '../user-context/user.context';
 import { Webhook, WebhookLog } from './schemas';
-import { alldocuments } from '../document-management/document.dict';
+import { alldocuments } from '../document-no-format/document.dict';
 
 @Injectable()
 export class RunWebhookService {

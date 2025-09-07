@@ -9,7 +9,7 @@ export const DocumentNoFormatMongoSchema = SchemaFactory.createForClass(Document
     this.increment();
     return next();
   })
-
+  .index({ 'tenantId': 1 })
   .index({ orgId: 1, docNoFormatNo: 1 }, { unique: true })
 
   .index({ 'branch._id': 1 });

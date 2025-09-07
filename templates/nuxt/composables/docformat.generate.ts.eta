@@ -4,8 +4,10 @@
  * last change 2023-10-28
  * Author: Ks Tan
  */
+import {DOCNOApi} from '~/simpleapp/generate/openapi'
+
 export const getDocFormats = async (doctype:string)=>{    
-    const docno = useNuxtApp().$DocnoformatDoc();
+    const docno = new DOCNOApi(getAxiosConfig())
     const docnoformats = await docno.runListDocFormats(doctype)
-    return docnoformats
+    return docnoformats.data
 }

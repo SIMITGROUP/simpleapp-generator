@@ -135,3 +135,28 @@ export class DocumentNoFormatAutoComplete {
   @ApiProperty({ type: () => Boolean, required: false })
   default?: boolean;
 }
+
+
+export class DocumentNoFormatPreview{
+  @Field()
+  @ApiProperty({ type: String, required: true, default: '' })
+  _id: string
+  @Field()
+  @ApiProperty({ type: String, required: true, default: '' })
+  docNoFormatNo: string
+  @Field()
+  @ApiProperty({ type: String, required: true, default: '' })
+  docNoFormatName: string
+  @Field()
+  @ApiProperty({ type: String, required: true, default: '' })
+  docNoPattern: string
+  @Field()
+  @ApiProperty({ type: Number, required: true, default: '' })
+  nextNumber:number
+  @Field()
+  @ApiProperty({ type: Boolean, required: true, default: '' })
+  default: boolean
+  @Field()
+  @ApiProperty({ type: String, required: true, default: '' })
+  sample: string
+}

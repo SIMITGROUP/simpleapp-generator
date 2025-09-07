@@ -32,7 +32,7 @@ import * as rolegroups from '../auth/role-guard/roles.group';
 // import systemWebHooks from '../../webhooks';
 @Injectable({ scope: Scope.REQUEST })
 export class UserContext extends UserContextInfo {
-  // protected sessionId: string = crypto.randomUUID();
+  sessionId: string = crypto.randomUUID();
 
   protected logger = new Logger(this.constructor.name);
 
@@ -279,12 +279,12 @@ export class UserContext extends UserContextInfo {
           pipeline: [{ $match: { tenantId: this.tenantId, orgId: this.orgId, branchId: this.branchId } }],
         },
       },
-      { 
+      {
         $unwind: {
           path: '$perm',
-          preserveNullAndEmptyArrays: true
-        }
-       },
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       {
         $project: {
           uid: 1,
@@ -312,11 +312,21 @@ export class UserContext extends UserContextInfo {
                 pipeline: [{ $project: { orgCode: 1, orgName: 1, offsetMinute: 1, timeZone: 1, currency: 1, country: 1 } }],
               },
             },
-            { $unwind: '$o' },
+            {
+              $unwind: {
+                path: '$o',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
           ],
         },
       },
-      { $unwind: '$b' },
+      {
+        $unwind: {
+          path: '$b',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       {
         $project: {
           uid: 1,
@@ -344,8 +354,8 @@ export class UserContext extends UserContextInfo {
         $lookup: {
           from: 'permission',
           as: 'branches',
-          localField: '_id',
-          foreignField: 'userId',
+          localField: 'uid',
+          foreignField: 'uid',
           pipeline: [
             { $project: { tenantId: 1, orgId: 1, branchId: 1, groups: 1 } },
             {
@@ -390,7 +400,7 @@ export class UserContext extends UserContextInfo {
           ],
         },
       },
-    ];
+    ];    
     const userProfiles: UserContextInfo[] = await this.userModel.aggregate(pipelines).exec();
     return userProfiles[0];
   }
@@ -423,6 +433,9 @@ export class UserContext extends UserContextInfo {
       this.offsetMinute = userProfile['offsetMinute'] ?? 0;
       this.orgRecordId = userProfile['orgRecordId'] ?? '';
       this.branchRecordId = userProfile['branchRecordId'] ?? '';
+      userProfile['branches'].forEach((b) => {
+        b.xOrg = this.generateXOrg(b.tenantId, b.orgId, b.branchId);
+      });
       this.branches = userProfile['branches'];
       this.groups = userProfile['groups'] ?? [];
       this.clientSetting = userProfile['clientSetting'] ?? {

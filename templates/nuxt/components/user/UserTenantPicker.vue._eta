@@ -17,7 +17,7 @@
               </div>
               <div class="flex flex-col w-full justify-end gap-2">
                 <div class="flex flex-row gap-2">
-                  <TextMain>{{ item.branchCode }}</TextMain>
+                  <TextMain>{{ item.branch.label }}</TextMain>
                   <Tag v-for="groupname in item.groups">{{ t(groupname) }}</Tag>
                 </div>
                 <TextSubsubtitle>{{ item.orgName }}</TextSubsubtitle>

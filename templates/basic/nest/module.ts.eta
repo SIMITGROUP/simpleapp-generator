@@ -10,10 +10,11 @@ import { <%= it.typename%>Service } from './<%= camelToKebab(it.resourceName)%>.
 import { <%= it.typename%>Controller } from './<%= camelToKebab(it.resourceName)%>.controller';
 import { <%= it.typename%>MongoSchema } from './<%= camelToKebab(it.resourceName)%>.model';
 import { <%= it.typename%>Resolver } from './<%= camelToKebab(it.resourceName)%>.resolver';
-import { SimpleAppDocumentManagementModule } from 'src/simple-app/.core/features/document-management/document-management.module';
+
+import { DocumentNoFormatModule} from 'src/simple-app/.core/features/document-no-format/document-no-format.module';
 
 @Module({
-  imports: [ SimpleAppDocumentManagementModule,
+  imports: [ DocumentNoFormatModule,
     MongooseModule.forFeature([
       { name: '<%= it.typename%>', schema: <%= it.typename%>MongoSchema },
      ])],
