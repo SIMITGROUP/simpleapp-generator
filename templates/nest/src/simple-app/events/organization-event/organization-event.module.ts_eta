@@ -1,0 +1,14 @@
+import { Module } from '@nestjs/common';
+
+import { OrganizationModule } from 'src/simple-app/.core/resources/organization/organization.module';
+import { AutoIncreamentModule } from 'src/simple-app/.core/features/auto-increament/auto-increament.module';
+import { OrganizationEventService } from './organization-event.service';
+import { SimpleAppDocumentManagementModule } from 'src/simple-app/.core/features/document-management/document-management.module';
+import { GenerateLogoModule } from 'src/simple-app/features/generate-image/generate-logo/generate-log-module';
+@Module({
+  imports: [SimpleAppDocumentManagementModule, OrganizationModule, GenerateLogoModule, AutoIncreamentModule],
+  controllers: [],
+  providers: [OrganizationEventService],
+  exports: [OrganizationEventService],
+})
+export class OrganizationEventModule {}

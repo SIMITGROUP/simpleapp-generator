@@ -212,6 +212,7 @@ export class UserContext extends UserContextInfo {
 
   setCurrentUserInfo = async (tokenstr: string, xOrg: string, webhookModel: Model<Webhook>) => {
     this.setXOrg(xOrg);
+    // console.log('xOrg',xOrg)
     await this.setUserToken(tokenstr);
     this.setUserType('normal');
     // const wh = await webhookModel.find({ branchId: this.getBranchId(), active: true });
@@ -239,11 +240,33 @@ export class UserContext extends UserContextInfo {
     this.offsetMinute = offsetMinute;
   };
 
-  /**
-   * Obtain user profile filter by uid, tenantId, orgId, branchId
-   * @returns Promise<User|undefined>
-   */
+  // async obtainNoTenantProfile() {
+  //   const pipelines: PipelineStage[] = [{ $match: { uid: this.uid, tenantId: this.tenantId } }];
+  //   try {
+  //     const userdata: User[] = await this.userModel.aggregate(pipelines).exec();
+  //     const userProfile: UserContextInfo = {
+  //       _id: '',
+  //       uid: this.uid,
+  //       email: this.email,
+  //       fullName: this.fullName,
+  //       uName: this.uName,
+  //       country: '',
+  //       currency: '',
+  //       offsetMinute: 0,
+  //     } as UserContextInfo;
+
+  //     if (Array.isArray(userdata) && userdata.length > 0) {
+  //       userProfile._id = userdata[0]._id;
+  //     }
+  //     return userProfile;
+  //   } catch (e) {
+  //     throw e;
+  //   }
+  // }
   async obtainProfileFromDB() {
+    // if (this.tenantId == 0) {
+    //   return this.obtainNoTenantProfile();
+    // }
     const pipelines: PipelineStage[] = [
       //get profile
       { $match: { uid: this.uid, tenantId: this.tenantId } },
@@ -256,7 +279,12 @@ export class UserContext extends UserContextInfo {
           pipeline: [{ $match: { tenantId: this.tenantId, orgId: this.orgId, branchId: this.branchId } }],
         },
       },
-      { $unwind: '$perm' },
+      { 
+        $unwind: {
+          path: '$perm',
+          preserveNullAndEmptyArrays: true
+        }
+       },
       {
         $project: {
           uid: 1,
@@ -281,7 +309,7 @@ export class UserContext extends UserContextInfo {
                 as: 'o',
                 localField: 'orgId',
                 foreignField: 'orgId',
-                pipeline: [{ $project: { orgCode: 1, orgName: 1 } }],
+                pipeline: [{ $project: { orgCode: 1, orgName: 1, offsetMinute: 1, timeZone: 1, currency: 1, country: 1 } }],
               },
             },
             { $unwind: '$o' },
@@ -345,6 +373,13 @@ export class UserContext extends UserContextInfo {
                 tenantId: 1,
                 orgId: 1,
                 branchId: 1,
+                branch: {
+                  _id: '$b._id',
+                  branchCode: '$b.branchCode',
+                  branchName: '$b.branchName',
+                  branchId: '$b.branchId',
+                },
+
                 groups: 1,
                 orgCode: '$b.org.orgCode',
                 orgName: '$b.org.orgName',
@@ -356,121 +391,8 @@ export class UserContext extends UserContextInfo {
         },
       },
     ];
-
     const userProfiles: UserContextInfo[] = await this.userModel.aggregate(pipelines).exec();
     return userProfiles[0];
-    // aggregate([{$match:{
-
-    // }}]);
-
-    // console.log('userProfiles: ', userProfiles);
-
-    // const filter = { $match: { uid: this.uid, tenantId: this.tenantId } };
-
-    // const joinPermission: PipelineStage = {
-    //   $lookup: {
-    //     from: 'permission',
-    //     localField: '_id',
-    //     foreignField: 'userId',
-    //     as: 'permissions',
-    //     pipeline: [
-    //       {
-    //         $match: {
-    //           tenantId: this.tenantId,
-    //           orgId: this.orgId,
-    //           branchId: this.branchId,
-    //         },
-    //       },
-    //       {
-    //         $lookup: {
-    //           from: 'branch',
-    //           localField: 'branchId',
-    //           foreignField: 'branchId',
-    //           as: 'currentbranch',
-    //         },
-    //       },
-    //       // {
-    //       //   $unwind: '$currentbranch',
-    //       // },
-    //       {
-    //         $lookup: {
-    //           from: 'organization',
-    //           localField: 'orgId',
-    //           foreignField: 'orgId',
-    //           as: 'currentorg',
-    //         },
-    //       },
-    //       {
-    //         $unwind: '$currentorg',
-    //       },
-    //       {
-    //         $lookup: {
-    //           from: 'tenant',
-    //           localField: 'tenantId',
-    //           foreignField: 'tenantId',
-    //           as: 'currentTenant',
-    //         },
-    //       },
-
-    //       {
-    //         $unwind: '$currentTenant',
-    //       },
-    //     ],
-    //   },
-    // };
-
-    // const pipeline: PipelineStage[] = [filter];
-
-    // if (this.tenantId > 0) {
-    //   pipeline.push(joinPermission);
-    //   pipeline.push({ $unwind: '$permissions' });
-    // }
-
-    // const userProfiles: UserProfile[] = await this.userModel.aggregate(pipeline);
-    // console.log(JSON.stringify(pipeline))
-    // console.log("userProfiles",userProfiles)
-    // if (!userProfiles || userProfiles.length === 0) {
-    //   return undefined;
-    // }
-
-    // const userProfile = userProfiles[0];
-
-    // if (this.tenantId > 0) {
-    //   const userPermissions = userProfile.permissions;
-
-    //   if (userPermissions && userPermissions.groups) {
-    //     userProfile.groups = userPermissions.groups;
-    //     userProfile.roles = [Role.Everyone, Role.User] as Role[];
-    //     for (let g = 0; g < userProfile.groups.length; g++) {
-    //       const roles: Role[] = (<() => Role[]>rolegroups[userProfile.groups[g]])();
-    //       for (let r = 0; r < roles.length; r++) {
-    //         if (!userProfile.roles.includes(roles[r])) {
-    //           userProfile.roles.push(roles[r]);
-    //         }
-    //       }
-    //     }
-    //     if (userPermissions.currentTenant.owner.uid == userProfile.uid) {
-    //       userProfile.roles.push(Role.TenantOwner);
-    //     }
-    //     userProfile.tenantRecordId = userPermissions.currentTenant._id;
-    //     userProfile.package = userPermissions.currentTenant.package;
-    //     userProfile.branchRecordId = userPermissions.currentbranch._id;
-    //     userProfile.branchCode = userPermissions.currentbranch.branchCode;
-    //     userProfile.branchName = userPermissions.currentbranch.branchName;
-    //     userProfile.orgRecordId = userPermissions.currentorg._id;
-    //     userProfile.orgCode = userPermissions.currentorg.orgCode;
-    //     userProfile.orgName = userPermissions.currentorg.orgName;
-    //     userProfile.timeZone = userPermissions.currentorg.timeZone;
-    //     userProfile.currency = userPermissions.currentorg.currency;
-    //     userProfile.country = userPermissions.currentorg.country;
-    //     userProfile.offsetMinute = userPermissions.currentorg.offsetMinute;
-    //     userProfile.clientSetting = userPermissions.currentTenant.clientSetting;
-    //   }
-    // } else {
-    //   userProfile.groups = [];
-    // }
-
-    // return userProfile;
   }
 
   setUserToken = async (tokenStr: string) => {

@@ -1,0 +1,33 @@
+import { BadRequestException, InternalServerErrorException, HttpException, Injectable, Inject } from '@nestjs/common';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { Permission } from './permission-event.type';
+import { OnEvent } from '@nestjs/event-emitter';
+import { EventBeforeCreate, EventAfterCreate } from 'src/simple-app/.core/features/event/interface';
+import { PermissionService } from 'src/simple-app/.core/resources/permission/permission.service';
+import { CreatePayLoad } from 'src/simple-app/.core/features/event/event.type';
+
+@Injectable()
+export class PermissionEventService implements EventBeforeCreate<Permission>, EventAfterCreate<Permission> {
+  constructor(
+    private permissionSvc: PermissionService,
+  ) {}
+
+  @OnEvent('permission.before-create')
+  async beforeCreate(appUser: UserContext, payload: CreatePayLoad<Permission>) {
+
+  }
+
+  @OnEvent('permission.after-create')
+  async afterCreate(appUser: UserContext, payload: CreatePayLoad<Permission>) {
+    const data = payload.data;
+    if(data.tenantId ==0){
+      throw new BadRequestException('Create permission failed due to tenantId=0')
+    }
+    if(data.orgId ==0){
+      throw new BadRequestException('Create permission failed due to orgId=0')
+    }
+    if(data.branchId ==0){
+      throw new BadRequestException('Create permission failed due to branchId=0')
+    }
+  }
+}

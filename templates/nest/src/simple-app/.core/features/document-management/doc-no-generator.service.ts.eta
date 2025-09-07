@@ -10,12 +10,12 @@ import dayjs from 'dayjs';
 export class DocNumberFormatGeneratorService {
   constructor(@InjectModel('DocumentNoFormat') private docformat: Model<DocumentNoFormat>) {}
 
-  async generateNextNumberFromDocument(appuser: UserContext, docType: string, data: any) {
+  async generateNextNumberFromDocument(appUser: UserContext, docType: string, data: any) {
     let formatId = '';
     if (data.DocumentNoFormat && data.DocumentNoFormat._id) {
       formatId = data.DocumentNoFormat._id;
     }
-    const docnoobj = await this.generateNextNo(appuser, docType, formatId);
+    const docnoobj = await this.generateNextNo(appUser, docType, formatId);
     const result: ForeignKey = {
       _id: String(docnoobj.formatId),
       code: docnoobj.formatName,
@@ -25,23 +25,24 @@ export class DocNumberFormatGeneratorService {
     return docnoobj.result;
   }
 
-  async generateNextNo(appuser: UserContext, doctype: string, id: string = '') {
+  async generateNextNo(appUser: UserContext, doctype: string, id: string = '') {
     doctype = doctype.toUpperCase();
     const filter = { docNoType: doctype, active: true };
     if (id) {
       filter['_id'] = id;
     }
     //
-    Object.assign(filter, appuser.getBranchFilter());
-    const result = await this.docformat.find(filter).session(appuser.getDBSession());
-    //search(appuser, filter);
+    Object.assign(filter, appUser.getBranchFilter());
+    console.log("filter",filter)
+    const result = await this.docformat.find(filter).session(appUser.getDBSession());
+    console.log('result',result);
     if (result && result.length > 0) {
       const d: DocumentNoFormat = result[0];
       const recordId = d._id;
       const newdocno = DocNumberFormatGeneratorService.previewDocNo(d);
       const newnextnumber = d.nextNumber + 1;
       const updatedata = { nextNumber: newnextnumber } as DocumentNoFormat;
-      const updateresult = await this.docformat.findByIdAndUpdate(recordId, updatedata).session(appuser.getDBSession());
+      const updateresult = await this.docformat.findByIdAndUpdate(recordId, updatedata).session(appUser.getDBSession());
 
       if (updateresult) {
         const result: DocNumberFormatResult = {
@@ -66,11 +67,17 @@ export class DocNumberFormatGeneratorService {
     const branchId = data.branchId;
     const orgId = data.orgId;
     const tenantId = data.tenantId;
-    console.log("generateBranchDefaultDocNumbers")
-    // throw new InternalServerErrorException(`want fail "${branchCode}" failed.`);
-
+    if(tenantId==0){
+      throw new BadRequestException('create document no format failed due to tenantId=0')
+    }
+    if(orgId==0){
+      throw new BadRequestException('create document no format failed due to orgId=0')
+    }
+    if(branchId==0){
+      throw new BadRequestException('create document no format failed due to branchId=0')
+    }
     const docformats = alldocuments.filter((item) => item.docNumber);
-    const allFormats:DocumentNoFormat[] =[]
+    const allFormats: DocumentNoFormat[] = [];
     for (let i = 0; i < docformats.length; i++) {
       const doc = docformats[i];
       const pattern = doc.docNoPattern.replace('@BranchCode', branchCode);
@@ -84,22 +91,26 @@ export class DocNumberFormatGeneratorService {
         branchId: branchId,
         orgId: orgId,
         tenantId: tenantId,
+        active:true,
         nextNumber: 1,
+        created: new Date().toISOString(),
+        createdBy: appUser.getUid(),
+        updated: new Date().toISOString(),
+        updatedBy: appUser.getUid(),
+        default:true,        
       };
-      Object.assign(formatdata, { ...appUser.getCreateFilter() });
-      allFormats.push(formatdata)
-     
+      allFormats.push(formatdata);
     }
 
-     try {
-        //rollback when not able to create branch
-        const result = await this.docformat.insertMany(allFormats,{session:appUser.getDBSession()});
-        if (!result) {
-          throw new InternalServerErrorException(`Generate ${allFormats.length } document formats for "${branchCode}" failed.`, 'generateDefaultDocNumbers');
-        }
-      } catch (err) {
-        throw new InternalServerErrorException(err);
+    try {
+      //rollback when not able to create branch
+      const result = await this.docformat.insertMany(allFormats, { session: appUser.getDBSession() });
+      if (!result) {
+        throw new InternalServerErrorException(`Generate ${allFormats.length} document formats for "${branchCode}" failed.`, 'generateDefaultDocNumbers');
       }
+    } catch (err) {
+      throw new InternalServerErrorException(err);
+    }
   }
 
   static previewDocNo = (s: DocumentNoFormat) => {

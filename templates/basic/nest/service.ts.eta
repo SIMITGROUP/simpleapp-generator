@@ -5,6 +5,8 @@
  * Author: Ks Tan
  * Last Modified By: Yong Xiang
  */
+ 
+
 import { UserContext } from 'src/simple-app/.core/features/user-context/user.context'
 import * as sharelibs from 'src/simple-app/.core/share-libs'
 import { Injectable,Inject,forwardRef } from '@nestjs/common';
@@ -30,8 +32,11 @@ export * from './<%= camelToKebab(it.resourceName) %>.schema';
 @Injectable()
 export class <%= it.typename %>Service extends SimpleAppService<schema.<%= it.typename %>>  {
   protected documentIdentityCode='<%~ it.autocompletecode %>' as keyof schema.<%= it.typename %>;
-  protected documentIdentityLabel ='<%~ it.autocompletename %>' as keyof schema.<%= it.typename %>
+  protected documentIdentityLabel ='<%~ it.autocompletename %>' as keyof schema.<%= it.typename %> ;
 
+  <% if(skipIsolationDocument().includes(it.name.toLowerCase())) {%> 
+    protected strictIsolation = false;
+  <%}%>
   <%if(it.jsonschema['x-simpleapp-config']['generateDocumentNumber']){%>
   protected withDocNumberFormat = true;
   <%}%>

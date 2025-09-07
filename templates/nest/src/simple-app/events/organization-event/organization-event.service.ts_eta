@@ -1,0 +1,35 @@
+import { BadRequestException, InternalServerErrorException, HttpException, Injectable, Inject } from '@nestjs/common';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { Organization } from './organization-event.type';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { EventBeforeCreate, EventAfterCreate } from 'src/simple-app/.core/features/event/interface';
+import { OrganizationService } from 'src/simple-app/.core/resources/organization/organization.service';
+import { CreatePayLoad } from 'src/simple-app/.core/features/event/event.type';
+import { AutoIncreamentService } from 'src/simple-app/.core/features/auto-increament/auto-increament.service';
+import { DocNumberFormatGeneratorService } from 'src/simple-app/.core/features/document-management/doc-no-generator.service';
+import { GenerateLogoService } from 'src/simple-app/features/generate-image/generate-logo/generate-logo-service';
+
+@Injectable()
+export class OrganizationEventService implements EventBeforeCreate<Organization>, EventAfterCreate<Organization> {
+  constructor(
+    private organizationSvc: OrganizationService,
+    private autoIncreamentSvc: AutoIncreamentService,
+    private docNoGeneratorSvc: DocNumberFormatGeneratorService,
+    private generateLogoSvc: GenerateLogoService,
+  ) {}
+
+  @OnEvent('organization.before-create')
+  async beforeCreate(appUser: UserContext, payload: CreatePayLoad<Organization>) {
+    const searchresult = await this.autoIncreamentSvc.runGenerateNextNo(appUser, 'organization', 'orgId');
+    payload.data.orgId = searchresult.nextNo;
+  }
+
+  @OnEvent('organization.after-create')
+  async afterCreate(appUser: UserContext, payload: CreatePayLoad<Organization>) {
+    const data = payload.data;
+    if(data.orgId ==0){
+      throw new BadRequestException('Create branch failed due to orgId=0')
+    }
+    // await this.generateLogoSvc.generateLogo(appUser, data.orgName, data._id, data.tenantId, data.orgId, data.organizationId);
+  }
+}

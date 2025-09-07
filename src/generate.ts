@@ -28,7 +28,7 @@ import _ from 'lodash';
 import * as buildinschemas from './buildinschemas';
 import { JSONSchema7 } from 'json-schema';
 import { generatePrintformat } from './processors/jrxmlbuilder';
-
+const skipIsolationDocument = ['tenant','organization','branch','permission','user']
 const systemResources = ['user','tenant','organization','branch','permission','keyvaluepair','customfield','miniapp','miniappinstallation','systemmessage','queuejob']
 const { Eta } = require('eta');
 const { capitalizeFirstLetter } = require('./libs');
@@ -868,4 +868,5 @@ const getCodeGenHelper = () =>
   'const isWhitelistedMiniApp = (actionName, it) => { return it.miniApp.whitelistApis?.[actionName] === true };' +
   'const titleCase = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1 $2"); }; '+
   'const toTypeName = (resName,fieldName)=>{return ["string","number","boolean","array","object"].includes(fieldName.toLowerCase())? capitalizeFirstLetter(fieldName) :upperFirstCase(resName) + fieldName.slice(resName.length)};'+
+  'const skipIsolationDocument = () => ' + JSON.stringify(skipIsolationDocument)+';'+
   'const getSystemResources = () => '+JSON.stringify(systemResources);

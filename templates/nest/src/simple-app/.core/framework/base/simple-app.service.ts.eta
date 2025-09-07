@@ -908,7 +908,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       isolationFilter['_id'] = id;
       this.applyNestedDateTime(appuser, data, 'update');
-      console.log('findid patch ', data);
+      // console.log('findid patch ', data);
 
       const result = await this.doc.findOneAndUpdate(isolationFilter, data, {
         session: dbsession,
@@ -1070,9 +1070,9 @@ export class SimpleAppService<T extends SchemaFields> {
 
   async genNewDocNo(appuser: UserContext, data: T) {
     this.logger.debug('genNewDocNo');
-    console.log('before genNewDocNo');
+    // console.log('before genNewDocNo');
     const result = await this.docnogenerator.generateNextNumberFromDocument(appuser, this.documentType, data);
-    console.log('after genNewDocNo');
+    // console.log('after genNewDocNo');
     this.logger.debug(result, 'genNewDocNo');
 
     // been for to convert become object

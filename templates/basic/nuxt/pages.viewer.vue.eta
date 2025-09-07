@@ -1,5 +1,5 @@
 <template>
-    <LazyForm<%=it.typename%> :_id="_id" @after="after" :paras="paras"/>
+    <LazyForm<%=upperFirstCase(it.name)%> :_id="_id" @after="after" :paras="paras"/>
 </template>
 <script setup lang="ts">
 /**
@@ -9,7 +9,7 @@
  * author: Ks Tan
  */
 import {<%= it.typename %>} from '~/simpleapp/generate/types'
-const props = defineProps<{_id:string,paras?:<%= it.typename %>}>();
+const props = defineProps<{_id:string,paras?:Partial<<%= it.typename %>>}>();
 const emits = defineEmits(["afterCreate","after"]);
 
 const after = (actionName: string, data: <%= it.typename %>) => {

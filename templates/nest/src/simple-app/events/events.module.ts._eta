@@ -5,11 +5,13 @@
  * Author: Ks Tan
  */
 import { Module } from '@nestjs/common';
-import {BranchEventModule} from './branch-event/branch-event.module'
+import { OrganizationEventModule } from './organization-event/organization-event.module';
+import { BranchEventModule } from './branch-event/branch-event.module';
+import { PermissionEventModule } from './permission-event/permission-event.module';
 @Module({
-  imports: [BranchEventModule],
+  imports: [TenantEventModule,OrganizationEventModule,BranchEventModule,PermissionEventModule],
   controllers:[],
   providers: [],
-  exports: [BranchEventModule],
+  exports: [TenantEventModule,OrganizationEventModule,BranchEventModule,PermissionEventModule],
 })
 export class SimpleAppEventsModule {}

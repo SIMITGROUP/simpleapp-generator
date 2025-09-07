@@ -1,0 +1,34 @@
+import { BadRequestException, InternalServerErrorException, HttpException, Injectable, Inject } from '@nestjs/common';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { Tenant } from './tenant-event.type';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { EventBeforeCreate, EventAfterCreate } from 'src/simple-app/.core/features/event/interface';
+import { TenantService } from 'src/simple-app/.core/resources/tenant/tenant.service';
+import { CreatePayLoad } from 'src/simple-app/.core/features/event/event.type';
+import { AutoIncreamentService } from 'src/simple-app/.core/features/auto-increament/auto-increament.service';
+import { DocNumberFormatGeneratorService } from 'src/simple-app/.core/features/document-management/doc-no-generator.service';
+import { GenerateLogoService } from 'src/simple-app/features/generate-image/generate-logo/generate-logo-service';
+
+@Injectable()
+export class TenantEventService implements EventBeforeCreate<Tenant>, EventAfterCreate<Tenant> {
+  constructor(
+    private tenantSvc: TenantService,
+    private autoIncreamentSvc: AutoIncreamentService,
+    private docNoGeneratorSvc: DocNumberFormatGeneratorService,
+    private generateLogoSvc: GenerateLogoService,
+  ) {}
+
+  @OnEvent('tenant.before-create')
+  async beforeCreate(appUser: UserContext, payload: CreatePayLoad<Tenant>) {
+    const searchresult = await this.autoIncreamentSvc.runGenerateNextNo(appUser, 'tenant', 'tenantId');
+    payload.data.tenantId = searchresult.nextNo;
+  }
+
+  @OnEvent('tenant.after-create')
+  async afterCreate(appUser: UserContext, payload: CreatePayLoad<Tenant>) {
+    const data = payload.data;
+    if(data.tenantId ==0){
+      throw new BadRequestException('Create branch failed due to tenantId=0')
+    }
+  }
+}

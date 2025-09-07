@@ -55,19 +55,16 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         const { $axios, $miniAppStore, $customFieldStore } = useNuxtApp();
         const route = useRoute();
         let xorg = this.getCurrentXorg();
-
         let apiurl = "";
-        if (xorg === undefined) {
+        if (!xorg) {
           apiurl = `${useRuntimeConfig().public.appUrl}/api`;
         } else {
           apiurl = `${useRuntimeConfig().public.appUrl}/api/${xorg}`;
         }
-
-        if (xorg !== undefined) {
+        if (xorg) {
           await $miniAppStore.loadInstalledMiniApps();
           await $customFieldStore.fetchList();
         }
-
         return await new PROFILEApi(undefined, apiurl, $axios)
           .getProfile()
           .then((res: AxiosResponse) => {            

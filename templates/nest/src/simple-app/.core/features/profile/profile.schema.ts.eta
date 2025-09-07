@@ -87,7 +87,7 @@ export class ProfileUserBranch {
   @ApiProperty({ type: ForeignKey })
   branch: ForeignKey;
   @ApiProperty({ type: String })
-  orgRecordId: String
+  orgRecordId: String;
   @ApiProperty({ type: String })
   xOrg: String;
 }
@@ -95,53 +95,33 @@ export class ProfileUserBranch {
 export class TenantPermission {
   @ApiProperty({ type: String })
   tenantName: string;
-  @ApiProperty({ type: ()=>ProfileUserBranch })
+  @ApiProperty({ type: () => ProfileUserBranch })
   permissions: ProfileUserBranch[];
-};
+}
 
+export class RegTenant {
+  @ApiProperty({
+    type: String,
+    required: true,
+    examples: ['my company 1'],
+    default: '',
+  })
+  tenantName: String;
+  @ApiProperty({
+    type: String,
+    required: true,
+    examples: ['Asia/Kuala_Lumpur'],
+    default: '',
+  })
+  timeZone: String;
+  @ApiProperty({
+    type: Number,
+    required: true,
+    examples: [0, -460],
+  })
+  utcOffset: Number;
+}
 /****************------unchecked schema------********************/
-
-
-
-
-// export class RegTenantApiSchema {
-//   @ApiProperty({
-//     type: String,
-//     required: true,
-//     examples: ['my company 1'],
-//     default: '',
-//   })
-//   tenantName: String;
-//   @ApiProperty({
-//     type: String,
-//     required: true,
-//     examples: ['Asia/Kuala_Lumpur'],
-//     default: '',
-//   })
-//   timeZone: String;
-//   @ApiProperty({
-//     type: Number,
-//     required: true,
-//     examples: [0, -460],
-//   })
-//   utcOffset: Number;
-// }
-// // export class ProfileUserBranch {
-// //   @ApiProperty({ type: String })
-// //   _id: String;
-// //   @ApiProperty({ type: Number })
-// //   tenantId: Number;
-// //   @ApiProperty({ type: Number })
-// //   orgId: Number;
-// //   @ApiProperty({ type: Number })
-// //   branchId: Number;
-// //   @ApiProperty({ type: ForeignKey })
-// //   branch: ForeignKey;
-// //   @ApiProperty({ type: String })
-// //   group: String;
-// //   @ApiProperty({ type: String })
-// //   xOrg: String;
-// // }
 
 // export class ProfileSchema {
 //   @ApiProperty({ type: String })
