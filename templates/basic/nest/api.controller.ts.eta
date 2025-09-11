@@ -17,13 +17,14 @@
 %>
 
 <% 
-  const getFieldType =(proptype, typename,actionname)=>{
-    const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
+  const getFieldType =(proptype, typename,actionname)=>{    
     if(!typename) throw actionname +" undefine schema";
-
+    
     let tmptypename = typename.replace('[','').replace(']','')
-    if(!systemtypes.includes(tmptypename)){
+    if(!systemType().includes(tmptypename)){
       tmptypename = 'schema.'+tmptypename
+    }else{
+      if(proptype=='type') tmptypename = tmptypename.toLowerCase()
     }
     if(typename.includes('[')){
       return  proptype=='schema' ?  `[${tmptypename}]` : `${tmptypename}[]`
@@ -73,12 +74,16 @@ export class <%= it.typename%>ApiController {
     <%}%>
     <% if(['post','put','patch'].includes(api.method)){ %>
         @ApiBody({ description: 'Request Body', 
-            type:  <%= getFieldType('schema',api.schema,api.action)%>
+            type: <%= getFieldType('schema',api.schema,api.action)%>
         
             })
     <%}%>  
     @ApiResponse({status: 200,description: '<%=api.description%>' 
+      <%if(api.action=='getPhoto'){%>
+      ,content: { 'image/png': {schema: {type: 'string',format: 'binary',} }, }
+      <%}else{%>
         ,type: <%= getFieldType('schema',api.responseType,api.action)%>
+      <%}%>
             })  
     @ApiOperation({ operationId: 'run<%=capitalizeFirstLetter(api.action)%>' })
     <% if(api.queryPara && api.queryPara.length>0) {%>
@@ -89,6 +94,8 @@ export class <%= it.typename%>ApiController {
     <%~ drawMiniAppScope(api.action) %>
     async <%=capitalizeFirstLetter(api.action) %>(
         @AppUser() appuser: UserContext,
+        <%if(api.action=='getPhoto'){%>@Res() res: Response,<%}%>
+
         <%if(['post','put','patch'].includes(api.method.toLowerCase())){%> 
         @Body() data:<%= getFieldType('type',api.schema,api.action)%>,
         //@Body() data:any,
@@ -111,31 +118,36 @@ export class <%= it.typename%>ApiController {
             <%}%>
             ){
         
-
-        const res:<%= getFieldType('type',api.responseType,api.action)%>  = await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser,<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
-            <%let subpath = api.entryPoint.split('/')%>
-            <% for(let a=0;a<subpath.length;a++){%>
-                <%const partstr = subpath[a]%>
-                <%if(partstr.includes(':')){%>
-                <% const paraname = partstr.replace(':','') %>  
-                <%=paraname%>,
-                <%}%>    
-            <%}%>  
+        <%if(api.action=='getPhoto'){%>
+          const output:Buffer= await this.service.runGetPhoto(appuser, id);
+          res.setHeader('Content-Type', 'image/png');
+          res.send(output);
+        <%}else{%>
+          const output:<%= getFieldType('type',api.responseType,api.action)%>  = await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser,<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
+              <%let subpath = api.entryPoint.split('/')%>
+              <% for(let a=0;a<subpath.length;a++){%>
+                  <%const partstr = subpath[a]%>
+                  <%if(partstr.includes(':')){%>
+                  <% const paraname = partstr.replace(':','') %>  
+                  <%=paraname%>,
+                  <%}%>    
+              <%}%>  
+              <%}%>
+              <% if(api.queryPara && api.queryPara.length>0) {%>
+                  <%for(let q=0;q<api.queryPara.length; q++){%>
+                  <%= api['queryPara'][q] %>,              
+                  <%}%>
+              <%}%>
+              <%if(['post','put','patch'].includes(api.method.toLowerCase())){%>
+              data,
+              <%}%>
+              )
+               return output
             <%}%>
-            <% if(api.queryPara && api.queryPara.length>0) {%>
-                <%for(let q=0;q<api.queryPara.length; q++){%>
-                <%= api['queryPara'][q] %>,              
-                <%}%>
-            <%}%>
-            <%if(['post','put','patch'].includes(api.method.toLowerCase())){%>
-            data,
-            <%}%>
-            )
-        return res
+       
     
     } 
     <%}%>
-    /***************************** end additionalAPI definitions *****************************************/
 
 
 }

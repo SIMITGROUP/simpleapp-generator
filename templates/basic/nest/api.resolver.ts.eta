@@ -15,13 +15,14 @@ import { Request } from '@nestjs/common';
 import * as schema from './<%= camelToKebab(it.resourceName)%>-api.schema'
 
 <% 
-  const getFieldType =(proptype, typename,actionname)=>{
-    const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
+  const getFieldType =(proptype, typename,actionname)=>{    
     if(!typename) throw actionname +" undefine schema";
 
     let tmptypename = typename.replace('[','').replace(']','')
-    if(!systemtypes.includes(tmptypename)){
+    if(!systemType().includes(tmptypename)){
       tmptypename = 'schema.'+tmptypename
+    }else{
+      if(proptype=='type') tmptypename = tmptypename.toLowerCase()
     }
     if(typename.includes('[')){
       return  proptype=='schema' ?  `[${tmptypename}]` : `${tmptypename}[]`
@@ -73,6 +74,9 @@ export class <%= it.typename %>ApiResolver {
             <%}%>
              ){
         
+          <%if(api.action=='getPhoto'){%>
+          return await this.service.runGetPhoto(appuser, id);
+          <%}else{%>
           return await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser,<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
               <%let subpath = api.entryPoint.split('/')%>
               <% for(let a=0;a<subpath.length;a++){%>
@@ -83,8 +87,8 @@ export class <%= it.typename %>ApiResolver {
                 <%}%>    
               <%}%>  
             <%}%>            
-            )              
+            )           
+          <%}%>            
       } 
     <%}%>
-    /***************************** end additionalAPI definitions *****************************************/
 }

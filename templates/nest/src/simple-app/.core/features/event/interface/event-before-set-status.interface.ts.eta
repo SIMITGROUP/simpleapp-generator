@@ -1,5 +1,5 @@
 import { UserContext } from "../../user-context/user.context"
 import { BeforeSetStatusPayload } from "../event.type"
 export interface EventBeforeSetStatus<T> {
-    afterCreate(appUser:UserContext,payload: BeforeSetStatusPayload<T> ): Promise<void>
+    beforeSetStatus(appUser:UserContext,payload: BeforeSetStatusPayload<T> ): Promise<void>
 }

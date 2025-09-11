@@ -8,7 +8,8 @@ import {
   ModuleObject,
   SchemaType,
   SchemaConfig,
-  SchemaPrintFormat
+  SchemaPrintFormat,
+  RESTMethods
 } from './type';
 import { Logger, ILogObj } from 'tslog';
 
@@ -115,7 +116,7 @@ export const run = async (
       // log.info("Process ",fullfilename)
       // console.log("=====>>>>>",fullfilename)
       const jsonschema = JSON.parse(jsoncontent);
-      const schemaconfig = jsonschema['x-simpleapp-config'];
+      const schemaconfig:SchemaConfig = jsonschema['x-simpleapp-config'];
       if (schemaconfig['printFormats']) {
         const formats: SchemaPrintFormat[] = schemaconfig['printFormats'];
         for (let formatno = 0; formatno < formats.length; formatno++) {
@@ -218,9 +219,43 @@ const generateSchema = (
   const finalizefolder = `${constants.templatedir}/nest`;
   const modelname = _.upperFirst(docname);
   const currentmodel = allmodels[modelname];
-
-  const resourceName =
-    jsonschemas[docname]?.['x-simpleapp-config']?.resourceName ?? docname;
+  const xconfig:SchemaConfig = jsonschemas[docname]?.['x-simpleapp-config']
+  const apiSettings = currentmodel.apiSettings?? []
+  const resourceName = xconfig?.resourceName ?? docname;
+  if(xconfig.getPhoto){
+    apiSettings.push( {
+            action: 'getPhoto',
+            entryPoint: ':id/photo',
+            requiredRole: ['Everyone'],
+            method: RESTMethods.get,
+            responseType: 'String',
+            description: 'Get photo'
+          },)
+  }
+  if(xconfig.uploadPhoto){
+    apiSettings.push( {
+            action: 'uploadPhoto',
+            entryPoint: ':id/photo',
+            requiredRole: [capitalizeFirstLetter(resourceName)+'_create'],
+            schema: 'KeyValue',
+            method: RESTMethods.post,
+            responseType: 'String',
+            description: 'upload photo'
+          },)
+  }
+  
+  if(Array.isArray(xconfig.printFormats) && xconfig.printFormats.length>0){
+    apiSettings.push( {
+            action: 'print',
+            entryPoint: ':id/print/:formatId',
+            requiredRole: [capitalizeFirstLetter(resourceName)+'_print'],
+            method: RESTMethods.get,
+            responseType: 'String',
+            description: 'obtain base64 pdf'
+          },)
+  }
+  // if(xconfig)
+  
   const resourceFileName = camelToKebab(resourceName)
   //console.log("---^^^^^------",modelname,docname, doctype, rendertype,currentmodel,allmodels)
 
@@ -231,6 +266,8 @@ const generateSchema = (
     name: docname,
     doctype: doctype,
     models: allmodels,
+    getPhoto: xconfig.getPhoto,
+    uploadPhoto:xconfig.uploadPhoto,
     autocompletecode: currentmodel.codeField ?? '',
     autocompletename: currentmodel.nameField ?? '',
     moreAutoComplete: currentmodel.moreAutoComplete ?? [],
@@ -246,7 +283,7 @@ const generateSchema = (
     controllerCode: '',
     apiSchemaCode: '',
     docStatusSettings: currentmodel.docStatusSettings ?? [],
-    apiSettings: currentmodel.apiSettings ?? [],
+    apiSettings: apiSettings,
     isolationtype: currentmodel.isolationtype,
     hasdocformat: currentmodel.hasdocformat,
     foreignkeys: currentmodel.foreignkeys ?? {},
@@ -867,6 +904,7 @@ const getCodeGenHelper = () =>
   'const removeSuffix = (input, suffix) => { return input.endsWith(suffix) ? input.slice(0, -suffix.length) : input };' +
   'const isWhitelistedMiniApp = (actionName, it) => { return it.miniApp.whitelistApis?.[actionName] === true };' +
   'const titleCase = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1 $2"); }; '+
+  'const systemType = () => [ "String","Number","Boolean","Array","Object"];'+
   'const toTypeName = (resName,fieldName)=>{return ["string","number","boolean","array","object"].includes(fieldName.toLowerCase())? capitalizeFirstLetter(fieldName) :upperFirstCase(resName) + fieldName.slice(resName.length)};'+
   'const skipIsolationDocument = () => ' + JSON.stringify(skipIsolationDocument)+';'+
   'const getSystemResources = () => '+JSON.stringify(systemResources);

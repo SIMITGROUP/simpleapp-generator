@@ -1,27 +1,23 @@
-export * from '../../resources/user/user.schema';
-export * from '../../resources/permission/permission.schema';
-export * from '../../resources/mini-app-installation/mini-app-installation.schema';
-
-export type DeletePayLoad<T>={
-  id:string,
-  deleteData:T
-}
-export type CreatePayLoad<T> = {
-  data:T
-}
+export type DeletePayload<T> = {
+  id: string;
+  deleteData: T;
+};
+export type CreatePayload<T> = {
+  data: T;
+};
 export type UpdatePayload<T> = {
-  id:string
-  prevData:T
-  newData:T
-}
+  id: string;
+  prevData: T;
+  newData: T;
+};
 
 export type BeforeSetStatusPayload<T> = {
-  docStatus: string, 
-  prevData: T, 
-  newData: T
-}
+  docStatus: string;
+  prevData: T;
+  newData: T;
+};
 
 export type AfterSetStatusPayload<T> = {
-  docStatus: string,
-  data: T
-}
+  docStatus: string;
+  data: T;
+};

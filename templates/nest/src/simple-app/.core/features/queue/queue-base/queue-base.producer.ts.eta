@@ -1,14 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Job, Queue } from 'bullmq';
+import { Job } from 'bullmq';
 // import { QueueName } from '../queue.enum';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import axios from 'axios';
-import { QueuePayload, QueueJobProducerResponse, QueueJob } from '../queue.type';
-
+import { Model } from 'mongoose';
+import { QueuePayload } from '../queue.type';
+import { QueueJob,QueueJobProducerResponse } from 'src/simple-app/.core/resources/queue-job/queue-job.schema';
 import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
-import { QueueJobService } from 'src/simple-app/.core/resources/queue-job/queue-job.service';
 
 export abstract class QueueBaseProducer {
   // protected abstract readonly processor: QueueName;
@@ -29,6 +26,9 @@ export abstract class QueueBaseProducer {
           currency: appUser.getCurrency(),
           country: appUser.getCountry(),
           offsetMinute: appUser.getOffsetMinute(),
+          tenantId: appUser.getTenantId(),
+          orgId: appUser.getOrgId(),
+          branchId: appUser.getBranchId(),
         },
         xOrg: appUser.getXOrg(),
       },
@@ -82,32 +82,31 @@ export abstract class QueueBaseProducer {
    * - This avoids conflicts between the active transaction and the worker.
    */
   protected async createQueueJobRecord<T>(appUser: UserContext, job: Job, payload: T, title: string) {
-    try{
-    const doc = new this.queueJobModel({
-      _id: crypto.randomUUID(),
-      created: new Date().toISOString(),
-      updated: new Date().toISOString(),
-      createdBy: appUser.getUid(),
-      updatedBy: appUser.getUid(),
-      tenantId: appUser.getTenantId(),
-      orgId: appUser.getOrgId(),
-      branchId: appUser.getBranchId(),
+    try {
+      const doc = new this.queueJobModel({
+        _id: crypto.randomUUID(),
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        createdBy: appUser.getUid(),
+        updatedBy: appUser.getUid(),
+        tenantId: appUser.getTenantId(),
+        orgId: appUser.getOrgId(),
+        branchId: appUser.getBranchId(),
 
-      job: {
-        id: job.id,
-        name: job.name,
-        processor: this.processor,
-        status: 'waiting',
-        title,
-      },
+        job: {
+          id: job.id,
+          name: job.name,
+          processor: this.processor,
+          status: 'waiting',
+          title,
+        },
 
-      payload,
-    })
-    const res = await doc.save({session: appUser.getDBSession()})
-
-  }catch(e){
-    throw e
-  }
+        payload,
+      });
+      const res = await doc.save({ session: appUser.getDBSession() });
+    } catch (e) {
+      throw e;
+    }
     // this.queueJobModel.create({,{
     //   session:appUser.getDBSession()
     // });

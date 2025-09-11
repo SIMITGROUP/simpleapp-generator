@@ -1,8 +1,8 @@
 import { UserContext } from '../user-context/user.context';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, FilterQuery } from 'mongoose';
 import { DocNumberFormatResult, ForeignKey, SchemaFields } from '../../framework/schemas';
-import { DocumentNoFormat,DocumentNoFormatPreview } from './document-no-format.schema';
+import { DocumentNoFormat, DocumentNoFormatPreview } from './document-no-format.schema';
 import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { alldocuments } from './document.dict';
 import dayjs from 'dayjs';
@@ -12,13 +12,16 @@ export class DocumentNoFormatService {
 
   async runListDocFormats(appUser: UserContext, doctype: string) {
     doctype = doctype.toUpperCase();
-    const searchresult = await this.docformat.aggregate([{ 
-      $match: { 
-        docNoType: doctype, "branch.branchId": appUser.getBranchId() } 
-      }, 
-      { $sort: { default: -1 } }
+    const searchresult = await this.docformat.aggregate([
+      {
+        $match: {
+          docNoType: doctype,
+          'branch.branchId': appUser.getBranchId(),
+        },
+      },
+      { $sort: { default: -1 } },
     ]);
-    
+
     let data: DocumentNoFormatPreview[] = [];
     for (let i = 0; i < searchresult.length; i++) {
       const s = searchresult[i];
@@ -59,9 +62,7 @@ export class DocumentNoFormatService {
     }
     //
     Object.assign(filter, appUser.getBranchFilter());
-    console.log('filter', filter);
     const result = await this.docformat.find(filter).session(appUser.getDBSession());
-    console.log('result', result);
     if (result && result.length > 0) {
       const d: DocumentNoFormat = result[0];
       const recordId = d._id;
@@ -175,4 +176,14 @@ export class DocumentNoFormatService {
       throw new InternalServerErrorException(errors);
     }
   };
+
+  async search (appUser,filter:FilterQuery<DocumentNoFormat>){
+    const isolationFilter:FilterQuery<DocumentNoFormat> = {
+      tenantId:appUser.tenantId,
+      orgId:appUser.orgId,
+      branchId:appUser.branchId,
+    }
+    Object.assign(filter,isolationFilter)
+    return await this.docformat.find<DocumentNoFormat>(filter,null,{session:appUser.getDBSession()})
+  }
 }

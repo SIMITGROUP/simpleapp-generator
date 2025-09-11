@@ -1,10 +1,3 @@
-export * from '../../resources/user/user.schema'
-export * from '../../resources/permission/permission.schema'
-export * from '../../resources/mini-app-installation/mini-app-installation.schema'
-export * from 'src/simple-app/.core/resources/queue-job/queue-job.schema'
-
-
-
 export namespace QueuePayload {
   export type UserContext = {
     user: {
@@ -17,6 +10,9 @@ export namespace QueuePayload {
       currency: string;
       country: string;
       offsetMinute: number;
+      tenantId:number;
+      orgId:number;
+      branchId:number;
     };
     xOrg: string;
   };

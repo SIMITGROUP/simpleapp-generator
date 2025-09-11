@@ -1,19 +1,17 @@
 import { OnWorkerEvent, WorkerHost } from '@nestjs/bullmq';
-import { QueueUserContext } from '../queue-user-context/queue-user-context.service';
-import { UserContext } from '../../user-context/user.context';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import axios from 'axios';
 import { Job } from 'bullmq';
-import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
+import { UserContext } from '../../user-context/user.context';
+import { QueueUserContext } from '../queue-user-context/queue-user-context.service';
 import { Queuejob } from '../queue.type';
 // import { QueueName } from '../queue.enum';
-import _ from 'lodash';
 import { forwardRef, Inject, InternalServerErrorException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import _ from 'lodash';
 
 export abstract class BaseQueueConsumer extends WorkerHost {
-  protected appUser: UserContext;  
-
   // protected abstract readonly processor: QueueName;
   protected abstract readonly processor: string;
 
@@ -21,45 +19,47 @@ export abstract class BaseQueueConsumer extends WorkerHost {
     @Inject(forwardRef(() => QueueUserContext)) protected readonly queueUserContext: QueueUserContext,
     @InjectModel('Queuejob') protected queueJobModel: Model<Queuejob>,
     @InjectConnection() private readonly connection: Connection,
-    protected eventEmitter: EventEmitter2
+    protected eventEmitter: EventEmitter2,
   ) {
     super();
   }
 
-  createUserContext() {
-    this.queueUserContext.create();
-    this.appUser = this.queueUserContext.appUser;
+  createUserContext(user) {
+    return this.queueUserContext.create(user);
   }
 
-  async startSession() {
+  async startSession(appUser: UserContext) {
     const session = await this.connection.startSession();
-    this.appUser.setDBSession(session);
-    this.appUser.getDBSession().startTransaction({ readPreference: 'primary' });
+    appUser.setDBSession(session);
+    appUser.getDBSession().startTransaction({ readPreference: 'primary' });
   }
 
   async process(job: Job) {
-    this.createUserContext();
-    await this.startSession();
+    console.log("process job", job.data)
+    const { userContext, payload } = job.data
+
+    const appUser = this.createUserContext(userContext.user);
+    await this.startSession(appUser);
 
     try {
       const { userContext, payload } = job.data;
-      this.queueUserContext.assign(userContext);
+      // this.queueUserContext.assign(userContext);
 
-      await this.dispatch(job, payload);
+      await this.dispatch(appUser, job, payload);
 
-      await this.appUser.getDBSession().commitTransaction();
+      await appUser.getDBSession().commitTransaction();
       return {
         success: true,
       };
     } catch (e) {
-      await this.appUser.getDBSession().abortTransaction();
+      await appUser.getDBSession().abortTransaction();
       throw e;
     } finally {
-      this.appUser.getDBSession().endSession();
+      appUser.getDBSession().endSession();
     }
   }
 
-  private async dispatch(job: Job, payload: any) {
+  private async dispatch(appUser: UserContext, job: Job, payload: any) {
     const pascalJobName = _.upperFirst(_.camelCase(job.name));
     const methodName = `handle${pascalJobName}`;
 
@@ -69,7 +69,7 @@ export abstract class BaseQueueConsumer extends WorkerHost {
       return;
     }
 
-    await handler.call(this, job, payload);
+    await handler.call(this, appUser, job, payload);
   }
 
   protected async updateQueueJobRecord(job: Job, status: 'completed' | 'failed', result: any) {

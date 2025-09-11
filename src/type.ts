@@ -90,6 +90,8 @@ export type TypeGenerateDocumentVariable = {
   schema: SchemaModel;
   apiSchemaName: string;
   typename: string;
+  getPhoto: boolean,
+  uploadPhoto: boolean,
   fullApiSchemaName: string;
   fullTypeName: string;
   jsonschema: SimpleAppJSONSchema7;
@@ -171,6 +173,8 @@ export type SchemaConfig = {
   uniqueKeys?: string[][];
   documentTitle?: string;
   loseDataIsolation?: boolean;
+  getPhoto?: boolean;
+  uploadPhoto?: boolean;
   generateDocumentNumber?: boolean;
   docNoPattern?: string;
   documentDate?: string;
@@ -240,7 +244,6 @@ export type SchemaType = {
   type: string;
   definitions?: SimpleAppJSONSchema7;
   required?: string[];
-
   'x-simpleapp-config': SchemaConfig;
   properties: SchemaFields;
 };

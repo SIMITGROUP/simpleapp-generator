@@ -11,11 +11,18 @@ import { UserContext } from '../user-context/user.context';
 // import { RegTenant } from './profile.types';
 import * as mongoose from 'mongoose';
 import { InjectConnection } from '@nestjs/mongoose';
-import { TenantService, Tenant } from '../../resources/tenant/tenant.service';
-import { OrganizationService, Organization } from '../../resources/organization/organization.service';
-import { BranchService, Branch } from '../../resources/branch/branch.service';
-import { UserService, User } from '../../resources/user/user.service';
-import { PermissionService, Permission } from '../../resources/permission/permission.service';
+import { TenantService } from '../../resources/tenant/tenant.service';
+import { OrganizationService } from '../../resources/organization/organization.service';
+import { BranchService } from '../../resources/branch/branch.service';
+import { UserService } from '../../resources/user/user.service';
+import { PermissionService } from '../../resources/permission/permission.service';
+
+import { Tenant } from '../../resources/tenant/tenant.schema';
+import { Organization } from '../../resources/organization/organization.schema';
+import { Branch } from '../../resources/branch/branch.schema';
+import { User } from '../../resources/user/user.schema';
+import { Permission } from '../../resources/permission/permission.schema'
+
 import { UserContextInfo } from './profile.schema';
 const Base64URL = require('@darkwolf/base64url');
 @Injectable()
@@ -144,7 +151,7 @@ export class ProfileService {
       workStart: '09:00:00',
       workEnd: '22:00:00',
       workingHours: [],
-      offdays: ['sat','sun'],
+      offdays: ['sat', 'sun'],
       street1: '11,my street 1',
       street2: 'my street 2',
       postcode: '11111',

@@ -35,7 +35,7 @@ import { RolesGuard } from './simple-app/.core/features/auth/role-guard/roles.gu
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
     }),
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({isGlobal: true,}),
     MongooseModule.forRoot(process.env.MONGO_DB_URL, {}),
     // ApiEventModule,
     // UserModule,

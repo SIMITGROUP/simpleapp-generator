@@ -4,7 +4,7 @@ import { Branch } from './branch-event.type';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { EventBeforeCreate, EventAfterCreate } from 'src/simple-app/.core/features/event/interface';
 import { BranchService } from 'src/simple-app/.core/resources/branch/branch.service';
-import { CreatePayLoad } from 'src/simple-app/.core/features/event/event.type';
+import { CreatePayload } from 'src/simple-app/.core/features/event/event.type';
 import { AutoIncreamentService } from 'src/simple-app/.core/features/auto-increament/auto-increament.service';
 import { DocumentNoFormatService } from 'src/simple-app/.core/features/document-no-format/document-no-format.service';
 import { GenerateLogoService } from 'src/simple-app/features/generate-image/generate-logo/generate-logo-service';
@@ -19,14 +19,14 @@ export class BranchEventService implements EventBeforeCreate<Branch>, EventAfter
   ) {}
 
   @OnEvent('branch.before-create')
-  async beforeCreate(appUser: UserContext, payload: CreatePayLoad<Branch>) {
+  async beforeCreate(appUser: UserContext, payload: CreatePayload<Branch>) {
     const searchresult = await this.autoIncreamentSvc.runGenerateNextNo(appUser, 'branch', 'branchId');
     payload.data.branchId = searchresult.nextNo;
     console.log('branch.before-create', payload);
   }
 
   @OnEvent('branch.after-create')
-  async afterCreate(appUser: UserContext, payload: CreatePayLoad<Branch>) {
+  async afterCreate(appUser: UserContext, payload: CreatePayload<Branch>) {
     try{
       const data = payload.data;
       if(data.branchId==0){

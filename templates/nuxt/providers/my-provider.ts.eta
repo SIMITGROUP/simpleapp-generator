@@ -6,14 +6,13 @@ const operationsGenerator = createOperationsGenerator()
 
 export const getImage: ProviderGetImage = (
   src,
-  { modifiers = {}, baseURL } = {}
+  { modifiers = {}, baseURL:string='' } = {}
 ) => {
-
-  if (!baseURL) {
-    // also support runtime config 
-    baseURL = useRuntimeConfig().public.apiUrl
+  let baseURL = useRuntimeConfig().public.apiUrl ??''
+  
+  if(baseURL.endsWith('/')){
+    baseURL = baseURL.slice(0, -1) 
   }
-
   const operations = operationsGenerator(modifiers)
 
   return {

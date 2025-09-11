@@ -6,6 +6,8 @@ export const branch: SchemaType = {
     isolationType: IsolationType.org,
     documentType: 'branch',
     documentName: 'branch',
+    uploadPhoto:true,
+    getPhoto:true,
     // pageType:"crud",
     uniqueKey: 'branchCode',
     uniqueKeys: [['branchId']],

@@ -1,0 +1,77 @@
+<template>
+  <div>
+    <ImageToBase64Uploader
+      v-if="changable"
+      #default
+      :class="` place-content-center bg-white rounded-md`"
+      @image-uploaded="handleBase64"
+      :imagePath="imagepath"
+    >
+      <!-- {{console.log("imagepath",imagepath)}} -->
+      <NuxtImg
+        v-if="orgRecordId"
+        class="w-full h-full rounded-md"
+        :key="imageKey"
+        :src="imagepath"
+        placeholder="/images/organization.png"
+        @error="onError"
+      />
+    </ImageToBase64Uploader>
+    <div
+      v-else
+      :class="` inline-block rounded-md bg-white text-black`"
+    >
+      <!-- {{console.log("imagepath",imagepath)}} -->
+
+      <NuxtImg
+        v-if="orgRecordId"
+        class="rounded-md min-w-10 min-h-10 h-full"
+        :src="imagepath"
+        placeholder="/images/organization.png"
+        @error="onError"
+      />
+    </div>
+  </div>
+</template>
+<script lang="ts" setup>
+import { PHOTOSIZE } from "~/types";
+// import {KeyValue} from ''
+const props = defineProps<{
+  changable?: boolean;
+  orgRecordId?: string;
+  size: PHOTOSIZE;
+}>();
+const imageKey = ref(0);
+const orgRecordId = computed(
+  () => props.orgRecordId ?? getUserProfile()?.orgRecordId,
+);
+const xorgpath = getCurrentXorg() ? `${getCurrentXorg()}/` : "MC0wLTA/";
+const size = props.size ?? PHOTOSIZE.S64;
+const path = useOrganizationInfo().getBranchPhotoUrl(orgRecordId.value, size);
+const imagepath = ref(path)
+
+
+watch(
+  () => props.orgRecordId,
+  () => imageKey.value++,
+);
+const handleBase64 = async (data: string) => {
+  const keyvalue = {
+    key: "organizations/" + props.orgRecordId,
+    value: data,
+  };
+  // console.log("upload logo ", data);
+  const uploadok = await useNuxtApp()
+    .$OrganizationDoc()
+    .getApi()
+    .runUploadPhoto(orgRecordId.value,keyvalue)
+  if (uploadok) {
+    const realpath = `/api/${imagepath}`;
+    await fetch(realpath, { cache: "reload", credentials: "include" });
+    imageKey.value++;
+  }
+};
+const onError = () => {
+  imagepath.value = "/images/organization.png";
+};
+</script>

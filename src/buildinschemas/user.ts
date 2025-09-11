@@ -11,12 +11,14 @@ export const user: SchemaType = {
     uniqueKey: 'email',
     documentTitle: 'fullname',
     requiredRoles: ['SuperUser'],
+    getPhoto: true,
+    uploadPhoto: true,
     additionalAutoCompleteFields: ['uid'],
     additionalApis: [
       {
         action: 'getPermission',
         entryPoint: ':id/permission',
-        requiredRole: [],
+        requiredRole: ["Admin"],
         method: RESTMethods.get,
         responseType: '[UserPermission]',
         description: 'Get user permissoin'
@@ -24,8 +26,9 @@ export const user: SchemaType = {
       {
         action: 'updatePermission',
         entryPoint: ':id/permission',
-        requiredRole: [],
+        requiredRole: ["Admin"],
         method: RESTMethods.put,
+        responseType: "String",
         schema: '[UserPermission]',
         description: 'set user permissoin'
       }

@@ -7,29 +7,13 @@ export const organization: SchemaType = {
     documentType: 'org',
     documentName: 'organization',
     pageType: 'crud',
+    uploadPhoto:true,
+    getPhoto:true,
     uniqueKey: 'orgCode',
     uniqueKeys: [['orgId']],
     documentTitle: 'orgName',
     additionalAutoCompleteFields: ['orgId'],
-    additionalApis: [
-      {
-        action: 'getlogo',
-        entryPoint: 'logo',
-        requiredRole: ['User'],
-        method: RESTMethods.get,
-        responseType: 'String',
-        description: 'obtain avatar base64 jpg image'
-      },
-      {
-        action: 'uploadlogo',
-        entryPoint: 'logo',
-        requiredRole: ['Admin'],
-        method: RESTMethods.post,
-        schema: 'KeyValue',
-        responseType: 'String',
-        description: 'post avatar in base64 jpg image'
-      }
-    ],
+    additionalApis: [],
     resourceName: 'organization'
   },
   required: ['orgId', 'orgCode', 'orgName'],

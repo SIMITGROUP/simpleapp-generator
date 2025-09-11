@@ -1,0 +1,63 @@
+<template>
+  <div>
+    <ImageToBase64Uploader
+      v-if="changable"
+      #default
+      :style="`width:${size}px; height:${size} px`"
+      :class="`place-content-center `"
+      @image-uploaded="handleBase64"
+      :imagePath="imagepath"
+    >
+      <NuxtImg
+        v-if="uid"
+        class="w-full h-full border-4 rounded-full"
+        :src="imagepath"
+        :key="imageKey"
+        provider="cloudflare"
+      />
+    </ImageToBase64Uploader>
+    <div
+      v-else
+      class="inline-block text-black"
+      :style="`width:${size}px; height:${size} px`"
+    >
+      <NuxtImg
+        v-if="uid"
+        class="w-full h-full border rounded-full"
+        :key="refreshkey"
+        :src="imagepath"
+        provider="cloudflare"
+      />
+    </div>
+  </div>
+</template>
+<script lang="ts" setup>
+import { updateAvatarVersion } from "~/composables/stringHelper.generate";
+import { PHOTOSIZE } from "~/types";
+
+// import {KeyValue} from ''
+const props = defineProps<{
+  changable?: boolean;
+  size?: PHOTOSIZE;
+  uid?: string;
+  refreshkey?: number;
+}>();
+const size = computed(() => props.size ?? PHOTOSIZE.S64);
+const imageKey = ref(0);
+const uid = computed(() => props.uid ?? getUserProfile()?.uid);
+// const xorgpath = getCurrentXorg() ? `${getCurrentXorg()}/` : "MC0wLTA/";
+
+const imagepath = computed(() => useUserInfo().getAvatarByUid(uid.value,size.value)); //`${xorgpath}images/organization/${orgRecordId.value}`;
+
+const handleBase64 = async (data: string) => {
+  await fetch(`/api/profile/avatar`, {
+    method: "POST",
+    body: data.split("base64,")[1],
+  }).then(async (res) => {
+    await fetch(imagepath.value, { cache: "reload", credentials: "include" });
+    imageKey.value++;
+    updateAvatarVersion();
+    // useNuxtApp().$event('RefreshUser',uid.value)
+  });
+};
+</script>

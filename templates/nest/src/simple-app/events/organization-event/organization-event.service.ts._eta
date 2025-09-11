@@ -1,0 +1,52 @@
+import { BadRequestException, InternalServerErrorException, HttpException, Injectable, Inject } from '@nestjs/common';
+import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { Organization } from './organization-event.type';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { EventBeforeCreate, EventAfterCreate, EventBeforeUpdate } from 'src/simple-app/.core/features/event/interface';
+import { OrganizationService } from 'src/simple-app/.core/resources/organization/organization.service';
+import { CreatePayload, UpdatePayload } from 'src/simple-app/.core/features/event/event.type';
+import { AutoIncreamentService } from 'src/simple-app/.core/features/auto-increament/auto-increament.service';
+import { GenerateLogoService } from 'src/simple-app/features/generate-image/generate-logo/generate-logo-service';
+import { getCountriesForTimezone, getCurrencyCode } from 'src/simple-app/.core/utils/locale-tool';
+
+
+@Injectable()
+export class OrganizationEventService implements 
+  EventBeforeCreate<Organization>, 
+  EventAfterCreate<Organization>,
+  EventBeforeUpdate<Organization>
+   {
+  constructor(
+    private organizationSvc: OrganizationService,
+    private autoIncreamentSvc: AutoIncreamentService,
+    private generateLogoSvc: GenerateLogoService,
+  ) {}
+
+  @OnEvent('organization.before-create',{suppressErrors:false})
+  async beforeCreate(appUser: UserContext, payload: CreatePayload<Organization>) {
+    const searchresult = await this.autoIncreamentSvc.runGenerateNextNo(appUser, 'organization', 'orgId');
+    payload.data.orgId = searchresult.nextNo;
+    console.log('organization.before-create', payload);
+  }
+
+  @OnEvent('organization.after-create',{suppressErrors:false})
+  async afterCreate(appUser: UserContext, payload: CreatePayload<Organization>) {
+    const data = payload.data;
+    if (data.orgId == 0) {
+      throw new BadRequestException('Create branch failed due to orgId=0');
+    }
+    // await this.generateLogoSvc.generateLogo(appUser, data.orgName, data._id, data.tenantId, data.orgId, data.organizationId);
+  }
+
+  @OnEvent('organization.after-create',{suppressErrors:false})
+  async beforeUpdate(appUser: UserContext, payload: UpdatePayload<Organization>): Promise<void> {
+    if (payload.prevData.timeZone != payload.newData.timeZone) {
+      const timeZoneInfo = getCountriesForTimezone(payload.newData.timeZone);
+      payload.newData.country = timeZoneInfo['id'];
+      // newdata.currency = getCurrencyCode(timeZoneInfo['id']);
+    }
+  }
+
+
+
+}

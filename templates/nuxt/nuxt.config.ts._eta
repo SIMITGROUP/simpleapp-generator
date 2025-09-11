@@ -18,6 +18,7 @@ export default defineNuxtConfig({
             API_URL: process.env.API_URL,
             DEBUGDATA: process.env.DEBUGDATA,
             PROJECT_NAME: process.env.PROJECT_NAME,
+            avatarUrl: "process.env.AVATAR_URL",
         }
     },
     vite: {

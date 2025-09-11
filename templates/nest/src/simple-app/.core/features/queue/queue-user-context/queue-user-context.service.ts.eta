@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
-import { QueuePayload,User, Permission,  MiniAppInstallation } from '../queue.type';
-
+import { SimpleAppRobotUserService } from '../../user-context/robot-user.service';
+import { MiniAppInstallation } from '../../mini-app/dto';
+import { Permission } from 'src/simple-app/.core/resources/permission/permission.schema';
+import { User } from 'src/simple-app/.core/resources/user/user.schema';
 
 @Injectable()
 export class QueueUserContext {
@@ -13,20 +15,21 @@ export class QueueUserContext {
     @InjectModel('User') private userModel: Model<User>,
     @InjectModel('Permission') private permModel: Model<Permission>,
     @InjectModel('MiniAppInstallation') private miniAppInstallationModel: Model<MiniAppInstallation>,
-  ) {}
+    private robotUserSvc: SimpleAppRobotUserService
+  ) { }
 
-  create() {
-    this.appUser = new UserContext(this.userModel, this.permModel,  this.miniAppInstallationModel);
+  create(user) {
+    return this.robotUserSvc.createDumyAppUser(user)
   }
 
-  assign(userContext: QueuePayload.UserContext) {
-    const userPayload = userContext.user;
-    const xOrg = userContext.xOrg;
+  //   assign(userContext: QueuePayload.UserContext) {
+  //     const userPayload = userContext.user;
+  //     const xOrg = userContext.xOrg;
 
-    this.appUser.setAsStaticUser(userPayload.uid, userPayload.uname, userPayload.fullName, userPayload.email, xOrg);
-    this.appUser.setTimeZone(userPayload.timeZone);
-    this.appUser.setCountry(userPayload.country);
-    this.appUser.setCurrency(userPayload.currency);
-    this.appUser.setOffsetMinute(userPayload.offsetMinute);
-  }
+  //     this.appUser.setAsStaticUser(userPayload.uid, userPayload.uname, userPayload.fullName, userPayload.email, xOrg);
+  //     this.appUser.setTimeZone(userPayload.timeZone);
+  //     this.appUser.setCountry(userPayload.country);
+  //     this.appUser.setCurrency(userPayload.currency);
+  //     this.appUser.setOffsetMinute(userPayload.offsetMinute);
+  //   }
 }

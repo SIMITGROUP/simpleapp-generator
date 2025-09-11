@@ -1,20 +1,24 @@
 import { Module } from '@nestjs/common';
-import { QueueUserContext } from './queue-user-context/queue-user-context.service';
 import { QueueJobModule } from 'src/simple-app/.core/resources/queue-job/queue-job.module';
+import { QueueUserContext } from './queue-user-context/queue-user-context.service';
 
-import { UserMongoSchema } from '../../resources/user/user.model';
-import { PermissionMongoSchema } from '../../resources/permission/permission.model';
-import { MiniAppInstallationMongoSchema } from '../../resources/mini-app-installation/mini-app-installation.model';
 import { MongooseModule } from '@nestjs/mongoose';
+import { MiniAppInstallationMongoSchema } from '../../resources/mini-app-installation/mini-app-installation.model';
+import { PermissionMongoSchema } from '../../resources/permission/permission.model';
+import { UserMongoSchema } from '../../resources/user/user.model';
+import { SimpleAppUserContextModule } from '../user-context/user-context.module';
 
 @Module({
-    imports: [ 
+  imports: [
+    SimpleAppUserContextModule,
     MongooseModule.forFeature([
-      { name: 'User', schema: UserMongoSchema },      
+      { name: 'User', schema: UserMongoSchema },
       { name: 'Permission', schema: PermissionMongoSchema },
       { name: 'MiniAppInstallation', schema: MiniAppInstallationMongoSchema },
-    ]),QueueJobModule ],
-    providers: [QueueUserContext, ],
-    exports: [QueueUserContext,QueueJobModule],
+    ]),
+    QueueJobModule,
+  ],
+  providers: [QueueUserContext],
+  exports: [QueueUserContext, QueueJobModule],
 })
-export class SimpleAppQueueModule {}
+export class SimpleAppQueueModule { }

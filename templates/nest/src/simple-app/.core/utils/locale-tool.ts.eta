@@ -1,0 +1,11 @@
+import * as countrytimezone from 'countries-and-timezones';
+
+import countryToCurrency, { Countries } from 'country-to-currency';
+
+export const getCurrencyCode = (countryCode: Countries) => {
+  return countryToCurrency[countryCode];
+};
+
+export const getCountriesForTimezone = (timeZone: string) => {
+  return countrytimezone.getCountriesForTimezone(timeZone)[0];
+};

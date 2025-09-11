@@ -8,13 +8,14 @@
 
 <% 
 
-  const getFieldType =(proptype, typename,actionname)=>{
-    const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
+  const getFieldType =(proptype, typename,actionname)=>{    
     if(!typename) throw actionname +" undefine schema";
 
     let tmptypename = typename.replace('[','').replace(']','')
-    if(!systemtypes.includes(tmptypename)){
+    if(!systemType().includes(tmptypename)){
       tmptypename = 'schema.'+tmptypename
+    }else{
+      if(proptype=='type') tmptypename = tmptypename.toLowerCase()
     }
     if(typename.includes('[')){
       return  proptype=='schema' ?  `[${tmptypename}]` : `${tmptypename}[]`
@@ -69,8 +70,12 @@ export class <%= (it.typename)%>ApiService  {
             <%}%>
 
          ){
-            const resultResult:<%= getFieldType('type',api.responseType,api.action)%> = <%= api.responseType.substr(0,1)=='[' ? '[]' : '{}'%>
 
+           <%if(api.action=='getPhoto'){%>
+            const resultResult:Buffer= Buffer.from("DummyStringConvertAsPhoto");
+          <%}else{%>
+            const resultResult:<%= getFieldType('type',api.responseType,api.action)%> = <%= api.responseType.substr(0,1)=='[' ? '[]' : '{}'%>
+          <%}%>
             return resultResult
     
   } 

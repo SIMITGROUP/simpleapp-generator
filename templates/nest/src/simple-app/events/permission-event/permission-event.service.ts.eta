@@ -4,7 +4,7 @@ import { Permission } from './permission-event.type';
 import { OnEvent } from '@nestjs/event-emitter';
 import { EventBeforeCreate, EventAfterCreate } from 'src/simple-app/.core/features/event/interface';
 import { PermissionService } from 'src/simple-app/.core/resources/permission/permission.service';
-import { CreatePayLoad } from 'src/simple-app/.core/features/event/event.type';
+import { CreatePayload } from 'src/simple-app/.core/features/event/event.type';
 
 @Injectable()
 export class PermissionEventService implements EventBeforeCreate<Permission>, EventAfterCreate<Permission> {
@@ -13,12 +13,12 @@ export class PermissionEventService implements EventBeforeCreate<Permission>, Ev
   ) {}
 
   @OnEvent('permission.before-create')
-  async beforeCreate(appUser: UserContext, payload: CreatePayLoad<Permission>) {
+  async beforeCreate(appUser: UserContext, payload: CreatePayload<Permission>) {
 
   }
 
   @OnEvent('permission.after-create')
-  async afterCreate(appUser: UserContext, payload: CreatePayLoad<Permission>) {
+  async afterCreate(appUser: UserContext, payload: CreatePayload<Permission>) {
     const data = payload.data;
     if(data.tenantId ==0){
       throw new BadRequestException('Create permission failed due to tenantId=0')

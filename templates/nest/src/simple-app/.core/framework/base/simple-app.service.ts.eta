@@ -4,7 +4,7 @@
  * last change 2025-09-01
  * Author: Ks Tan
  */
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import jsonpath from 'jsonpath';
 import _ from 'lodash';
 
@@ -15,15 +15,14 @@ import addErrors from 'ajv-errors';
 import addFormats from 'ajv-formats';
 import { FilterQuery, Model, PipelineStage, mongo } from 'mongoose';
 // import { CloudApiService } from 'src/cloudapi/cloudapi.service';
-import { CustomException } from '../custom-exception';
-import { SimpleAppLogService } from '../../features/log/log.service';
 import { foreignkeys } from '../../features/foreign-key/foreignkeys.dict';
+import { CustomException } from '../custom-exception';
 
-import { DocumentNoFormatService } from '../../features/document-no-format/document-no-format.service';
-import { RunWebhookService } from '../../features/webhook/run-webhook.service';
-import { UserContext } from '../../features/user-context/user.context';
-import { CheckMutipleUnionExistResponse, DeleteResultType, IsolationType, MoreProjectionType, TextSearchBody, SchemaFields } from '../schemas';
 import { camelToKebab } from 'src/simple-app/.core/utils/string-utils';
+import { DocumentNoFormatService } from '../../features/document-no-format/document-no-format.service';
+import { UserContext } from '../../features/user-context/user.context';
+import { RunWebhookService } from '../../features/webhook/run-webhook.service';
+import { UniqueKeyExistResponse, DeleteResultType, IsolationType, MoreProjectionType, SchemaFields, TextSearchBody, PatchManyRequest } from '../schemas';
 
 @Injectable()
 export class SimpleAppService<T extends SchemaFields> {
@@ -702,7 +701,7 @@ export class SimpleAppService<T extends SchemaFields> {
     let dependency;
     try {
       //new way of hook
-      await this.runEvent(appuser, `${this.documentName}.beforeDelete`, { id: id, deleteData: deletedata }, false);
+      await this.runEvent(appuser, this.setHookName('beforeDelete'), { id: id, deleteData: deletedata }, false);
 
       // if (this.hooks.beforeDelete) await this.hooks.beforeDelete(appuser, id, deletedata);
       this.logger.debug('delete record', this.documentName, id);
@@ -715,6 +714,7 @@ export class SimpleAppService<T extends SchemaFields> {
         filterIsolation['_id'] = id;
         this.logger.debug('delete filter', filterIsolation);
         const result = await this.doc.deleteOne(filterIsolation).session(dbsession);
+
         await this.addAuditEvent(appuser, this.documentName, id, 'delete', deletedata);
 
         appuser.addDeletedRecordId(this.documentName, id);
@@ -726,14 +726,13 @@ export class SimpleAppService<T extends SchemaFields> {
         // this.doc.findByIdAndDelete(id)
 
         //new way of hook
-
-        await this.runEvent(appuser, this.setHookName('afterDelete'), { id: id, deleteResult: deleteresult }, false);
+        await this.runEvent(appuser, this.setHookName('afterDelete'), { id: id, deleteData: deletedata }, false);
 
         await this.callWebhook(appuser, 'delete', deletedata);
         return deleteresult;
       } else {
         this.logger.debug('reject query', dependency);
-
+        console.log(this.documentName, ' dependency :id=', id, dependency);
         throw new ForbiddenException(`This system detected that the [${this.documentName}] data has been used in other record`, 'Foreignkey constraint');
       }
     } catch (err) {
@@ -929,6 +928,31 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   };
 
+  async patchMany<T>(appuser: UserContext, data: PatchManyRequest<T>) {
+    // filter = {
+    //   _id: '7eb2661a-6ea6-406e-b868-2e8b19c4658b',
+    //   'tuitionClass._id': '5aa69cee-f651-45f4-bad8-0f52a3fb92b5',
+    // };
+
+    const filter = data.filter;
+    const patch = data.data as Object;
+
+    const isolationFilter = { ...this.getIsolationFilter(appuser), ...(filter || {}) };
+    this.polishIsolationFilter(isolationFilter);
+    this.applyNestedDateTime(appuser, patch, 'update');
+
+    // Get DB Session
+    const dbsession = appuser.getDBSession();
+    if (dbsession && !dbsession.inTransaction()) {
+      dbsession.startTransaction({ readPreference: 'primary' });
+    }
+
+    const result = await this.doc.updateMany(isolationFilter, { $set: patch }, { session: dbsession });
+    await this.addManyAuditEvents(appuser, this.documentName, 'patchMany', [patch]);
+
+    return result;
+  }
+
   //find what foreign key constraint
   async getRelatedRecords(appuser: UserContext, id: string) {
     this.logger.debug('get foreignkey for delete:', id);
@@ -1012,7 +1036,7 @@ export class SimpleAppService<T extends SchemaFields> {
       return createresult;
     } else {
       const updateresult = await this.findIdThenPatch(appuser, id, data);
-      const finaldata = await this.findById(appuser, id);
+      const finaldata = await this.findById(appuser, id);      
       await this.runEvent(appuser, this.setHookName('afterSetStatus'), { docStatus: docstatus, data: finaldata }, false);
       await this.addAuditEvent(appuser, this.documentName, id, docstatus, data);
 
@@ -1051,18 +1075,24 @@ export class SimpleAppService<T extends SchemaFields> {
    * @return     {Promise}      { description_of_the_return_value }
    */
   async runEvent(appuser: UserContext, eventName: string, payloads: any, enforce: boolean = true) {
-    if (enforce && !this.eventEmitter.hasListeners(eventName)) {
-      throw new InternalServerErrorException(`${eventName} seems no listener`);
-    } else if (this.eventEmitter.hasListeners(eventName)) {
-      const res = await this.eventEmitter.emitAsync(eventName, appuser, payloads);
+    try {
 
-      if (!res) {
-        throw new InternalServerErrorException(`${eventName} is invalid worker`);
+      if (enforce && !this.eventEmitter.hasListeners(eventName)) {
+        throw new InternalServerErrorException(`${eventName} seems no listener`);
+      } else if (this.eventEmitter.hasListeners(eventName)) {        
+        const res = await this.eventEmitter.emitAsync(eventName, appuser, payloads);
+
+        if (!res) {
+          throw new InternalServerErrorException(`${eventName} is invalid worker`);
+        }
+
+        const result = res[0];
+        if (result?.name && result?.name.includes('Exception')) throw result;
+        return result;
       }
-
-      const result = res[0];
-      if (result?.name && result?.name.includes('Exception')) throw result;
-      return result;
+    } catch (e) {
+      console.error(e);
+      throw e;
     }
   }
   // startWorkflow(appuser: UserContext, processName: WorkflowName, workflowData: any) {
@@ -1175,8 +1205,8 @@ export class SimpleAppService<T extends SchemaFields> {
     return Promise.resolve('ok');
   }
 
-  async checkMultipleUnionExist(appuser: UserContext, data: string[]): Promise<CheckMutipleUnionExistResponse[]> {
-    const response: CheckMutipleUnionExistResponse[] = [];
+  async checkUniqueKeyExist(appuser: UserContext, data: string[]): Promise<UniqueKeyExistResponse[]> {
+    const response: UniqueKeyExistResponse[] = [];
     const unionKey = this.getDocumentIdentityCode();
     const searchQuery: any = { [unionKey]: { $in: data } };
     // search for multiple union exist

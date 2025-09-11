@@ -21,7 +21,9 @@ import { DocumentNoFormatService } from 'src/simple-app/.core/features/document-
 
 import * as defaultValue from './<%= camelToKebab(it.resourceName) %>.default'
 import * as schema from './<%= camelToKebab(it.resourceName) %>.schema';
-export * from './<%= camelToKebab(it.resourceName) %>.schema';
+//export * from './<%= camelToKebab(it.resourceName) %>.schema';
+
+
 <%if(it.jsonschema['x-import-lib']) {%>
   <%let libs = it.jsonschema['x-import-lib'] %>
   <%for(let l = 0; l< libs.length; l++) { %>

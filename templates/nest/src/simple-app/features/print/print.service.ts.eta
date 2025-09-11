@@ -23,7 +23,7 @@ export class PrintService {
     };
     return config;
   }
-  async getBase64Pdf(appUser: UserContext, formatid: string, id: string) {
+  async getBase64Pdf(appUser: UserContext, document:string, formatid: string, id: string) {
     const printapi = new api.DefaultApi(this.getConfig(appUser), undefined);
     try {
       const result: any = await printapi.runPdfBase64(formatid, id, {

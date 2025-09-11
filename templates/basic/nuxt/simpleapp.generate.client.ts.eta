@@ -338,7 +338,7 @@ export class <%= upperFirstCase(it.name)%>Client extends SimpleAppClient<openapi
           return await Promise.reject(errors);
         } 
       }
-      return await this.docapi.<%=it.name %>ControllerSetStatus<%=capitalizeFirstLetter(setting.status)%>(id,data).then((res)=>{
+      return await this.docapi.<%=it.resourceName %>ControllerSetStatus<%=capitalizeFirstLetter(setting.status)%>(id,data).then((res)=>{
         $event('Notification',{
           documentName:this.getDocName(),
           summary:t('setStatus<%=capitalizeFirstLetter(setting.status)%>Success'),

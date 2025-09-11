@@ -7,7 +7,7 @@
 import { getUserProfile } from './../composables/getUserStore.generate';
 import  {MenuData} from '~/types'
 export default defineNuxtRouteMiddleware((to, from) => {      
-  const userprofile = getUserProfile()
+  // const userprofile = getUserProfile()
   //skip auto then simply allow
   if(!to.meta.auth){
     return true
@@ -26,12 +26,12 @@ export default defineNuxtRouteMiddleware((to, from) => {
       if(resourcename===undefined){//home page
         
         // return true  //no permission needed
-        if(userprofile.group==''){
-          console.error("no access right to current xorg")
-          return navigateTo('/')
-        }else{
+        //if(userprofile.group==''){
+        //  console.error("no access right to current xorg")
+        //  return navigateTo('/')
+        //}else{
           return true
-        }
+        //}
         
       }else{        
         const {$userstore} = useNuxtApp()  

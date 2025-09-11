@@ -13,13 +13,52 @@ export class PreparedKey {
   uid?: string;
 }
 
+
+export class PatchManyRequest<T> {
+  @ApiProperty({ type: () => Object, required: true })
+  data: Partial<T>;
+
+  @ApiProperty({ type: () => Object, required: false })  
+  filter?: Object | null;
+}
+
+@ObjectType()
+export class UpdateManyResponse {
+  /** Indicates whether this write result was acknowledged. If not, then all other members of this result will be undefined */
+  @ApiProperty({ type: 'boolean' })
+  @Field()
+  acknowledged: boolean;
+
+  /** The number of documents that matched the filter */
+  @ApiProperty({ type: 'number' })
+  @Field()
+  matchedCount: number;
+
+  /** The number of documents that were modified */
+  @ApiProperty({ type: 'number' })
+  @Field()
+  modifiedCount: number;
+
+  /** The number of documents that were upserted */
+  @ApiProperty({ type: 'number' })
+  @Field()
+  upsertedCount: number;
+
+  /** The identifier of the inserted document if an upsert took place */
+  @ApiProperty({ type: 'string', nullable: true })
+  @Field()
+  upsertedId: string | null
+}
+
+
+
 @ObjectType()
 export class CodeLabelValue {
   @Field()
   @ApiProperty({ type: () => String })
   _id: string;
   @Field()
-  @ApiProperty({ type: () => String})
+  @ApiProperty({ type: () => String })
   code: string;
   @Field()
   @ApiProperty({ type: () => String })
@@ -32,56 +71,53 @@ export class CodeLabelValue {
 @ObjectType()
 export class KeyValue {
   @Field()
-  @ApiProperty({ type: () => String})
+  @ApiProperty({ type: () => String })
   key: string;
   @Field()
   @ApiProperty({ type: () => String })
   value: string;
   @Field()
-  @ApiProperty({ type: () => String, required: false })  
+  @ApiProperty({ type: () => String, required: false })
   id?: string;
 }
 
 @ObjectType()
 export class ImportErrorMessgeError {
-    @Field()
-    @ApiProperty({ type: () => String})
-    message: string;
-    
+  @Field()
+  @ApiProperty({ type: () => String })
+  message: string;
 
-    // @Field()
-    // @ApiProperty({ type: () => Object})
-    [key: string]: any;
-  }
-
+  // @Field()
+  // @ApiProperty({ type: () => Object})
+  [key: string]: any;
+}
 
 @ObjectType()
 export class ImportErrorMessage {
   @Field()
-  @ApiProperty({ type: () => String})
+  @ApiProperty({ type: () => String })
   code: string;
   @Field()
-  @ApiProperty({ type: () => String})
+  @ApiProperty({ type: () => String })
   label: string;
   @Field()
-  @ApiProperty({ type: () => String})
+  @ApiProperty({ type: () => String })
   message: string;
   @Field()
-  @ApiProperty({ type: () => ImportErrorMessgeError})
+  @ApiProperty({ type: () => ImportErrorMessgeError })
   error: ImportErrorMessgeError;
 }
-
 
 @ObjectType()
 export class QueueJobProducerResponse {
   @Field()
-  @ApiProperty({ type: () => String})
+  @ApiProperty({ type: () => String })
   id: string;
   @Field()
-  @ApiProperty({ type: () => String})
+  @ApiProperty({ type: () => String })
   name: string;
   @Field()
-  @ApiProperty({ type: () => String})
+  @ApiProperty({ type: () => String })
   processor: string;
 }
 
@@ -111,10 +147,7 @@ export class Docnoformat {
   branch: DocnoformatBranch;
 }
 
-export class CheckMutipleUnionExistResponse {
+@ObjectType()
+export class UniqueKeyExistResponse {
   [code: string]: 0 | 1;
 }
-
-//export type CheckMutipleUnionExistResponse = {
-//  [code: string]: 0 | 1;
-//}[];
