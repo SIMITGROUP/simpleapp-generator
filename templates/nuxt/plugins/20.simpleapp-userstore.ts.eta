@@ -5,7 +5,7 @@
  * Author: Ks Tan
  */
 import { defineNuxtPlugin } from "#app";
-import { PROFILEApi,ProfileUserBranch,UserContextInfo } from "../simpleapp/generate/openapi";
+import { PROFILEApi,ProfileUserBranch,UserContextInfo , Branch, Tenant,Organization} from "../simpleapp/generate/openapi";
 import { UserProfile } from "~/types";
 import axios, { Axios, AxiosError, AxiosResponse } from "axios";
 import _ from "lodash";
@@ -30,6 +30,9 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       currency: ref(""),
       country: ref(""),
       offsetMinute: ref(0),
+      tenantInfo: ref<Tenant>(),
+      orgInfo: ref<Organization>(),
+      branchInfo: ref<Branch>(),
       uid: ref(""),
       email: ref(""),
       fullName: ref(""),

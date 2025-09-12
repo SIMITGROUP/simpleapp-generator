@@ -3,6 +3,8 @@ import { ForeignKey } from '../../framework/schemas';
 import { Branch } from 'src/simple-app/.core/resources/branch/branch.schema';
 import { Permission } from 'src/simple-app/.core/resources/permission/permission.schema';
 import { Role } from '../auth/role-guard/roles.enum';
+import { Organization } from '../../resources/organization/organization.schema';
+import { Tenant } from '../../resources/tenant/tenant.schema';
 
 export class UserContextInfo {
   @ApiProperty({ type: String })
@@ -13,7 +15,6 @@ export class UserContextInfo {
   sessionId: string;
   @ApiProperty({ type: String })
   xOrg: string;
-
   @ApiProperty({ type: Number })
   tenantId: number;
   @ApiProperty({ type: Number })
@@ -58,6 +59,13 @@ export class UserContextInfo {
   @ApiProperty({ type: () => [ProfileUserBranch], description: 'List of branch the user can access in current tenant' })
   branches: ProfileUserBranch[];
 
+  @ApiProperty({ type: ()=>Tenant, description: 'List of task, or authority of the user can do' })
+  tenantInfo:Tenant;
+  @ApiProperty({ type: ()=>Organization, description: 'List of task, or authority of the user can do' })
+  orgInfo:Organization;
+  @ApiProperty({ type: ()=>Branch, description: 'List of task, or authority of the user can do' })
+  branchInfo:Branch;
+  
   @ApiProperty({ type: () => Object, description: 'Store all the rest of useful fields regarding user or branch' })
   moreProps?: Record<string, any>;
 }
@@ -75,11 +83,11 @@ export class ProfileUserInvites {
 
 export class BranchMinInfo {
   @ApiProperty({ type: String })
-  branchId:string
+  branchId: string;
   @ApiProperty({ type: String })
-  branchCode:string
+  branchCode: string;
   @ApiProperty({ type: String })
-  branchName:string
+  branchName: string;
 }
 export class ProfileUserBranch {
   @ApiProperty({ type: String })

@@ -106,7 +106,7 @@ export class UserContext extends UserContextInfo {
 
   // protected moreProps: Record<string, any> = {};
 
-  protected package: string = '';
+  // protected package: string = '';
 
   protected webhooks: Webhook[] = []; //systemWebHooks;
   protected clientSetting: TenantClientSetting = {
@@ -186,7 +186,7 @@ export class UserContext extends UserContextInfo {
 
   getMoreProps = () => this.moreProps;
 
-  getPackage = () => this.package;
+  // getPackage = () => this.package;
 
   getRoles = () => this.roles;
 
@@ -220,9 +220,9 @@ export class UserContext extends UserContextInfo {
     // if (Array.isArray(wh) && wh.length > 0) this.webhooks = this.webhooks.concat(wh);
   };
 
-  setPackage = (packageName: string) => {
-    this.package = packageName;
-  };
+  // setPackage = (packageName: string) => {
+  //   this.package = packageName;
+  // };
 
   setTimeZone = (timeZone: string) => {
     this.timeZone = timeZone;
@@ -272,6 +272,16 @@ export class UserContext extends UserContextInfo {
       { $match: { uid: this.uid, tenantId: this.tenantId } },
       {
         $lookup: {
+          from: 'tenant',
+          as: 'tenantInfo',
+          localField: 'tenantId',
+          foreignField: 'tenantId',
+          pipeline: [{ $project:{ created:0,updated:0,createdBy:0,updatedBy:0,__v:0} }],
+        },
+      },
+      {$unwind:{path:'$tenantInfo',preserveNullAndEmptyArrays:true}},
+      {
+        $lookup: {
           from: 'permission',
           as: 'perm',
           localField: '_id',
@@ -286,13 +296,13 @@ export class UserContext extends UserContextInfo {
         },
       },
       {
-        $project: {
-          uid: 1,
-          fullName: 1,
-          email: 1,
-          tenantId: 1,
-          orgId: 1,
-          branchId: 1,
+        $addFields: {
+          // uid: 1,
+          // fullName: 1,
+          // email: 1,
+          // tenantId: 1,
+          // orgId: 1,
+          // branchId: 1,
           groups: '$perm.groups',
         },
       },
@@ -328,6 +338,36 @@ export class UserContext extends UserContextInfo {
         },
       },
       {
+        $lookup: {
+          from: 'tenant',
+          as: 'tenantInfo',
+          localField: 'tenantId',
+          foreignField: 'tenantId',
+          pipeline: [{ $project:{ created:0,updated:0,createdBy:0,updatedBy:0,__v:0} }],
+        },
+      },
+      {$unwind:{path:'$tenantInfo',preserveNullAndEmptyArrays:true}},
+      {
+        $lookup: {
+          from: 'organization',
+          as: 'orgInfo',
+          localField: 'orgId',
+          foreignField: 'orgId',
+          pipeline: [{ $project:{ created:0,updated:0,createdBy:0,updatedBy:0,__v:0} }],
+        },
+      },
+      {$unwind:{path:'$orgInfo',preserveNullAndEmptyArrays:true}},
+      {
+        $lookup: {
+          from: 'branch',
+          as: 'branchInfo',
+          localField: 'branchId',
+          foreignField: 'branchId',
+          pipeline: [{ $project:{ created:0,updated:0,createdBy:0,updatedBy:0,__v:0} }],
+        },
+      },
+      {$unwind:{path:'$branchInfo',preserveNullAndEmptyArrays:true}},
+      {
         $project: {
           uid: 1,
           fullName: 1,
@@ -346,6 +386,9 @@ export class UserContext extends UserContextInfo {
           timeZone: '$b.o.timeZone',
           currency: '$b.o.currency',
           country: '$b.o.country',
+          tenantInfo:1,
+          orgInfo:1,
+          branchInfo:1,
         },
       },
 
@@ -400,8 +443,40 @@ export class UserContext extends UserContextInfo {
           ],
         },
       },
-    ];    
+
+      //get invites
+      {
+        $lookup: {
+          from: 'user',
+          localField: 'email',
+          foreignField: 'email',
+          as: 'invites',
+          pipeline: [
+            { $match: { uid: '' } },
+            {
+              $lookup: {
+                from: 'tenant',
+                localField: 'tenantId',
+                foreignField: 'tenantId',
+                as: 'tenant',
+              },
+            },
+            {$unwind:'$tenant'},
+            {
+              $project:{
+                _id:1,
+                created:1,
+                tenantId: 1,
+                tenantName:'$tenant.tenantName'
+              }
+            }
+          ],
+        },
+      }
+    ];
+
     const userProfiles: UserContextInfo[] = await this.userModel.aggregate(pipelines).exec();
+    // console.log("userProfiles",userProfiles)
     return userProfiles[0];
   }
 
@@ -418,13 +493,16 @@ export class UserContext extends UserContextInfo {
     this.logger.debug(`User found ${this.uid}`);
 
     const userProfile = await this.obtainProfileFromDB();
-    // console.log('userProfile', userProfile);
+    // console.log('userProfile', JSON.stringify(userProfile,null,2));
     if (userProfile) {
       this.logger.debug(`User ${this.uid} exists in tenant (${this.tenantId})`);
 
       this._id = userProfile._id;
       this.branchCode = userProfile['branchCode'] ?? '';
       this.branchName = userProfile['branchName'] ?? '';
+      this.tenantInfo = userProfile.tenantInfo;
+      this.orgInfo = userProfile.orgInfo;
+      this.branchInfo = userProfile.branchInfo;
       this.orgCode = userProfile['orgCode'] ?? '';
       this.orgName = userProfile['orgName'] ?? '';
       this.timeZone = userProfile['timeZone'] ?? '';
@@ -433,6 +511,7 @@ export class UserContext extends UserContextInfo {
       this.offsetMinute = userProfile['offsetMinute'] ?? 0;
       this.orgRecordId = userProfile['orgRecordId'] ?? '';
       this.branchRecordId = userProfile['branchRecordId'] ?? '';
+      this.invites = userProfile.invites;
       userProfile['branches'].forEach((b) => {
         b.xOrg = this.generateXOrg(b.tenantId, b.orgId, b.branchId);
       });
@@ -445,8 +524,8 @@ export class UserContext extends UserContextInfo {
         support: false,
       };
       this.roles = userProfile['roles'] ?? [Role.Everyone, Role.User];
-      // this.moreProps = this.setMoreProps(userProfile);
-      this.package = userProfile['package'];
+      this.moreProps = this.setMoreProps(userProfile);
+      // this.package = userProfile['package'];
       // this.appintegration = await this.setAppIntegration();
     } else {
       this.logger.debug(`User ${this.uid} not exists in tenant (${this.tenantId})`);
@@ -600,6 +679,9 @@ export class UserContext extends UserContextInfo {
       branchId: this.branchId,
       //branch id in string (branch._id)
       branchRecordId: this.branchRecordId,
+      tenantInfo: this.tenantInfo,
+      orgInfo: this.orgInfo,
+      branchInfo: this.branchInfo,
 
       branchCode: this.branchCode,
       branchName: this.branchName,
@@ -980,7 +1062,7 @@ export class UserContext extends UserContextInfo {
   /**
    * Define additional properties from user into moreProps
    */
-  setMoreProps(userProfile: UserProfile): Record<string, any> {
+  setMoreProps(userProfile: UserContextInfo): Record<string, any> {
     const allprops = Object.keys(userProfile);
     const excludekeys = [
       'created',
@@ -1003,6 +1085,9 @@ export class UserContext extends UserContextInfo {
       'country',
       'offsetMinute',
       'tenantId',
+      'tenantInfo',
+      'orgInfo',
+      'branchInfo',
       // 'lastActivity',
       'group',
       '__v',
@@ -1017,9 +1102,9 @@ export class UserContext extends UserContextInfo {
       }
     }
 
-    if (!data['package']) {
-      data['package'] = 'free';
-    }
+    // if (!data['package']) {
+    //   data['package'] = 'free';
+    // }
     return data;
   }
 
@@ -1054,7 +1139,7 @@ type UserProfile = {
   groups: string[];
   roles: Role[];
   tenantRecordId?: string;
-  package?: string;
+  // package?: string;
   branchRecordId?: string;
   branchCode?: string;
   branchName?: string;
@@ -1092,7 +1177,7 @@ type UserProfile = {
     currentTenant: {
       _id: string;
       tenantName: string;
-      package: string;
+      // package: string;
       clientSetting: TenantClientSetting;
       owner: {
         uid: string;

@@ -29,7 +29,7 @@ export class MiniAppManagerPolicyService {
   }
 
   hasRequiredPlan(appUser: UserContext, miniApp: MiniApp) {
-    const currentPlan = appUser.getPackage();
+    const currentPlan = appUser.tenantInfo.package;
     const requiredPlans = miniApp.access.requiredPlans ?? [];
 
     if (_.isEmpty(requiredPlans)) return true;

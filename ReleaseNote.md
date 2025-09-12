@@ -1,3 +1,6 @@
+[2.0.0d-alpha]
+1. provide tenantInfo, orgInfo, branchInfo to frontend
+
 [2.0.0c-alpha]
 1. fix profile session keeping error
 

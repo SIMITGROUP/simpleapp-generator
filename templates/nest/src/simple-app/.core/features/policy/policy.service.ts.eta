@@ -28,7 +28,7 @@ export class PolicyService {
    * - plans/enterprise.ts
    */
   hasFeature(appUser: UserContext, feature: keyof typeof this._FEATURES): boolean {
-    const appPackage = appUser.getPackage();
+    const appPackage = appUser.tenantInfo.package
     const allowedPlans = this._FEATURES[feature];
 
     return allowedPlans.includes(appPackage);
