@@ -1,3 +1,8 @@
+[2.0.0b-alpha]
+1. fix audit trail 
+2. add patch many api
+3. fix webhook
+
 [2.0.0a-alpha]
 1. big restructure of files and folders
 
