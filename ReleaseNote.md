@@ -1,3 +1,6 @@
+[2.0.0c-alpha]
+1. fix profile session keeping error
+
 [2.0.0b-alpha]
 1. fix audit trail 
 2. add patch many api
