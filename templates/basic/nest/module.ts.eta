@@ -12,9 +12,10 @@ import { <%= it.typename%>MongoSchema } from './<%= camelToKebab(it.resourceName
 import { <%= it.typename%>Resolver } from './<%= camelToKebab(it.resourceName)%>.resolver';
 
 import { DocumentNoFormatModule} from 'src/simple-app/.core/features/document-no-format/document-no-format.module';
-
+import { SimpleAppLogModule } from 'src/simple-app/.core/features/log/log.module';
+import { SimpleAppWebhookModule } from 'src/simple-app/.core/features/webhook/webhook.module';
 @Module({
-  imports: [ DocumentNoFormatModule,
+  imports: [ DocumentNoFormatModule,SimpleAppLogModule,SimpleAppWebhookModule,
     MongooseModule.forFeature([
       { name: '<%= it.typename%>', schema: <%= it.typename%>MongoSchema },
      ])],

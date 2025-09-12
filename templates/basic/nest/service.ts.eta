@@ -21,6 +21,8 @@ import { DocumentNoFormatService } from 'src/simple-app/.core/features/document-
 
 import * as defaultValue from './<%= camelToKebab(it.resourceName) %>.default'
 import * as schema from './<%= camelToKebab(it.resourceName) %>.schema';
+import { SimpleAppLogService } from 'src/simple-app/.core/features/log/log.service';
+import { RunWebhookService } from 'src/simple-app/.core/features/webhook/run-webhook.service';
 //export * from './<%= camelToKebab(it.resourceName) %>.schema';
 
 
@@ -47,9 +49,11 @@ export class <%= it.typename %>Service extends SimpleAppService<schema.<%= it.ty
     constructor(
         @InjectModel('<%= it.typename %>')  mydoc: Model<schema.<%= it.typename %>>,
         @Inject(forwardRef(() => EventEmitter2)) event2:EventEmitter2,
-        docNoGen:DocumentNoFormatService
+        docNoGen:DocumentNoFormatService,
+        logSvc: SimpleAppLogService,
+        webhookSvc:RunWebhookService
       ) {
-    super('<%= it.doctype.toUpperCase() %>','<%= it.name %>',mydoc,IsolationType.<%=it.isolationtype%>,event2,docNoGen);
+    super('<%= it.doctype.toUpperCase() %>','<%= it.name %>',mydoc,IsolationType.<%=it.isolationtype%>,event2,docNoGen,logSvc,webhookSvc);
     this.setSchema(<%= it.typename%>JsonSchema)
     this.setData(defaultValue.Default<%=it.typename%>(crypto.randomUUID()))
     <%if(it.moreAutoComplete.length>0){%>

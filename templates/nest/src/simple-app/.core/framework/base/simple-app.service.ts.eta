@@ -23,6 +23,7 @@ import { DocumentNoFormatService } from '../../features/document-no-format/docum
 import { UserContext } from '../../features/user-context/user.context';
 import { RunWebhookService } from '../../features/webhook/run-webhook.service';
 import { UniqueKeyExistResponse, DeleteResultType, IsolationType, MoreProjectionType, SchemaFields, TextSearchBody, PatchManyRequest } from '../schemas';
+import { SimpleAppLogService } from '../../features/log/log.service';
 
 @Injectable()
 export class SimpleAppService<T extends SchemaFields> {
@@ -61,10 +62,10 @@ export class SimpleAppService<T extends SchemaFields> {
   protected withDocNumberFormat = false;
   protected foreignkeys = {};
   private eventEmitter: EventEmitter2;
-
+  private logSvc:SimpleAppLogService;
   // protected userprovider = new UserContext() ;
 
-  constructor(doctype: string, docname: string, newdoc: Model<T>, isolationtype: IsolationType = IsolationType.org, eventEmitter: EventEmitter2, docnogenerator: DocumentNoFormatService) {
+  constructor(doctype: string, docname: string, newdoc: Model<T>, isolationtype: IsolationType = IsolationType.org, eventEmitter: EventEmitter2, docnogenerator: DocumentNoFormatService,logSvc: SimpleAppLogService,runWebHook: RunWebhookService) {
     // console.log("-------init simpleapp service abstract class -------userprovider=",typeof this.userprovider)
     this.eventEmitter = eventEmitter;
     this.documentType = doctype.toUpperCase();
@@ -72,7 +73,8 @@ export class SimpleAppService<T extends SchemaFields> {
     this.doc = newdoc;
     this.docnogenerator = docnogenerator;
     this.isolationtype = isolationtype;
-
+    this.logSvc = logSvc
+    this.runWebHook = runWebHook
     // this.tenantdoc = tenantdoc
   }
   getDocumentType = () => this.documentType;
@@ -1274,30 +1276,16 @@ export class SimpleAppService<T extends SchemaFields> {
   //only realtime webhook supported at this moment
   async callWebhook(appuser: UserContext, actionName: string, data: any) {
     try {
-      // await this.runWebHook.run(appuser, this.documentName, actionName, data);
-      // await this.runEvent(appuser, 'webhook.run', {
-      //   documentName: this.documentName,
-      //   actionName: actionName,
-      //   data: data,
-      // });
+      await this.runWebHook.run(appuser, this.documentName, actionName, data);      
     } catch (e) {
       throw new InternalServerErrorException(e);
     }
   }
 
-  async addAuditEvent(appuser: UserContext, documentName: string, id: string, eventType: string, data: any) {
-    // await this.runEvent(appuser, 'audittrail.add', {
-    //   documentName: documentName,
-    //   id: id,
-    //   eventType: eventType,
-    //   data: data,
-    // });
+  async addAuditEvent(appUser: UserContext, documentName: string, id: string, eventType: string, data: any) {
+    await this.logSvc.addEvent(appUser,documentName,id,eventType,data)    
   }
-  async addManyAuditEvents(appuser: UserContext, documentName: string, eventType: string, datas: any) {
-    // await this.runEvent(appuser, 'audittrail.add', {
-    //   documentName: documentName,
-    //   eventType: eventType,
-    //   datas: datas,
-    // });
+  async addManyAuditEvents(appUser: UserContext, documentName: string, eventType: string, datas: any) {
+    await this.logSvc.addManyEvents(appUser,documentName,eventType,datas)    
   }
 }

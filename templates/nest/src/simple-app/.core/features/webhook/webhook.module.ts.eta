@@ -7,6 +7,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { WebhookMongoSchema,WebhookLogMongoSchema } from './schemas';
+import { RunWebhookService } from './run-webhook.service';
 @Module({
   imports: [ MongooseModule.forFeature([
     { name: 'Webhook', schema: WebhookMongoSchema },
@@ -14,7 +15,7 @@ import { WebhookMongoSchema,WebhookLogMongoSchema } from './schemas';
     ])
   ],
   controllers: [],
-  providers: [],
-  exports: [MongooseModule],
+  providers: [RunWebhookService],
+  exports: [MongooseModule,RunWebhookService],
 })
-export class SimpleWebhookModule {}
+export class SimpleAppWebhookModule {}

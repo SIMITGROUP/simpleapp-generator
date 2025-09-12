@@ -8,24 +8,31 @@ import { alldocuments } from '../document-no-format/document.dict';
 export class RunWebhookService {
   @Inject(EventEmitter2)
   protected eventEmitter: EventEmitter2;
-
+  protected systemWebhooks : Webhook[] = []
   protected logger = new Logger();
   protected maxRetries = 5;
   public constructor() {}
+  public addWebhook = (wh:Webhook)=> this.systemWebhooks.push(wh)
 
   /**
    * trigger
    */
   async run(appuser: UserContext, documentName: string, actionName: string, data: any) {
-    if (process.env.WEBHOOK_ONOFF && process.env.WEBHOOK_ONOFF.toLowerCase() == 'on') return await this.runRealtimeWebHook(appuser, documentName, actionName, data);
-    else this.logger.warn(`Webhook off, not run for ${documentName}:${actionName}`);
+    if (process.env.WEBHOOK_ONOFF && process.env.WEBHOOK_ONOFF.toLowerCase() == 'on') {
+      return await this.runRealtimeWebhook(appuser, documentName, actionName, data);
+    }
+    else {
+      this.logger.warn(`Webhook off, not run for ${documentName}:${actionName}`);
+    }
   }
 
-  async runRealtimeWebHook(appuser: UserContext, documentName: string, actionName: string, data: any) {
+  async runRealtimeWebhook(appuser: UserContext, documentName: string, actionName: string, data: any) {
     this.logger.debug(`Run webhook ${documentName}, ${actionName}`);
 
-    const webhooks = appuser.getWebHooks().filter((wh) => wh.resourceName == documentName && wh.eventType == actionName);
-    // console.log(webhooks);
+    const userWebhooks = appuser.getWebHooks().filter((wh) => wh.resourceName == documentName && wh.eventType == actionName && wh.active);
+    const systemWebhooks = this.systemWebhooks.filter((wh) => wh.resourceName == documentName && wh.eventType == actionName && wh.active);    
+    const webhooks = []
+    webhooks.concat(userWebhooks).concat(systemWebhooks)    
 
     const systemVars = {
       $xOrg: appuser.getXOrg(),

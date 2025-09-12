@@ -10,7 +10,7 @@ import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @ObjectType()
-@Schema({collection:'webhook'})
+@Schema({ collection: 'webhook' })
 export class WebhookBasicAuth {
   @Prop()
   @Field()
@@ -61,35 +61,35 @@ export class Webhook {
   @Prop()
   @Field()
   @ApiProperty({ type: 'string', required: false, format: 'uuid', default: '' })
-  _id: string;
+  _id?: string;
   @Prop()
   @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
-  created: string;
+  created?: string;
   @Prop()
   @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
-  updated: string;
+  updated?: string;
   @Prop()
   @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
-  createdBy: string;
+  createdBy?: string;
   @Prop()
   @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
-  updatedBy: string;
+  updatedBy?: string;
   @Prop()
   @Field()
   @ApiProperty({ type: 'number', required: false, default: 1 })
-  tenantId: number;
+  tenantId?: number;
   @Prop()
   @Field()
   @ApiProperty({ type: 'number', required: false, default: 1 })
-  orgId: number;
+  orgId?: number;
   @Prop()
   @Field()
   @ApiProperty({ type: 'number', required: false, default: 1 })
-  branchId: number;
+  branchId?: number;
   @Prop()
   @Field()
   @ApiProperty({ type: 'string', required: true, default: '' })
@@ -105,11 +105,11 @@ export class Webhook {
   @Prop()
   @Field()
   @ApiProperty({ type: 'string', required: false, description: 'apikey authentication use none + headers props', default: '' })
-  authentication: string;
+  authentication?: string;
   @Prop()
   @Field()
   @ApiProperty({ type: 'string', required: false, format: 'text', default: '' })
-  description: string;
+  description?: string;
   @Prop()
   @Field()
   @ApiProperty({ type: 'string', required: false, description: 'POST,PUT body template', format: 'text', default: '*' })
@@ -136,11 +136,11 @@ export class Webhook {
   retryAttemps: number;
   @Field()
   @ApiProperty({ type: () => WebhookBasicAuth, required: false })
-  basicAuth: WebhookBasicAuth;
+  basicAuth?: WebhookBasicAuth;
   @Prop()
   @Field(() => [WebhookHeaders])
   @ApiProperty({ type: () => [WebhookHeaders], required: false })
-  headers: WebhookHeaders[];
+  headers?: WebhookHeaders[];
 }
 
 /***************************************** Start Auto Complete *****************************************/

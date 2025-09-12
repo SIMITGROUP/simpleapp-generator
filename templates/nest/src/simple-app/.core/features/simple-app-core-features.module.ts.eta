@@ -16,7 +16,7 @@ import { SimpleAppSoftwarePolicyModule } from './policy/policy.module';
 import { SimpleAppMiniAppModule } from './mini-app/mini-app.module';
 import { ProfileModule } from './profile/profile.module';
 import { SimpleAppUserContextModule } from './user-context/user-context.module';
-import { SimpleWebhookModule } from './webhook/webhook.module';
+import { SimpleAppWebhookModule } from './webhook/webhook.module';
 import { AutoIncreamentModule } from './auto-increament/auto-increament.module';
 @Module({
   imports: [
@@ -28,7 +28,7 @@ import { AutoIncreamentModule } from './auto-increament/auto-increament.module';
     MaintenanceModule,
     ProfileModule,
     SimpleAppUserContextModule,
-    SimpleWebhookModule,
+    SimpleAppWebhookModule,
     SimpleAppMiniAppModule,
     SimpleAppSoftwarePolicyModule,
   ],
@@ -43,7 +43,7 @@ import { AutoIncreamentModule } from './auto-increament/auto-increament.module';
     MaintenanceModule,
     ProfileModule,
     SimpleAppUserContextModule,
-    SimpleWebhookModule,
+    SimpleAppWebhookModule,
     SimpleAppMiniAppModule,
     SimpleAppSoftwarePolicyModule,
   ],

@@ -7,7 +7,7 @@
 import { Controller, Get, Put, Post, Delete, Body, Param, Type } from '@nestjs/common';
 // import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { UserContext } from '../../features/user-context/user.context';
-import { SearchBody, TextSearchBody } from '../schemas';
+import { SearchBody, TextSearchBody,PatchManyRequest } from '../schemas';
 const doctype = 'person'.toUpperCase();
 type ServiceType = {
   list: Function;
@@ -73,5 +73,12 @@ export class SimpleAppController<TService extends ServiceType, TApiSchema> {
 
   async _delete(appuser: UserContext, id: string) {
     return this.service.findIdThenDelete(appuser, id);
+  }
+  async _patchMany(appuser: UserContext, id: string, patchManyData: PatchManyRequest<TApiSchema>) {   
+    return this.service.findIdThenPatch(appuser, id, patchManyData) as TApiSchema;
+  }
+
+  async _deleteMany(appuser: UserContext, data: SearchBody) {
+    return this.service.findIdThenDelete(appuser, data);
   }
 }
