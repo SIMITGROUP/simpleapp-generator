@@ -84,3 +84,11 @@ export type SearchBody = {
 export type DynamicObject = {
   [key: string]: any;
 };
+
+export enum PHOTOSIZE {
+    "S40"="40",
+    "S64"="64",
+    "S200"="200",
+    "S500"="500",
+}
+

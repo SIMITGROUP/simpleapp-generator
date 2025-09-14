@@ -5,3 +5,5 @@
  * Author: Ks Tan
  */
 export const <%= it.typename%>JsonSchema = <%~ JSON.stringify(it.jsonschema) %>
+
+export const <%= it.name%>JsonSchema  = <%= it.typename%>JsonSchema

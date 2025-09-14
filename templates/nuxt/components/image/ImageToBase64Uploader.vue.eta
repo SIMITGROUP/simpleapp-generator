@@ -6,8 +6,7 @@
   >
     <ClientOnly>
       <slot name="default">
-        <Image v-if="selectedBase64Img" :src="selectedBase64Img" />
-        <i v-else class="pi pi-upload text-3xl"></i>
+        <div class="text-red-600">add NuxtImg component</div>
       </slot>
 
       <Dialog

@@ -35,7 +35,7 @@ export abstract class BaseQueueConsumer extends WorkerHost {
   }
 
   async process(job: Job) {
-    console.log("process job", job.data)
+    // console.log("process job", job.data)
     const { userContext, payload } = job.data
 
     const appUser = this.createUserContext(userContext.user);

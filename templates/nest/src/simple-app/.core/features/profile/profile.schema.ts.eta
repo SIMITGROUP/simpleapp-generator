@@ -5,7 +5,7 @@ import { Permission } from 'src/simple-app/.core/resources/permission/permission
 import { Role } from '../auth/role-guard/roles.enum';
 import { Organization } from '../../resources/organization/organization.schema';
 import { Tenant } from '../../resources/tenant/tenant.schema';
-
+export {KeyValue} from '../../framework/schemas';
 export class UserContextInfo {
   @ApiProperty({ type: String })
   _id: string;
@@ -59,13 +59,13 @@ export class UserContextInfo {
   @ApiProperty({ type: () => [ProfileUserBranch], description: 'List of branch the user can access in current tenant' })
   branches: ProfileUserBranch[];
 
-  @ApiProperty({ type: ()=>Tenant, description: 'List of task, or authority of the user can do' })
-  tenantInfo:Tenant;
-  @ApiProperty({ type: ()=>Organization, description: 'List of task, or authority of the user can do' })
-  orgInfo:Organization;
-  @ApiProperty({ type: ()=>Branch, description: 'List of task, or authority of the user can do' })
-  branchInfo:Branch;
-  
+  @ApiProperty({ type: () => Tenant, description: 'List of task, or authority of the user can do' })
+  tenantInfo: Tenant;
+  @ApiProperty({ type: () => Organization, description: 'List of task, or authority of the user can do' })
+  orgInfo: Organization;
+  @ApiProperty({ type: () => Branch, description: 'List of task, or authority of the user can do' })
+  branchInfo: Branch;
+
   @ApiProperty({ type: () => Object, description: 'Store all the rest of useful fields regarding user or branch' })
   moreProps?: Record<string, any>;
 }

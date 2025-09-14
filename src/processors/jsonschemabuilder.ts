@@ -40,7 +40,6 @@ export const readJsonSchemaBuilder = async (
 
   let schemaconfigs: SchemaConfig = orijsondata[configname];
   const doctype = schemaconfigs.documentType;
-
   if (!schemaconfigs.collectionName) {
     schemaconfigs.documentName;
   }
@@ -114,7 +113,10 @@ export const readJsonSchemaBuilder = async (
 
   //enforce format uuid for _id
   orijsondata.properties['_id']['format'] = 'uuid';
-
+  if(schemaconfigs.uploadPhoto){
+    orijsondata.properties['imageUrl']={type:'string'}
+  }
+ 
   // let newschema:JSONSchema7 & SchemaType = {
   //   type: 'object',
   //   "x-simpleapp-config":schemaconfigs,

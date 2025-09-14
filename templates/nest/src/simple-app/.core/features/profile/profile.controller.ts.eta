@@ -9,8 +9,8 @@ import { Role } from '../auth/role-guard/roles.enum';
 import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { UserContext } from '../user-context/user.context';
 import { ProfileService } from './profile.service';
-import { AppUser } from '../user-context/appuser.decorator';
-import { UserContextInfo, TenantPermission, RegTenant } from './profile.schema';
+import { AppUser } from '../user-context/appUser.decorator';
+import { UserContextInfo, TenantPermission, RegTenant, KeyValue } from './profile.schema';
 @ApiTags('PROFILE')
 @Controller('/profile')
 export class ProfileController {
@@ -31,9 +31,9 @@ export class ProfileController {
     description: 'Success',
   })
   @ApiResponse({ status: 401, type: Object, description: 'Undefine profile' })
-  async getProfile(@AppUser() appuser: UserContext) {
-    this.logger.debug(`access getProfile API by ${appuser.getUid()},(${appuser.getId()})`);
-    const result = await this.profileservice.getProfile(appuser);
+  async getProfile(@AppUser() appUser: UserContext) {
+    this.logger.debug(`access getProfile API by ${appUser.getUid()},(${appUser.getId()})`);
+    const result = await this.profileservice.getProfile(appUser);
     this.logger.debug('getProfile result is:');
     this.logger.debug(result);
     if (result) {
@@ -55,8 +55,8 @@ export class ProfileController {
     description: 'Success',
   })
   @ApiResponse({ status: 401, type: Object, description: 'Expired' })
-  async getSession(@AppUser() appuser: UserContext) {
-    const result = await this.profileservice.getSession(appuser);
+  async getSession(@AppUser() appUser: UserContext) {
+    const result = await this.profileservice.getSession(appUser);
     if (result) {
       return result;
     } else {
@@ -76,9 +76,9 @@ export class ProfileController {
     description: 'Success',
   })
   @ApiResponse({ status: 401, type: Object, description: 'Undefine profile' })
-  async getAllTenants(@AppUser() appuser: UserContext) {
-    this.logger.debug(`access getAllTenants API by ${appuser.getUid()},(${appuser.getId()})`);
-    const result = await this.profileservice.getAllTenants(appuser);
+  async getAllTenants(@AppUser() appUser: UserContext) {
+    this.logger.debug(`access getAllTenants API by ${appUser.getUid()},(${appUser.getId()})`);
+    const result = await this.profileservice.getAllTenants(appUser);
     this.logger.debug('getProfile result is:');
     this.logger.debug(result);
     if (result) {
@@ -86,6 +86,19 @@ export class ProfileController {
     } else {
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
+  }
+
+  @Post('photo')
+  @Roles(Role.Everyone)
+  @ApiBody({ description: 'base64 photo', type: KeyValue })
+  @ApiOperation({
+    operationId: 'uploadPhoto',
+    description: 'Upload avatar image with base64',
+  })
+  @ApiResponse({ status: 201, type: String, description: 'Success' })
+  async uploadImage(@AppUser() appUser: UserContext, @Body() data: KeyValue) {
+    const result = await this.profileservice.uploadPhoto(appUser, data);
+    return result;
   }
 
   @Post('/tenant')
@@ -97,13 +110,13 @@ export class ProfileController {
   })
   @ApiResponse({ status: 201, type: Object, description: 'Success' })
   async createTenant(
-    @AppUser() appuser: UserContext,
+    @AppUser() appUser: UserContext,
     @Body('tenantName') tenantName: string,
     @Body('timeZone') timeZone: string,
     @Body('utcOffset') utcOffset: number,
     @Body('businessType') businessType: string,
   ) {
-    const result = await this.profileservice.createTenant(appuser, tenantName, timeZone, utcOffset, businessType);
+    const result = await this.profileservice.createTenant(appUser, tenantName, timeZone, utcOffset, businessType);
     if (result) {
       return result;
     } else {
@@ -118,8 +131,8 @@ export class ProfileController {
     description: 'accept or reject invitation to tenant',
   })
   @ApiResponse({ status: 201, type: Object, description: 'Success' })
-  async decideInvitation(@AppUser() appuser: UserContext, @Param('id') id: string, @Param('decision') decision: string) {
-    const result = await this.profileservice.decideInvitation(appuser, id, decision);
+  async decideInvitation(@AppUser() appUser: UserContext, @Param('id') id: string, @Param('decision') decision: string) {
+    const result = await this.profileservice.decideInvitation(appUser, id, decision);
     if (result) {
       return result;
     } else {
@@ -133,8 +146,8 @@ export class ProfileController {
     description: 'complete specific tour guide',
   })
   @ApiResponse({ status: 201, type: Object, description: 'Success' })
-  async runTourComplete(@AppUser() appuser: UserContext, @Param('guidename') guidename: string) {
-    const result = await this.profileservice.runTourComplete(appuser, guidename);
+  async runTourComplete(@AppUser() appUser: UserContext, @Param('guidename') guidename: string) {
+    const result = await this.profileservice.runTourComplete(appUser, guidename);
     if (result) {
       return result;
     } else {
