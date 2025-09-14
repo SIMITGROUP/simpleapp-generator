@@ -1,3 +1,9 @@
+[2.0.0e-alpha]
+1. add fix frontend ImageAvatar/ImageOrg template and add suitable refresh event.use bunny as image storage
+2. profile allow upload images
+3. prepare a place to access all jsonschemas
+4. 
+
 [2.0.0d-alpha]
 1. provide tenantInfo, orgInfo, branchInfo to frontend
 
