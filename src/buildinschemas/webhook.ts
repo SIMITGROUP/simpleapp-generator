@@ -15,7 +15,7 @@ export const webhook: SchemaType = {
         entryPoint: ':id/histories',
         requiredRole: ["Admin"],
         method: RESTMethods.get,
-        responseType: '[Webhooklog]',
+        responseType: '[WebhookLog]',
         description: 'Get webhook execute histories'
       }]
   },

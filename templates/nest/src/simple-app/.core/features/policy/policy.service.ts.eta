@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';
 import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
-
+import * as plans from 'src/simple-app/features/subscription/license/plans'
 @Injectable()
 export class PolicyService {
   private readonly _HIGH_PRIVILEGE_ROLES = [Role.SuperAdmin, Role.SuperUser, Role.TenantOwner];
@@ -27,11 +27,12 @@ export class PolicyService {
    * - plans/pro.ts
    * - plans/enterprise.ts
    */
-  hasFeature(appUser: UserContext, feature: keyof typeof this._FEATURES): boolean {
-    const appPackage = appUser.tenantInfo.package
+  hasFeature(appUser: UserContext, feature: keyof typeof this._FEATURES): boolean {    
+    const appPackage = appUser.tenantInfo.package;
     const allowedPlans = this._FEATURES[feature];
-
-    return allowedPlans.includes(appPackage);
+    const planSetting = plans[appPackage]();
+    const allowed = planSetting.features?.advance?.features[feature]  ?? false;
+    return allowed
   }
 
   can(appUser: UserContext, role: Role) {

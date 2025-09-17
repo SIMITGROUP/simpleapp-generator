@@ -17,6 +17,36 @@ export class SimpleAppLogService {
   // addEvent(data: any) {
   //   console.log('Add event into db:', data);
   // }
+  //
+  async searchDocumentEvent(appUser: UserContext, documentName: string, id: string) {
+    const data = await this.doc.aggregate([
+      { $match: { documentName: documentName, documentId: id } },
+      {
+        $lookup: {
+          from: 'user',
+          as: 'user',
+          localField: 'createdBy',
+          foreignField: 'uid',
+          pipeline: [{$match:{tenantId:appUser.getTenantId()}},{ $project: { fullName: 1 } }],
+        },
+      },
+      { $unwind: '$user' },
+      {
+        $project: {
+          _id: 1,
+          fullName: '$user.fullName',
+          eventType:1,
+          createdBy: 1,
+          created: 1,
+          eventData: 1
+        },
+      },
+      {$sort:{created:1}}
+    ]);
+    // find({documentName:documentName,documentId:id},null,{session:appUser.getDBSession()})
+
+    return data;
+  }
   async addEvent(appUser: UserContext, documentName: string, id: string, eventType: string, data: any) {
     const eventdata: DocumentEvent = {
       _id: crypto.randomUUID(),
@@ -24,13 +54,13 @@ export class SimpleAppLogService {
       documentId: id,
       eventType: eventType,
       eventData: data,
-      created:'',
-      createdBy:'',
+      created: '',
+      createdBy: '',
       updated: '',
-      updatedBy:'',
-      tenantId:0,
-      orgId:0,
-      branchId:0,
+      updatedBy: '',
+      tenantId: 0,
+      orgId: 0,
+      branchId: 0,
     };
     Object.assign(eventdata, appUser.getCreateFilter());
     // console.log('add event', documentName, id, eventType);
@@ -51,13 +81,13 @@ export class SimpleAppLogService {
         documentId: data.id,
         eventType: eventType,
         eventData: data,
-        created:'',
-        createdBy:'',
+        created: '',
+        createdBy: '',
         updated: '',
-        updatedBy:'',
-        tenantId:0,
-        orgId:0,
-        branchId:0,
+        updatedBy: '',
+        tenantId: 0,
+        orgId: 0,
+        branchId: 0,
       };
       Object.assign(eventdata, appUser.getCreateFilter());
       alldata.push(eventdata);

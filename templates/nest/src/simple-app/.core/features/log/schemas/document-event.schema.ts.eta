@@ -4,6 +4,28 @@ import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @ObjectType()
+export class DocumentEventListItem {
+  @Field()
+  @ApiProperty({ type: 'string', required: false, format: 'uuid', default: '' })
+  _id: string;
+  @Field()
+  @ApiProperty({ type: 'string', required: false, format: 'uuid', default: '' })
+  eventType: string;
+  @Field()
+  @ApiProperty({ type: 'string', required: false, format: 'uuid', default: '' })
+  created: string;
+  @Field()
+  @ApiProperty({ type: 'string', required: false, format: 'uuid', default: '' })
+  createdBy: string;
+  @Field()
+  @ApiProperty({ type: 'string', required: false, format: 'uuid', default: '' })
+  fullName: string;
+  @Field(()=>GraphQLJSON)
+  @ApiProperty({ type: ()=>Object, required: false, format: 'uuid', default: '' })
+  eventData: any;
+}
+
+@ObjectType()
 @Schema()
 export class DocumentEvent {
   @Prop()
@@ -50,7 +72,7 @@ export class DocumentEvent {
   @Field()
   @ApiProperty({ type: 'string', required: false, example: ['create', 'delete'], default: '' })
   eventType: string;
-  @Prop({type: ()=>Object})
+  @Prop({ type: () => Object })
   @Field(() => GraphQLJSON)
   @ApiProperty({ type: () => Object, required: false, default: {} })
   eventData: Object;

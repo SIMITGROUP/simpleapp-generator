@@ -7,7 +7,7 @@
 import { Module } from '@nestjs/common';
 
 import { SimpleAppAuthModule } from './auth/auth.module';
-import { DocumentNoFormatModule } from './document-no-format/document-no-format.module';
+import { SimpleAppDocumentNoFormatModule } from './document-no-format/document-no-format.module';
 import { SimpleAppForeignKeyModule } from './foreign-key/foreign-key.module';
 import { SimpleAppLogModule } from './log/log.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
@@ -22,7 +22,7 @@ import { AutoIncreamentModule } from './auto-increament/auto-increament.module';
   imports: [
     AutoIncreamentModule,
     SimpleAppAuthModule,
-    DocumentNoFormatModule,
+    SimpleAppDocumentNoFormatModule,
     SimpleAppForeignKeyModule,
     SimpleAppLogModule,
     MaintenanceModule,
@@ -37,7 +37,7 @@ import { AutoIncreamentModule } from './auto-increament/auto-increament.module';
   exports: [
     AutoIncreamentModule,
     SimpleAppAuthModule,
-    DocumentNoFormatModule,
+    SimpleAppDocumentNoFormatModule,
     SimpleAppForeignKeyModule,
     SimpleAppLogModule,
     MaintenanceModule,

@@ -1000,6 +1000,17 @@ export class UserContext extends UserContextInfo {
     return miniAppInstallation;
   }
 
+  async findInstalledMiniAppCode(miniAppCode: string) {
+    const miniAppInstallation = await this.miniAppInstallationModel.findOne({
+      'miniApp.code': miniAppCode,
+      isActive: true,
+      tenantId: this.tenantId,
+      orgId: this.orgId,
+      branchId: this.branchId,
+    });    
+    return miniAppInstallation.miniApp;
+  }
+
   async setUserProfileFromDB() {
     // const userProfile = await this.obtainProfileFromDB();
     // if (userProfile) {

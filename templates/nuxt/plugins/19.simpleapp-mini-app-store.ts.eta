@@ -6,10 +6,10 @@
 
 import _, { min } from "lodash";
 import {
-  Miniapp,
+  MiniApp,
   MiniAppDetail,
   MiniAppDetailPermission,
-  MiniappIntegrationCustomPagePages,
+  MiniAppIntegrationCustomPagePages,
   MINIAPPMANAGERApi,
 } from "~/simpleapp/generate/openapi";
 import { MiniAppFormWithMiniAppCode } from "~/simpleapp/generate/features/miniApp/app/types/miniApp";

@@ -11,7 +11,7 @@ import {SimpleAppEventsModule} from './events/events.module'
 import {SimpleAppFeaturesModule} from './features/features.module'
 
 import { SimpleAppResourceApiModule } from './apis/resource-api.module';
-
+import { SimpleAppMiniAppsModule } from './mini-apps/mini-apps.module';
 
 @Module({
   imports: [
@@ -19,6 +19,8 @@ import { SimpleAppResourceApiModule } from './apis/resource-api.module';
     SimpleAppResourcesModule,
     SimpleAppEventsModule,
     SimpleAppResourceApiModule,
+    SimpleAppFeaturesModule,
+    SimpleAppMiniAppsModule
   ],
   controllers: [],
   providers: [],
@@ -27,6 +29,8 @@ import { SimpleAppResourceApiModule } from './apis/resource-api.module';
     SimpleAppResourcesModule,
     SimpleAppEventsModule,
     SimpleAppResourceApiModule,
+    SimpleAppFeaturesModule,
+    SimpleAppMiniAppsModule
   ]
 })
 export class SimpleAppModule {}

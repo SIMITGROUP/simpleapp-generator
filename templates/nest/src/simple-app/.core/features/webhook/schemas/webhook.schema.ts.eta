@@ -9,132 +9,132 @@ import { Field, ObjectType, ID } from '@nestjs/graphql';
 import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
-@ObjectType()
+// @ObjectType()
 @Schema({ collection: 'webhook' })
 export class WebhookBasicAuth {
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   user: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   password: string;
 }
 
-@ObjectType()
+// @ObjectType()
 @Schema()
 export class WebhookHeaders {
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   name: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   value: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, description: 'iso8601 dataempty mean new record', default: '' })
   created: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, description: 'iso8601 or empty', default: '' })
   updated: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   createdBy: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   updatedBy: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   _id: string;
 }
 
-@ObjectType()
+// @ObjectType()
 @Schema()
 export class Webhook {
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, format: 'uuid', default: '' })
   _id?: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   created?: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   updated?: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   createdBy?: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   updatedBy?: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'number', required: false, default: 1 })
   tenantId?: number;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'number', required: false, default: 1 })
   orgId?: number;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'number', required: false, default: 1 })
   branchId?: number;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: true, default: '' })
   title: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: true, format: 'uri', default: '' })
   url: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   requestMethod: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, description: 'apikey authentication use none + headers props', default: '' })
   authentication?: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, format: 'text', default: '' })
   description?: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, description: 'POST,PUT body template', format: 'text', default: '*' })
   body: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'boolean', required: false, default: true })
   active: boolean;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   resourceName: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, default: '' })
   eventType: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: false, description: 'temporary support realtime and roll-back-when-failed, 2nd way way throw error and roll back data if webhook failed.)', default: '' })
   jobType: string;
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'number', required: false, description: 'retries how many time when webhook failed', default: 0 })
   retryAttemps: number;
-  @Field()
+  // @Field()
   @ApiProperty({ type: () => WebhookBasicAuth, required: false })
   basicAuth?: WebhookBasicAuth;
   @Prop()
@@ -144,21 +144,21 @@ export class Webhook {
 }
 
 /***************************************** Start Auto Complete *****************************************/
-@ObjectType()
+// @ObjectType()
 @Schema()
 export class WebhookAutoComplete {
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: true, default: '' })
   _id: string;
 
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: true, default: '' })
   code: string;
 
   @Prop()
-  @Field()
+  // @Field()
   @ApiProperty({ type: 'string', required: true, default: '' })
   label: string;
 }

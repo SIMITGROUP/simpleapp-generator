@@ -7,7 +7,7 @@ import { Injectable, InternalServerErrorException, BadRequestException } from '@
 import { alldocuments } from './document.dict';
 import dayjs from 'dayjs';
 
-export class DocumentNoFormatService {
+export class SimpleAppDocumentNoFormatService {
   constructor(@InjectModel('DocumentNoFormat') private docformat: Model<DocumentNoFormat>) {}
 
   async runListDocFormats(appUser: UserContext, doctype: string) {
@@ -33,7 +33,7 @@ export class DocumentNoFormatService {
           docNoPattern: s.docNoPattern,
           nextNumber: s.nextNumber,
           default: s.default,
-          sample: DocumentNoFormatService.previewDocNo(s),
+          sample: SimpleAppDocumentNoFormatService.previewDocNo(s),
         });
       }
     }
@@ -66,7 +66,7 @@ export class DocumentNoFormatService {
     if (result && result.length > 0) {
       const d: DocumentNoFormat = result[0];
       const recordId = d._id;
-      const newdocno = DocumentNoFormatService.previewDocNo(d);
+      const newdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);
       const newnextnumber = d.nextNumber + 1;
       const updatedata = { nextNumber: newnextnumber } as DocumentNoFormat;
       const updateresult = await this.docformat.findByIdAndUpdate(recordId, updatedata).session(appUser.getDBSession());
@@ -177,13 +177,13 @@ export class DocumentNoFormatService {
     }
   };
 
-  async search (appUser,filter:FilterQuery<DocumentNoFormat>){
-    const isolationFilter:FilterQuery<DocumentNoFormat> = {
-      tenantId:appUser.tenantId,
-      orgId:appUser.orgId,
-      branchId:appUser.branchId,
-    }
-    Object.assign(filter,isolationFilter)
-    return await this.docformat.find<DocumentNoFormat>(filter,null,{session:appUser.getDBSession()})
+  async search(appUser, filter: FilterQuery<DocumentNoFormat>) {
+    const isolationFilter: FilterQuery<DocumentNoFormat> = {
+      tenantId: appUser.tenantId,
+      orgId: appUser.orgId,
+      branchId: appUser.branchId,
+    };
+    Object.assign(filter, isolationFilter);
+    return await this.docformat.find<DocumentNoFormat>(filter, null, { session: appUser.getDBSession() });
   }
 }

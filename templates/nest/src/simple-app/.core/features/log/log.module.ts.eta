@@ -6,15 +6,18 @@
  */
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ApiEventMongoSchema,DocumentEventMongoSchema } from './schemas';
-import {SimpleAppLogService} from './log.service'
+import { ApiEventMongoSchema, DocumentEventMongoSchema } from './schemas';
+import { SimpleAppLogService } from './log.service';
+import {SimpleAppLogController} from './log.controller'
 @Module({
-  imports: [MongooseModule.forFeature([
-    { name: 'ApiEvent', schema: ApiEventMongoSchema },
-    { name: 'DocumentEvent', schema: DocumentEventMongoSchema }
-    ])],
-  controllers: [],
+  imports: [
+    MongooseModule.forFeature([
+      { name: 'ApiEvent', schema: ApiEventMongoSchema },
+      { name: 'DocumentEvent', schema: DocumentEventMongoSchema },
+    ]),
+  ],
+  controllers: [SimpleAppLogController],
   providers: [SimpleAppLogService],
-  exports: [MongooseModule,SimpleAppLogService],
+  exports: [MongooseModule, SimpleAppLogService],
 })
 export class SimpleAppLogModule {}

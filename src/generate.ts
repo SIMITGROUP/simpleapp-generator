@@ -30,7 +30,7 @@ import * as buildinschemas from './buildinschemas';
 import { JSONSchema7 } from 'json-schema';
 import { generatePrintformat } from './processors/jrxmlbuilder';
 const skipIsolationDocument = ['tenant','organization','branch','permission','user']
-const systemResources = ['user','tenant','organization','branch','permission','keyvaluepair','customfield','miniapp','miniappinstallation','systemmessage','queuejob']
+const systemResources = ['user','tenant','organization','branch','permission','keyvaluepair','customfield','miniapp','miniappinstallation','systemmessage','queuejob','documentnoformat']
 const { Eta } = require('eta');
 const { capitalizeFirstLetter } = require('./libs');
 // const X_DOCUMENT_TYPE='x-document-type'

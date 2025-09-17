@@ -19,7 +19,7 @@ import { foreignkeys } from '../../features/foreign-key/foreignkeys.dict';
 import { CustomException } from '../custom-exception';
 
 import { camelToKebab } from 'src/simple-app/.core/utils/string-utils';
-import { DocumentNoFormatService } from '../../features/document-no-format/document-no-format.service';
+import { SimpleAppDocumentNoFormatService } from '../../features/document-no-format/document-no-format.service';
 import { UserContext } from '../../features/user-context/user.context';
 import { RunWebhookService } from '../../features/webhook/run-webhook.service';
 import { UniqueKeyExistResponse, DeleteResultType, IsolationType, MoreProjectionType, SchemaFields, TextSearchBody, PatchManyRequest } from '../schemas';
@@ -38,7 +38,7 @@ export class SimpleAppService<T extends SchemaFields> {
   // @Inject(AuditTrail)
   // protected audittrail: AuditTrail;
   // @Inject(DocNumberFormatGenerator)
-  protected docnogenerator: DocumentNoFormatService;
+  protected docnogenerator: SimpleAppDocumentNoFormatService;
   protected logger = new Logger();
   protected strictIsolation = true;
   protected jsonschema: any = {
@@ -65,7 +65,7 @@ export class SimpleAppService<T extends SchemaFields> {
   private logSvc:SimpleAppLogService;
   // protected userprovider = new UserContext() ;
 
-  constructor(doctype: string, docname: string, newdoc: Model<T>, isolationtype: IsolationType = IsolationType.org, eventEmitter: EventEmitter2, docnogenerator: DocumentNoFormatService,logSvc: SimpleAppLogService,runWebHook: RunWebhookService) {
+  constructor(doctype: string, docname: string, newdoc: Model<T>, isolationtype: IsolationType = IsolationType.org, eventEmitter: EventEmitter2, docnogenerator: SimpleAppDocumentNoFormatService,logSvc: SimpleAppLogService,runWebHook: RunWebhookService) {
     // console.log("-------init simpleapp service abstract class -------userprovider=",typeof this.userprovider)
     this.eventEmitter = eventEmitter;
     this.documentType = doctype.toUpperCase();
