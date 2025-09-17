@@ -1,3 +1,7 @@
+[2.0.0f-alpha]
+1. add back document no and webhook
+
+
 [2.0.0e-alpha]
 1. add fix frontend ImageAvatar/ImageOrg template and add suitable refresh event.use bunny as image storage
 2. profile allow upload images
