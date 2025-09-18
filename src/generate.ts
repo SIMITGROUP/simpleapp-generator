@@ -183,13 +183,25 @@ const processSchema = async (schemaname: string, jsondata: JSONSchema7) => {
     (item) => item.doctype == doctype
   );
   if (moduleindex < 0) {
+
+    const api = config.additionalApis ?? []
+    if(copyofjsonschema['x-simpleapp-config']['printFormats']){
+        api.push({
+          "action": "runPrint",
+          "method": RESTMethods.get,
+          "entryPoint": ":id/print/:formatId",
+          "responseType": "String",
+          "requiredRole": ["User"],
+          "description": "print pdf"
+        })
+    }
     activatemodules.push({
       doctype: doctype,
       docname: capitalizeFirstLetter(docname),
       resourcename: resourceName,
       typename:capitalizeFirstLetter(resourceName),
       pagetype: config.pageType ?? '',
-      api: config.additionalApis,
+      api: api,
       schema: copyofjsonschema
     });
   } else {

@@ -1,3 +1,6 @@
+[2.0.0i-alpha]
+1. fix some document no print api available
+
 [2.0.0h-alpha]
 1. add software license config folder
 

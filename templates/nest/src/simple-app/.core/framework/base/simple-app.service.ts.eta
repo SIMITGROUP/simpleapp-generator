@@ -600,15 +600,7 @@ export class SimpleAppService<T extends SchemaFields> {
       appuser.addInsertedRecordId(this.documentName, result._id);
     } catch (err) {
       this.logger.error(err);
-      const processdata = await this.runEvent(appuser, 'processdata.processError', {
-        err: err,
-      });
-
-      if (!processdata) {
-        throw new InternalServerErrorException(err);
-      } else {
-        throw new CustomException(processdata.code, processdata.msg);
-      }
+      throw err
     }
 
     try {
@@ -1223,12 +1215,12 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
-  async print(appuser: UserContext, id: string, formatId: string) {
-    // const pdfresult = await this.printapi.getBase64Pdf(appuser, formatid, id);
-    const pdfresult = await this.runEvent(appuser, 'print.getbase64pdf', { id: id, formatId: formatId }, true);
-    // return pdfresult;
-    return Promise.resolve('ok');
-  }
+  // async print(appuser: UserContext, id: string, formatId: string) {
+  //   // const pdfresult = await this.printapi.getBase64Pdf(appuser, formatid, id);
+  //   const pdfresult = await this.runEvent(appuser, 'print.getbase64pdf', { id: id, formatId: formatId }, true);
+  //   // return pdfresult;
+  //   return Promise.resolve('ok');
+  // }
 
   async checkUniqueKeyExist(appuser: UserContext, data: string[]): Promise<UniqueKeyExistResponse[]> {
     const response: UniqueKeyExistResponse[] = [];
