@@ -24,6 +24,7 @@ import { UserContext } from '../../features/user-context/user.context';
 import { RunWebhookService } from '../../features/webhook/run-webhook.service';
 import { UniqueKeyExistResponse, DeleteResultType, IsolationType, MoreProjectionType, SchemaFields, TextSearchBody, PatchManyRequest } from '../schemas';
 import { SimpleAppLogService } from '../../features/log/log.service';
+import { ProcessErrorException } from 'src/simple-app/features/exception/process-error.exception';
 
 @Injectable()
 export class SimpleAppService<T extends SchemaFields> {
@@ -62,10 +63,19 @@ export class SimpleAppService<T extends SchemaFields> {
   protected withDocNumberFormat = false;
   protected foreignkeys = {};
   private eventEmitter: EventEmitter2;
-  private logSvc:SimpleAppLogService;
+  private logSvc: SimpleAppLogService;
   // protected userprovider = new UserContext() ;
 
-  constructor(doctype: string, docname: string, newdoc: Model<T>, isolationtype: IsolationType = IsolationType.org, eventEmitter: EventEmitter2, docnogenerator: SimpleAppDocumentNoFormatService,logSvc: SimpleAppLogService,runWebHook: RunWebhookService) {
+  constructor(
+    doctype: string,
+    docname: string,
+    newdoc: Model<T>,
+    isolationtype: IsolationType = IsolationType.org,
+    eventEmitter: EventEmitter2,
+    docnogenerator: SimpleAppDocumentNoFormatService,
+    logSvc: SimpleAppLogService,
+    runWebHook: RunWebhookService,
+  ) {
     // console.log("-------init simpleapp service abstract class -------userprovider=",typeof this.userprovider)
     this.eventEmitter = eventEmitter;
     this.documentType = doctype.toUpperCase();
@@ -73,8 +83,8 @@ export class SimpleAppService<T extends SchemaFields> {
     this.doc = newdoc;
     this.docnogenerator = docnogenerator;
     this.isolationtype = isolationtype;
-    this.logSvc = logSvc
-    this.runWebHook = runWebHook
+    this.logSvc = logSvc;
+    this.runWebHook = runWebHook;
     // this.tenantdoc = tenantdoc
   }
   getDocumentType = () => this.documentType;
@@ -348,100 +358,105 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
-  async createManyWithId(appuser: UserContext, datas: T[]) {
-    if (Array.isArray(datas)) {
-      for (let i = 0; i < datas.length; i++) {
-        const data = datas[i];
-        let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
-        isolationFilter = this.polishIsolationFilter(isolationFilter, data);
+  // seems no use, and confusing
+  // async createManyWithId(appuser: UserContext, datas: T[]) {
+  //   if (Array.isArray(datas)) {
+  //     for (let i = 0; i < datas.length; i++) {
+  //       const data = datas[i];
+  //       let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
+  //       isolationFilter = this.polishIsolationFilter(isolationFilter, data);
 
-        Object.assign(data, isolationFilter);
-        this.reCalculateValue(data);
-        await this.validateData(appuser, data);
-        this.applyNestedDateTime(appuser, data, 'create');
-      }
+  //       Object.assign(data, isolationFilter);
+  //       this.reCalculateValue(data);
+  //       await this.validateData(appuser, data);
+  //       this.applyNestedDateTime(appuser, data, 'create');
+  //     }
 
-      const dbsession = appuser.getDBSession();
-      if (dbsession && !dbsession.inTransaction()) {
-        dbsession.startTransaction({ readPreference: 'primary' });
-      }
+  //     const dbsession = appuser.getDBSession();
+  //     if (dbsession && !dbsession.inTransaction()) {
+  //       dbsession.startTransaction({ readPreference: 'primary' });
+  //     }
 
-      const result = await this.doc.insertMany(datas, { session: dbsession });
-      await this.addManyAuditEvents(appuser, this.documentName, 'createMany', datas);
-      for (let i = 0; i < datas.length; i++) {
-        appuser.addInsertedRecordId(this.documentName, datas[i]._id);
-      }
-      return result;
-    } else {
-      throw new BadRequestException(this.getDocumentType() + ': create many only support array');
-    }
-  }
+  //     const result = await this.doc.insertMany(datas, { session: dbsession });
+  //     await this.addManyAuditEvents(appuser, this.documentName, 'createMany', datas);
+  //     for (let i = 0; i < datas.length; i++) {
+  //       appuser.addInsertedRecordId(this.documentName, datas[i]._id);
+  //     }
+  //     return result;
+  //   } else {
+  //     throw new BadRequestException(this.getDocumentType() + ': create many only support array');
+  //   }
+  // }
 
   /**
    * create many from array with hooks (temporary used for generate sample data only)
    * @param appuser
    * @param datas
    */
-  async createManyWithHook(appuser: UserContext, datas: T[]) {
-    if (Array.isArray(datas)) {
-      for (let i = 0; i < datas.length; i++) {
-        const data = datas[i];
+  //seems nobody use. also confusing
+  // async createManyWithHook(appuser: UserContext, datas: T[]) {
+  //   if (Array.isArray(datas)) {
+  //     for (let i = 0; i < datas.length; i++) {
+  //       const data = datas[i];
 
-        let result;
-        const dbsession = appuser.getDBSession();
-        if (dbsession && !dbsession.inTransaction()) {
-          dbsession.startTransaction({ readPreference: 'primary' });
-        }
+  //       let result;
+  //       const dbsession = appuser.getDBSession();
+  //       if (dbsession && !dbsession.inTransaction()) {
+  //         dbsession.startTransaction({ readPreference: 'primary' });
+  //       }
 
-        if (this.withDocNumberFormat && !data[this.documentIdentityCode]) {
-          await this.genNewDocNo(appuser, data);
-        }
+  //       if (this.withDocNumberFormat && !data[this.documentIdentityCode]) {
+  //         await this.genNewDocNo(appuser, data);
+  //       }
 
-        let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
-        isolationFilter = this.polishIsolationFilter(isolationFilter, data);
+  //       let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
+  //       isolationFilter = this.polishIsolationFilter(isolationFilter, data);
 
-        Object.assign(data, isolationFilter);
-        this.reCalculateValue(data);
-        await this.validateData(appuser, data);
-        this.applyNestedDateTime(appuser, data, 'create');
+  //       Object.assign(data, isolationFilter);
+  //       this.reCalculateValue(data);
+  //       await this.validateData(appuser, data);
+  //       this.applyNestedDateTime(appuser, data, 'create');
 
-        //new way of hook
-        await this.runEvent(appuser, this.setHookName('beforeCreate'), { data: data }, false);
+  //       //new way of hook
+  //       await this.runEvent(appuser, this.setHookName('beforeCreate'), { data: data }, false);
 
-        const newdoc = new this.doc(data);
+  //       const newdoc = new this.doc(data);
 
-        try {
-          result = await newdoc.save({ session: dbsession });
-          await this.addAuditEvent(appuser, this.documentName, result._id, 'create', data);
-          appuser.addInsertedRecordId(this.documentName, result._id);
-        } catch (err) {
-          this.logger.error(err);
-          const processdata = await this.runEvent(appuser, 'processdata.processError', {
-            err: err,
-          });
+  //       try {
+  //         result = await newdoc.save({ session: dbsession });
+  //         await this.addAuditEvent(appuser, this.documentName, result._id, 'create', data);
+  //         appuser.addInsertedRecordId(this.documentName, result._id);
+  //       } catch (err) {
+  //         this.logger.error(err);
+  //         throw new ProcessErrorException('ERR_CREATE_MANY',err.message,{
+  //           err:err
+  //         })
+  //         // const processdata = await this.runEvent(appuser, 'processdata.processError', {
+  //         //   err: err,
+  //         // });
 
-          if (!processdata) {
-            throw new InternalServerErrorException(err);
-          } else {
-            throw new CustomException(processdata.code, processdata.msg);
-          }
-        }
+  //         // if (!processdata) {
+  //         //   throw new InternalServerErrorException(err);
+  //         // } else {
+  //         //   throw new CustomException(processdata.code, processdata.msg);
+  //         // }
+  //       }
 
-        try {
-          //new way of hook
-          await this.runEvent(appuser, this.setHookName('afterCreate'), { data: data }, false);
-          await this.callWebhook(appuser, 'create', result);
+  //       try {
+  //         //new way of hook
+  //         await this.runEvent(appuser, this.setHookName('afterCreate'), { data: data }, false);
+  //         await this.callWebhook(appuser, 'create', result);
 
-          // return result as T;
-        } catch (err) {
-          throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
-        }
-      }
-    } else {
-      throw new BadRequestException(this.getDocumentType() + ': create many only support array');
-    }
-    return 'ok';
-  }
+  //         // return result as T;
+  //       } catch (err) {
+  //         throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
+  //       }
+  //     }
+  //   } else {
+  //     throw new BadRequestException(this.getDocumentType() + ': create many only support array');
+  //   }
+  //   return 'ok';
+  // }
 
   /**
    * create many from array, for performance reason it submit all item in 1 go, so it won't implement hooks
@@ -464,76 +479,85 @@ export class SimpleAppService<T extends SchemaFields> {
       if (dbsession && !dbsession.inTransaction()) {
         dbsession.startTransaction({ readPreference: 'primary' });
       }
-      const result = await this.doc.insertMany(datas, { session: dbsession });
-      await this.addManyAuditEvents(appuser, this.documentName, 'createMany', datas);
-      return result;
+      
+      try{
+        const result = await this.doc.insertMany(datas, { session: dbsession });
+        await this.addManyAuditEvents(appuser, this.documentName, 'createMany', datas);  
+        return result;
+      }catch(e){
+        throw e
+      }
+      
+      
     } else {
       throw new BadRequestException(this.getDocumentType() + ': create many only support array');
     }
   }
-  async createWithId(appuser: UserContext, data: T) {
-    let result;
 
-    if (!data._id) {
-      data._id = crypto.randomUUID();
-    }
-    const dbsession = appuser.getDBSession();
-    if (dbsession && !dbsession.inTransaction()) {
-      dbsession.startTransaction({ readPreference: 'primary' });
-    }
+  //seems nobody use, also confusing
+  // async createWithId(appuser: UserContext, data: T) {
+  //   let result;
 
-    this.logger.debug('this.withDocNumberFormat :' + this.withDocNumberFormat + '  && ' + '!data[this.documentIdentityCode] ==' + !data[this.documentIdentityCode]);
-    if (this.withDocNumberFormat && !data[this.documentIdentityCode]) {
-      await this.genNewDocNo(appuser, data);
-    }
+  //   if (!data._id) {
+  //     data._id = crypto.randomUUID();
+  //   }
+  //   const dbsession = appuser.getDBSession();
+  //   if (dbsession && !dbsession.inTransaction()) {
+  //     dbsession.startTransaction({ readPreference: 'primary' });
+  //   }
 
-    let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
-    isolationFilter = this.polishIsolationFilter(isolationFilter, data);
+  //   this.logger.debug('this.withDocNumberFormat :' + this.withDocNumberFormat + '  && ' + '!data[this.documentIdentityCode] ==' + !data[this.documentIdentityCode]);
+  //   if (this.withDocNumberFormat && !data[this.documentIdentityCode]) {
+  //     await this.genNewDocNo(appuser, data);
+  //   }
 
-    this.logger.debug('isolationFilter', 'SimpleAppService');
-    this.logger.debug(isolationFilter, 'SimpleAppService');
-    this.logger.debug('Create data before isolation', 'SimpleAppService');
-    this.logger.debug(data, 'SimpleAppService');
-    Object.assign(data, isolationFilter);
-    this.reCalculateValue(data);
-    await this.validateData(appuser, data);
-    this.logger.debug(data, `after create validation`);
-    this.applyNestedDateTime(appuser, data, 'create');
+  //   let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
+  //   isolationFilter = this.polishIsolationFilter(isolationFilter, data);
 
-    //new way of hook
+  //   this.logger.debug('isolationFilter', 'SimpleAppService');
+  //   this.logger.debug(isolationFilter, 'SimpleAppService');
+  //   this.logger.debug('Create data before isolation', 'SimpleAppService');
+  //   this.logger.debug(data, 'SimpleAppService');
+  //   Object.assign(data, isolationFilter);
+  //   this.reCalculateValue(data);
+  //   await this.validateData(appuser, data);
+  //   this.logger.debug(data, `after create validation`);
+  //   this.applyNestedDateTime(appuser, data, 'create');
 
-    await this.runEvent(appuser, this.setHookName('beforeCreate'), { data: data }, false);
+  //   //new way of hook
 
-    this.logger.debug(data, `Create Record ${this.documentName}`);
-    const newdoc = new this.doc(data);
-    await this.identifyForeignKeys(appuser, data);
-    try {
-      result = await newdoc.save({ session: dbsession });
-      await this.addAuditEvent(appuser, this.documentName, result._id, 'create', data);
-      appuser.addInsertedRecordId(this.documentName, result._id);
-    } catch (err) {
-      this.logger.error(err);
-      const processdata = await this.runEvent(appuser, 'processdata.processError', {
-        err: err,
-      });
+  //   await this.runEvent(appuser, this.setHookName('beforeCreate'), { data: data }, false);
 
-      if (!processdata) {
-        throw new InternalServerErrorException(err);
-      } else {
-        throw new CustomException(processdata.code, processdata.msg);
-      }
-    }
+  //   this.logger.debug(data, `Create Record ${this.documentName}`);
+  //   const newdoc = new this.doc(data);
+  //   await this.identifyForeignKeys(appuser, data);
+  //   try {
+  //     result = await newdoc.save({ session: dbsession });
+  //     await this.addAuditEvent(appuser, this.documentName, result._id, 'create', data);
+  //     appuser.addInsertedRecordId(this.documentName, result._id);
+  //   } catch (err) {
+  //     this.logger.error(err);
+  //     const processdata = await this.runEvent(appuser, 'processdata.processError', {
+  //       err: err,
+  //     });
 
-    try {
-      //new way of hook
-      await this.runEvent(appuser, this.setHookName('afterCreate'), { data: result }, false);
+  //     if (!processdata) {
+  //       throw new InternalServerErrorException(err);
+  //     } else {
+  //       throw new CustomException(processdata.code, processdata.msg);
+  //     }
+  //   }
 
-      await this.callWebhook(appuser, 'create', result);
-      return result as T;
-    } catch (err) {
-      throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
-    }
-  }
+  //   try {
+  //     //new way of hook
+  //     await this.runEvent(appuser, this.setHookName('afterCreate'), { data: result }, false);
+
+  //     await this.callWebhook(appuser, 'create', result);
+  //     return result as T;
+  //   } catch (err) {
+  //     throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
+  //   }
+  // }
 
   async create(appuser: UserContext, data: T, noStartTransaction: boolean = false) {
     let result;
@@ -1038,7 +1062,7 @@ export class SimpleAppService<T extends SchemaFields> {
       return createresult;
     } else {
       const updateresult = await this.findIdThenPatch(appuser, id, data);
-      const finaldata = await this.findById(appuser, id);      
+      const finaldata = await this.findById(appuser, id);
       await this.runEvent(appuser, this.setHookName('afterSetStatus'), { docStatus: docstatus, data: finaldata }, false);
       await this.addAuditEvent(appuser, this.documentName, id, docstatus, data);
 
@@ -1078,10 +1102,9 @@ export class SimpleAppService<T extends SchemaFields> {
    */
   async runEvent(appuser: UserContext, eventName: string, payloads: any, enforce: boolean = true) {
     try {
-
       if (enforce && !this.eventEmitter.hasListeners(eventName)) {
         throw new InternalServerErrorException(`${eventName} seems no listener`);
-      } else if (this.eventEmitter.hasListeners(eventName)) {        
+      } else if (this.eventEmitter.hasListeners(eventName)) {
         const res = await this.eventEmitter.emitAsync(eventName, appuser, payloads);
 
         if (!res) {
@@ -1276,16 +1299,16 @@ export class SimpleAppService<T extends SchemaFields> {
   //only realtime webhook supported at this moment
   async callWebhook(appuser: UserContext, actionName: string, data: any) {
     try {
-      await this.runWebHook.run(appuser, this.documentName, actionName, data);      
+      await this.runWebHook.run(appuser, this.documentName, actionName, data);
     } catch (e) {
       throw new InternalServerErrorException(e);
     }
   }
 
   async addAuditEvent(appUser: UserContext, documentName: string, id: string, eventType: string, data: any) {
-    await this.logSvc.addEvent(appUser,documentName,id,eventType,data)    
+    await this.logSvc.addEvent(appUser, documentName, id, eventType, data);
   }
   async addManyAuditEvents(appUser: UserContext, documentName: string, eventType: string, datas: any) {
-    await this.logSvc.addManyEvents(appUser,documentName,eventType,datas)    
+    await this.logSvc.addManyEvents(appUser, documentName, eventType, datas);
   }
 }

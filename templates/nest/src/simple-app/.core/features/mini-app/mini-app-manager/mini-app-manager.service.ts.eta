@@ -9,7 +9,7 @@ import { MiniAppInstallationService } from 'src/simple-app/.core/resources/mini-
 import _ from 'lodash';
 import { MiniAppManagerPolicyService } from './mini-app-manager-policy.service';
 import { MiniAppError } from './mini-app-manager.error';
-import * as plans from 'src/simple-app/features/subscription/license/plans'
+
 @Injectable()
 export class MiniAppManagerService {
   constructor(
@@ -82,7 +82,7 @@ export class MiniAppManagerService {
     });
 
     const permissions = this.getMiniAppActionAccess(appUser);
-    
+
     const installedMiniApps = miniAppInstallations.map((installation) => {
       const miniApp = miniApps.find((miniApp) => miniApp._id === installation.miniApp._id);
       if (!miniApp) {
@@ -175,10 +175,7 @@ export class MiniAppManagerService {
     };
   }
 
-  private getMiniAppActionAccess(appUser: UserContext) {
-    const currentPlan = appUser.tenantInfo.package; 
-    const planSetting =  plans[currentPlan]()
-
+  private getMiniAppActionAccess(appUser: UserContext) {    
     return {
       hasMiniAppFeature: this.policyService.hasFeature(appUser),
       canInstall: this.policyService.canInstall(appUser),

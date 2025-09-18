@@ -1,3 +1,9 @@
+[2.0.0h-alpha]
+1. add software license config folder
+
+[2.0.0g-alpha]
+1. fix create many no await cause transaction error
+
 [2.0.0f-alpha]
 1. add back document no and webhook
 

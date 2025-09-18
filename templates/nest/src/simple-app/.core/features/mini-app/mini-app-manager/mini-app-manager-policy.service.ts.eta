@@ -5,7 +5,7 @@ import { PolicyService } from 'src/simple-app/.core/features/policy/policy.servi
 import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';
 import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
 import { MiniApp } from '../dto';
-import * as plans from 'src/simple-app/features/subscription/license/plans'
+import * as licenseTypes from 'src/simple-app/config/license-types';
 @Injectable()
 export class MiniAppManagerPolicyService {
   readonly _RELEASED_STATUSES = [MiniAppStatusEnum.PUBLISHED];
@@ -29,15 +29,14 @@ export class MiniAppManagerPolicyService {
   }
 
   hasRequiredPlan(appUser: UserContext, miniApp: MiniApp) {
-    const currentPlan = appUser.tenantInfo.package;
+    const currentLicense = appUser.tenantInfo?.license ?? 'free';
     // const requiredPlans = miniApp.access.requiredPlans ?? [];
-    
-    if(plans[currentPlan]){
-      const plansetting = plans[currentPlan]()
-      return plansetting?.features?.advance?.features?.miniApp ?? false
 
-    }else{
-      return false
+    if (licenseTypes[currentLicense]) {
+      const licenseSetting = licenseTypes[currentLicense]();
+      return licenseSetting?.features?.advance?.features?.miniApp ?? false;
+    } else {
+      return false;
     }
     // if (_.isEmpty(requiredPlans)) return true;
 

@@ -50,11 +50,13 @@ export class ProfileService {
     this.logger.verbose(`get userprofile for ${appuser.getUid()} for tenantId ${accessTenantId}`, 'getProfile');
     const userinfo: UserContextInfo = await appuser.getUserInfo();
 
-    if (userinfo._id == '') {
+    if (!userinfo._id) {
       this.logger.warn('unknown _id for ', appuser.getUid());
 
       let newprofile;
+      
       if (accessTenantId == 0) {
+      
         newprofile = await this.createUserProfile(appuser);
         newprofile['time'] = new Date().toISOString();
         return newprofile;

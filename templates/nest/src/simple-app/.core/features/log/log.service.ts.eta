@@ -27,7 +27,7 @@ export class SimpleAppLogService {
           as: 'user',
           localField: 'createdBy',
           foreignField: 'uid',
-          pipeline: [{$match:{tenantId:appUser.getTenantId()}},{ $project: { fullName: 1 } }],
+          pipeline: [{ $match: { tenantId: appUser.getTenantId() } }, { $project: { fullName: 1 } }],
         },
       },
       { $unwind: '$user' },
@@ -35,13 +35,13 @@ export class SimpleAppLogService {
         $project: {
           _id: 1,
           fullName: '$user.fullName',
-          eventType:1,
+          eventType: 1,
           createdBy: 1,
           created: 1,
-          eventData: 1
+          eventData: 1,
         },
       },
-      {$sort:{created:1}}
+      { $sort: { created: 1 } },
     ]);
     // find({documentName:documentName,documentId:id},null,{session:appUser.getDBSession()})
 
@@ -93,6 +93,11 @@ export class SimpleAppLogService {
       alldata.push(eventdata);
     }
     const dbsession = appUser.getDBSession();
-    this.doc.insertMany(alldata, { session: dbsession });
+    try{
+      await this.doc.insertMany(alldata, { session: dbsession });  
+    }catch(e){
+      throw e
+    }
+    
   }
 }
