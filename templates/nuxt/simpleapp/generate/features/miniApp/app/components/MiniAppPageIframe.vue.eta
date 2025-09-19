@@ -4,9 +4,11 @@
       v-if="iframeSource !== ''"
       :ref="(el) => (iframeRef = el as HTMLIFrameElement)"
       :src="
-        generateIframeSource(iframeSource, {
-          miniAppInstallationId: miniAppInstallationId,
-        })
+        copyQueryToIframeSource(
+          generateIframeSource(iframeSource, {
+            miniAppInstallationId: miniAppInstallationId,
+          }),
+        )
       "
       :title="pageInfo.title || t('miniAppLang.content')"
       sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-modals"
@@ -25,16 +27,18 @@
 <script setup lang="ts">
 import {
   MiniAppDetail,
-  MiniappIntegrationCustomPagePages,
+  MiniAppIntegrationCustomPagePages,
 } from "~/simpleapp/generate/openapi";
 
 const props = defineProps<{
   miniApp: MiniAppDetail;
-  pageInfo: MiniappIntegrationCustomPagePages;
+  pageInfo: MiniAppIntegrationCustomPagePages;
   miniAppCode: string;
   miniAppInstallationId: string;
   developerPortalAppId: string;
 }>();
+
+const route = useRoute();
 
 const _xOrg = getPathPara("xorg", "");
 const hasError = ref(false);
@@ -51,6 +55,26 @@ function generateIframeSource(template: string, options: Option = {}) {
   return template.replace(/{(\w+)}/g, (_, key) => {
     return options[key] ?? `{${key}}`;
   });
+}
+
+function copyQueryToIframeSource(url: string): string {
+  const query = route.query;
+  const searchParams = new URLSearchParams();
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((v) => {
+        if (v != null) searchParams.append(key, v);
+      });
+    } else if (value != null) {
+      searchParams.append(key, value);
+    }
+  });
+
+  const hasQuery = url.includes("?");
+  const queryString = searchParams.toString();
+
+  return queryString ? url + (hasQuery ? "&" : "?") + queryString : url;
 }
 
 const { iframeRef, onIframeLoad } = useMiniAppBridge(
