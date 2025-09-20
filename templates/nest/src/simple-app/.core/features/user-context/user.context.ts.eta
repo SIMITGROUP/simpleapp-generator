@@ -212,12 +212,13 @@ export class UserContext extends UserContextInfo {
 
   setCurrentUserInfo = async (tokenstr: string, xOrg: string, webhookModel: Model<Webhook>) => {
     this.setXOrg(xOrg);
-    // console.log('xOrg',xOrg)
     await this.setUserToken(tokenstr);
     this.setUserType('normal');
-    // const wh = await webhookModel.find({ branchId: this.getBranchId(), active: true });
-
-    // if (Array.isArray(wh) && wh.length > 0) this.webhooks = this.webhooks.concat(wh);
+    // branchId: this.getBranchId(), active: true 
+    const wh = await webhookModel.find({});
+    if (Array.isArray(wh) && wh.length > 0) {
+      this.webhooks = this.webhooks.concat(wh);      
+    }
   };
 
   // setPackage = (packageName: string) => {
@@ -276,10 +277,10 @@ export class UserContext extends UserContextInfo {
           as: 'tenantInfo',
           localField: 'tenantId',
           foreignField: 'tenantId',
-          pipeline: [{ $project:{ created:0,updated:0,createdBy:0,updatedBy:0,__v:0} }],
+          pipeline: [{ $project: { created: 0, updated: 0, createdBy: 0, updatedBy: 0, __v: 0 } }],
         },
       },
-      {$unwind:{path:'$tenantInfo',preserveNullAndEmptyArrays:true}},
+      { $unwind: { path: '$tenantInfo', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: 'permission',
@@ -343,30 +344,30 @@ export class UserContext extends UserContextInfo {
           as: 'tenantInfo',
           localField: 'tenantId',
           foreignField: 'tenantId',
-          pipeline: [{ $project:{ created:0,updated:0,createdBy:0,updatedBy:0,__v:0} }],
+          pipeline: [{ $project: { created: 0, updated: 0, createdBy: 0, updatedBy: 0, __v: 0 } }],
         },
       },
-      {$unwind:{path:'$tenantInfo',preserveNullAndEmptyArrays:true}},
+      { $unwind: { path: '$tenantInfo', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: 'organization',
           as: 'orgInfo',
           localField: 'orgId',
           foreignField: 'orgId',
-          pipeline: [{ $project:{ created:0,updated:0,createdBy:0,updatedBy:0,__v:0} }],
+          pipeline: [{ $project: { created: 0, updated: 0, createdBy: 0, updatedBy: 0, __v: 0 } }],
         },
       },
-      {$unwind:{path:'$orgInfo',preserveNullAndEmptyArrays:true}},
+      { $unwind: { path: '$orgInfo', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: 'branch',
           as: 'branchInfo',
           localField: 'branchId',
           foreignField: 'branchId',
-          pipeline: [{ $project:{ created:0,updated:0,createdBy:0,updatedBy:0,__v:0} }],
+          pipeline: [{ $project: { created: 0, updated: 0, createdBy: 0, updatedBy: 0, __v: 0 } }],
         },
       },
-      {$unwind:{path:'$branchInfo',preserveNullAndEmptyArrays:true}},
+      { $unwind: { path: '$branchInfo', preserveNullAndEmptyArrays: true } },
       {
         $project: {
           uid: 1,
@@ -386,9 +387,9 @@ export class UserContext extends UserContextInfo {
           timeZone: '$b.o.timeZone',
           currency: '$b.o.currency',
           country: '$b.o.country',
-          tenantInfo:1,
-          orgInfo:1,
-          branchInfo:1,
+          tenantInfo: 1,
+          orgInfo: 1,
+          branchInfo: 1,
         },
       },
 
@@ -461,22 +462,21 @@ export class UserContext extends UserContextInfo {
                 as: 'tenant',
               },
             },
-            {$unwind:'$tenant'},
+            { $unwind: '$tenant' },
             {
-              $project:{
-                _id:1,
-                created:1,
+              $project: {
+                _id: 1,
+                created: 1,
                 tenantId: 1,
-                tenantName:'$tenant.tenantName'
-              }
-            }
+                tenantName: '$tenant.tenantName',
+              },
+            },
           ],
         },
-      }
+      },
     ];
 
     const userProfiles: UserContextInfo[] = await this.userModel.aggregate(pipelines).exec();
-    // console.log("userProfiles",userProfiles)
     return userProfiles[0];
   }
 
@@ -492,8 +492,7 @@ export class UserContext extends UserContextInfo {
     this.ssoACL = <Record<string, { roles: string[] }>>tokeninfo?.resource_access ?? {};
     this.logger.debug(`User found ${this.uid}`);
 
-    const userProfile = await this.obtainProfileFromDB();
-    // console.log('userProfile', JSON.stringify(userProfile,null,2));
+    const userProfile = await this.obtainProfileFromDB();    
     if (userProfile) {
       this.logger.debug(`User ${this.uid} exists in tenant (${this.tenantId})`);
 
@@ -535,8 +534,7 @@ export class UserContext extends UserContextInfo {
 
     if (this.isRealmAdmin() && !this.roles.includes(Role.SuperAdmin)) {
       this.roles.push(Role.SuperAdmin);
-    }
-    // console.log('this.roles',this.roles)
+    }    
     // this.logger.verbose(`User ${this.uid} have _id (${this.getId()}), groups (${this.groups.join(',')}) and roles (${this.getRoles().join(',')}).`);
   };
 
@@ -924,7 +922,7 @@ export class UserContext extends UserContextInfo {
       //   }
     }
 
-    // console.log(JSON.stringify(results,null,2))
+    
     return results;
   }
 
@@ -1007,7 +1005,7 @@ export class UserContext extends UserContextInfo {
       tenantId: this.tenantId,
       orgId: this.orgId,
       branchId: this.branchId,
-    });    
+    });
     return miniAppInstallation.miniApp;
   }
 

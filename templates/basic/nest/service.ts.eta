@@ -48,7 +48,7 @@ export class <%= it.typename %>Service extends SimpleAppService<schema.<%= it.ty
   protected foreignkeys = <%~ JSON.stringify(it.foreignkeys)%>;
     constructor(
         @InjectModel('<%= it.typename %>')  mydoc: Model<schema.<%= it.typename %>>,
-        @Inject(forwardRef(() => EventEmitter2)) event2:EventEmitter2,
+        event2:EventEmitter2,
         docNoGen:SimpleAppDocumentNoFormatService,
         logSvc: SimpleAppLogService,
         webhookSvc:RunWebhookService

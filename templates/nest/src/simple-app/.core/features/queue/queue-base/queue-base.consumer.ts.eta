@@ -16,7 +16,7 @@ export abstract class BaseQueueConsumer extends WorkerHost {
   protected abstract readonly processor: string;
 
   constructor(
-    @Inject(forwardRef(() => QueueUserContext)) protected readonly queueUserContext: QueueUserContext,
+    protected readonly queueUserContext: QueueUserContext,
     @InjectModel('Queuejob') protected queueJobModel: Model<Queuejob>,
     @InjectConnection() private readonly connection: Connection,
     protected eventEmitter: EventEmitter2,

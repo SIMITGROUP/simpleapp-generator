@@ -121,13 +121,13 @@ export class SchemaConfig {
 export class ForeignKey {
   @Field()
   @ApiProperty({ type: () => String })
-  _id?: String;
+  _id?: string;
   @Field()
   @ApiProperty({ type: () => String })
-  code?: String;
+  code?: string;
   @Field()
   @ApiProperty({ type: () => String })
-  label?: String;
+  label?: string;
   [key: string]: any;
 }
 export class MyForeignKey {

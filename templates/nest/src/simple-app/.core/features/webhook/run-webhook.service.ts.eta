@@ -1,5 +1,8 @@
 import { BadRequestException, Injectable, Inject, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+
 import { UserContext } from '../user-context/user.context';
 import { Webhook, WebhookLog } from './schemas';
 import { alldocuments } from '../document-no-format/document.dict';
@@ -8,38 +11,40 @@ import { alldocuments } from '../document-no-format/document.dict';
 export class RunWebhookService {
   @Inject(EventEmitter2)
   protected eventEmitter: EventEmitter2;
-  protected systemWebhooks : Webhook[] = []
+  protected systemWebhooks: Webhook[] = [];
   protected logger = new Logger();
   protected maxRetries = 5;
-  public constructor() {}
-  public addWebhook = (wh:Webhook)=> this.systemWebhooks.push(wh)
+  public constructor(
+    @InjectModel('WebhookLog') private webHookLogModel: Model<WebhookLog>
+    ) {}
+  public addWebhook = (wh: Webhook) => this.systemWebhooks.push(wh);
 
   /**
    * trigger
    */
-  async run(appuser: UserContext, documentName: string, actionName: string, data: any) {
-    if (process.env.WEBHOOK_ONOFF && process.env.WEBHOOK_ONOFF.toLowerCase() == 'on') {
-      return await this.runRealtimeWebhook(appuser, documentName, actionName, data);
-    }
-    else {
+  async run(appUser: UserContext, documentName: string, actionName: string, data: any) {
+    if (process.env.WEBHOOK_ONOFF && process.env.WEBHOOK_ONOFF.toLowerCase() == 'on') {      
+      return await this.runRealtimeWebhook(appUser, documentName, actionName, data);
+    } else {
       this.logger.warn(`Webhook off, not run for ${documentName}:${actionName}`);
     }
   }
 
-  async runRealtimeWebhook(appuser: UserContext, documentName: string, actionName: string, data: any) {
+  async runRealtimeWebhook(appUser: UserContext, documentName: string, actionName: string, data: any) {
     this.logger.debug(`Run webhook ${documentName}, ${actionName}`);
-
-    const userWebhooks = appuser.getWebHooks().filter((wh) => wh.resourceName == documentName && wh.eventType == actionName && wh.active);
-    const systemWebhooks = this.systemWebhooks.filter((wh) => wh.resourceName == documentName && wh.eventType == actionName && wh.active);    
-    const webhooks = []
-    webhooks.concat(userWebhooks).concat(systemWebhooks)    
-
+    
+    const userWebhooks = appUser.getWebHooks().filter((wh) => wh.resourceName === documentName && wh.eventType === actionName && wh.active);
+    const systemWebhooks = this.systemWebhooks.filter((wh) => wh.resourceName === documentName && wh.eventType === actionName && wh.active);
+    let webhooks = [];
+    webhooks = webhooks.concat(userWebhooks)
+    webhooks = webhooks.concat(systemWebhooks);
+    console.log("implement webhooks",webhooks)
     const systemVars = {
-      $xOrg: appuser.getXOrg(),
-      $accessToken: appuser.getUserToken(),
-      $fullName: appuser.getFullname(),
-      $email: appuser.getEmail(),
-      $uid: appuser.getUid(),
+      $xOrg: appUser.getXOrg(),
+      $accessToken: appUser.getUserToken(),
+      $fullName: appUser.getFullname(),
+      $email: appUser.getEmail(),
+      $uid: appUser.getUid(),
       $resourceName: documentName,
       $actionName: actionName,
       $url: process.env.APP_URL ?? 'http://localhost:8080',
@@ -90,7 +95,7 @@ export class RunWebhookService {
       // console.log("options",options)
 
       if (['POST', 'PUT', 'PATCH'].includes(options.method)) {
-        options.body = this.prepareBody(appuser, webhook, data, systemVars);
+        options.body = this.prepareBody(appUser, webhook, data, systemVars);
       }
 
       while (tries > 0) {
@@ -107,16 +112,16 @@ export class RunWebhookService {
           msg = `Try: ${tryno}/${maxtries} ${documentName}:${actionName}, ${reqMethod} ${webhookUrl}, ${statusCode},${req.statusText}`;
           if (statusCode >= 200 && statusCode <= 300) {
             //success, continue next webhook
-            this.addLog(appuser, documentName, webhook, actionName, data, options, 'success', statusCode, msg);
+            await this.addLog(appUser, documentName, webhook, actionName, data, options, 'success', statusCode, msg);
             break;
           } else {
             //common error like 404
-            this.addLog(appuser, documentName, webhook, actionName, data, options, 'failed', statusCode, msg);
+            await this.addLog(appUser, documentName, webhook, actionName, data, options, 'failed', statusCode, msg);
           }
         } catch (e) {
           // exception, usually server not accessible. use error 500
           msg = `Try: ${tryno}/${maxtries}, error ${documentName}:${actionName}  (${webhook._id}) ${e} at ${webhookUrl}`;
-          this.addLog(appuser, documentName, webhook, actionName, data, options, 'failed', 500, msg);
+          await this.addLog(appUser, documentName, webhook, actionName, data, options, 'failed', 500, msg);
         }
 
         //finish tries, throw error
@@ -129,7 +134,7 @@ export class RunWebhookService {
     return true;
   }
 
-  addLog(appuser: UserContext, documentName: string, webhook: Webhook, actionName: string, data: any, options, status: string, statusCode: number, msg: string) {
+  async addLog(appUser: UserContext, documentName: string, webhook: Webhook, actionName: string, data: any, options, status: string, statusCode: number, msg: string) {
     if (status == 'success') {
       this.logger.debug(msg);
     } else {
@@ -140,14 +145,14 @@ export class RunWebhookService {
 
     const whlog: WebhookLog = {
       _id: crypto.randomUUID(),
-      tenantId: appuser.getTenantId(),
-      orgId: appuser.getOrgId(),
-      branchId: appuser.getBranchId(),
+      tenantId: appUser.getTenantId(),
+      orgId: appUser.getOrgId(),
+      branchId: appUser.getBranchId(),
       webHookId: webhook._id,
       created: new Date().toISOString(),
-      createdBy: appuser.getUid(),
+      createdBy: appUser.getUid(),
       updated: new Date().toISOString(),
-      updatedBy: appuser.getUid(),
+      updatedBy: appUser.getUid(),
       title: `${webhook.requestMethod} ${webhook.url}`,
       dataId: data._id,
       resource: documentName,
@@ -157,10 +162,11 @@ export class RunWebhookService {
       body: body,
       msg: msg,
     };
-
-    this.eventEmitter.emit('webhooklog.add', appuser, whlog);
+    
+    const doc = new this.webHookLogModel(whlog)
+    await doc.save({ session:appUser.getDBSession() })
   }
-  prepareBody(appuser: UserContext, webhook: Webhook, data: any, systemVars: any) {
+  prepareBody(appUser: UserContext, webhook: Webhook, data: any, systemVars: any) {
     const cleandata = JSON.parse(JSON.stringify(data));
 
     if (webhook.body?.trim() == '*') {

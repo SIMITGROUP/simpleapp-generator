@@ -1,3 +1,6 @@
+[2.0.0j-alpha]
+1. fix webhook no trigger
+
 [2.0.0i-alpha]
 1. fix some document no print api available
 
