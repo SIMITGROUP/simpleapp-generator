@@ -1,0 +1,182 @@
+import { BadRequestException, Injectable, Inject, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+
+import { UserContext } from '../user-context/user.context';
+import { Webhook, WebhookLog } from './schemas';
+import { alldocuments } from '../document-no-format/document.dict';
+
+@Injectable()
+export class RunWebhookService {
+  @Inject(EventEmitter2)
+  protected eventEmitter: EventEmitter2;
+  protected systemWebhooks: Webhook[] = [];
+  protected logger = new Logger();
+  protected maxRetries = 5;
+  public constructor(
+    @InjectModel('WebhookLog') private webHookLogModel: Model<WebhookLog>
+    ) {}
+  public addWebhook = (wh: Webhook) => this.systemWebhooks.push(wh);
+
+  /**
+   * trigger
+   */
+  async run(appUser: UserContext, documentName: string, actionName: string, data: any) {
+    if (process.env.WEBHOOK_ONOFF && process.env.WEBHOOK_ONOFF.toLowerCase() == 'on') {      
+      return await this.runRealtimeWebhook(appUser, documentName, actionName, data);
+    } else {
+      this.logger.warn(`Webhook off, not run for ${documentName}:${actionName}`);
+    }
+  }
+
+  async runRealtimeWebhook(appUser: UserContext, documentName: string, actionName: string, data: any) {
+    this.logger.debug(`Run webhook ${documentName}, ${actionName}`);
+    
+    const userWebhooks = appUser.getWebHooks().filter((wh) => wh.resourceName === documentName && wh.eventType === actionName && wh.active);
+    const systemWebhooks = this.systemWebhooks.filter((wh) => wh.resourceName === documentName && wh.eventType === actionName && wh.active);
+    let webhooks = [];
+    webhooks = webhooks.concat(userWebhooks)
+    webhooks = webhooks.concat(systemWebhooks);    
+    const systemVars = {
+      $xOrg: appUser.getXOrg(),
+      $accessToken: appUser.getUserToken(),
+      $fullName: appUser.getFullname(),
+      $email: appUser.getEmail(),
+      $uid: appUser.getUid(),
+      $resourceName: documentName,
+      $actionName: actionName,
+      $url: process.env.APP_URL ?? 'http://localhost:8080',
+      $apiUrl: process.env.BACKEND_URL ?? '',
+    };
+
+    //same resource,actionName may have multiple webhook, run 1 by 1
+    for (let whNo = 0; whNo < webhooks.length; whNo++) {
+      const webhook = webhooks[whNo];
+      //danger!! system webhook, only private webhook will allow access
+      if (webhook._id.includes('private.')) systemVars['$automationApiKey'] = process.env.DEFAULT_AUTOMATION_API_KEY ?? '';
+
+      const reqMethod = webhook.requestMethod;
+      let webhookUrl = webhook.url;
+      // this.logger.verbose(webhook);
+      const headers = {};
+
+      Object.keys(systemVars).forEach((k) => {
+        webhookUrl = webhookUrl.replace('{{' + k + '}}', systemVars[k]);
+      });
+
+      if (Array.isArray(webhook.headers)) {
+        webhook.headers.forEach((h) => {
+          let headerValue = h.value ?? '';
+          Object.keys(systemVars).forEach((k) => {
+            headerValue = headerValue.replace('{{' + k + '}}', systemVars[k]);
+          });
+
+          headers[h.name] = headerValue;
+        });
+      }
+      headers['accept'] = 'application/json';
+      headers['content-type'] = 'application/json';
+
+      if (webhook.authentication == 'basic') headers['Authorization'] = 'Basic ' + Buffer.from(webhook.basicAuth.user + ':' + webhook.basicAuth.password).toString('base64');
+
+      let tries: number = webhook.retryAttemps ?? 0;
+
+      tries = tries + 1;
+
+      if (tries > this.maxRetries) tries = this.maxRetries;
+      const maxtries = tries;
+      const options: RequestInit = {
+        method: reqMethod.toUpperCase(),
+        headers: headers,
+      };
+
+      // console.log("options",options)
+
+      if (['POST', 'PUT', 'PATCH'].includes(options.method)) {
+        options.body = this.prepareBody(appUser, webhook, data, systemVars);
+      }
+
+      while (tries > 0) {
+        // console.log(`Excute webhook id ${webhook._id} max ${tries}`);
+        tries--;
+        let req: Response;
+        let msg = '';
+        let statusCode = 0;
+        const tryno = maxtries - tries;
+        try {
+          req = await fetch(webhookUrl, options);
+          statusCode = req.status;
+          //sucess, break and no more retry
+          msg = `Try: ${tryno}/${maxtries} ${documentName}:${actionName}, ${reqMethod} ${webhookUrl}, ${statusCode},${req.statusText}`;
+          if (statusCode >= 200 && statusCode <= 300) {
+            //success, continue next webhook
+            await this.addLog(appUser, documentName, webhook, actionName, data, options, 'success', statusCode, msg);
+            break;
+          } else {
+            //common error like 404
+            await this.addLog(appUser, documentName, webhook, actionName, data, options, 'failed', statusCode, msg);
+          }
+        } catch (e) {
+          // exception, usually server not accessible. use error 500
+          msg = `Try: ${tryno}/${maxtries}, error ${documentName}:${actionName}  (${webhook._id}) ${e} at ${webhookUrl}`;
+          await this.addLog(appUser, documentName, webhook, actionName, data, options, 'failed', 500, msg);
+        }
+
+        //finish tries, throw error
+        if (tries == 0 && webhook.jobType == 'roll-back-when-failed') {
+          throw new InternalServerErrorException(msg);
+        }
+      } //end retries
+    } //next webhook
+
+    return true;
+  }
+
+  async addLog(appUser: UserContext, documentName: string, webhook: Webhook, actionName: string, data: any, options, status: string, statusCode: number, msg: string) {
+    if (status == 'success') {
+      this.logger.debug(msg);
+    } else {
+      this.logger.warn(msg);
+    }
+    const logbody = options.body;
+    let body = typeof logbody == 'string' ? logbody : JSON.stringify(logbody, null, 4);
+
+    const whlog: WebhookLog = {
+      _id: crypto.randomUUID(),
+      tenantId: appUser.getTenantId(),
+      orgId: appUser.getOrgId(),
+      branchId: appUser.getBranchId(),
+      webHookId: webhook._id,
+      created: new Date().toISOString(),
+      createdBy: appUser.getUid(),
+      updated: new Date().toISOString(),
+      updatedBy: appUser.getUid(),
+      title: `${webhook.requestMethod} ${webhook.url}`,
+      dataId: data._id,
+      resource: documentName,
+      actionName: actionName,
+      status: status,
+      statusCode: statusCode,
+      body: body,
+      msg: msg,
+    };
+    
+    const doc = new this.webHookLogModel(whlog)
+    await doc.save({ session:appUser.getDBSession() })
+  }
+  prepareBody(appUser: UserContext, webhook: Webhook, data: any, systemVars: any) {
+    const cleandata = JSON.parse(JSON.stringify(data));
+
+    if (webhook.body?.trim() == '*') {
+      return JSON.stringify(cleandata);
+    }
+    const finaldata = { ...cleandata, ...systemVars };
+
+    const parse = require('json-templates');
+    const template = parse(webhook.body);
+    const x: BodyInit = template(finaldata);
+    // this.logger.log(x)
+    return JSON.parse(JSON.stringify(x));
+  }
+}

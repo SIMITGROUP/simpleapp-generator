@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { OrganizationModule } from 'src/simple-app/.core/resources/organization/organization.module';
-import { AutoIncreamentModule } from 'src/simple-app/.core/features/auto-increament/auto-increament.module';
+import { OrganizationModule } from 'src/simple-app/_core/resources/organization/organization.module';
+import { AutoIncreamentModule } from 'src/simple-app/_core/features/auto-increament/auto-increament.module';
 import { OrganizationEventService } from './organization-event.service';
 import { GenerateLogoModule } from 'src/simple-app/features/generate-image/generate-logo/generate-log-module';
 @Module({

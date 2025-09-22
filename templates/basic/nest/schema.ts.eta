@@ -10,7 +10,7 @@ import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 
-export * from 'src/simple-app/.core/framework/schemas';
+export * from 'src/simple-app/_core/framework/schemas';
 
 <% 
   const getFieldType =(proptype, typename,actionname)=>{

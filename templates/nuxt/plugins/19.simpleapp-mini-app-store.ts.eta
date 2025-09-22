@@ -273,7 +273,7 @@ export default defineNuxtPlugin(async () => {
         };
       },
 
-      shouldShowPageOnMenu(page: MiniappIntegrationCustomPagePages) {
+      shouldShowPageOnMenu(page: MiniAppIntegrationCustomPagePages) {
         return page.isHideOnMenu === true ? false : true;
       },
 

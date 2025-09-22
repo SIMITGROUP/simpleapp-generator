@@ -1,0 +1,346 @@
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
+import { CategorizedMiniAppDetail, DynamicParam, InstalledMiniAppDetail, MiniApp, MiniAppDetail, MiniAppInstallation } from '../dto';
+import { MiniAppService } from 'src/simple-app/_core/resources/mini-app/mini-app.service';
+
+import { MiniAppEnvEnum, MiniAppStatusEnum } from 'src/simple-app/_core/resources/mini-app/mini-app.enum';
+import { MiniAppInstallationService } from 'src/simple-app/_core/resources/mini-app-installation/mini-app-installation.service';
+import _ from 'lodash';
+import { MiniAppManagerPolicyService } from './mini-app-manager-policy.service';
+import { MiniAppError } from './mini-app-manager.error';
+
+@Injectable()
+export class MiniAppManagerService {
+  constructor(
+    private readonly miniAppService: MiniAppService,
+    private readonly miniAppInstallationService: MiniAppInstallationService,
+    private readonly policyService: MiniAppManagerPolicyService,
+  ) {}
+
+  // ==================================== API Function ====================================
+
+  async runInstallMiniApp(appUser: UserContext, miniAppCode: string) {
+    this.assertHasMiniAppFeature(appUser);
+
+    const miniApp = await this.findMiniAppOrFail(appUser, miniAppCode);
+
+    this.assertPrivateAppPermission(appUser, miniApp);
+
+    this.assertHasRequiredPlan(appUser, miniApp);
+
+    this.assertIsMiniAppReleased(miniApp);
+
+    return await this.installMiniApp(appUser, miniAppCode, miniApp);
+  }
+
+  async runUninstallMiniApp(appUser: UserContext, miniAppCode: string) {
+    this.assertHasMiniAppFeature(appUser);
+
+    await this.findMiniAppOrFail(appUser, miniAppCode);
+
+    return await this.uninstallMiniApp(appUser, miniAppCode);
+  }
+
+  async runUpdateMiniAppSetting(appUser: UserContext, miniAppCode: string, data: DynamicParam) {
+    this.assertHasMiniAppFeature(appUser);
+
+    const miniApp = await this.findMiniAppOrFail(appUser, miniAppCode);
+
+    this.assertHasRequiredPlan(appUser, miniApp);
+
+    this.assertIsMiniAppReleased(miniApp);
+
+    return await this.updateMiniAppSetting(appUser, miniAppCode, data);
+  }
+
+  async runSystemDefaultMiniAppMigration(appUser: UserContext) {
+    // const result = [];
+    // for (const item of DEFAULT_MINI_APPS) {
+    //   const miniApps = await this.miniAppService.search(appUser, {
+    //     code: item.code,
+    //   });
+    //   if (miniApps && miniApps.length > 0) {
+    //     const miniApp = miniApps[0];
+    //     const id = miniApp._id;
+    //     const resp = await this.miniAppService.findIdThenUpdate(appUser, id, item);
+    //     result.push(resp);
+    //   } else {
+    //     const resp = await this.miniAppService.create(appUser, item);
+    //     result.push(resp);
+    //   }
+    // }
+    // return result;
+  }
+
+  async runGetInstalledMiniApps(appUser: UserContext): Promise<InstalledMiniAppDetail> {
+    // Find Mini App Installation Record With Mini App Detail
+    const miniAppInstallations = await this.findMiniAppInstallations(appUser);
+    const installationMap = new Map(miniAppInstallations.map((inst) => [inst.miniApp._id.toString(), inst]));
+    const miniApps = await this.miniAppService.search(appUser, {
+      _id: { $in: Array.from(installationMap.keys()) },
+    });
+
+    const permissions = this.getMiniAppActionAccess(appUser);
+
+    const installedMiniApps = miniAppInstallations.map((installation) => {
+      const miniApp = miniApps.find((miniApp) => miniApp._id === installation.miniApp._id);
+      if (!miniApp) {
+        return null;
+      }
+
+      // @ts-ignore
+      const miniAppObj = miniApp.toObject();
+      return {
+        ...miniAppObj,
+        hasRequiredPlan: this.policyService.hasRequiredPlan(appUser, miniApp),
+        // @ts-ignore
+        miniAppInstallation: installation ? installation.toObject() : undefined,
+      };
+    });
+
+    return { installedMiniApps: installedMiniApps, permissions };
+  }
+
+  async runGetCategorizedMiniApps(appUser: UserContext): Promise<CategorizedMiniAppDetail> {
+    const isDevEnv = this.isDevEnv(appUser);
+
+    const result = {
+      upcomingMiniApps: [],
+      availableMiniApps: [],
+    };
+
+    const miniAppInstallations = await this.findMiniAppInstallations(appUser);
+
+    const installedMiniAppIdArr = miniAppInstallations.map((inst) => inst.miniApp._id);
+
+    let filter = {
+      _id: { $nin: installedMiniAppIdArr },
+      env: MiniAppEnvEnum.PROD,
+      status: {
+        $in: [MiniAppStatusEnum.PUBLISHED, MiniAppStatusEnum.UPCOMING, MiniAppStatusEnum.BETA],
+      },
+    };
+
+    if (isDevEnv) {
+      filter = {
+        _id: { $nin: installedMiniAppIdArr },
+        env: MiniAppEnvEnum.DEV,
+        status: {
+          $in: [MiniAppStatusEnum.DRAFT],
+        },
+      };
+    }
+
+    const miniApps = await this.miniAppService.search(appUser, filter);
+
+    miniApps.forEach((miniApp) => {
+      if (miniApp.status === MiniAppStatusEnum.UPCOMING) {
+        result.upcomingMiniApps.push({
+          // @ts-ignore
+          ...miniApp.toObject(),
+          hasRequiredPlan: this.policyService.hasRequiredPlan(appUser, miniApp),
+        });
+      } else {
+        // MiniApp Not Public, Not Allow To List To User
+        if (miniApp.access.visibility === 'private' && !isDevEnv) {
+          if (!(miniApp.access.allowEmails ?? []).includes(appUser.getEmail())) {
+            // Private App, and not allowed current user to install
+            return;
+          }
+        }
+
+        result.availableMiniApps.push({
+          // @ts-ignore
+          ...miniApp.toObject(),
+          hasRequiredPlan: this.policyService.hasRequiredPlan(appUser, miniApp),
+        });
+      }
+    });
+
+    return result;
+  }
+
+  async runGetMiniAppDetail(appUser: UserContext, miniAppCode: string): Promise<MiniAppDetail> {
+    const miniApp = await this.findMiniAppOrFail(appUser, miniAppCode);
+    const miniAppInstallation = await this.findMiniAppInstallation(appUser, miniAppCode);
+
+    this.assertPrivateAppPermission(appUser, miniApp);
+
+    return {
+      // @ts-ignore
+      ...miniApp.toObject(),
+      hasRequiredPlan: this.policyService.hasRequiredPlan(appUser, miniApp),
+      miniAppInstallation,
+    };
+  }
+
+  private getMiniAppActionAccess(appUser: UserContext) {    
+    return {
+      hasMiniAppFeature: this.policyService.hasFeature(appUser),
+      canInstall: this.policyService.canInstall(appUser),
+      canUninstall: this.policyService.canUninstall(appUser),
+      canUpdateSetting: this.policyService.canUpdateSetting(appUser),
+    };
+  }
+
+  // =================================== Finder Function ==================================
+
+  async findMiniAppOrFail(appUser: UserContext, miniAppCode: string): Promise<MiniApp> {
+    const isDevEnv = this.isDevEnv(appUser);
+    const miniApps = await this.miniAppService.search(appUser, {
+      code: miniAppCode,
+      env: isDevEnv ? MiniAppEnvEnum.DEV : MiniAppEnvEnum.PROD,
+    });
+
+    if (miniApps && miniApps.length > 0) {
+      return miniApps[0];
+    }
+
+    const msg = MiniAppError.format(MiniAppError.ERR.NOT_FOUND);
+    throw new NotFoundException(msg);
+  }
+
+  async findMiniAppInstallations(appUser: UserContext) {
+    const miniAppInstallations = await this.miniAppInstallationService.search(
+      appUser,
+      {
+        isActive: true,
+      },
+      undefined,
+      {
+        seqNo: 1,
+      },
+    );
+
+    return miniAppInstallations;
+  }
+
+  async findMiniAppInstallation(appUser: UserContext, miniAppCode: string): Promise<MiniAppInstallation | undefined> {
+    const miniAppInstallations = await this.miniAppInstallationService.search(appUser, {
+      'miniApp.code': miniAppCode,
+    });
+
+    return miniAppInstallations?.[0];
+  }
+
+  async findIsMiniAppInstalledOrFail(appUser: UserContext, miniAppCode: string) {
+    const miniAppInstallation = await this.findMiniAppInstallation(appUser, miniAppCode);
+    if (!miniAppInstallation) {
+      const msg = MiniAppError.format(MiniAppError.ERR.NOT_INSTALLED);
+      throw new NotFoundException(msg);
+    }
+
+    if (!miniAppInstallation.isActive) {
+      // Already inactive, previously already uninstall
+      const msg = MiniAppError.format(MiniAppError.ERR.NOT_INSTALLED);
+      throw new NotFoundException(msg);
+    }
+
+    return miniAppInstallation;
+  }
+
+  // ================================= Validation Function ================================
+
+  assertHasMiniAppFeature(appUser: UserContext) {
+    if (!this.policyService.hasFeature(appUser)) {
+      const msg = MiniAppError.format(MiniAppError.ERR.NO_FEATURE);
+      throw new BadRequestException(msg);
+    }
+  }
+
+  assertIsMiniAppReleased(miniApp: MiniApp) {
+    if (!this.policyService.isMiniAppRealeased(miniApp.status as MiniAppStatusEnum)) {
+      const msg = MiniAppError.format(MiniAppError.ERR.NOT_RELEASED, { status: miniApp.status });
+      throw new BadRequestException(msg);
+    }
+  }
+
+  assertHasRequiredPlan(appUser: UserContext, miniApp: MiniApp) {
+    if (!this.policyService.hasRequiredPlan(appUser, miniApp)) {
+      const msg = MiniAppError.format(MiniAppError.ERR.PLAN_REQUIRED, { miniAppName: miniApp.name, requiredPlans: miniApp.access.requiredPlans.join(', ') });
+      throw new BadRequestException(msg);
+    }
+  }
+
+  assertPrivateAppPermission(appUser: UserContext, miniApp: MiniApp) {
+    if (miniApp.access.visibility === 'private') {
+      if (!(miniApp.access.allowEmails ?? []).includes(appUser.getEmail())) {
+        const msg = MiniAppError.format(MiniAppError.ERR.PRIVATE_APP);
+        throw new BadRequestException(msg);
+      }
+    }
+  }
+
+  // =================================== Action Function ==================================
+
+  private async installMiniApp(appUser: UserContext, miniAppCode: string, miniApp: MiniApp): Promise<MiniAppInstallation> {
+    const miniAppInstallation = await this.findMiniAppInstallation(appUser, miniAppCode);
+    if (!miniAppInstallation) {
+      // Install MiniApp
+      return await this.createMiniAppInstallation(appUser, miniApp);
+    }
+
+    if (miniAppInstallation.isActive) {
+      const msg = MiniAppError.format(MiniAppError.ERR.ALREADY_INSTALLED);
+      throw new BadRequestException(msg);
+    }
+
+    // Reactivate MiniApp
+    return await this.reactivateInstalledMiniApp(appUser, miniAppInstallation);
+  }
+
+  private async uninstallMiniApp(appUser: UserContext, miniAppCode: string) {
+    const miniAppInstallation = await this.findIsMiniAppInstalledOrFail(appUser, miniAppCode);
+    return await this.deactiveInstalledMiniApp(appUser, miniAppInstallation);
+  }
+
+  private async updateMiniAppSetting(appUser: UserContext, miniAppCode: string, data: DynamicParam) {
+    const miniAppInstallation = await this.findIsMiniAppInstalledOrFail(appUser, miniAppCode);
+    return await this.setMiniAppInstallationSetting(appUser, miniAppInstallation, data);
+  }
+
+  private async setMiniAppInstallationSetting(appUser: UserContext, miniAppInstallation: MiniAppInstallation, data: DynamicParam) {
+    return await this.miniAppInstallationService.findIdThenPatch(appUser, miniAppInstallation._id, {
+      settings: data,
+    } as MiniAppInstallation);
+  }
+
+  private async createMiniAppInstallation(appUser: UserContext, miniApp: MiniApp) {
+    return await this.miniAppInstallationService.create(appUser, {
+      apiKey: crypto.randomUUID(),
+      isActive: true,
+      miniApp: {
+        _id: miniApp._id,
+        code: miniApp.code,
+        label: miniApp.name,
+        developerPortalAppId: miniApp.developerPortal.appId,
+      },
+      miniApiUser: {
+        _id: appUser.getId(),
+        uid: appUser.getUid(),
+        name: appUser.getFullname(),
+        email: appUser.getEmail(),
+      },
+      settings: {},
+    });
+  }
+
+  private async reactivateInstalledMiniApp(appUser: UserContext, miniAppInstallation: MiniAppInstallation) {
+    return this.setMiniAppInstallationActiveStatus(appUser, miniAppInstallation, true);
+  }
+
+  private async deactiveInstalledMiniApp(appUser: UserContext, miniAppInstallation: MiniAppInstallation) {
+    return this.setMiniAppInstallationActiveStatus(appUser, miniAppInstallation, false);
+  }
+
+  private async setMiniAppInstallationActiveStatus(appUser: UserContext, miniAppInstallation: MiniAppInstallation, isActive: boolean) {
+    return await this.miniAppInstallationService.findIdThenPatch(appUser, miniAppInstallation._id, {
+      isActive,
+    } as MiniAppInstallation);
+  }
+
+  private isDevEnv(appUser: UserContext) {
+    return appUser.getXOrg() === process.env.DEMO_COMPANY_XORG;
+  }
+}

@@ -5,7 +5,7 @@
  * Author: Ks Tan
  */
 
-import  {<%=it.typename%>Client} from "../generate/clients/<%=upperFirstCase(it.name)%>Client"
-export class <%=it.typename%>Doc extends <%=it.typename%>Client{
+import  {<%=upperFirstCase(it.name)%>Client} from "../generate/clients/<%=upperFirstCase(it.name)%>Client"
+export class <%=upperFirstCase(it.name)%>Doc extends <%=upperFirstCase(it.name)%>Client{
 
 }

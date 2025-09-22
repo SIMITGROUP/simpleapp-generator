@@ -7,22 +7,22 @@
  */
  
 
-import { UserContext } from 'src/simple-app/.core/features/user-context/user.context'
-import * as sharelibs from 'src/simple-app/.core/share-libs'
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context'
+import * as sharelibs from 'src/simple-app/_core/share-libs'
 import { Injectable,Inject,forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import jsonpath from 'jsonpath'
 import { Model } from 'mongoose';
 import {<%= it.typename%>JsonSchema } from './<%= camelToKebab(it.resourceName) %>.jsonschema'
-import { SimpleAppService } from 'src/simple-app/.core/framework/base/simple-app.service';
-import { IsolationType } from 'src/simple-app/.core/framework/schemas';
+import { SimpleAppService } from 'src/simple-app/_core/framework/base/simple-app.service';
+import { IsolationType } from 'src/simple-app/_core/framework/schemas';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { SimpleAppDocumentNoFormatService } from 'src/simple-app/.core/features/document-no-format/document-no-format.service';
+import { SimpleAppDocumentNoFormatService } from 'src/simple-app/_core/features/document-no-format/document-no-format.service';
 
 import * as defaultValue from './<%= camelToKebab(it.resourceName) %>.default'
 import * as schema from './<%= camelToKebab(it.resourceName) %>.schema';
-import { SimpleAppLogService } from 'src/simple-app/.core/features/log/log.service';
-import { RunWebhookService } from 'src/simple-app/.core/features/webhook/run-webhook.service';
+import { SimpleAppLogService } from 'src/simple-app/_core/features/log/log.service';
+import { RunWebhookService } from 'src/simple-app/_core/features/webhook/run-webhook.service';
 //export * from './<%= camelToKebab(it.resourceName) %>.schema';
 
 

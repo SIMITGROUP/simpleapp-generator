@@ -18,8 +18,8 @@ export type NameValue = {
 };
 
 export type ForeignKey = {
-  _id: string;
-  label: string;
+  _id?: string;
+  label?: string;
   code?: string;
   [key: string]: any;
 };

@@ -1,0 +1,41 @@
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
+import { AppUser } from 'src/simple-app/_core/features/user-context/appuser.decorator';
+import { Roles } from 'src/simple-app/_core/features/auth/role-guard/roles.decorator';
+import { Role } from 'src/simple-app/_core/features/auth/role-guard/roles.enum';
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
+import { DeveloperPortalBridgeService } from './developer-portal-bridge.service';
+import { DeveloperPortalInstalledXOrgsResponse } from './developer-portal.schema';
+import {MiniApp} from '@resources/mini-app/mini-app.schema'
+
+@ApiTags('DEVELOPERPORTAL')
+@Controller('developer')
+export class DeveloperPortalController {
+  constructor(private readonly service: DeveloperPortalBridgeService) {}
+
+  @Post('publish-dev/:developerPortalAppId')
+  @Roles(Role.SuperAdmin, Role.SuperUser)
+  @ApiBody({ description: 'Request Body', type: MiniApp })
+  @ApiOperation({ operationId: 'runDeveloperPublishDev' })
+  @ApiResponse({ status: 200, type: MiniApp })
+  async developerPublishDev(@AppUser() appUser: UserContext, @Param('developerPortalAppId') developerPortalAppId: string, @Body() dto: MiniApp) {
+    return await this.service.runDeveloperPublishDev(appUser, developerPortalAppId, dto);
+  }
+
+  @Post('publish/:developerPortalAppId')
+  @Roles(Role.SuperAdmin, Role.SuperUser)
+  @ApiBody({ description: 'Request Body', type: MiniApp })
+  @ApiOperation({ operationId: 'runDeveloperPublish' })
+  @ApiResponse({ status: 200, type: MiniApp })
+  async developerPublish(@AppUser() appUser: UserContext, @Param('developerPortalAppId') developerPortalAppId: string, @Body() dto: MiniApp) {
+    return await this.service.runDeveloperPublish(appUser, developerPortalAppId, dto);
+  }
+
+  @Get('installed-xorgs/:developerPortalAppId')
+  @Roles(Role.SuperAdmin, Role.SuperUser)
+  @ApiOperation({ operationId: 'runDeveloperInstalledXOrgs' })
+  @ApiResponse({ status: 200, type: DeveloperPortalInstalledXOrgsResponse })
+  async developerInstalledXOrgs(@AppUser() appUser: UserContext, @Param('developerPortalAppId') developerPortalAppId: string) {
+    return await this.service.runDeveloperInstalledXOrgs(appUser, developerPortalAppId);
+  }
+}

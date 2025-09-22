@@ -9,9 +9,9 @@
 <%
 
 const kebabname =  camelToKebab(it.resourceName) 
-let filepath = `src/simple-app/.resources/${kebabname}/${kebabname}.module`
+let filepath = `src/simple-app/_resources/${kebabname}/${kebabname}.module`
 if(getSystemResources().includes(it.resourceName.toLowerCase())){
-    filepath = `src/simple-app/.core/resources/${kebabname}/${kebabname}.module`
+    filepath = `src/simple-app/_core/resources/${kebabname}/${kebabname}.module`
 }
 %>
 

@@ -6,10 +6,10 @@
  */
 import { Module } from '@nestjs/common';
 
-import { BranchModule } from 'src/simple-app/.core/resources/branch/branch.module';
-import { AutoIncreamentModule } from 'src/simple-app/.core/features/auto-increament/auto-increament.module';
+import { BranchModule } from 'src/simple-app/_core/resources/branch/branch.module';
+import { AutoIncreamentModule } from 'src/simple-app/_core/features/auto-increament/auto-increament.module';
 import { BranchEventService } from './branch-event.service';
-import { DocumentNoFormatModule } from 'src/simple-app/.core/features/document-no-format/document-no-format.module';
+import { DocumentNoFormatModule } from 'src/simple-app/_core/features/document-no-format/document-no-format.module';
 
 @Module({
   imports: [DocumentNoFormatModule,BranchModule,AutoIncreamentModule],

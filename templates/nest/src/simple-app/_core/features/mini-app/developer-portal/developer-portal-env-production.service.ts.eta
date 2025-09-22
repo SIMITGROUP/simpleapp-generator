@@ -1,0 +1,50 @@
+import { Injectable } from '@nestjs/common';
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
+import { MiniApp } from '@resources/mini-app/mini-app.schema';
+import _ from 'lodash';
+import { MiniAppManagerEnvEnum } from '../mini-app-manager/mini-app-manager.enum';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { MiniAppManagerEnvProductionService } from '../mini-app-manager/mini-app-manager-env-production.service';
+import { DeveloperPortalService } from './developer-portal.service';
+
+@Injectable()
+export class DeveloperPortalEnvProductionService {
+  constructor(
+    private readonly miniAppManagerService: MiniAppManagerEnvProductionService,
+
+    @InjectModel('MiniApp')
+    protected miniAppDoc: Model<MiniApp>,
+  ) {
+    // super(miniAppDoc);
+  }
+
+  async findMiniApp(developerPortalAppId: string, env: MiniAppManagerEnvEnum) {
+    const miniApp = await this.miniAppDoc.findOne({
+      'developerPortal.appId': developerPortalAppId,
+      env,
+    });
+
+    return miniApp;
+  }
+
+  async publish(appUser: UserContext, developerPortalAppId: string, dto: MiniApp) {
+    const miniApp = await this.findMiniApp(developerPortalAppId, MiniAppManagerEnvEnum.PROD);
+
+    if (!miniApp) {
+      return await this.createMiniApp(appUser, developerPortalAppId, dto);
+    } else {
+      return await this.updateMiniApp(appUser, miniApp.toObject(), dto);
+    }
+  }
+
+  async createMiniApp(appUser: UserContext, developerPortalAppId: string, dto: MiniApp) {
+    return await this.miniAppManagerService.createMiniApp(appUser, developerPortalAppId, dto);
+  }
+
+  async updateMiniApp(appUser: UserContext, miniApp: MiniApp, dto: MiniApp) {
+    const updatedMiniApp = await this.miniAppManagerService.updateMiniApp(appUser, miniApp, dto);
+
+    return updatedMiniApp;
+  }
+}

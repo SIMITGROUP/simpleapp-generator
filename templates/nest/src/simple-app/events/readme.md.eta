@@ -19,12 +19,12 @@
 ```ts
 //student.event.ts
 import { BadRequestException, InternalServerErrorException, HttpException, Injectable, Inject } from '@nestjs/common';
-import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
-import * as schema from 'src/simple-app/.resources/student/student.schema'
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
+import * as schema from 'src/simple-app/_resources/student/student.schema'
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
-import { EventBeforeCreate } from 'src/simple-app/.core/features/event/interface';
-import { CreatePayLoad } from 'src/simple-app/.core/features/event/event.type';
+import { EventBeforeCreate } from 'src/simple-app/_core/features/event/interface';
+import { CreatePayLoad } from 'src/simple-app/_core/features/event/event.type';
 @Injectable()
 export class StudentEvent implements EventBeforeUpdate<Student>{
   constructor() {}

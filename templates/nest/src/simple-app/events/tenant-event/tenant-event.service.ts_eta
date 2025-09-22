@@ -1,11 +1,11 @@
 import { BadRequestException, InternalServerErrorException, HttpException, Injectable, Inject } from '@nestjs/common';
-import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { Tenant } from './tenant-event.type';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { EventBeforeCreate, EventAfterCreate } from 'src/simple-app/.core/features/event/interface';
-import { TenantService } from 'src/simple-app/.core/resources/tenant/tenant.service';
-import { CreatePayLoad } from 'src/simple-app/.core/features/event/event.type';
-import { AutoIncreamentService } from 'src/simple-app/.core/features/auto-increament/auto-increament.service';
+import { EventBeforeCreate, EventAfterCreate } from 'src/simple-app/_core/features/event/interface';
+import { TenantService } from 'src/simple-app/_core/resources/tenant/tenant.service';
+import { CreatePayLoad } from 'src/simple-app/_core/features/event/event.type';
+import { AutoIncreamentService } from 'src/simple-app/_core/features/auto-increament/auto-increament.service';
 
 @Injectable()
 export class TenantEventService implements EventBeforeCreate<Tenant>, EventAfterCreate<Tenant> {

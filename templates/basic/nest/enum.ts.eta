@@ -9,7 +9,7 @@ for(const fname of fnames){
     export enum <%=it.typename%><%= upperFirstCase(fname)%>Enum{
         <%for(const val of obj.enum){        
 %>
-            <%= val.toUpperCase()%> = '<%= val %>',        
+            '<%= val.toUpperCase()%>' = '<%= val %>',        
         <%}%>
     }
    <%}%>

@@ -7,7 +7,7 @@
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { SimpleAppExceptionFilter } from './simple-app/.core/framework/exception-filter';
+import { SimpleAppExceptionFilter } from './simple-app/_core/framework/exception-filter';
 import { HttpAdapterHost } from '@nestjs/core';
 
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';

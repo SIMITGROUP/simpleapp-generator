@@ -1,10 +1,10 @@
 import { BadRequestException, InternalServerErrorException, HttpException, Injectable, Inject } from '@nestjs/common';
-import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { Permission } from './permission-event.type';
 import { OnEvent } from '@nestjs/event-emitter';
-import { EventBeforeCreate, EventAfterCreate } from 'src/simple-app/.core/features/event/interface';
-import { PermissionService } from 'src/simple-app/.core/resources/permission/permission.service';
-import { CreatePayload } from 'src/simple-app/.core/features/event/event.type';
+import { EventBeforeCreate, EventAfterCreate } from 'src/simple-app/_core/features/event/interface';
+import { PermissionService } from 'src/simple-app/_core/resources/permission/permission.service';
+import { CreatePayload } from 'src/simple-app/_core/features/event/event.type';
 
 @Injectable()
 export class PermissionEventService implements EventBeforeCreate<Permission>, EventAfterCreate<Permission> {

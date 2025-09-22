@@ -37,12 +37,12 @@
 import { Controller, Get, Put, Patch, Post, Delete, Body, Query, Param, Type, Res, Req, HttpStatus, HttpCode, NotFoundException } from '@nestjs/common';
 
 import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { Roles } from 'src/simple-app/.core/features/auth/role-guard/roles.decorator';
-import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';
+import { Roles } from 'src/simple-app/_core/features/auth/role-guard/roles.decorator';
+import { Role } from 'src/simple-app/_core/features/auth/role-guard/roles.enum';
 import { Response } from 'express';
-import { AppUser } from 'src/simple-app/.core/features/user-context/appuser.decorator';
-import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
-import { MiniAppScope } from 'src/simple-app/.core/features/mini-app/mini-app-scope/mini-app-scope.decorator';
+import { AppUser } from 'src/simple-app/_core/features/user-context/appuser.decorator';
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
+import { MiniAppScope } from 'src/simple-app/_core/features/mini-app/mini-app-scope/mini-app-scope.decorator';
 import { <%= it.typename%>ApiService } from './<%= camelToKebab(it.resourceName)%>-api.service';
 import * as schema from './<%= camelToKebab(it.resourceName)%>-api.schema'
 

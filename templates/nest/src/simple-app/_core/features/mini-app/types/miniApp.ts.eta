@@ -1,0 +1,24 @@
+import { MiniApp,  } from '@resources/mini-app/mini-app.schema';
+import { MiniAppInstallation,  } from '@resources/mini-app-installation/mini-app-installation.schema';
+
+export type MiniAppDetailPermission = {
+  hasMiniAppFeature: boolean;
+  canInstall: boolean;
+  canUninstall: boolean;
+  canUpdateSetting: boolean;
+};
+
+export type MiniAppDetail = MiniApp & {
+  hasRequiredPlan: boolean;
+  miniAppInstallation?: MiniAppInstallation;
+};
+
+export type CategorizedMiniAppDetail = {
+  upcomingMiniApps: MiniAppDetail[];
+  availableMiniApps: MiniAppDetail[];
+};
+
+export type InstalledMiniAppDetail = {
+  installedMiniApps: MiniAppDetail[];
+  permissions: MiniAppDetailPermission;
+};

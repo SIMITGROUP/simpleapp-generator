@@ -1,0 +1,46 @@
+import { Injectable } from '@nestjs/common';
+import { Role } from 'src/simple-app/_core/features/auth/role-guard/roles.enum';
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
+import * as licenseTypes from 'src/simple-app/config/license-types';
+@Injectable()
+export class PolicyService {
+  private readonly _HIGH_PRIVILEGE_ROLES = [Role.SuperAdmin, Role.SuperUser, Role.TenantOwner];
+
+  private readonly _FEATURES = {
+    miniApp: ['lite', 'pro', 'enterprise'],
+  };
+
+  hasHighPrivilege(roles: Role[]): boolean {
+    return this._HIGH_PRIVILEGE_ROLES.some((role) => roles.includes(role));
+  }
+
+  hasRole(roles: Role[], role: Role) {
+    return roles.includes(role);
+  }
+
+  /**
+   * Check if user's current plan has access to a specific feature.
+   *
+   * TODO: In the future, migrate to individual plan definition files:
+   * - plans/free.ts
+   * - plans/lite.ts
+   * - plans/pro.ts
+   * - plans/enterprise.ts
+   */
+  hasFeature(appUser: UserContext, feature: keyof typeof this._FEATURES): boolean {
+    const appLicense = appUser.tenantInfo?.license ?? 'free';
+    // const allowedPlans = this._FEATURES[feature];
+    const licenseSetting = licenseTypes[appLicense]();
+    const allowed = licenseSetting.features?.advance?.features[feature] ?? false;
+    return allowed;
+  }
+
+  can(appUser: UserContext, role: Role) {
+    const roles = appUser.getRoles();
+
+    const hasHighPrivilege = this.hasHighPrivilege(roles);
+    if (hasHighPrivilege) return hasHighPrivilege;
+
+    return this.hasRole(roles, role);
+  }
+}

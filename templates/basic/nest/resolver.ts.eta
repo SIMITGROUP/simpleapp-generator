@@ -10,10 +10,10 @@ import { Request } from '@nestjs/common';
 import * as schemas from './<%= camelToKebab(it.resourceName) %>.schema';
 import { <%= it.typename %>Service } from './<%= camelToKebab(it.resourceName) %>.service';
 
-import { AppUser } from 'src/simple-app/.core/features/user-context/appuser.decorator';
-import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
-import { Roles } from 'src/simple-app/.core/features/auth/role-guard/roles.decorator';
-import { Role } from 'src/simple-app/.core/features/auth/role-guard/roles.enum';
+import { AppUser } from 'src/simple-app/_core/features/user-context/appuser.decorator';
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
+import { Roles } from 'src/simple-app/_core/features/auth/role-guard/roles.decorator';
+import { Role } from 'src/simple-app/_core/features/auth/role-guard/roles.enum';
 
 
 

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { TenantModule } from 'src/simple-app/.core/resources/tenant/tenant.module';
-import { AutoIncreamentModule } from 'src/simple-app/.core/features/auto-increament/auto-increament.module';
+import { TenantModule } from 'src/simple-app/_core/resources/tenant/tenant.module';
+import { AutoIncreamentModule } from 'src/simple-app/_core/features/auto-increament/auto-increament.module';
 import { TenantEventService } from './tenant-event.service';
 @Module({
   imports: [TenantModule, AutoIncreamentModule],

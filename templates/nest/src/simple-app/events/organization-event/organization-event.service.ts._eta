@@ -1,13 +1,13 @@
 import { BadRequestException, InternalServerErrorException, HttpException, Injectable, Inject } from '@nestjs/common';
-import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { Organization } from './organization-event.type';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { EventBeforeCreate, EventAfterCreate, EventBeforeUpdate } from 'src/simple-app/.core/features/event/interface';
-import { OrganizationService } from 'src/simple-app/.core/resources/organization/organization.service';
-import { CreatePayload, UpdatePayload } from 'src/simple-app/.core/features/event/event.type';
-import { AutoIncreamentService } from 'src/simple-app/.core/features/auto-increament/auto-increament.service';
+import { EventBeforeCreate, EventAfterCreate, EventBeforeUpdate } from 'src/simple-app/_core/features/event/interface';
+import { OrganizationService } from 'src/simple-app/_core/resources/organization/organization.service';
+import { CreatePayload, UpdatePayload } from 'src/simple-app/_core/features/event/event.type';
+import { AutoIncreamentService } from 'src/simple-app/_core/features/auto-increament/auto-increament.service';
 import { GenerateLogoService } from 'src/simple-app/features/generate-image/generate-logo/generate-logo-service';
-import { getCountriesForTimezone, getCurrencyCode } from 'src/simple-app/.core/utils/locale-tool';
+import { getCountriesForTimezone, getCurrencyCode } from 'src/simple-app/_core/utils/locale-tool';
 
 
 @Injectable()

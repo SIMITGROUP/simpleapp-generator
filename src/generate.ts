@@ -360,9 +360,9 @@ const generateSchema = (
         // log.info("process nest: ",docname," :",filename)
         if (autogeneratetypes.includes(filecategory)) {
           //multiple files in folder, append s at folder name
-          let storein = `${backendTargetFolder}/.resources/${resourceFileName}`;
+          let storein = `${backendTargetFolder}/_resources/${resourceFileName}`;
           if(systemResources.includes(docname)){
-            storein=`${backendTargetFolder}/.core/resources/${resourceFileName}`
+            storein=`${backendTargetFolder}/_core/resources/${resourceFileName}`
           }
           const targetfile = `${storein}/${resourceFileName}.${filecategory}.${filetype}`;
           if (!existsSync(storein)) {

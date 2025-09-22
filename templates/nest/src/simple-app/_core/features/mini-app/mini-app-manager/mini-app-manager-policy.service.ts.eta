@@ -1,0 +1,49 @@
+import { Injectable } from '@nestjs/common';
+import _ from 'lodash';
+import { MiniAppStatusEnum } from 'src/simple-app/_core/resources/mini-app/mini-app.enum';
+import { PolicyService } from 'src/simple-app/_core/features/policy/policy.service';
+import { Role } from 'src/simple-app/_core/features/auth/role-guard/roles.enum';
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
+import { MiniApp } from '../dto';
+import * as licenseTypes from 'src/simple-app/config/license-types';
+@Injectable()
+export class MiniAppManagerPolicyService {
+  readonly _RELEASED_STATUSES = [MiniAppStatusEnum.PUBLISHED];
+
+  constructor(private readonly policyService: PolicyService) {}
+
+  canInstall(appUser: UserContext) {
+    return this.policyService.can(appUser, Role.MiniAppInstallation_create);
+  }
+
+  canUninstall(appUser: UserContext) {
+    return this.policyService.can(appUser, Role.MiniAppInstallation_update);
+  }
+
+  canUpdateSetting(appUser: UserContext) {
+    return this.policyService.can(appUser, Role.MiniAppInstallation_update);
+  }
+
+  hasFeature(appUser: UserContext) {
+    return this.policyService.hasFeature(appUser, 'miniApp');
+  }
+
+  hasRequiredPlan(appUser: UserContext, miniApp: MiniApp) {
+    const currentLicense = appUser.tenantInfo?.license ?? 'free';
+    // const requiredPlans = miniApp.access.requiredPlans ?? [];
+
+    if (licenseTypes[currentLicense]) {
+      const licenseSetting = licenseTypes[currentLicense]();
+      return licenseSetting?.features?.advance?.features?.miniApp ?? false;
+    } else {
+      return false;
+    }
+    // if (_.isEmpty(requiredPlans)) return true;
+
+    // return requiredPlans.includes(currentPlan);
+  }
+
+  isMiniAppRealeased(status: MiniAppStatusEnum) {
+    return this._RELEASED_STATUSES.includes(status);
+  }
+}

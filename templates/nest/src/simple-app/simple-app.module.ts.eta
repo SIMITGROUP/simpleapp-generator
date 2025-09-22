@@ -5,8 +5,8 @@
  * Author: Ks Tan
  */
 import { Module } from '@nestjs/common';
-import {SimpleAppCoreModule} from './.core/simple-app-core.module'
-import {SimpleAppResourcesModule} from './.resources/resources.module'
+import {SimpleAppCoreModule} from './_core/simple-app-core.module'
+import {SimpleAppResourcesModule} from './_resources/resources.module'
 import {SimpleAppEventsModule} from './events/events.module'
 import {SimpleAppFeaturesModule} from './features/features.module'
 

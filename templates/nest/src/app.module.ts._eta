@@ -21,13 +21,13 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bullmq';
 
 import { SimpleAppModule } from './simple-app/simple-app.module';
-import { SimpleAppInterceptor } from './simple-app/.core/framework/simple-app.interceptor';
-import { SimpleAppMiddleware } from './simple-app/.core/framework/simple-app.middleware';
-import { CustomKeycloakGuard } from './simple-app/.core/features/auth/keycloak/keycloak.guard';
-import { RolesGuard } from './simple-app/.core/features/auth/role-guard/roles.guard';
+import { SimpleAppInterceptor } from './simple-app/_core/framework/simple-app.interceptor';
+import { SimpleAppMiddleware } from './simple-app/_core/framework/simple-app.middleware';
+import { CustomKeycloakGuard } from './simple-app/_core/features/auth/keycloak/keycloak.guard';
+import { RolesGuard } from './simple-app/_core/features/auth/role-guard/roles.guard';
 
 
-// import { UserModule } from './simple-app/.core/resources/user/user.module';
+// import { UserModule } from './simple-app/_core/resources/user/user.module';
 
 @Module({
   imports: [

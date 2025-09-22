@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { PermissionEventService } from './permission-event.service';
-import { PermissionModule } from 'src/simple-app/.core/resources/permission/permission.module';
+import { PermissionModule } from 'src/simple-app/_core/resources/permission/permission.module';
 @Module({
   imports: [PermissionModule],
   controllers: [],

@@ -25,15 +25,15 @@
   }
   
 const kebabname =  camelToKebab(it.resourceName) 
-let filepath = `src/simple-app/.resources/${kebabname}/${kebabname}.service`
+let filepath = `src/simple-app/_resources/${kebabname}/${kebabname}.service`
 if(getSystemResources().includes(it.resourceName.toLowerCase())){
-    filepath = `src/simple-app/.core/resources/${kebabname}/${kebabname}.service`
+    filepath = `src/simple-app/_core/resources/${kebabname}/${kebabname}.service`
 }
 %>
 
 
 import { Injectable } from '@nestjs/common';
-import { UserContext } from 'src/simple-app/.core/features/user-context/user.context';
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import * as schema from './<%= camelToKebab(it.resourceName)%>-api.schema'
 import { <%= it.typename%>Service }from '<%= filepath%>'; 
 
@@ -72,9 +72,9 @@ export class <%= (it.typename)%>ApiService  {
          ){
 
            <%if(api.action=='getPhoto'){%>
-            const resultResult:Buffer= Buffer.from("DummyStringConvertAsPhoto");
+            const resultResult:Buffer= Buffer.from("DummyStringConvertAsPhoto"); 
           <%}else{%>
-            const resultResult:<%= getFieldType('type',api.responseType,api.action)%> = <%= api.responseType.substr(0,1)=='[' ? '[]' : '{}'%>
+            const resultResult:<%= getFieldType('type',api.responseType,api.action)%> = <%= api.responseType.substr(0,1)=='[' ? '[]' : '{}'%> 
           <%}%>
             return resultResult
     

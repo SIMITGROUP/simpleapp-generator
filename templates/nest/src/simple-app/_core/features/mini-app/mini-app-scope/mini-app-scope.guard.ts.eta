@@ -1,0 +1,43 @@
+import { CanActivate, ExecutionContext, Injectable, ForbiddenException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
+import { MINIAPP_SCOPE_KEY } from './mini-app-scope.decorator';
+import { MiniAppScopeService } from './mini-app-scope.service';
+import { TUserType } from 'src/simple-app/_core/framework/schemas';
+import { GqlContextType } from '@nestjs/graphql';
+
+@Injectable()
+export class MiniAppScopeGuard implements CanActivate {
+  private readonly _miniAppUserTypes: TUserType[] = ['miniApi', 'miniAppSdk'];
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly miniAppScopeService: MiniAppScopeService,
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    if (context.getType<GqlContextType>() === 'graphql') {
+      return true;
+    }
+
+    const req = context.switchToHttp().getRequest();
+    const appUser: UserContext = req?.sessionuser;
+    if (!appUser) {
+      throw new BadRequestException('User Context Not Found');
+    }
+
+    // Not Mini API Request, Allow To Proceed
+    if (!this._miniAppUserTypes.includes(appUser.getUserType())) {
+      return true;
+    }
+
+    const requiredScope = this.reflector.get<string>(MINIAPP_SCOPE_KEY, context.getHandler());
+    if (!requiredScope) {
+      // Not Defined @MiniAppScope('xxx'), Not Allowed To Call This API
+      throw new ForbiddenException('You are not allowed to call this protected api.');
+    }
+
+    await this.miniAppScopeService.assertHasScope(appUser, requiredScope, req);
+
+    return true;
+  }
+}

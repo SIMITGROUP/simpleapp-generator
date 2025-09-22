@@ -11,9 +11,9 @@ import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 
 <%
 const kebabname =  camelToKebab(it.resourceName) 
-let filepath = `src/simple-app/.resources/${kebabname}/${kebabname}.schema`
+let filepath = `src/simple-app/_resources/${kebabname}/${kebabname}.schema`
 if(getSystemResources().includes(it.resourceName.toLowerCase())){
-    filepath = `src/simple-app/.core/resources/${kebabname}/${kebabname}.schema`
+    filepath = `src/simple-app/_core/resources/${kebabname}/${kebabname}.schema`
 }
 %>
 
