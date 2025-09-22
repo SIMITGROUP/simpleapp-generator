@@ -20,10 +20,14 @@
  * last change 2024-03-17
  * Author: Ks Tan
  */
-
-watch(()=>useRoute().params['xorg'],async (newval,oldvalue)=>{
-  await reloadUserStore()  
+let currentXorg = getCurrentXorg()
+watch(()=>useRoute().fullPath,async (newval,oldvalue)=>{
+   if(getCurrentXorg()!=currentXorg){
+      currentXorg = getCurrentXorg()      
+      await reloadUserStore()  
+   }
   if(getPathPara('xorg','')!=''){
+  
     if(!getUserProfile()?.currentGroup) goTo('pickgroup')
     setGraphqlServer()
   }  

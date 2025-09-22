@@ -1,3 +1,6 @@
+[2.0.0l-alpha]
+1. switch organization/branch no reload mini-app bugs
+
 [2.0.0k-alpha]
 1. change .core/.resources become _core/_resources to prevent vscode cant index
 

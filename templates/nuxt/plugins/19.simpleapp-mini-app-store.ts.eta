@@ -21,9 +21,9 @@ export default defineNuxtPlugin(async () => {
    */
   const MINI_APP_PAGE_PATH_PREFIX = "miniapp";
 
-  const config = getAxiosConfig();
+  
 
-  const miniAppManager = new MINIAPPMANAGERApi(config);
+  
 
   const MINI_APP_BUILT_IN_SETTING_NAME = "mini-app-setting";
 
@@ -59,7 +59,11 @@ export default defineNuxtPlugin(async () => {
             });
         });
       },
-
+      getMiniAppManager : ()=>{
+        const config = getAxiosConfig();
+        const miniAppManager = new MINIAPPMANAGERApi(config);
+        return miniAppManager
+      },
       showMiniAppMoreMenuButton: (state) => {
         if (!state.permissions.hasMiniAppFeature) {
           return false;
@@ -322,10 +326,11 @@ export default defineNuxtPlugin(async () => {
 
       // ============================ Load Function ============================
       async loadInstalledMiniApps() {
-        this.isFetchingInstalledMiniApps = true;
-
-        const resp = await miniAppManager
-          .runGetInstalledMiniApps()
+        this.isFetchingInstalledMiniApps = true;        
+        const resp = await this.getMiniAppManager
+          .runGetInstalledMiniApps({
+            
+          })
           .then((res) => {
             return res.data;
           })
@@ -340,7 +345,7 @@ export default defineNuxtPlugin(async () => {
       },
 
       async loadMiniAppDetail(miniAppCode: string) {
-        return await miniAppManager
+        return await this.getMiniAppManager
           .runGetMiniAppDetail(miniAppCode)
           .then((res) => {
             return res.data;
@@ -351,7 +356,7 @@ export default defineNuxtPlugin(async () => {
       },
 
       async loadCategorizedMiniApps() {
-        return await miniAppManager
+        return await this.getMiniAppManager
           .runGetCategorizedMiniApps()
           .then((res) => {
             return res.data;
@@ -411,7 +416,7 @@ export default defineNuxtPlugin(async () => {
       // ============================ miniApp Action ============================
 
       async installMiniApp(miniAppCode: string) {
-        const miniAppInstallation = await miniAppManager
+        const miniAppInstallation = await this.getMiniAppManager
           .runInstallMiniApp(miniAppCode)
           .then((res) => {
             return res.data;
@@ -426,7 +431,7 @@ export default defineNuxtPlugin(async () => {
       },
 
       async uninstallMiniApp(miniAppCode: string) {
-        const miniAppInstallation = await miniAppManager
+        const miniAppInstallation = await this.getMiniAppManager
           .runUninstallMiniApp(miniAppCode)
           .then((res) => {
             return res.data;
@@ -444,7 +449,7 @@ export default defineNuxtPlugin(async () => {
         miniAppCode: string,
         data: { [key: string]: any },
       ) {
-        const miniAppInstallation = await miniAppManager
+        const miniAppInstallation = await this.getMiniAppManager
           .runUpdateMiniAppSetting(miniAppCode, data)
           .then((res) => {
             return res.data;
