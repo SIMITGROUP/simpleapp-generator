@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { MiniappEnvEnum } from "~/enums/enums.generate";
+import { MiniappEnvEnum } from "~/enums";
 import { Miniapp, MiniAppDetail } from "~/simpleapp/generate/openapi";
 
 const props = defineProps<{

@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { MiniappStatusEnum } from "~/enums/enums.generate";
+import { MiniappStatusEnum } from "~/enums";
 import { MiniAppDetail } from "~/simpleapp/generate/openapi";
 import MiniAppIntegrationItemBadge from "./MiniAppIntegrationItemBadge.vue";
 import MiniAppIcon from "../MiniAppIcon.vue";

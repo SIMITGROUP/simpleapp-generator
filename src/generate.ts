@@ -12,6 +12,7 @@ import {
   RESTMethods
 } from './type';
 import { Logger, ILogObj } from 'tslog';
+const packgedata = require('../package.json');
 
 const log: Logger<ILogObj> = new Logger();
 const clc = require('cli-color');
@@ -825,7 +826,8 @@ const generateSystemFiles = (modules: ModuleObject[], allbpmn) => {
     foreignkeys: allforeignkeys,
     allfields: allfields,
     allbpmn: allbpmn,
-    lang: langdata
+    lang: langdata,
+    version: packgedata.version
   };
 
   Object.getOwnPropertyNames(generateTypes).forEach((foldertype) => {

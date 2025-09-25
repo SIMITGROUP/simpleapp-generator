@@ -9,7 +9,7 @@ import { CreatePayload } from 'src/simple-app/_core/features/event/event.type';
 @Injectable()
 export class PermissionEventService implements EventBeforeCreate<Permission>, EventAfterCreate<Permission> {
   constructor(
-    private permissionSvc: PermissionService,
+    private permissionService: PermissionService,
   ) {}
 
   @OnEvent('permission.before-create')

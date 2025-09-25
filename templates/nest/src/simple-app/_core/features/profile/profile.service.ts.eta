@@ -30,12 +30,12 @@ const Base64URL = require('@darkwolf/base64url');
 export class ProfileService {
   protected logger = new Logger();
   constructor(
-    private usersvc: UserService,
-    private tenantsvc: TenantService,
-    private orgsvc: OrganizationService,
-    private branchsvc: BranchService,
-    private permsvc: PermissionService,
-    private uploadImageSvc: PhotoService,
+    private userService: UserService,
+    private tenantService: TenantService,
+    private orgService: OrganizationService,
+    private branchService: BranchService,
+    private permService: PermissionService,
+    private uploadImageService: PhotoService,
   ) {}
 
   /**
@@ -54,9 +54,8 @@ export class ProfileService {
       this.logger.warn('unknown _id for ', appuser.getUid());
 
       let newprofile;
-      
+
       if (accessTenantId == 0) {
-      
         newprofile = await this.createUserProfile(appuser);
         newprofile['time'] = new Date().toISOString();
         return newprofile;
@@ -82,13 +81,13 @@ export class ProfileService {
       data.orgId = 0;
       data.branchId = 0;
     }
-    const createresult = await this.usersvc.create(appuser, data);
+    const createresult = await this.userService.create(appuser, data);
     const userinfo = await appuser.getUserInfo();
     userinfo._id = createresult._id.toString();
     return userinfo;
   }
 
-  async createTenant(appuser: UserContext, tenantName: string, timeZone: string, utcOffset: number, businessType: string) {
+  async createTenant(appuser: UserContext, tenantName: string, timeZone: string, utcOffset: number, businessType: string,mobileNo:string) {
     // try{
     const timezonedata = countrytimezone.getCountriesForTimezone(timeZone)[0];
     const countryCode = timezonedata['id'];
@@ -113,7 +112,7 @@ export class ProfileService {
       },
     };
     this.logger.log(tenantdata, 'createTenant data');
-    const tenantResult = await this.tenantsvc.create(appuser, tenantdata);
+    const tenantResult = await this.tenantService.create(appuser, tenantdata);
     if (!tenantResult) {
       throw new BadRequestException('Create tenant failed');
     }
@@ -135,7 +134,7 @@ export class ProfileService {
     };
 
     this.logger.log(orgdata, 'createOrg data');
-    const orgResult = await this.orgsvc.create(appuser, orgdata);
+    const orgResult = await this.orgService.create(appuser, orgdata);
     if (!orgResult) {
       throw new BadRequestException('Create Org failed');
     }
@@ -160,8 +159,8 @@ export class ProfileService {
       street2: 'my street 2',
       postcode: '11111',
       city: 'my city',
-      tel: '99999999999',
-      email: 'change-email@email.com',
+      tel: mobileNo,
+      email: appuser.getEmail(),
       region: 'my region',
       country: countryName,
       active: true,
@@ -171,7 +170,7 @@ export class ProfileService {
     };
     this.logger.log(branchdata, 'createbranch data');
 
-    const branchResult = await this.branchsvc.create(appuser, branchdata);
+    const branchResult = await this.branchService.create(appuser, branchdata);
     if (!branchResult) {
       throw new BadRequestException('Create Branch failed');
     }
@@ -188,7 +187,7 @@ export class ProfileService {
       active: true,
     };
     this.logger.log(userdata, 'createtenant user data');
-    const userResult = await this.usersvc.create(appuser, userdata);
+    const userResult = await this.userService.create(appuser, userdata);
     // if(true ){
     if (!userResult) {
       throw new BadRequestException('Create User failed');
@@ -206,7 +205,7 @@ export class ProfileService {
       groups: ['admin'],
     };
     this.logger.log(permdata, 'create Permission data');
-    const permResult = await this.permsvc.create(appuser, permdata);
+    const permResult = await this.permService.create(appuser, permdata);
     if (!permResult) {
       throw new BadRequestException('Create permResult failed');
     }
@@ -215,10 +214,10 @@ export class ProfileService {
 
     //tenant owner shall map to userId for that tenant
 
-    const tenantUpdateData = await this.tenantsvc.findById(appuser, tenantResult._id);
+    const tenantUpdateData = await this.tenantService.findById(appuser, tenantResult._id);
     this.logger.log(tenantUpdateData, `update tenant owner(${tenantResult._id})`);
     tenantUpdateData.owner._id = userRecordId;
-    const updateTenantOwnerResult = await this.tenantsvc.findIdThenUpdate(appuser, tenantResult._id, tenantUpdateData);
+    const updateTenantOwnerResult = await this.tenantService.findIdThenUpdate(appuser, tenantResult._id, tenantUpdateData);
     if (!updateTenantOwnerResult) {
       throw new BadRequestException('Update tenant owner failed');
     }
@@ -257,14 +256,14 @@ export class ProfileService {
   async runTourComplete(appuser: UserContext, guideName: string) {
     if (!guideName || guideName == '') throw new BadRequestException('undefine guideName');
 
-    const user = await this.usersvc.findById(appuser, appuser.getId());
+    const user = await this.userService.findById(appuser, appuser.getId());
     if (!Array.isArray(user.completedTours)) {
       user.completedTours = [];
     }
 
     if (!user.completedTours.includes(guideName)) {
       user.completedTours.push(guideName);
-      const res = await this.usersvc.findIdThenUpdate(appuser, user._id, user);
+      const res = await this.userService.findIdThenUpdate(appuser, user._id, user);
     }
 
     return 'ok';
@@ -272,7 +271,7 @@ export class ProfileService {
 
   async uploadPhoto(appuser, data: KeyValue) {
     const fileName = `user/${appuser.getUid()}`;
-    await this.uploadImageSvc.sendBase64Image(data.value, fileName, 0);
+    await this.uploadImageService.sendBase64Image(data.value, fileName, 0);
     return 'ok';
   }
 }

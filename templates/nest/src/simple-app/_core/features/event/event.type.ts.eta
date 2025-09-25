@@ -11,6 +11,12 @@ export type UpdatePayload<T> = {
   newData: T;
 };
 
+export type PatchPayload<T> = {
+  id: string;
+  patchData: Partial<T>;
+  prevData: Partial<T>;
+};
+
 export type BeforeSetStatusPayload<T> = {
   docStatus: string;
   prevData: T;

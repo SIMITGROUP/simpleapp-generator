@@ -20,6 +20,6 @@ defineProps<{
 }>();
 
 function handleUpgradePlan() {
-  window.open("https://simitgroup.com/simtraineco/#simtrain-price", "_blank");
+  window.open("https://simtrainsystem.com/#pricing", "_blank");
 }
 </script>

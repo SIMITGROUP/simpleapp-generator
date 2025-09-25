@@ -22,7 +22,12 @@ export class MiniAppBridgeService extends MiniAppBridgeResourceAccessor {
   /**************************************** Bridge Handler ***************************************/
 
   handleBridgeNavigate(message: MiniAppBridgeMessageNavigate) {
-    goTo(message.params.target, message.params.id, message.params.query);
+    goTo(
+      message.params.target,
+      message.params.id,
+      message.params.query,
+      message.params.options,
+    );
   }
 
   handleBridgeNavigateCurrentMiniApp(
@@ -40,7 +45,7 @@ export class MiniAppBridgeService extends MiniAppBridgeResourceAccessor {
       targetUrl = `${targetUrl}/${message.params.target}`;
     }
 
-    goTo(targetUrl, undefined, message.params.query);
+    goTo(targetUrl, undefined, message.params.query, message.params.options);
   }
 
   handleBridgeOpenOnScreenResourceForm(

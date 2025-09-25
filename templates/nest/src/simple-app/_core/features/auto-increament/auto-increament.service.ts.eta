@@ -22,8 +22,7 @@ export class AutoIncreamentService  {
   async runGenerateNextNo(appUser: UserContext, collection: string, field: string):Promise<AutoIncreamentData> {
     // console.log('run generate');
 
-    const res = await this.autoIncreamentModel.find({
-      branchId: appUser.branchId,
+    const res = await this.autoIncreamentModel.find({      
       collectionName: collection,
       fieldName: field,
     });

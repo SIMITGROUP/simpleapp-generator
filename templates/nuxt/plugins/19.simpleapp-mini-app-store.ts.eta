@@ -13,7 +13,7 @@ import {
   MINIAPPMANAGERApi,
 } from "~/simpleapp/generate/openapi";
 import { MiniAppFormWithMiniAppCode } from "~/simpleapp/generate/features/miniApp/app/types/miniApp";
-import { MiniappEnvEnum } from "~/enums/enums.generate";
+import { MiniappEnvEnum } from "~/enums";
 
 export default defineNuxtPlugin(async () => {
   /**

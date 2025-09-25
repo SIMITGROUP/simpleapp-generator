@@ -1,3 +1,9 @@
+[2.0.0m-alpha]
+1. support before/after patch resource
+2. fix auto increament bugs cause cannot create branch and tenant
+3. tiny improvement on variable name
+4. plenty of misc enhancement and bug fix
+
 [2.0.0l-alpha]
 1. switch organization/branch no reload mini-app bugs
 

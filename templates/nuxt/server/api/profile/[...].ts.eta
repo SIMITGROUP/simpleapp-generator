@@ -62,7 +62,7 @@ export default defineEventHandler(async (event:any) => {
         }
 
         if(documentLink=='avatar' ){
-            axiosConfig.url = pathJoin([useRuntimeConfig().public.avatarUrl, documentLink]);
+            axiosConfig.url = pathJoin([useRuntimeConfig().public.imageUrl, documentLink]);
             delete axiosConfig.params
         }
         // console.log("axiosConfig",axiosConfig)

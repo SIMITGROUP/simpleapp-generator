@@ -58,7 +58,7 @@ const apiname = '<%= it.typename %>'.toUpperCase();
 @Controller(apiname.toLowerCase())
 export class <%= it.typename %>Controller extends SimpleAppController<
   <%= it.typename %>Service,  
-  schemas.<%= it.typename%>,
+  schemas.<%= it.typename%>
 > {
   constructor(service: <%= it.typename %>Service) {
     super(service);

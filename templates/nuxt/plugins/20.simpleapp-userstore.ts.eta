@@ -30,9 +30,9 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       currency: ref(""),
       country: ref(""),
       offsetMinute: ref(0),
-      tenantInfo: ref<Tenant>(),
-      orgInfo: ref<Organization>(),
-      branchInfo: ref<Branch>(),
+      tenantInfo: ref<Tenant>({} as Tenant),
+      orgInfo: ref<Organization>({} as Organization),
+      branchInfo: ref<Branch>({} as Branch),
       uid: ref(""),
       email: ref(""),
       fullName: ref(""),
@@ -71,39 +71,44 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         }
         return await new PROFILEApi(undefined, apiurl, $axios)
           .getProfile()
-          .then((res: AxiosResponse) => {            
-            if (!res) {
+          .then((tmp: AxiosResponse) => {            
+            if (!tmp) {
               return;
             }
-            this._id = res.data._id;
-            this.uName = res.data.uName;
-            this.sessionId = res.data.sessionId;
-            this.tenantId = res.data.tenantId;
-            this.orgId = res.data.orgId;
-            this.orgRecordId = res.data.orgRecordId;
-            this.branchId = res.data.branchId;
-            this.branchRecordId = res.data.branchRecordId;
-            this.branchCode = res.data.branchCode;
-            this.branchName = res.data.branchName;
-            this.orgCode = res.data.orgCode;
-            this.orgName = res.data.orgName;
-            this.timeZone = res.data.timeZone;
-            this.currency = res.data.currency;
-            this.country = res.data.country;
-            this.offsetMinute = res.data.offsetMinute;
-            this.uid = res.data.uid;
-            this.email = res.data.email;
-            this.fullName = res.data.fullName;
-            this.branches = res.data.branches;
-            this.groups = res.data.groups;
-            this.roles = res.data.roles;
-            this.time = res.data.time;
-            this.xOrg = res.data.xOrg;
-            this.invites = res.data.invites;
-            this.moreProps = res.data.moreProps;
-            // this.package = res.data.moreProps.package;
-            // this.appintegration.einvoice = res.data.appintegration.einvoice;
-            // this.appintegration.simbiz6 = res.data.appintegration.simbiz6;
+            const res = tmp.data
+            
+            this._id = res._id;
+            this.uName = res.uName;
+            this.sessionId = res.sessionId;
+            this.tenantId = res.tenantId;
+            this.orgId = res.orgId;
+            this.orgRecordId = res.orgRecordId;
+            this.branchId = res.branchId;
+            this.branchRecordId = res.branchRecordId;
+            this.branchCode = res.branchCode;
+            this.branchName = res.branchName;
+            this.orgCode = res.orgCode;
+            this.orgName = res.orgName;
+            this.timeZone = res.timeZone;
+            this.currency = res.currency;
+            this.country = res.country;
+            this.offsetMinute = res.offsetMinute;
+            this.tenantInfo = res?.tenantInfo;
+            this.orgInfo = res?.orgInfo;
+            this.branchInfo = res?.branchInfo;
+            this.uid = res.uid;
+            this.email = res.email;
+            this.fullName = res.fullName;
+            this.branches = res.branches;
+            this.groups = res.groups;
+            this.roles = res.roles;
+            this.time = res.time;
+            this.xOrg = res.xOrg;
+            this.invites = res.invites;
+            this.moreProps = res.moreProps;
+            // this.package = res.moreProps.package;
+            // this.appintegration.einvoice = res.appintegration.einvoice;
+            // this.appintegration.simbiz6 = res.appintegration.simbiz6;
             let cachegroup = useCookie("currentGroup").value ?? "";
             if (!this.groups || !this.groups.includes(cachegroup)) {
               cachegroup = "";
@@ -267,7 +272,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         navigateTo(tourl, { external: true });
       },
       getUserInfo() {
-        const userinfo: UserProfile = {
+        const userinfo: UserContextInfo & {currentGroup:string} = {
           _id: this._id,
           sessionId: this.sessionId,
           tenantId: this.tenantId,
@@ -286,6 +291,10 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           timeZone: this.timeZone,
           country: this.country,
           offsetMinute: this.offsetMinute,
+          tenantInfo: this.tenantInfo,
+          orgInfo: this.orgInfo,
+          branchInfo:this.branchInfo,
+
           fullName: this.fullName,
           branches: this.branches ?? [],
           invites: this.invites ?? [],

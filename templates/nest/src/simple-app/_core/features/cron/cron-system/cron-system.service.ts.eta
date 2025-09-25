@@ -10,9 +10,9 @@ export class CronSystemService extends SimpleAppCronBaseClass{
   constructor(
     @InjectModel('ApiEvent') private apiEventModel: Model<ApiEvent>,
     @InjectModel('QueueJob') private queueJobModel: Model<QueueJob>, 
-    robotUserSvc:SimpleAppRobotUserService   
+    robotUserService:SimpleAppRobotUserService   
   ) {
-    super(robotUserSvc)
+    super(robotUserService)
   }
   
   @Cron('0 1 * * *')

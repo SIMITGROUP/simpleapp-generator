@@ -63,7 +63,7 @@ export class SimpleAppService<T extends SchemaFields> {
   protected withDocNumberFormat = false;
   protected foreignkeys = {};
   private eventEmitter: EventEmitter2;
-  private logSvc: SimpleAppLogService;
+  private logService: SimpleAppLogService;
   // protected userprovider = new UserContext() ;
 
   constructor(
@@ -73,7 +73,7 @@ export class SimpleAppService<T extends SchemaFields> {
     isolationtype: IsolationType = IsolationType.org,
     eventEmitter: EventEmitter2,
     docnogenerator: SimpleAppDocumentNoFormatService,
-    logSvc: SimpleAppLogService,
+    logService: SimpleAppLogService,
     runWebHook: RunWebhookService,
   ) {
     // console.log("-------init simpleapp service abstract class -------userprovider=",typeof this.userprovider)
@@ -83,7 +83,7 @@ export class SimpleAppService<T extends SchemaFields> {
     this.doc = newdoc;
     this.docnogenerator = docnogenerator;
     this.isolationtype = isolationtype;
-    this.logSvc = logSvc;
+    this.logService = logService;
     this.runWebHook = runWebHook;
     // this.tenantdoc = tenantdoc
   }
@@ -479,16 +479,14 @@ export class SimpleAppService<T extends SchemaFields> {
       if (dbsession && !dbsession.inTransaction()) {
         dbsession.startTransaction({ readPreference: 'primary' });
       }
-      
-      try{
+
+      try {
         const result = await this.doc.insertMany(datas, { session: dbsession });
-        await this.addManyAuditEvents(appuser, this.documentName, 'createMany', datas);  
+        await this.addManyAuditEvents(appuser, this.documentName, 'createMany', datas);
         return result;
-      }catch(e){
-        throw e
+      } catch (e) {
+        throw e;
       }
-      
-      
     } else {
       throw new BadRequestException(this.getDocumentType() + ': create many only support array');
     }
@@ -600,7 +598,7 @@ export class SimpleAppService<T extends SchemaFields> {
       appuser.addInsertedRecordId(this.documentName, result._id);
     } catch (err) {
       this.logger.error(err);
-      throw err
+      throw err;
     }
 
     try {
@@ -786,7 +784,7 @@ export class SimpleAppService<T extends SchemaFields> {
       await this.identifyForeignKeys(appuser, data);
 
       //new way of hook
-      await this.runEvent(appuser, `${this.documentName}.beforeUpdate`, { id: id, prevData: existingdata, newData: data }, false);
+      await this.runEvent(appuser, this.setHookName('beforeUpdate'), { id: id, prevData: existingdata, newData: data }, false);
 
       // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appuser, id, existingdata, data);
 
@@ -845,7 +843,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       await this.identifyForeignKeys(appuser, data);
 
-      await this.runEvent(appuser, `${this.documentName}.beforeUpdate`, { data: data }, false);
+      await this.runEvent(appuser, this.setHookName('beforeUpdate'), { data: data }, false);
 
       // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appuser, id, existingdata, data);
 
@@ -904,7 +902,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       //patch not suitable trigger afterupdate
       // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appuser, id, existingdata, data);
-
+      await this.runEvent(appuser, this.setHookName('beforePatch'), { id: id, patchData: data,prevData:existingdata }, false);
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction()) {
         dbsession.startTransaction({ readPreference: 'primary' });
@@ -937,7 +935,7 @@ export class SimpleAppService<T extends SchemaFields> {
         await this.addAuditEvent(appuser, this.documentName, id, 'patch', data);
       }
       appuser.addUpdatedRecordId(this.documentName, data._id);
-
+      await this.runEvent(appuser, this.setHookName('afterPatch'), { id: id, patchData: data, prevData:existingdata }, false);
       return result; //await this.findById(appuser, id);
     } catch (err) {
       this.logger.error(err.message, 'findIdThenPath error');
@@ -1092,11 +1090,13 @@ export class SimpleAppService<T extends SchemaFields> {
    * @param      {any}          data       The data
    * @return     {Promise}      { description_of_the_return_value }
    */
-  async runEvent(appuser: UserContext, eventName: string, payloads: any, enforce: boolean = true) {
+  async runEvent(appuser: UserContext, eventName: string, payloads: any, enforce: boolean = true) {    
     try {
       if (enforce && !this.eventEmitter.hasListeners(eventName)) {
         throw new InternalServerErrorException(`${eventName} seems no listener`);
       } else if (this.eventEmitter.hasListeners(eventName)) {
+
+        console.log("run eventName",eventName)
         const res = await this.eventEmitter.emitAsync(eventName, appuser, payloads);
 
         if (!res) {
@@ -1298,9 +1298,9 @@ export class SimpleAppService<T extends SchemaFields> {
   }
 
   async addAuditEvent(appUser: UserContext, documentName: string, id: string, eventType: string, data: any) {
-    await this.logSvc.addEvent(appUser, documentName, id, eventType, data);
+    await this.logService.addEvent(appUser, documentName, id, eventType, data);
   }
   async addManyAuditEvents(appUser: UserContext, documentName: string, eventType: string, datas: any) {
-    await this.logSvc.addManyEvents(appUser, documentName, eventType, datas);
+    await this.logService.addManyEvents(appUser, documentName, eventType, datas);
   }
 }

@@ -12,15 +12,15 @@ import { GenerateLogoService } from 'src/simple-app/features/generate-image/gene
 @Injectable()
 export class BranchEventService implements EventBeforeCreate<Branch>, EventAfterCreate<Branch> {
   constructor(
-    private branchSvc: BranchService,
-    private autoIncreamentSvc: AutoIncreamentService,
-    private docNoGeneratorSvc: DocumentNoFormatService,
-    private generateLogoSvc: GenerateLogoService,
+    private branchService: BranchService,
+    private autoIncreamentService: AutoIncreamentService,
+    private docNoGeneratorService: DocumentNoFormatService,
+    private generateLogoService: GenerateLogoService,
   ) {}
 
   @OnEvent('branch.before-create')
   async beforeCreate(appUser: UserContext, payload: CreatePayload<Branch>) {
-    const searchresult = await this.autoIncreamentSvc.runGenerateNextNo(appUser, 'branch', 'branchId');
+    const searchresult = await this.autoIncreamentService.runGenerateNextNo(appUser, 'branch', 'branchId');
     payload.data.branchId = searchresult.nextNo;
     console.log('branch.before-create', payload);
   }
@@ -33,8 +33,8 @@ export class BranchEventService implements EventBeforeCreate<Branch>, EventAfter
         throw new BadRequestException('Create branch failed due to branchId=0')
       }
 
-      await this.docNoGeneratorSvc.generateBranchDefaultDocNumbers(appUser, data);
-      await this.generateLogoSvc.generateLogo(appUser, data.branchName, data._id, data.tenantId, data.orgId, data.branchId);
+      await this.docNoGeneratorService.generateBranchDefaultDocNumbers(appUser, data);
+      await this.generateLogoService.generateLogo(appUser, data.branchName, data._id, data.tenantId, data.orgId, data.branchId);
     }catch(e){
       return e
     }

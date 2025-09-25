@@ -214,10 +214,10 @@ export class UserContext extends UserContextInfo {
     this.setXOrg(xOrg);
     await this.setUserToken(tokenstr);
     this.setUserType('normal');
-    // branchId: this.getBranchId(), active: true 
+    // branchId: this.getBranchId(), active: true
     const wh = await webhookModel.find({});
     if (Array.isArray(wh) && wh.length > 0) {
-      this.webhooks = this.webhooks.concat(wh);      
+      this.webhooks = this.webhooks.concat(wh);
     }
   };
 
@@ -492,7 +492,7 @@ export class UserContext extends UserContextInfo {
     this.ssoACL = <Record<string, { roles: string[] }>>tokeninfo?.resource_access ?? {};
     this.logger.debug(`User found ${this.uid}`);
 
-    const userProfile = await this.obtainProfileFromDB();    
+    const userProfile = await this.obtainProfileFromDB();
     if (userProfile) {
       this.logger.debug(`User ${this.uid} exists in tenant (${this.tenantId})`);
 
@@ -523,6 +523,19 @@ export class UserContext extends UserContextInfo {
         support: false,
       };
       this.roles = userProfile['roles'] ?? [Role.Everyone, Role.User];
+
+      // console.log("rolegroups",rolegroups)
+      for (const group of this.groups) {
+        const roles: Role[] = rolegroups[group]()
+        //(<() => Role[]>rolegroups[group])();
+        for (let r = 0; r < roles.length; r++) {
+          if (!this.roles.includes(roles[r])) {
+            this.roles.push(roles[r]);
+          }
+        }
+      }
+
+
       this.moreProps = this.setMoreProps(userProfile);
       // this.package = userProfile['package'];
       // this.appintegration = await this.setAppIntegration();
@@ -534,7 +547,7 @@ export class UserContext extends UserContextInfo {
 
     if (this.isRealmAdmin() && !this.roles.includes(Role.SuperAdmin)) {
       this.roles.push(Role.SuperAdmin);
-    }    
+    }
     // this.logger.verbose(`User ${this.uid} have _id (${this.getId()}), groups (${this.groups.join(',')}) and roles (${this.getRoles().join(',')}).`);
   };
 
@@ -922,7 +935,6 @@ export class UserContext extends UserContextInfo {
       //   }
     }
 
-    
     return results;
   }
 

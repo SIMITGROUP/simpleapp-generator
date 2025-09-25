@@ -9,13 +9,13 @@ import { Role } from '../auth/role-guard/roles.enum';
 import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { UserContext } from '../user-context/user.context';
 import { SimpleAppLogService } from './log.service';
-import { AppUser } from '../user-context/appUser.decorator';
+import { AppUser } from '../user-context/appuser.decorator';
 import { DocumentEventListItem } from './schemas';
 @ApiTags('LOG')
 @Controller('/log')
 export class SimpleAppLogController {
   protected logger = new Logger();
-  constructor(private logSvc: SimpleAppLogService) {
+  constructor(private logService: SimpleAppLogService) {
     //console.log("init Profile Controller ")
   }
 
@@ -32,7 +32,7 @@ export class SimpleAppLogController {
   })
   // @ApiResponse({ status: 401, type: Object, description: 'Expired' })
   async searchDocumentEvent(@AppUser() appUser: UserContext, @Param('docName') docName: string, @Param('id') id: string) {
-    const result = await this.logSvc.searchDocumentEvent(appUser, docName, id);
+    const result = await this.logService.searchDocumentEvent(appUser, docName, id);
     if (result) {
       return result;
     } else {

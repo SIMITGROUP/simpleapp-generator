@@ -5,30 +5,25 @@
       #default
       :class="` place-content-center bg-white rounded-md`"
       @image-uploaded="handleBase64"
-      :imagePath="imagepath"
+      :src="`${server}/organizations/${orgId}`"
     >
-      <!-- {{console.log("imagepath",imagepath)}} -->
       <NuxtImg
-        v-if="orgRecordId"
-        class="w-full h-full rounded-md"
+        v-if="orgId"
+        class="w-full h-full rounded-lg"
         :key="imageKey"
-        :src="imagepath"
-        placeholder="/images/organization.png"
-        @error="onError"
+        :src="`${server}/organizations/${orgId}`"
+        :placeholder="`/organizations/${props.orgId}`"
       />
     </ImageToBase64Uploader>
-    <div
-      v-else
-      :class="` inline-block rounded-md bg-white text-black`"
-    >
-      <!-- {{console.log("imagepath",imagepath)}} -->
-
+    <div v-else :class="` inline-block rounded-md bg-white text-black`">
       <NuxtImg
-        v-if="orgRecordId"
-        class="rounded-md min-w-10 min-h-10 h-full"
-        :src="imagepath"
-        placeholder="/images/organization.png"
-        @error="onError"
+        v-if="orgId"
+        class="w-full h-full rounded-lg"
+        :width="size"
+        :height="size"
+        :src="`${server}/organizations/${orgId}`"
+        :key="imageKey"
+        :placeholder="`/organizations/${props.orgId}`"
       />
     </div>
   </div>
@@ -36,42 +31,52 @@
 <script lang="ts" setup>
 import { PHOTOSIZE } from "~/types";
 // import {KeyValue} from ''
+const server = useRuntimeConfig().public.imageUrl;
+console.log("server", server);
+const uploading = ref(false);
+const emits = defineEmits(["upload"]);
 const props = defineProps<{
   changable?: boolean;
+  orgId: number;
   orgRecordId?: string;
   size: PHOTOSIZE;
 }>();
 const imageKey = ref(0);
-const orgRecordId = computed(
-  () => props.orgRecordId ?? getUserProfile()?.orgRecordId,
-);
-const xorgpath = getCurrentXorg() ? `${getCurrentXorg()}/` : "MC0wLTA/";
-const size = props.size ?? PHOTOSIZE.S64;
-const path = useOrganizationInfo().getBranchPhotoUrl(orgRecordId.value, size);
-const imagepath = ref(path)
 
+
+useNuxtApp().$listen("RefreshPhoto", (resource: string[]) => {
+  if (resource[0] == "organization" && resource[1] == props.orgRecordId) {
+    imageKey.value = new Date().getTime();
+  }
+});
 
 watch(
-  () => props.orgRecordId,
+  () => props.orgId,
   () => imageKey.value++,
 );
 const handleBase64 = async (data: string) => {
   const keyvalue = {
-    key: "organizations/" + props.orgRecordId,
+    key: "organizations/" + props.orgId,
     value: data,
+    id: props.orgRecordId,
   };
+  uploading.value = true;
   // console.log("upload logo ", data);
   const uploadok = await useNuxtApp()
     .$OrganizationDoc()
     .getApi()
-    .runUploadPhoto(orgRecordId.value,keyvalue)
+    .runUploadPhoto(<string>props.orgRecordId, keyvalue);
   if (uploadok) {
-    const realpath = `/api/${imagepath}`;
-    await fetch(realpath, { cache: "reload", credentials: "include" });
-    imageKey.value++;
+    imageKey.value = new Date().getTime();
+    uploading.value = false;
+    emits("upload", keyvalue.key);
+    setTimeout(() => {
+      useNuxtApp().$event("RefreshPhoto", [
+        "organization",
+        <string>props.orgRecordId ,
+        keyvalue.key ?? "",
+      ]);
+    }, 1500);
   }
-};
-const onError = () => {
-  imagepath.value = "/images/organization.png";
 };
 </script>

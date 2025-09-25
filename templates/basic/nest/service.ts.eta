@@ -50,10 +50,10 @@ export class <%= it.typename %>Service extends SimpleAppService<schema.<%= it.ty
         @InjectModel('<%= it.typename %>')  mydoc: Model<schema.<%= it.typename %>>,
         event2:EventEmitter2,
         docNoGen:SimpleAppDocumentNoFormatService,
-        logSvc: SimpleAppLogService,
-        webhookSvc:RunWebhookService
+        logService: SimpleAppLogService,
+        webhookService:RunWebhookService
       ) {
-    super('<%= it.doctype.toUpperCase() %>','<%= it.name %>',mydoc,IsolationType.<%=it.isolationtype%>,event2,docNoGen,logSvc,webhookSvc);
+    super('<%= it.doctype.toUpperCase() %>','<%= it.name %>',mydoc,IsolationType.<%=it.isolationtype%>,event2,docNoGen,logService,webhookService);
     this.setSchema(<%= it.typename%>JsonSchema)
     this.setData(defaultValue.Default<%=it.typename%>(crypto.randomUUID()))
     <%if(it.moreAutoComplete.length>0){%>

@@ -5,6 +5,7 @@
  * Author: Ks Tan
  */
 import { Module } from '@nestjs/common';
+import { AdditionalApiModule } from './additional-api.module';
 <% const loadapi = true; %>
 <% for(let i=0;i<it.modules.length; i++){ %>
 <% let obj = it.modules[i]%>
@@ -15,7 +16,7 @@ import { Module } from '@nestjs/common';
 
 
 @Module({
-  imports: [
+  imports: [AdditionalApiModule,
      <% for(let i=0;i<it.modules.length; i++){ %>
       <% let obj = it.modules[i]%>
       <% if( loadapi && obj.api && obj.api.length>0 && !getSystemResources().includes(obj.docname)){%>

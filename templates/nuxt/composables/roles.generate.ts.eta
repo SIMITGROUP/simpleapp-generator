@@ -13,14 +13,14 @@ const allroles:roletype[] = [
     <% for(let i=0;i<it.modules.length; i++){ %>
         <% const m = it.modules[i] %>
         <% const appconfig = m.schema["x-simpleapp-config"] %>                
-        {resource: '<%=m.docname%>', action:'access'},
-        {resource: '<%=m.docname%>', action:'create'},
-        {resource: '<%=m.docname%>', action:'update'},
-        {resource: '<%=m.docname%>', action:'delete'},
-        {resource: '<%=m.docname%>', action:'search'},       
+        {resource: '<%=m.typename%>', action:'access'},
+        {resource: '<%=m.typename%>', action:'create'},
+        {resource: '<%=m.typename%>', action:'update'},
+        {resource: '<%=m.typename%>', action:'delete'},
+        {resource: '<%=m.typename%>', action:'search'},       
         <% if(Array.isArray(appconfig?.allStatus) && appconfig.allStatus.length>0){%> 
         <% for(let sindex=0;sindex<appconfig.allStatus.length;sindex++){%> 
-         {resource: '<%=m.docname%>', action:'<%=appconfig.allStatus[sindex].status%>'},       
+         {resource: '<%=m.typename%>', action:'<%=appconfig.allStatus[sindex].status%>'},       
         <%}%> 
         <%}%> 
     <%}%>

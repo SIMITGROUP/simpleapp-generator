@@ -10,13 +10,13 @@ import { AutoIncreamentService } from 'src/simple-app/_core/features/auto-increa
 @Injectable()
 export class TenantEventService implements EventBeforeCreate<Tenant>, EventAfterCreate<Tenant> {
   constructor(
-    private tenantSvc: TenantService,
-    private autoIncreamentSvc: AutoIncreamentService,
+    private tenantService: TenantService,
+    private autoIncreamentService: AutoIncreamentService,
   ) {}
 
   @OnEvent('tenant.before-create')
   async beforeCreate(appUser: UserContext, payload: CreatePayLoad<Tenant>) {
-    const searchresult = await this.autoIncreamentSvc.runGenerateNextNo(appUser, 'tenant', 'tenantId');
+    const searchresult = await this.autoIncreamentService.runGenerateNextNo(appUser, 'tenant', 'tenantId');
     payload.data.tenantId = searchresult.nextNo;
   }
 

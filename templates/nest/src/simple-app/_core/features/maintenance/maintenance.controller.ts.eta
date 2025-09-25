@@ -17,7 +17,7 @@ import { AppUser } from 'src/simple-app/_core/features/user-context/appuser.deco
 @Roles(Role.SuperAdmin)
 export class MaintenanceController {
   private logger = new Logger();
-  constructor(private readonly maintenanceSvc: MaintenanceService) {}
+  constructor(private readonly maintenanceService: MaintenanceService) {}
 
   @Get('/get-updates')
   @Roles(Role.SuperAdmin)
@@ -27,7 +27,7 @@ export class MaintenanceController {
     type: [schemas.UpgradeScript],
   })
   async getUpdate(@AppUser() appuser: UserContext) {
-    const result = await this.maintenanceSvc.getUpdates(appuser);
+    const result = await this.maintenanceService.getUpdates(appuser);
     return result;
   }
 
@@ -40,7 +40,7 @@ export class MaintenanceController {
     type: [String],
   })
   async runUpdate(@AppUser() appuser: UserContext, @Param('id') id: string) {
-    const result: string = await this.maintenanceSvc.runUpdates(appuser, id);
+    const result: string = await this.maintenanceService.runUpdates(appuser, id);
     return result;
   }
 
@@ -52,7 +52,7 @@ export class MaintenanceController {
     type: Boolean,
   })
   async runGetServiceStatus(@AppUser() appuser: UserContext) {
-    const result: Boolean = await this.maintenanceSvc.runGetServiceStatus(appuser);
+    const result: Boolean = await this.maintenanceService.runGetServiceStatus(appuser);
     return result;
   }
 
@@ -65,7 +65,7 @@ export class MaintenanceController {
     type: String,
   })
   async runStopService(@AppUser() appuser: UserContext) {
-    const result: string = await this.maintenanceSvc.runStopService(appuser);
+    const result: string = await this.maintenanceService.runStopService(appuser);
     return result;
   }
 
@@ -78,7 +78,7 @@ export class MaintenanceController {
     type: String,
   })
   async runStartService(@AppUser() appuser: UserContext) {
-    const result: string = await this.maintenanceSvc.runStartService(appuser);
+    const result: string = await this.maintenanceService.runStartService(appuser);
     return result;
   }
 }

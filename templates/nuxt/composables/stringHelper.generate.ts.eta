@@ -23,7 +23,7 @@ export const md5=(s:string)=>  new Md5().appendStr(s).end()
 // }
 export const getAvatarByUid = (id:string, size?:number):string=>{  
   if(size===undefined)size=160
-  return `${useRuntimeConfig().public.avatarUrl}/${md5(id)}?size=${size}`
+  return `${useRuntimeConfig().public.imageUrl}/id?width=${size}&height=${size}`
 }
 export const updateAvatarVersion = ()=>{
   myAvatarVersion.value++

@@ -9,7 +9,7 @@ import { Role } from '../auth/role-guard/roles.enum';
 import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { UserContext } from '../user-context/user.context';
 import { ProfileService } from './profile.service';
-import { AppUser } from '../user-context/appUser.decorator';
+import { AppUser } from '../user-context/appuser.decorator';
 import { UserContextInfo, TenantPermission, RegTenant, KeyValue } from './profile.schema';
 @ApiTags('PROFILE')
 @Controller('/profile')
@@ -102,7 +102,7 @@ export class ProfileController {
   }
 
   @Post('/tenant')
-  @Roles(Role.Everyone)
+  @Roles(Role.Everyone, Role.User)
   @ApiBody({ description: 'create tenant name', type: RegTenant })
   @ApiOperation({
     operationId: 'createTenant',
@@ -112,11 +112,12 @@ export class ProfileController {
   async createTenant(
     @AppUser() appUser: UserContext,
     @Body('tenantName') tenantName: string,
+    @Body('mobileNo') mobileNo: string,
     @Body('timeZone') timeZone: string,
     @Body('utcOffset') utcOffset: number,
     @Body('businessType') businessType: string,
   ) {
-    const result = await this.profileservice.createTenant(appUser, tenantName, timeZone, utcOffset, businessType);
+    const result = await this.profileservice.createTenant(appUser, tenantName, timeZone, utcOffset, businessType,mobileNo);
     if (result) {
       return result;
     } else {
@@ -125,7 +126,7 @@ export class ProfileController {
   }
 
   @Post('/invitation/:id/:decision')
-  @Roles(Role.Everyone)
+  @Roles(Role.Everyone, Role.User)
   @ApiOperation({
     operationId: 'decideInvitation',
     description: 'accept or reject invitation to tenant',
