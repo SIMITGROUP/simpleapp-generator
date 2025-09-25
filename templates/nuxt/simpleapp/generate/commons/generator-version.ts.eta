@@ -1,1 +1,1 @@
-export generatorVersion='<%=it.version%>'
+export const generatorVersion='<%=it.version%>'

@@ -1,3 +1,7 @@
+[2.0.0n-alpha]
+1. fix bugs on declare generator version
+2. show generator version on swagger ui
+
 [2.0.0m-alpha]
 1. support before/after patch resource
 2. fix auto increament bugs cause cannot create branch and tenant

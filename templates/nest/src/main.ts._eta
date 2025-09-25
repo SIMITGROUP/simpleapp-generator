@@ -9,14 +9,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SimpleAppExceptionFilter } from './simple-app/_core/framework/exception-filter';
 import { HttpAdapterHost } from '@nestjs/core';
-
+import {generatorVersion} from 'src/simple-app/_core/framework/generator-version'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import {writeFileSync} from 'fs';
+import { writeFileSync } from 'fs';
 import { LogLevel } from '@nestjs/common';
 const yaml = require('yaml');
 
 async function bootstrap() {
-  const logs:LogLevel[] = String(process.env.LOGGER).split(',') as LogLevel[]
+  const logs: LogLevel[] = String(process.env.LOGGER).split(',') as LogLevel[];
   const app = await NestFactory.create(AppModule, {
     logger: logs,
   });
@@ -28,7 +28,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle(process.env.PROJECT_NAME)
     .addServer(process.env.BACKEND_URL)
-    .setDescription(process.env.PROJECT_DESCRIPTION)
+    .setDescription(`${process.env.PROJECT_DESCRIPTION} (generator: ${generatorVersion})`)
     .setVersion(process.env.PROJECT_VERSION)
     .addApiKey(
       {
@@ -50,8 +50,8 @@ async function bootstrap() {
         },
       },
       'oauth2',
-    ).
-    addApiKey(
+    )
+    .addApiKey(
       {
         in: 'header',
         name: 'x-api-key',
@@ -59,7 +59,8 @@ async function bootstrap() {
         description: 'optional only use for specal case',
       },
       'x-api-key',
-    ).addApiKey(
+    )
+    .addApiKey(
       {
         in: 'header',
         name: 'x-api-secret',
@@ -77,12 +78,12 @@ async function bootstrap() {
       },
       'x-guest-accesstoken',
     )
-    
+
     .addSecurityRequirements('x-org')
     .addSecurityRequirements('oauth2')
     .addSecurityRequirements('x-api-key')
-    .addSecurityRequirements('x-api-secret')    
-    .addSecurityRequirements('x-guest-accesstoken')    
+    .addSecurityRequirements('x-api-secret')
+    .addSecurityRequirements('x-guest-accesstoken')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document, {
@@ -90,7 +91,7 @@ async function bootstrap() {
   });
 
   writeFileSync('./openapi.yaml', yaml.stringify(document));
-  
+
   await app.listen(process.env.HTTP_PORT ?? 8000); //listen which port
 }
 bootstrap();
