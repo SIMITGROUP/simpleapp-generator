@@ -16,15 +16,13 @@ import addFormats from 'ajv-formats';
 import { FilterQuery, Model, PipelineStage, mongo } from 'mongoose';
 // import { CloudApiService } from 'src/cloudapi/cloudapi.service';
 import { foreignkeys } from '../../features/foreign-key/foreignkeys.dict';
-import { CustomException } from '../custom-exception';
 
 import { camelToKebab } from 'src/simple-app/_core/utils/string-utils';
 import { SimpleAppDocumentNoFormatService } from '../../features/document-no-format/document-no-format.service';
+import { SimpleAppLogService } from '../../features/log/log.service';
 import { UserContext } from '../../features/user-context/user.context';
 import { RunWebhookService } from '../../features/webhook/run-webhook.service';
-import { UniqueKeyExistResponse, DeleteResultType, IsolationType, MoreProjectionType, SchemaFields, TextSearchBody, PatchManyRequest } from '../schemas';
-import { SimpleAppLogService } from '../../features/log/log.service';
-import { ProcessErrorException } from 'src/simple-app/features/exception/process-error.exception';
+import { DeleteResultType, IsolationType, MoreProjectionType, PatchManyRequest, SchemaFields, TextSearchBody, UniqueKeyExistResponse } from '../schemas';
 
 @Injectable()
 export class SimpleAppService<T extends SchemaFields> {
@@ -108,7 +106,7 @@ export class SimpleAppService<T extends SchemaFields> {
   public isReadOnly(): boolean {
     return false;
   }
-  reCalculateValue(data: T) {}
+  reCalculateValue(data: T) { }
   getIsolationFilter = (appuser: UserContext) => {
     let isolationFilter = {};
     switch (this.isolationtype) {
@@ -483,6 +481,10 @@ export class SimpleAppService<T extends SchemaFields> {
       try {
         const result = await this.doc.insertMany(datas, { session: dbsession });
         await this.addManyAuditEvents(appuser, this.documentName, 'createMany', datas);
+        for (const data of datas) {
+          appuser.addInsertedRecordId(this.documentName, data._id);
+        }
+
         return result;
       } catch (e) {
         throw e;
@@ -902,7 +904,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       //patch not suitable trigger afterupdate
       // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appuser, id, existingdata, data);
-      await this.runEvent(appuser, this.setHookName('beforePatch'), { id: id, patchData: data,prevData:existingdata }, false);
+      await this.runEvent(appuser, this.setHookName('beforePatch'), { id: id, patchData: data, prevData: existingdata }, false);
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction()) {
         dbsession.startTransaction({ readPreference: 'primary' });
@@ -935,7 +937,7 @@ export class SimpleAppService<T extends SchemaFields> {
         await this.addAuditEvent(appuser, this.documentName, id, 'patch', data);
       }
       appuser.addUpdatedRecordId(this.documentName, data._id);
-      await this.runEvent(appuser, this.setHookName('afterPatch'), { id: id, patchData: data, prevData:existingdata }, false);
+      await this.runEvent(appuser, this.setHookName('afterPatch'), { id: id, patchData: data, prevData: existingdata }, false);
       return result; //await this.findById(appuser, id);
     } catch (err) {
       this.logger.error(err.message, 'findIdThenPath error');
@@ -1090,13 +1092,12 @@ export class SimpleAppService<T extends SchemaFields> {
    * @param      {any}          data       The data
    * @return     {Promise}      { description_of_the_return_value }
    */
-  async runEvent(appuser: UserContext, eventName: string, payloads: any, enforce: boolean = true) {    
+  async runEvent(appuser: UserContext, eventName: string, payloads: any, enforce: boolean = true) {
     try {
       if (enforce && !this.eventEmitter.hasListeners(eventName)) {
         throw new InternalServerErrorException(`${eventName} seems no listener`);
       } else if (this.eventEmitter.hasListeners(eventName)) {
-
-        console.log("run eventName",eventName)
+        console.log('run eventName', eventName);
         const res = await this.eventEmitter.emitAsync(eventName, appuser, payloads);
 
         if (!res) {

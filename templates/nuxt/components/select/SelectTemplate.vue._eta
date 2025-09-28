@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
     <div class="flex flex-row">
-      <label v-if="!hideLabel" :for="fieldid">
+      <label v-if="!hideLabel" :for="fieldid" class="mr-2 text-xs text-gray-400">
         {{ t(documentName) }}
       </label>
       <div

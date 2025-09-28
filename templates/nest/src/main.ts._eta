@@ -27,7 +27,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle(process.env.PROJECT_NAME)
-    .addServer(process.env.BACKEND_URL)
+    .addServer(process.env.APP_SWAGGER_SERVER_URL)
     .setDescription(`${process.env.PROJECT_DESCRIPTION} (generator: ${generatorVersion})`)
     .setVersion(process.env.PROJECT_VERSION)
     .addApiKey(

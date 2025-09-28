@@ -186,4 +186,33 @@ export class SimpleAppDocumentNoFormatService {
     Object.assign(filter, isolationFilter);
     return await this.docformat.find<DocumentNoFormat>(filter, null, { session: appUser.getDBSession() });
   }
+
+  async requestMultipleNumbers(appUser: UserContext, doctype: string, quantity:number, id: string = '') {
+    doctype = doctype.toUpperCase();
+    const documentNumbers: string[] = []
+    const filter = { docNoType: doctype, active: true };
+    if (id) {
+      filter['_id'] = id;
+    }
+    //
+    Object.assign(filter, appUser.getBranchFilter());
+    const result = await this.docformat.find(filter).session(appUser.getDBSession());
+    if (result && result.length > 0) {
+      const d: DocumentNoFormat = result[0];
+      const recordId = d._id;      
+      
+      for(let i=0;i<quantity;i++){
+        d.nextNumber++
+        const newdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);
+        documentNumbers.push(newdocno)
+
+      }      
+      const updatedata = { nextNumber: d.nextNumber+1 } as DocumentNoFormat;
+      const updateresult = await this.docformat.findByIdAndUpdate(recordId, updatedata).session(appUser.getDBSession());
+
+      return documentNumbers
+    } else {
+      throw new BadRequestException(`No active document number found for ${doctype}. Please update in Settings > Document Numbering Format`);
+    }
+  }
 }

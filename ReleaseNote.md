@@ -1,3 +1,7 @@
+[2.0.0o-alpha]
+1. Fix create many bugs
+2. support request multiple number
+
 [2.0.0n-alpha]
 1. fix bugs on declare generator version
 2. show generator version on swagger ui
