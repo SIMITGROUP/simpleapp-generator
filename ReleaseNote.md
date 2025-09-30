@@ -1,17 +1,16 @@
 [2.0.0r-alpha]
-
 1. Fix Developer Portal
 
 [2.0.0q-alpha]
-
 1. Fixed ts log version
 
 [2.0.0p-alpha]
-
 1. Test
 
-[2.0.0o-alpha]
+[2.0.0p-alpha]
+1. auto add imageUrl for those schema have uploadPhoto
 
+[2.0.0o-alpha]
 1. Fix create many bugs
 2. support request multiple number
 

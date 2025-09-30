@@ -244,6 +244,7 @@ const generateSchema = (
             responseType: 'String',
             description: 'Get photo'
           },)
+    jsonschemas['imageUrl']={type:'string'}
   }
   if(xconfig.uploadPhoto){
     apiSettings.push( {

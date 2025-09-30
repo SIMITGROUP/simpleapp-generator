@@ -9,7 +9,6 @@ import {SimpleAppCoreModule} from './_core/simple-app-core.module'
 import {SimpleAppResourcesModule} from './_resources/resources.module'
 import {SimpleAppEventsModule} from './events/events.module'
 import {SimpleAppFeaturesModule} from './features/features.module'
-
 import { SimpleAppResourceApiModule } from './apis/resource-api.module';
 import { SimpleAppMiniAppsModule } from './mini-apps/mini-apps.module';
 import { SimpleAppQueueConsumersModule } from './queues/queues.module';
