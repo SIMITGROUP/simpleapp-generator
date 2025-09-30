@@ -6,14 +6,17 @@
  */
 
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { Connection, Model } from 'mongoose';
+import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import * as dbupdate from 'src/simple-app/config/db-update';
 import * as schemas from './schemas';
-import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 @Injectable()
 export class MaintenanceService {
-  constructor(@InjectModel('Environment') private sysEnvdoc: Model<schemas.Environment>) {
+  constructor(
+    @InjectModel('Environment') private sysEnvdoc: Model<schemas.Environment>,
+    @InjectConnection() private readonly connection: Connection,
+  ) {
     this.initEnv();
   }
 
@@ -50,7 +53,7 @@ export class MaintenanceService {
   async runUpdates(appuser: UserContext, versionId: string) {
     try {
       if (dbupdate[versionId]) {
-        const result = await dbupdate[versionId]().execute();
+        const result = await dbupdate[versionId]().execute(this.connection);
         return Promise.resolve(result);
       } else {
         throw new BadRequestException(`invalid update script ${versionId}`);

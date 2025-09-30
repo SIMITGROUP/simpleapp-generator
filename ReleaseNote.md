@@ -1,3 +1,7 @@
+[2.0.0t-alpha]
+1. Fix maintenance cannot execute update script
+
+
 [2.0.0r-alpha]
 1. Fix Developer Portal
 
