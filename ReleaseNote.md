@@ -1,73 +1,93 @@
+[2.0.0p-alpha]
+
+1. Test
+
 [2.0.0o-alpha]
+
 1. Fix create many bugs
 2. support request multiple number
 
 [2.0.0n-alpha]
+
 1. fix bugs on declare generator version
 2. show generator version on swagger ui
 
 [2.0.0m-alpha]
+
 1. support before/after patch resource
 2. fix auto increament bugs cause cannot create branch and tenant
 3. tiny improvement on variable name
 4. plenty of misc enhancement and bug fix
 
 [2.0.0l-alpha]
+
 1. switch organization/branch no reload mini-app bugs
 
 [2.0.0k-alpha]
-1. change .core/.resources become _core/_resources to prevent vscode cant index
+
+1. change .core/.resources become \_core/\_resources to prevent vscode cant index
 
 [2.0.0j-alpha]
+
 1. fix webhook no trigger
 
 [2.0.0i-alpha]
+
 1. fix some document no print api available
 
 [2.0.0h-alpha]
+
 1. add software license config folder
 
 [2.0.0g-alpha]
+
 1. fix create many no await cause transaction error
 
 [2.0.0f-alpha]
+
 1. add back document no and webhook
 
-
 [2.0.0e-alpha]
+
 1. add fix frontend ImageAvatar/ImageOrg template and add suitable refresh event.use bunny as image storage
 2. profile allow upload images
 3. prepare a place to access all jsonschemas
-4. 
+4.
 
 [2.0.0d-alpha]
+
 1. provide tenantInfo, orgInfo, branchInfo to frontend
 
 [2.0.0c-alpha]
+
 1. fix profile session keeping error
 
 [2.0.0b-alpha]
-1. fix audit trail 
+
+1. fix audit trail
 2. add patch many api
 3. fix webhook
 
 [2.0.0a-alpha]
+
 1. big restructure of files and folders
 
-
 [1.6.7o-alpha]
+
 1. exclude findIdThenPatch to execute beforeUpdate and afterUpdate
 
 [1.6.7m-alpha]
+
 1. insert many bug fix
 
 [1.6.7l-alpha]
+
 1. insert many support transaction
 
 [1.6.7k-alpha]
+
 1. Add More Setter For User Context
 2. Fix createManyWithId No Use Session
-
 
 [1.6.7j-alpha]
 
