@@ -14,11 +14,39 @@ import { SimpleAppSoftwarePolicyModule } from '../policy/policy.module';
 import { MiniAppManagerBridgeService } from './mini-app-manager/mini-app-manager-bridge.service';
 import { MiniAppManagerEnvProductionService } from './mini-app-manager/mini-app-manager-env-production.service';
 import { MiniAppManagerEnvDevelopmentService } from './mini-app-manager/mini-app-manager-env-development.service';
+import { DeveloperPortalController } from './developer-portal/developer-portal.controller';
+import { DeveloperPortalEnvProductionService } from './developer-portal/developer-portal-env-production.service';
+import { DeveloperPortalEnvDevelopmentService } from './developer-portal/developer-portal-env-development.service';
+import { DeveloperPortalBridgeService } from './developer-portal/developer-portal-bridge.service';
+import { DeveloperPortalService } from './developer-portal/developer-portal.service';
+import { BranchModule } from '@resources/branch/branch.module';
+import { PermissionModule } from '@resources/permission/permission.module';
+import { UserModule } from '@resources/user/user.module';
 
 @Module({
-  imports: [SimpleAppSoftwarePolicyModule,MiniAppInstallationModule,MiniAppModule],
-  controllers: [MiniAppManagerController],
-  providers: [MiniAppManagerService,MiniAppManagerPolicyService,MiniAppManagerEnvProductionService,MiniAppManagerEnvDevelopmentService,MiniAppManagerBridgeService],
-  exports: [MiniAppManagerService,MiniAppManagerPolicyService,MiniAppManagerEnvProductionService,MiniAppManagerEnvDevelopmentService,MiniAppManagerBridgeService],
+  imports: [SimpleAppSoftwarePolicyModule, MiniAppInstallationModule, MiniAppModule, BranchModule, PermissionModule, UserModule],
+  controllers: [MiniAppManagerController, DeveloperPortalController],
+  providers: [
+    MiniAppManagerService,
+    MiniAppManagerPolicyService,
+    MiniAppManagerEnvProductionService,
+    MiniAppManagerEnvDevelopmentService,
+    MiniAppManagerBridgeService,
+    DeveloperPortalService,
+    DeveloperPortalBridgeService,
+    DeveloperPortalEnvDevelopmentService,
+    DeveloperPortalEnvProductionService,
+  ],
+  exports: [
+    MiniAppManagerService,
+    MiniAppManagerPolicyService,
+    MiniAppManagerEnvProductionService,
+    MiniAppManagerEnvDevelopmentService,
+    MiniAppManagerBridgeService,
+    DeveloperPortalService,
+    DeveloperPortalBridgeService,
+    DeveloperPortalEnvDevelopmentService,
+    DeveloperPortalEnvProductionService,
+  ],
 })
 export class SimpleAppMiniAppModule {}

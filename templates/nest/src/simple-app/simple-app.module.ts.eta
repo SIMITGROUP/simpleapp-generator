@@ -12,6 +12,8 @@ import {SimpleAppFeaturesModule} from './features/features.module'
 
 import { SimpleAppResourceApiModule } from './apis/resource-api.module';
 import { SimpleAppMiniAppsModule } from './mini-apps/mini-apps.module';
+import { SimpleAppQueueConsumersModule } from './queues/queues.module';
+import { SimpleAppMiniAppScopeModule } from '@core-features/mini-app/mini-app-scope/mini-app-scope.module';
 
 @Module({
   imports: [
@@ -20,7 +22,9 @@ import { SimpleAppMiniAppsModule } from './mini-apps/mini-apps.module';
     SimpleAppEventsModule,
     SimpleAppResourceApiModule,
     SimpleAppFeaturesModule,
-    SimpleAppMiniAppsModule
+    SimpleAppMiniAppsModule,
+    SimpleAppQueueConsumersModule,
+    SimpleAppMiniAppScopeModule,
   ],
   controllers: [],
   providers: [],
@@ -30,7 +34,9 @@ import { SimpleAppMiniAppsModule } from './mini-apps/mini-apps.module';
     SimpleAppEventsModule,
     SimpleAppResourceApiModule,
     SimpleAppFeaturesModule,
-    SimpleAppMiniAppsModule
+    SimpleAppMiniAppsModule,
+    SimpleAppQueueConsumersModule,
+    SimpleAppMiniAppScopeModule,
   ]
 })
 export class SimpleAppModule {}

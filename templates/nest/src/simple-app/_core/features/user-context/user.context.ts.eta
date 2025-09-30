@@ -526,7 +526,7 @@ export class UserContext extends UserContextInfo {
 
       // console.log("rolegroups",rolegroups)
       for (const group of this.groups) {
-        const roles: Role[] = rolegroups[group]()
+        const roles: Role[] = rolegroups[group]();
         //(<() => Role[]>rolegroups[group])();
         for (let r = 0; r < roles.length; r++) {
           if (!this.roles.includes(roles[r])) {
@@ -534,7 +534,6 @@ export class UserContext extends UserContextInfo {
           }
         }
       }
-
 
       this.moreProps = this.setMoreProps(userProfile);
       // this.package = userProfile['package'];
@@ -1022,39 +1021,61 @@ export class UserContext extends UserContextInfo {
   }
 
   async setUserProfileFromDB() {
-    // const userProfile = await this.obtainProfileFromDB();
-    // if (userProfile) {
-    //   this.logger.debug(`User ${this.uid} exists in tenant (${this.tenantId})`);
-    //   this._id = userProfile._id.toString();
-    //   this.email = userProfile.email ?? '';
-    //   this.uName = userProfile.uname ?? '';
-    //   this.fullName = userProfile.fullname ?? '';
-    //   this.branchCode = userProfile['branchCode'] ?? '';
-    //   this.branchName = userProfile['branchName'] ?? '';
-    //   this.orgCode = userProfile['orgCode'] ?? '';
-    //   this.orgName = userProfile['orgName'] ?? '';
-    //   this.timeZone = userProfile['timeZone'] ?? '';
-    //   this.currency = userProfile['currency'] ?? '';
-    //   this.country = userProfile['country'] ?? '';
-    //   this.offsetMinute = userProfile['offsetMinute'] ?? 0;
-    //   this.orgRecordId = userProfile['orgRecordId'] ?? '';
-    //   this.branchRecordId = userProfile['branchRecordId'] ?? '';
-    //   this.groups = userProfile['groups'] ?? [];
-    //   this.roles = userProfile['roles'] ?? [Role.Everyone, Role.User];
-    //   //more complex
-    //   this.clientSetting = userProfile['clientSetting'] ?? {};
-    //   this.moreProps = this.setMoreProps(userProfile);
-    //   this.package = userProfile['package'];
-    //   // this.appintegration = await this.setAppIntegration();
-    // } else {
-    //   this.logger.debug(`User ${this.uid} not exists in tenant (${this.tenantId})`);
-    //   this.logger.debug(`Set unknown id of current user`);
-    //   this.roles = [Role.Everyone, Role.Unknown];
-    // }
-    // if (this.isRealmAdmin() && !this.roles.includes(Role.SuperAdmin)) {
-    //   this.roles.push(Role.SuperAdmin);
-    // }
-    // this.logger.verbose(`User ${this.uid} have _id (${this.getId()}), groups (${this.groups.join(',')}) and roles (${this.getRoles().join(',')}).`);
+    const userProfile = await this.obtainProfileFromDB();
+    if (userProfile) {
+      this.logger.debug(`User ${this.uid} exists in tenant (${this.tenantId})`);
+
+      this._id = userProfile._id;
+      this.email = userProfile.email ?? '';
+      this.uName = userProfile.uName ?? '';
+      this.fullName = userProfile.fullName ?? '';
+
+      this.branchCode = userProfile['branchCode'] ?? '';
+      this.branchName = userProfile['branchName'] ?? '';
+      this.tenantInfo = userProfile.tenantInfo;
+      this.orgInfo = userProfile.orgInfo;
+      this.branchInfo = userProfile.branchInfo;
+      this.orgCode = userProfile['orgCode'] ?? '';
+      this.orgName = userProfile['orgName'] ?? '';
+      this.timeZone = userProfile['timeZone'] ?? '';
+      this.currency = userProfile['currency'] ?? '';
+      this.country = userProfile['country'] ?? '';
+      this.offsetMinute = userProfile['offsetMinute'] ?? 0;
+      this.orgRecordId = userProfile['orgRecordId'] ?? '';
+      this.branchRecordId = userProfile['branchRecordId'] ?? '';
+      this.invites = userProfile.invites;
+      userProfile['branches'].forEach((b) => {
+        b.xOrg = this.generateXOrg(b.tenantId, b.orgId, b.branchId);
+      });
+      this.branches = userProfile['branches'];
+      this.groups = userProfile['groups'] ?? [];
+      this.clientSetting = userProfile['clientSetting'] ?? {
+        auditTrail: false,
+        disableClassReminder: true,
+        webhook: false,
+        support: false,
+      };
+      this.roles = userProfile['roles'] ?? [Role.Everyone, Role.User];
+
+      for (const group of this.groups) {
+        const roles: Role[] = rolegroups[group]();
+        for (let r = 0; r < roles.length; r++) {
+          if (!this.roles.includes(roles[r])) {
+            this.roles.push(roles[r]);
+          }
+        }
+      }
+
+      this.moreProps = this.setMoreProps(userProfile);
+    } else {
+      this.logger.debug(`User ${this.uid} not exists in tenant (${this.tenantId})`);
+      this.logger.debug(`Set unknown id of current user`);
+      this.roles = [Role.Everyone, Role.Unknown];
+    }
+    if (this.isRealmAdmin() && !this.roles.includes(Role.SuperAdmin)) {
+      this.roles.push(Role.SuperAdmin);
+    }
+    this.logger.verbose(`User ${this.uid} have _id (${this.getId()}), groups (${this.groups.join(',')}) and roles (${this.getRoles().join(',')}).`);
   }
 
   // getAppIntegration = () => this.appintegration;

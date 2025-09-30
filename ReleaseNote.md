@@ -1,3 +1,11 @@
+[2.0.0r-alpha]
+
+1. Fix Developer Portal
+
+[2.0.0q-alpha]
+
+1. Fixed ts log version
+
 [2.0.0p-alpha]
 
 1. Test
