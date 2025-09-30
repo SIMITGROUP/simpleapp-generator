@@ -2,8 +2,8 @@
   const pascalName = upperFirstCase(it.resourceName);
   const apiName = it.typename.toUpperCase() + 'Api';
   const uglyName = upperFirstCase(it.name ?? '');
-  const schemaName = `SimtrainSchema.${uglyName}`;
-  const schemaAutoCompleteName = `SimtrainSchema.${uglyName}AutoComplete`;
+  const schemaName = `SimtrainSchema.${pascalName}Dto`;
+  const schemaAutoCompleteName = `SimtrainSchema.${pascalName}AutoCompleteDto`;
 
   const getTypeName = (typeName) => {
     const systemTypes = ['boolean', 'string', 'number', 'object', 'integer'];
@@ -11,15 +11,19 @@
 
     if(systemTypes.includes(tmpTypeName.toLowerCase())){
         tmpTypeName = upperFirstCase(tmpTypeName.toLowerCase());
+        if(typeName.includes('[')){
+            return `[${tmpTypeName}]`;
+        }
+
+        return tmpTypeName;
     } else {
         tmpTypeName = `SimtrainSchema.${tmpTypeName}`;
-    }
+        if(typeName.includes('[')){
+            return `[${tmpTypeName}Dto]`;
+        }
 
-    if(typeName.includes('[')){
-        return `[${tmpTypeName}]`;
+        return `${tmpTypeName}Dto`;
     }
-
-    return tmpTypeName;
   }
 %>
 
@@ -29,7 +33,7 @@ import { <%= apiName %> } from 'src/openapi/backend-api';
 import { ApiHeader } from 'src/types/api';
 import { getOpenApiConfig } from 'src/utils/api';
 import { ResourceApiListDto } from '../../dto/resource-api.schema';
-import * as SimtrainSchema from '../../simtrain-schema';
+import * as SimtrainSchema from '../../../../openapi/backend-dto/dtos/Api';
 
 @Injectable()
 export class <%= pascalName %>Service {

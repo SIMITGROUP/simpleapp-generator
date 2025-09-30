@@ -4,8 +4,8 @@
   const apiName = it.typename.toUpperCase() + 'Api';
   const titleName = titleCase(pascalName);
   const uglyName = upperFirstCase(it.name ?? '');
-  const schemaName = `SimtrainSchema.${uglyName}`;
-  const schemaAutoCompleteName = `SimtrainSchema.${uglyName}AutoComplete`;
+  const schemaName = `SimtrainSchema.${pascalName}Dto`;
+  const schemaAutoCompleteName = `SimtrainSchema.${pascalName}AutoCompleteDto`;
 
   const serviceVariable = it.resourceName + 'Service';
 
@@ -15,15 +15,19 @@
 
     if(systemTypes.includes(tmpTypeName.toLowerCase())){
         tmpTypeName = upperFirstCase(tmpTypeName.toLowerCase());
+        if(typeName.includes('[')){
+            return `[${tmpTypeName}]`;
+        }
+
+        return tmpTypeName;
     } else {
         tmpTypeName = `SimtrainSchema.${tmpTypeName}`;
-    }
+        if(typeName.includes('[')){
+            return `[${tmpTypeName}Dto]`;
+        }
 
-    if(typeName.includes('[')){
-        return `[${tmpTypeName}]`;
+        return `${tmpTypeName}Dto`;
     }
-
-    return tmpTypeName;
   }
 %>
 
@@ -43,7 +47,7 @@ import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiQuery, PartialType } fr
 import { ApiHeader } from 'src/types/api';
 import { <%= pascalName %>Service } from './<%= kebabName %>.service';
 import { ResourceApiListDto } from '../../dto/resource-api.schema';
-import * as SimtrainSchema from '../../simtrain-schema';
+import * as SimtrainSchema from '../../../../openapi/backend-dto/dtos/Api';
 import { Filter } from 'mongodb';
 
 @ApiTags('<%= titleName %>')
@@ -161,7 +165,7 @@ export class <%= pascalName %>Controller {
                         const partstr = subpath[a];
                         if(partstr.includes(':')) {
                             const paraname = partstr.replace(':','');
-                            paramsWithType.push(`${paraname}: string`);
+                            paramsWithType.push(`@Param('${paraname}') ${paraname}: string`);
                             paramsWithoutType.push(paraname);
                         }
                         }
@@ -170,13 +174,13 @@ export class <%= pascalName %>Controller {
                     if(api.queryPara && api.queryPara.length > 0) {
                         for(let q=0; q < api.queryPara.length; q++) {
                         const qp = api['queryPara'][q];
-                        paramsWithType.push(`${qp}: string`);
+                        paramsWithType.push(`@Query('${qp}') ${qp}: string`);
                         paramsWithoutType.push(qp);
                         }
                     }
 
                     if(hasBody) {
-                        paramsWithType.push(`data: ${getTypeName(api.schema)}`);
+                        paramsWithType.push(`@Body() data: ${getTypeName(api.schema)}`);
                         paramsWithoutType.push('data');
                     }
                 %>
@@ -196,7 +200,7 @@ export class <%= pascalName %>Controller {
                 @ApiResponse({ status: 500, description: 'Internal Error' })
                 async <%= action %>(
                     @Headers() headers: ApiHeader,
-                    <%= paramsWithType.join(',') %>
+                    <%~ paramsWithType.join(',') %>
                 ){
                     return await this.<%= serviceVariable %>.<%= action %>(
                         headers,
