@@ -30,8 +30,27 @@ import _ from 'lodash';
 import * as buildinschemas from './buildinschemas';
 import { JSONSchema7 } from 'json-schema';
 import { generatePrintformat } from './processors/jrxmlbuilder';
-const skipIsolationDocument = ['tenant','organization','branch','permission','user']
-const systemResources = ['user','tenant','organization','branch','permission','keyvaluepair','customfield','miniapp','miniappinstallation','systemmessage','queuejob','documentnoformat']
+const skipIsolationDocument = [
+  'tenant',
+  'organization',
+  'branch',
+  'permission',
+  'user'
+];
+const systemResources = [
+  'user',
+  'tenant',
+  'organization',
+  'branch',
+  'permission',
+  'keyvaluepair',
+  'customfield',
+  'miniapp',
+  'miniappinstallation',
+  'systemmessage',
+  'queuejob',
+  'documentnoformat'
+];
 const { Eta } = require('eta');
 const { capitalizeFirstLetter } = require('./libs');
 // const X_DOCUMENT_TYPE='x-document-type'
@@ -106,18 +125,18 @@ export const run = async (
   for (let j = 0; j < files.length; j++) {
     const file = files[j];
     const filenamearr = file.split('.');
-    if (_.last(filenamearr) != 'json'){ 
-      log.warn(file," skip")
+    if (_.last(filenamearr) != 'json') {
+      log.warn(file, ' skip');
       continue;
     }
-    
+
     const fullfilename = `${configs.jsonschemaFolder}/${file}`;
     try {
       const jsoncontent = readFileSync(fullfilename, 'utf-8');
       // log.info("Process ",fullfilename)
       // console.log("=====>>>>>",fullfilename)
       const jsonschema = JSON.parse(jsoncontent);
-      const schemaconfig:SchemaConfig = jsonschema['x-simpleapp-config'];
+      const schemaconfig: SchemaConfig = jsonschema['x-simpleapp-config'];
       if (schemaconfig['printFormats']) {
         const formats: SchemaPrintFormat[] = schemaconfig['printFormats'];
         for (let formatno = 0; formatno < formats.length; formatno++) {
@@ -173,7 +192,7 @@ const processSchema = async (schemaname: string, jsondata: JSONSchema7) => {
   const config: SchemaConfig = jsondata['x-simpleapp-config'];
   let doctype = config.documentType;
   let docname = config.documentName;
-  let resourceName = config.resourceName
+  let resourceName = config.resourceName;
   const rendertype = 'basic';
   jsonschemas[docname] = jsondata;
   const copyofjsonschema = { ...jsondata };
@@ -184,23 +203,22 @@ const processSchema = async (schemaname: string, jsondata: JSONSchema7) => {
     (item) => item.doctype == doctype
   );
   if (moduleindex < 0) {
-
-    const api = config.additionalApis ?? []
-    if(copyofjsonschema['x-simpleapp-config']['printFormats']){
-        api.push({
-          "action": "runPrint",
-          "method": RESTMethods.get,
-          "entryPoint": ":id/print/:formatId",
-          "responseType": "String",
-          "requiredRole": ["User"],
-          "description": "print pdf"
-        })
+    const api = config.additionalApis ?? [];
+    if (copyofjsonschema['x-simpleapp-config']['printFormats']) {
+      api.push({
+        action: 'runPrint',
+        method: RESTMethods.get,
+        entryPoint: ':id/print/:formatId',
+        responseType: 'String',
+        requiredRole: ['User'],
+        description: 'print pdf'
+      });
     }
     activatemodules.push({
       doctype: doctype,
       docname: capitalizeFirstLetter(docname),
       resourcename: resourceName,
-      typename:capitalizeFirstLetter(resourceName),
+      typename: capitalizeFirstLetter(resourceName),
       pagetype: config.pageType ?? '',
       api: api,
       schema: copyofjsonschema
@@ -232,45 +250,45 @@ const generateSchema = (
   const finalizefolder = `${constants.templatedir}/nest`;
   const modelname = _.upperFirst(docname);
   const currentmodel = allmodels[modelname];
-  const xconfig:SchemaConfig = jsonschemas[docname]?.['x-simpleapp-config']
-  const apiSettings = currentmodel.apiSettings?? []
+  const xconfig: SchemaConfig = jsonschemas[docname]?.['x-simpleapp-config'];
+  const apiSettings = currentmodel.apiSettings ?? [];
   const resourceName = xconfig?.resourceName ?? docname;
-  if(xconfig.getPhoto){
-    apiSettings.push( {
-            action: 'getPhoto',
-            entryPoint: ':id/photo',
-            requiredRole: ['Everyone'],
-            method: RESTMethods.get,
-            responseType: 'String',
-            description: 'Get photo'
-          },)
-    jsonschemas['imageUrl']={type:'string'}
+  if (xconfig.getPhoto) {
+    apiSettings.push({
+      action: 'getPhoto',
+      entryPoint: ':id/photo',
+      requiredRole: ['Everyone'],
+      method: RESTMethods.get,
+      responseType: 'String',
+      description: 'Get photo'
+    });
+    jsonschemas['imageUrl'] = { type: 'string' };
   }
-  if(xconfig.uploadPhoto){
-    apiSettings.push( {
-            action: 'uploadPhoto',
-            entryPoint: ':id/photo',
-            requiredRole: [capitalizeFirstLetter(resourceName)+'_create'],
-            schema: 'KeyValue',
-            method: RESTMethods.post,
-            responseType: 'String',
-            description: 'upload photo'
-          },)
+  if (xconfig.uploadPhoto) {
+    apiSettings.push({
+      action: 'uploadPhoto',
+      entryPoint: ':id/photo',
+      requiredRole: [capitalizeFirstLetter(resourceName) + '_create'],
+      schema: 'KeyValue',
+      method: RESTMethods.post,
+      responseType: 'String',
+      description: 'upload photo'
+    });
   }
-  
-  if(Array.isArray(xconfig.printFormats) && xconfig.printFormats.length>0){
-    apiSettings.push( {
-            action: 'print',
-            entryPoint: ':id/print/:formatId',
-            requiredRole: [capitalizeFirstLetter(resourceName)+'_print'],
-            method: RESTMethods.get,
-            responseType: 'String',
-            description: 'obtain base64 pdf'
-          },)
+
+  if (Array.isArray(xconfig.printFormats) && xconfig.printFormats.length > 0) {
+    apiSettings.push({
+      action: 'print',
+      entryPoint: ':id/print/:formatId',
+      requiredRole: [capitalizeFirstLetter(resourceName) + '_print'],
+      method: RESTMethods.get,
+      responseType: 'String',
+      description: 'obtain base64 pdf'
+    });
   }
   // if(xconfig)
-  
-  const resourceFileName = camelToKebab(resourceName)
+
+  const resourceFileName = camelToKebab(resourceName);
   //console.log("---^^^^^------",modelname,docname, doctype, rendertype,currentmodel,allmodels)
 
   const miniAppWhitelistApis =
@@ -281,7 +299,7 @@ const generateSchema = (
     doctype: doctype,
     models: allmodels,
     getPhoto: xconfig.getPhoto,
-    uploadPhoto:xconfig.uploadPhoto,
+    uploadPhoto: xconfig.uploadPhoto,
     autocompletecode: currentmodel.codeField ?? '',
     autocompletename: currentmodel.nameField ?? '',
     moreAutoComplete: currentmodel.moreAutoComplete ?? [],
@@ -310,7 +328,6 @@ const generateSchema = (
       hasMiniAppWhitelistedApi: Object.keys(miniAppWhitelistApis).length > 0
     }
   };
-  
 
   const templatefolder = `${constants.templatedir}/${rendertype}`;
   // log.info(`- Generate ${docname}, ${doctype}, ${templatefolder}`)
@@ -330,7 +347,7 @@ const generateSchema = (
     //generate code for every schema
     const generateTemplatefolder = `${constants.templatedir}/basic/${foldertype}`;
     const allfiles = readdirSync(generateTemplatefolder, { recursive: true });
-    
+
     for (let j = 0; j < allfiles.length; j++) {
       const filename: string = String(allfiles[j]);
       const templatepath = `${generateTemplatefolder}/${filename}`;
@@ -363,8 +380,8 @@ const generateSchema = (
         if (autogeneratetypes.includes(filecategory)) {
           //multiple files in folder, append s at folder name
           let storein = `${backendTargetFolder}/_resources/${resourceFileName}`;
-          if(systemResources.includes(docname)){
-            storein=`${backendTargetFolder}/_core/resources/${resourceFileName}`
+          if (systemResources.includes(docname)) {
+            storein = `${backendTargetFolder}/_core/resources/${resourceFileName}`;
           }
           const targetfile = `${storein}/${resourceFileName}.${filecategory}.${filetype}`;
           if (!existsSync(storein)) {
@@ -374,21 +391,21 @@ const generateSchema = (
           const filecontent = eta.render(templatepath, variables);
           writeFileSync(targetfile, filecontent);
           // console.log("Write complete")
-        } else if(['api'].includes(filecategory)){
-          //if no define additional api, then no prepare additional api          
+        } else if (['api'].includes(filecategory)) {
+          //if no define additional api, then no prepare additional api
           // continue
-          if(variables.apiSettings.length==0){            
-             continue;
-          }else{
-            log.info("process additional api",docname);
+          if (variables.apiSettings.length == 0) {
+            continue;
+          } else {
+            log.info('process additional api', docname);
           }
 
-          const arrcategory = filename.split('.')
+          const arrcategory = filename.split('.');
           // console.log("process",docname, arrcategory);
-          const subcategory = arrcategory[0]
-          const subcategoryscope = arrcategory[1]
-          const subcategorytype = arrcategory[2]
-          
+          const subcategory = arrcategory[0];
+          const subcategoryscope = arrcategory[1];
+          const subcategorytype = arrcategory[2];
+
           const targetfolder = `${simpleappTargetFolder}/${subcategory}s/${resourceFileName}-api`;
           const targetfile = `${targetfolder}/${resourceFileName}-api.${subcategoryscope}.${subcategorytype}`;
           if (!existsSync(targetfolder)) {
@@ -396,10 +413,12 @@ const generateSchema = (
           }
 
           //if controller will always override
-          if ( targetfile.includes('controller') || targetfile.includes('resolver') ||
-            (!existsSync(targetfile) ||
+          if (
+            targetfile.includes('controller') ||
+            targetfile.includes('resolver') ||
+            !existsSync(targetfile) ||
             readFileSync(targetfile, 'utf-8').includes(
-              '--remove-this-line-to-prevent-override--')
+              '--remove-this-line-to-prevent-override--'
             )
           ) {
             // log.info("Write ",targetfile)
@@ -408,14 +427,14 @@ const generateSchema = (
           } else {
             // log.info("skip ",targetfile)
           }
-        }else if (['event'].includes(filecategory)) {
+        } else if (['event'].includes(filecategory)) {
           //service file won't override if exists
-          const arrcategory = filename.split('.')
-          console.log("process",docname, arrcategory);
-          const subcategory = arrcategory[0]
-          const subcategoryscope = arrcategory[1]
-          const subcategorytype = arrcategory[2]
-          
+          const arrcategory = filename.split('.');
+          console.log('process', docname, arrcategory);
+          const subcategory = arrcategory[0];
+          const subcategoryscope = arrcategory[1];
+          const subcategorytype = arrcategory[2];
+
           const targetfolder = `${simpleappTargetFolder}/${subcategory}s/${resourceFileName}`;
           const targetfile = `${targetfolder}/${resourceFileName}.${subcategoryscope}.${subcategorytype}`;
           if (!existsSync(targetfolder)) {
@@ -423,10 +442,11 @@ const generateSchema = (
           }
 
           //if controller will always override
-          if ( targetfile.includes('controller.ts') ||
-            (!existsSync(targetfile) ||
+          if (
+            targetfile.includes('controller.ts') ||
+            !existsSync(targetfile) ||
             readFileSync(targetfile, 'utf-8').includes(
-              '--remove-this-line-to-prevent-override--')
+              '--remove-this-line-to-prevent-override--'
             )
           ) {
             // log.info("Write ",targetfile)
@@ -742,7 +762,7 @@ const processPlatformFileMiniApi = (
 ) => {
   const mapfiles = {
     'resource.service.ts.eta': {
-      to: `src/mini-app/resource/resources/${_.kebabCase(resourceName)}`,
+      to: `src/modules/resource/resources/${_.kebabCase(resourceName)}`,
       as: `${_.kebabCase(resourceName)}.service.ts`,
       validate: (targetfile: string, isexists: boolean) => {
         const {
@@ -757,7 +777,7 @@ const processPlatformFileMiniApi = (
       }
     },
     'resource.controller.ts.eta': {
-      to: `src/mini-app/resource/resources/${_.kebabCase(resourceName)}`,
+      to: `src/modules/resource/resources/${_.kebabCase(resourceName)}`,
       as: `${_.kebabCase(resourceName)}.controller.ts`,
       validate: (targetfile: string, isexists: boolean) => {
         const {
@@ -772,7 +792,7 @@ const processPlatformFileMiniApi = (
       }
     },
     'resource.module.ts.eta': {
-      to: `src/mini-app/resource/resources/${_.kebabCase(resourceName)}`,
+      to: `src/modules/resource/resources/${_.kebabCase(resourceName)}`,
       as: `${_.kebabCase(resourceName)}.module.ts`,
       validate: (targetfile: string, isexists: boolean) => {
         const {
@@ -905,10 +925,9 @@ const prepareRoles = (groupsettings) => {
 };
 
 function camelToKebab(key) {
-   var result = key.replace( /([A-Z])/g, " $1" );
-   return result.split(' ').join('-').toLowerCase();
+  var result = key.replace(/([A-Z])/g, ' $1');
+  return result.split(' ').join('-').toLowerCase();
 }
-
 
 const getCodeGenHelper = () =>
   'const capitalizeFirstLetter = (str) => !str ? `Object` : str.slice(0, 1).toUpperCase() + str.slice(1);' +
@@ -918,8 +937,11 @@ const getCodeGenHelper = () =>
   'const camelToKebab = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase(); };' +
   'const removeSuffix = (input, suffix) => { return input.endsWith(suffix) ? input.slice(0, -suffix.length) : input };' +
   'const isWhitelistedMiniApp = (actionName, it) => { return it.miniApp.whitelistApis?.[actionName] === true };' +
-  'const titleCase = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1 $2"); }; '+
-  'const systemType = () => [ "String","Number","Boolean","Array","Object"];'+
-  'const toTypeName = (resName,fieldName)=>{return ["string","number","boolean","array","object"].includes(fieldName.toLowerCase())? capitalizeFirstLetter(fieldName) :upperFirstCase(resName) + fieldName.slice(resName.length)};'+
-  'const skipIsolationDocument = () => ' + JSON.stringify(skipIsolationDocument)+';'+
-  'const getSystemResources = () => '+JSON.stringify(systemResources);
+  'const titleCase = (value) => { return value.replace(/([a-z])([A-Z])/g, "$1 $2"); }; ' +
+  'const systemType = () => [ "String","Number","Boolean","Array","Object"];' +
+  'const toTypeName = (resName,fieldName)=>{return ["string","number","boolean","array","object"].includes(fieldName.toLowerCase())? capitalizeFirstLetter(fieldName) :upperFirstCase(resName) + fieldName.slice(resName.length)};' +
+  'const skipIsolationDocument = () => ' +
+  JSON.stringify(skipIsolationDocument) +
+  ';' +
+  'const getSystemResources = () => ' +
+  JSON.stringify(systemResources);
