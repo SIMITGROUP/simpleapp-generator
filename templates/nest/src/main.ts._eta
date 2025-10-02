@@ -91,7 +91,7 @@ async function bootstrap() {
   });
 
   writeFileSync('./openapi.yaml', yaml.stringify(document));
-
+  app.enableShutdownHooks();
   await app.listen(process.env.HTTP_PORT ?? 8000); //listen which port
 }
 bootstrap();

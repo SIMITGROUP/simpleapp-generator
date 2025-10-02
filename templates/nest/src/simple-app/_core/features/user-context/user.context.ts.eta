@@ -1150,10 +1150,7 @@ export class UserContext extends UserContextInfo {
     return data;
   }
 
-  isOnlyExecutive = () => {
-    return this.groups.includes(Role.Executive) && this.groups.length == 1;
-  };
-
+  
   offsetDate(date: string): string {
     const timestamp = new Date(date).getTime();
     const offsets = this.getOffsetMinute() * 60000;
