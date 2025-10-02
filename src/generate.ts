@@ -260,19 +260,20 @@ const generateSchema = (
       requiredRole: ['Everyone'],
       method: RESTMethods.get,
       responseType: 'String',
-      description: 'Get photo'
+      description: `Get ${capitalizeFirstLetter(resourceName)} photo`
     });
     jsonschemas['imageUrl'] = { type: 'string' };
   }
+
   if (xconfig.uploadPhoto) {
     apiSettings.push({
       action: 'uploadPhoto',
       entryPoint: ':id/photo',
       requiredRole: [capitalizeFirstLetter(resourceName) + '_create'],
-      schema: 'KeyValue',
+      schema: 'UploadPhoto',
       method: RESTMethods.post,
       responseType: 'String',
-      description: 'upload photo'
+      description: `Upload ${capitalizeFirstLetter(resourceName)} photo`
     });
   }
 

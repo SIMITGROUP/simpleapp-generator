@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Field, ObjectType, ID } from '@nestjs/graphql';
 import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 
@@ -79,6 +79,17 @@ export class KeyValue {
   @Field()
   @ApiProperty({ type: () => String, required: false })
   id?: string;
+}
+
+@ObjectType()
+export class UploadPhoto {
+  @Field()
+  @ApiPropertyOptional({ type: () => String, nullable: true })
+  filename?: string | null;
+
+  @Field()
+  @ApiProperty({ type: () => String })
+  base64Image: string;
 }
 
 @ObjectType()
