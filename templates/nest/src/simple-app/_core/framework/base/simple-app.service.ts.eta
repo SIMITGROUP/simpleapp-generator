@@ -23,6 +23,7 @@ import { SimpleAppLogService } from '../../features/log/log.service';
 import { UserContext } from '../../features/user-context/user.context';
 import { RunWebhookService } from '../../features/webhook/run-webhook.service';
 import { DeleteResultType, IsolationType, MoreProjectionType, PatchManyRequest, SchemaFields, TextSearchBody, UniqueKeyExistResponse } from '../schemas';
+import { SearchWithRelation } from './dto/simple-app-search-with-relation.dto';
 
 @Injectable()
 export class SimpleAppService<T extends SchemaFields> {
@@ -106,7 +107,7 @@ export class SimpleAppService<T extends SchemaFields> {
   public isReadOnly(): boolean {
     return false;
   }
-  reCalculateValue(data: T) { }
+  reCalculateValue(data: T) {}
   getIsolationFilter = (appuser: UserContext) => {
     let isolationFilter = {};
     switch (this.isolationtype) {
@@ -221,7 +222,7 @@ export class SimpleAppService<T extends SchemaFields> {
       throw new InternalServerErrorException('first aggregate pipelinestage shall use $match');
     }
   }
-  async aggregate(appuser: UserContext, pipeline: PipelineStage[]) {
+  async aggregate<T = any>(appuser: UserContext, pipeline: PipelineStage[]) {
     if (pipeline[0] && pipeline[0]['$match']) {
       try {
         const isolationFilter = { ...this.getIsolationFilter(appuser) };
@@ -233,7 +234,7 @@ export class SimpleAppService<T extends SchemaFields> {
         // if(appuser.getId() == ''){
         //   console.log(JSON.stringify(pipeline))
         // }
-        const res = await this.doc.aggregate(pipeline, {
+        const res = await this.doc.aggregate<T>(pipeline, {
           session: appuser.getDBSession(),
         });
 
@@ -1303,5 +1304,77 @@ export class SimpleAppService<T extends SchemaFields> {
   }
   async addManyAuditEvents(appUser: UserContext, documentName: string, eventType: string, datas: any) {
     await this.logService.addManyEvents(appUser, documentName, eventType, datas);
+  }
+
+  async searchWithRelation<T>(appUser: UserContext, option: SearchWithRelation<T>, allowedRelations: string[]) {
+    // Root Filter
+    const pipeline: PipelineStage[] = [
+      {
+        $match: {
+          ...(option.root?.filter ?? {}),
+        },
+      },
+    ];
+
+    // Relation lookups
+    Object.entries(option.relations).forEach(([relationName, relationOption]) => {
+      // Prevent mini api user lookup sensitive data
+      if (!allowedRelations.includes(relationName)) {
+        throw new BadRequestException(`Not allowed to lookup ${relationName}`);
+      }
+
+      const subPipeline: PipelineStage.Lookup['$lookup']['pipeline'] = [];
+      const foreignField = `${this.documentName}._id`;
+
+      subPipeline.push({
+        $match: {
+          $expr: { $eq: [`$${foreignField}`, '$$resourceId'] },
+        },
+        ...relationOption.filter,
+      });
+
+      // Relation sort
+      if (relationOption.sort) {
+        subPipeline.push({
+          $sort: relationOption.sort,
+        });
+      }
+
+      // Relation projection
+      if (relationOption.projection) {
+        subPipeline.push({
+          $project: {
+            ...(relationOption.projection ?? {}),
+          },
+        });
+      }
+
+      pipeline.push({
+        $lookup: {
+          from: relationName,
+          as: `_${relationName}`,
+          let: { resourceId: '$_id' },
+          pipeline: subPipeline,
+        },
+      });
+    });
+
+    // Root sort
+    if (option.root?.sort) {
+      pipeline.push({
+        $sort: option.root.sort,
+      });
+    }
+
+    // Root Projection
+    if (option.root.projection) {
+      pipeline.push({
+        $project: {
+          ...(option.root?.projection ?? {}),
+        },
+      });
+    }
+
+    return await this.aggregate(appUser, pipeline);
   }
 }
