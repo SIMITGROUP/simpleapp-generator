@@ -81,6 +81,73 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   async runDefault(@AppUser() appuser: UserContext) {
     return await this.service.runDefault(appuser)
   }
+
+  @Post('/search')
+  @HttpCode(200)
+  <%if(superadmindoctype.includes(it.doctype)){%>
+  @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_search`%>)
+  <%}else{%>
+  @Roles(Role.SuperAdmin,Role.SuperUser,Role.<%= `${it.typename}_search`%>)
+  <%}%>
+  @ApiResponse({
+    status: 200,
+    description: 'success',
+    type: [schemas.<%= it.typename%>]
+  })
+  @ApiResponse({ status: 400, description: 'bad request' })
+  @ApiResponse({ status: 500, description: 'internal error' })
+  @ApiBody({ description: 'Data', type: schemas.SearchBody })
+  @ApiOperation({ operationId: 'runSearch' })
+  <%~ drawMiniAppScope('list') %>
+  async search(@AppUser() appuser: UserContext,@Body() data: schemas.SearchBody) {
+    return await this._search(appuser,data)
+  }
+
+<% if(simpleappconfig.search !==undefined){%>
+@Post('/fulltextsearch')
+  @HttpCode(200)
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.<%= `${it.typename}_search`%>)
+  @ApiBody({ description: 'Data', type: schemas.TextSearchBody })
+  @ApiResponse({
+    status: 200,
+    description: 'success',
+    type: [schemas.<%= it.typename%>]
+  })
+  @ApiResponse({ status: 400, description: 'bad request' })
+  @ApiResponse({ status: 500, description: 'internal error' })
+  @ApiOperation({ operationId: 'runFullTextSearch' })
+  async fulltextsearch(
+    @AppUser() appuser: UserContext,
+    @Body() data: schemas.TextSearchBody,
+  ) {
+    return await this._fulltextsearch(appuser, data);
+  }
+<%}%>
+
+  @Get(':id')  
+  <%if(superadmindoctype.includes(it.doctype)){%>
+  @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_search`%>)
+  <%}else{%>
+  @Roles(Role.SuperAdmin,Role.SuperUser,Role.<%= `${it.typename}_search`%>)
+  <%}%>
+  @ApiResponse({
+    status: 200,
+    description: 'Founds',
+    type: schemas.<%= it.typename%>
+  })
+  @ApiResponse({ status: 404, description: 'Document not found' })
+  @ApiResponse({ status: 500, description: 'Internal error' })
+  @ApiOperation({ operationId: 'runFindOne' })
+  <%~ drawMiniAppScope('detail') %>
+  async findOne(@AppUser() appuser: UserContext,@Param('id') id: string) {    
+    const data = await this._findOne(appuser, id);
+     if(!data ){
+        throw new NotFoundException(`${id} not found`,"not found")
+     }else{
+      return data
+     }
+  }
+
   //autocomplete shall above :id
   @Post('/autocomplete')
   <%if(superadmindoctype.includes(it.doctype)){%>
@@ -106,8 +173,6 @@ export class <%= it.typename %>Controller extends SimpleAppController<
     return this._autocomplete(appuser, keyword,data);
   }
 
-
-
   @Post()
   <%if(superadmindoctype.includes(it.doctype)){%>
   @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_create`%>)
@@ -127,102 +192,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   async create(@AppUser() appuser: UserContext,@Body() data: schemas.<%= it.typename%>) {    
     return await this._create(appuser,data)
   }
-
-  @Post('/search')
-  @HttpCode(200)
-  <%if(superadmindoctype.includes(it.doctype)){%>
-  @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_search`%>)
-  <%}else{%>
-  @Roles(Role.SuperAdmin,Role.SuperUser,Role.<%= `${it.typename}_search`%>)
-  <%}%>
-  @ApiResponse({
-    status: 200,
-    description: 'success',
-    type: [schemas.<%= it.typename%>]
-  })
-  @ApiResponse({ status: 400, description: 'bad request' })
-  @ApiResponse({ status: 500, description: 'internal error' })
-  @ApiBody({ description: 'Data', type: schemas.SearchBody })
-  @ApiOperation({ operationId: 'runSearch' })
-  <%~ drawMiniAppScope('list') %>
-  async search(@AppUser() appuser: UserContext,@Body() data: schemas.SearchBody) {
-    return await this._search(appuser,data)
-  }
-
-
-<% if(simpleappconfig.search !==undefined){%>
-@Post('/fulltextsearch')
-  @HttpCode(200)
-  @Roles(Role.SuperAdmin, Role.SuperUser, Role.<%= `${it.typename}_search`%>)
-  @ApiBody({ description: 'Data', type: schemas.TextSearchBody })
-  @ApiResponse({
-    status: 200,
-    description: 'success',
-    type: [schemas.<%= it.typename%>]
-  })
-  @ApiResponse({ status: 400, description: 'bad request' })
-  @ApiResponse({ status: 500, description: 'internal error' })
-  @ApiOperation({ operationId: 'runFullTextSearch' })
-  async fulltextsearch(
-    @AppUser() appuser: UserContext,
-    @Body() data: schemas.TextSearchBody,
-  ) {
-    return await this._fulltextsearch(appuser, data);
-  }
-<%}%>
-
-
-  @Patch('bulk-patch')
-  @ApiResponse({ status: 200, description: 'success',})
-  @Roles(Role.SuperAdmin, Role.SuperUser, Role.<%= it.typename%>_update)
-  @ApiResponse({ status: 404, description: 'Document not found' })
-  @ApiResponse({ status: 500, description: 'Internal error' })
-  @ApiBody({ description: 'Data', type: schemas.PatchManyRequest<schemas.<%= it.typename%>> })
-  @ApiOperation({ operationId: 'runPatchMany' })
-  <%~ drawMiniAppScope('patch-many') %>
-  async patchMany(@AppUser() appuser: UserContext, @Param('id') id: string, @Body() patchManyData: schemas.PatchManyRequest<schemas.<%= it.typename%>>) {
-    return await this._patchMany(appuser, id, patchManyData);
-  }
-
-
-/***************************** start status control api definitions *****************************************/
-<%for(let s=0; s<it.docStatusSettings.length; s++){ %>
-  <%let statusconf = it.docStatusSettings[s]%>
-  <%let statusname = statusconf['status']%>
-  @Post(':id/set-<%=statusname%>')
-  @ApiBody({ description: 'Document data', type: Object })
-  @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_${statusname}`%>)
-  async setStatus<%=capitalizeFirstLetter(statusname)%>(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data:any,){
-          return await this.service.setDocumentStatus(appuser,id,data,'<%=statusname%>',)
-  }
-<%}%>
-/***************************** end status control api definitions *****************************************/
-
-  @Get(':id')  
-  <%if(superadmindoctype.includes(it.doctype)){%>
-  @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_search`%>)
-  <%}else{%>
-  @Roles(Role.SuperAdmin,Role.SuperUser,Role.<%= `${it.typename}_search`%>)
-  <%}%>
-  @ApiResponse({
-    status: 200,
-    description: 'Founds',
-    type: schemas.<%= it.typename%>
-  })
-  @ApiResponse({ status: 404, description: 'Document not found' })
-  @ApiResponse({ status: 500, description: 'Internal error' })
-  @ApiOperation({ operationId: 'runFindOne' })
-  <%~ drawMiniAppScope('detail') %>
-  async findOne(@AppUser() appuser: UserContext,@Param('id') id: string) {    
-    const data = await this._findOne(appuser, id);
-     if(!data ){
-        throw new NotFoundException(`${id} not found`,"not found")
-     }else{
-      return data
-     }
-  }
   
-
   @Put(':id')
   @ApiResponse({
     status: 200,
@@ -241,6 +211,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   async update(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data: schemas.<%= it.typename%>) {    
     return await this._update(appuser,id, data) ;
   }
+
   @Patch(':id')
   @ApiResponse({
     status: 200,
@@ -258,6 +229,18 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   <%~ drawMiniAppScope('patch') %>
   async patch(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data: schemas.<%= it.typename%>) {    
     return await this._patch(appuser,id, data) ;
+  }
+
+  @Patch('bulk-patch')
+  @ApiResponse({ status: 200, description: 'success',})
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.<%= it.typename%>_update)
+  @ApiResponse({ status: 404, description: 'Document not found' })
+  @ApiResponse({ status: 500, description: 'Internal error' })
+  @ApiBody({ description: 'Data', type: schemas.PatchManyRequest<schemas.<%= it.typename%>> })
+  @ApiOperation({ operationId: 'runPatchMany' })
+  <%~ drawMiniAppScope('patch-many') %>
+  async patchMany(@AppUser() appuser: UserContext, @Body() patchManyData: schemas.PatchManyRequest<schemas.<%= it.typename%>>) {
+    return await this._patchMany(appuser, patchManyData);
   }
 
   @Delete(':id')
@@ -279,6 +262,17 @@ export class <%= it.typename %>Controller extends SimpleAppController<
     return this._delete(appuser,id);
   }
 
-
+/***************************** start status control api definitions *****************************************/
+<%for(let s=0; s<it.docStatusSettings.length; s++){ %>
+  <%let statusconf = it.docStatusSettings[s]%>
+  <%let statusname = statusconf['status']%>
+  @Post(':id/set-<%=statusname%>')
+  @ApiBody({ description: 'Document data', type: Object })
+  @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_${statusname}`%>)
+  async setStatus<%=capitalizeFirstLetter(statusname)%>(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data:any,){
+          return await this.service.setDocumentStatus(appuser,id,data,'<%=statusname%>',)
+  }
+<%}%>
+/***************************** end status control api definitions *****************************************/
 
 }

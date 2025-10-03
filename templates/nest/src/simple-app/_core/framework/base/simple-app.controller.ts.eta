@@ -8,7 +8,10 @@ import { Controller, Get, Put, Post, Delete, Body, Param, Type } from '@nestjs/c
 // import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { UserContext } from '../../features/user-context/user.context';
 import { SearchBody, TextSearchBody,PatchManyRequest } from '../schemas';
+import { UpdateWriteOpResult } from 'mongoose';
+
 const doctype = 'person'.toUpperCase();
+
 type ServiceType = {
   list: Function;
   search: Function;
@@ -22,6 +25,7 @@ type ServiceType = {
   setData: Function;
   getAutoComplete: Function;
   fullTextSearch: Function;
+  patchMany: <T>(appuser: UserContext, data: PatchManyRequest<T>) => Promise<UpdateWriteOpResult>;
 };
 
 // @ApiTags(doctype)
@@ -38,15 +42,19 @@ export class SimpleAppController<TService extends ServiceType, TApiSchema> {
   async _list(appuser: UserContext) {
     return this.service.list(appuser);
   }
+
   async _fulltextsearch(appuser: UserContext, body: TextSearchBody) {
     return this.service.fullTextSearch(appuser, body);
   }
+
   async _search(appuser: UserContext, searchObject: SearchBody) {
     return this.service.search(appuser, searchObject['filter'], searchObject['fields'], searchObject['sorts'], searchObject['lookup']);
   }
+
   async _autocomplete(appuser: UserContext, keyword: string, data?: TApiSchema) {
     return this.service.getAutoComplete(appuser, keyword, data);
   }
+
   async _findOne(appuser: UserContext, id: string) {
     const result = (await this.service.findById(appuser, id)) as TApiSchema;
 
@@ -65,6 +73,7 @@ export class SimpleAppController<TService extends ServiceType, TApiSchema> {
     Object.assign(newdata, data); //
     return this.service.findIdThenUpdate(appuser, id, newdata) as TApiSchema;
   }
+
   async _patch(appuser: UserContext, id: string, data: TApiSchema) {
     const newdata: TApiSchema = {} as TApiSchema; //= { ...data };
     Object.assign(newdata, data); //
@@ -74,8 +83,9 @@ export class SimpleAppController<TService extends ServiceType, TApiSchema> {
   async _delete(appuser: UserContext, id: string) {
     return this.service.findIdThenDelete(appuser, id);
   }
-  async _patchMany(appuser: UserContext, id: string, patchManyData: PatchManyRequest<TApiSchema>) {   
-    return this.service.findIdThenPatch(appuser, id, patchManyData) as TApiSchema;
+
+  async _patchMany(appuser: UserContext, patchManyData: PatchManyRequest<TApiSchema>) {   
+    return this.service.findIdThenPatch(appuser, patchManyData) as TApiSchema;
   }
 
   async _deleteMany(appuser: UserContext, data: SearchBody) {
