@@ -25,7 +25,7 @@ type ServiceType = {
   setData: Function;
   getAutoComplete: Function;
   fullTextSearch: Function;
-  patchMany: <T>(appuser: UserContext, data: PatchManyRequest<T>) => Promise<UpdateWriteOpResult>;
+  patchMany: Function;
 };
 
 // @ApiTags(doctype)
@@ -85,7 +85,7 @@ export class SimpleAppController<TService extends ServiceType, TApiSchema> {
   }
 
   async _patchMany(appuser: UserContext, patchManyData: PatchManyRequest<TApiSchema>) {   
-    return this.service.findIdThenPatch(appuser, patchManyData) as TApiSchema;
+    return this.service.findIdThenPatch(appuser, patchManyData);
   }
 
   async _deleteMany(appuser: UserContext, data: SearchBody) {

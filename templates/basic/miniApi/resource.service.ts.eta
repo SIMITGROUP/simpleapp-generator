@@ -86,6 +86,12 @@ export class <%= pascalName %>Service {
         const resp = await api.runPatch(id, resourceDto);
         return resp.data;
       }
+    <% } else if(action === 'patchMany') { %>
+      async patchMany(headers: ApiHeader, resourceDto: any) {
+        const api = this.getApi(headers);
+        const resp = await api.runPatchMany(resourceDto);
+        return resp.data;
+      }
     <% } else if(action === 'delete') { %>
       async delete(headers: ApiHeader, id: string) {
         const api = this.getApi(headers);

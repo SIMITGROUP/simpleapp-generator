@@ -232,7 +232,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   }
 
   @Patch('bulk-patch')
-  @ApiResponse({ status: 200, description: 'success',})
+  @ApiResponse({ status: 200, description: 'success', type: schemas.UpdateManyResponse})
   @Roles(Role.SuperAdmin, Role.SuperUser, Role.<%= it.typename%>_update)
   @ApiResponse({ status: 404, description: 'Document not found' })
   @ApiResponse({ status: 500, description: 'Internal error' })

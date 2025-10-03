@@ -120,6 +120,20 @@ export class <%= pascalName %>Controller {
             ) {
                 return await  this.<%= serviceVariable %>.patch(headers, id, resourceDto);
             }
+        <% } else if(action === 'patchMany') { %>
+            @Patch('patchMany')
+            @ApiOperation({ operationId: 'patchMany' })
+            @ApiBody({ type: SimtrainSchema.PatchManyRequestDto, required: true })
+            @ApiResponse({ status: 200, description: 'Success', type: SimtrainSchema.UpdateManyResponseDto })
+            @ApiResponse({ status: 400, description: 'Bad Request' })
+            @ApiResponse({ status: 404, description: 'Not Found' })
+            @ApiResponse({ status: 500, description: 'Internal Error' })
+            async patchMany(
+                @Headers() headers: ApiHeader,
+                @Body() resourceDto: any,
+            ) {
+                return await  this.<%= serviceVariable %>.patchMany(headers, resourceDto);
+            }
         <% } else if(action === 'delete') { %>
             @Delete(':id')
             @ApiOperation({ operationId: 'delete' })
