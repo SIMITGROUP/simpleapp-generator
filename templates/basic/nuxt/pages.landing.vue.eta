@@ -19,8 +19,8 @@
 import { <%= it.typename %> } from '~/simpleapp/generate/openapi';
 
   
-  const {$<%= it.typename %>Doc,$listen } = useNuxtApp();
-  const doc = $<%= it.typename %>Doc()
+  const {$<%= capitalizeFirstLetter(it.name) %>Doc,$listen } = useNuxtApp();
+  const doc = $<%= capitalizeFirstLetter(it.name) %>Doc()
   const docdata = doc.getReactiveData();
   type <%= it.typename %>Key = keyof <%= it.typename %> 
 

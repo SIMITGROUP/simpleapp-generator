@@ -1,3 +1,7 @@
+[2.0.0v-alpha]
+1. frontend print toolbar control print button permission
+2. fix generate form use wrong file name
+
 [2.0.0t-alpha]
 
 1. Fix Developer Portal
