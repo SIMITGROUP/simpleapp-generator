@@ -1324,11 +1324,10 @@ export class SimpleAppService<T extends SchemaFields> {
       }
 
       const subPipeline: PipelineStage.Lookup['$lookup']['pipeline'] = [];
-      const foreignField = `${this.documentName}._id`;
 
       subPipeline.push({
         $match: {
-          $expr: { $eq: [`$${foreignField}`, '$$resourceId'] },
+          $expr: { $eq: [`$${relationOption.foreignField}`, '$$localValue'] },
         },
         ...relationOption.filter,
       });
@@ -1351,9 +1350,9 @@ export class SimpleAppService<T extends SchemaFields> {
 
       pipeline.push({
         $lookup: {
-          from: relationName,
+          from: relationName.toLowerCase(),
           as: `_${relationName}`,
-          let: { resourceId: '$_id' },
+          let: { localValue: `$${relationOption.localField}` },
           pipeline: subPipeline,
         },
       });
