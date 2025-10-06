@@ -46,6 +46,11 @@
           description = `Update specific fields of an existing ${resourceTitleName} record.`;
           break;
 
+        case 'patchMany':
+          method = 'patch';
+          description = `Update specific fields of existing ${resourceTitleName} records.`;
+          break;
+
         case 'delete':
           method = 'delete';
           description = `Delete an existing ${resourceTitleName} record.`;
@@ -89,6 +94,19 @@ const scopes = {
       <%= resourceName %>: <%~ JSON.stringify(availableApis) %>,
     <% } %>
   <% }); %>
+
+  // --- Custom ---
+  
+  onlinePayment: {
+    requestOnlinePayment: {
+      method: "post",
+      description: "Make online payment request",
+    },
+    checkStatus: {
+      method: "get",
+      description: "Check online payment status",
+    },
+  },
 };
 
 export default scopes;
