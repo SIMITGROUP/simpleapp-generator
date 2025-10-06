@@ -1,4 +1,10 @@
+[2.0.0w-alpha]
+
+1. Update api scope
+2. Update search with relation
+
 [2.0.0v-alpha]
+
 1. frontend print toolbar control print button permission
 2. fix generate form use wrong file name
 
