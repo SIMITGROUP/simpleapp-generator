@@ -96,7 +96,7 @@ export class SimpleAppInterceptor implements NestInterceptor {
         // endtime.getTime() - new Date(eventObj.created).getTime();
         // eventObj.save();
 
-        resp.status(err.status);
+        resp.status(err?.status ?? 500);
         return responseBody;
       }),
       tap(async () => {
