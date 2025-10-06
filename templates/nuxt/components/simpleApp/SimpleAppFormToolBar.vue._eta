@@ -48,7 +48,7 @@
           <div v-if="menu.label && menu.type == 'crud'">
             <ButtonAction
               v-if="menu.action == 'print'"
-              :disabled="!canPerform(doc.getDocName(true), 'access')"
+              :disabled="!canPerform(doc.getDocName(true), 'print')"
               @click="emitEvent(menu, $event)"
               :action-name="menu.action"
               >{{ menu.label }}</ButtonAction
