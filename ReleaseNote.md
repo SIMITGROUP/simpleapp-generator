@@ -1,3 +1,9 @@
+[2.0.0x-alpha]
+
+1. Fix patch many
+2. Fix undefined status error
+3. Update JS SDK add type
+
 [2.0.0w-alpha]
 
 1. Update api scope
