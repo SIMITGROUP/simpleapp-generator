@@ -73,8 +73,8 @@ export class MiniApp<%= pascalName %>BridgeService {
         return this.bridge.callApi<Schema.<%= pascalName %>>(this.resourceName, "patch", { id, body: data });
       }
     <% } else if(action === 'patchMany') { %>
-      async patchMany(id: string, data: Schema.PatchManyRequest) {
-        return this.bridge.callApi<Schema.UpdateManyResponse>(this.resourceName, "patchMany", { id, body: data });
+      async patchMany(data: Schema.PatchManyRequest) {
+        return this.bridge.callApi<Schema.UpdateManyResponse>(this.resourceName, "patchMany", { body: data });
       }
     <% } else if(action === 'delete') { %>
       async delete(id: string) {
