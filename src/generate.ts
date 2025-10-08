@@ -626,33 +626,19 @@ const generateSchema = (
         }
         // console.log("complete, go to next file")
       } else if (foldertype === 'miniAppJsSdk') {
-        const validateWritePage = (targetfile: string, isexists: boolean) => {
-          if (
-            !jsonschemas[docname][X_SIMPLEAPP_CONFIG]['pageType'] &&
-            !targetfile.includes('Viewer') &&
-            !targetfile.includes('Form')
-          ) {
-            return false;
-          } else if (!isexists) {
-            return true;
-          } else if (
-            !existsSync(targetfile) ||
-            readFileSync(targetfile, 'utf-8').includes(
-              '--remove-this-line-to-prevent-override--'
-            ) ||
-            readFileSync(targetfile, 'utf-8').includes('delete-me')
-          ) {
-            return true;
-          } else {
-            return false;
-          }
-        };
-
         const mapfiles = {
           'resource-bridge.service.ts.eta': {
             to: 'src/services/resources',
             as: `${_.kebabCase(resourceName)}-bridge.service.ts`,
             validate: (targetfile: string, isexists: boolean) => {
+              const {
+                miniApp: { hasMiniAppWhitelistedApi }
+              } = variables;
+
+              if (!hasMiniAppWhitelistedApi) {
+                return false;
+              }
+
               return true;
             }
           }
