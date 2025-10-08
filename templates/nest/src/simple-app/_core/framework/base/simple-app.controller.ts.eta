@@ -7,7 +7,7 @@
 import { Controller, Get, Put, Post, Delete, Body, Param, Type } from '@nestjs/common';
 // import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { UserContext } from '../../features/user-context/user.context';
-import { SearchBody, TextSearchBody,PatchManyRequest } from '../schemas';
+import { SearchBody, TextSearchBody, PatchManyRequest } from '../schemas';
 import { UpdateWriteOpResult } from 'mongoose';
 
 const doctype = 'person'.toUpperCase();
@@ -84,8 +84,8 @@ export class SimpleAppController<TService extends ServiceType, TApiSchema> {
     return this.service.findIdThenDelete(appuser, id);
   }
 
-  async _patchMany(appuser: UserContext, patchManyData: PatchManyRequest<TApiSchema>) {   
-    return this.service.findIdThenPatch(appuser, patchManyData);
+  async _patchMany(appuser: UserContext, patchManyData: PatchManyRequest<TApiSchema>) {
+    return this.service.patchMany(appuser, patchManyData);
   }
 
   async _deleteMany(appuser: UserContext, data: SearchBody) {
