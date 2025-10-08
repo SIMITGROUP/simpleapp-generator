@@ -130,7 +130,7 @@ export class <%= pascalName %>Controller {
             @ApiResponse({ status: 500, description: 'Internal Error' })
             async patchMany(
                 @Headers() headers: ApiHeader,
-                @Body() resourceDto: any,
+                @Body() resourceDto: SimtrainSchema.UpdateManyResponseDto,
             ) {
                 return await  this.<%= serviceVariable %>.patchMany(headers, resourceDto);
             }

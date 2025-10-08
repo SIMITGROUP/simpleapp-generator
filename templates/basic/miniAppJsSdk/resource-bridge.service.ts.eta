@@ -12,10 +12,33 @@
 
   const miniAppWhitelistApis = it.jsonschema['x-simpleapp-config']?.miniApp?.whitelist || {};
   const hasMiniAppWhitelistedApi = Object.keys(miniAppWhitelistApis).length > 0;
+
+  const getTypeName = (typeName) => {
+    const systemTypes = ['boolean', 'string', 'number', 'object', 'integer'];
+    let tmpTypeName = typeName.replace('[','').replace(']','');
+
+    if(systemTypes.includes(tmpTypeName.toLowerCase())){
+        tmpTypeName = tmpTypeName.toLowerCase();
+        if(typeName.includes('[')){
+            return `${tmpTypeName}[]`;
+        }
+
+        return tmpTypeName;
+    } else {
+        tmpTypeName = `Schema.${tmpTypeName}`;
+        if(typeName.includes('[')){
+            return `${tmpTypeName}[]`;
+        }
+
+        return `${tmpTypeName}`;
+    }
+  }
 %>
 
 import { MiniAppApiListParam } from "../../types/bridge.type";
 import { MiniAppBridgeService } from "../bridge.service";
+import * as Schema from "../../openapi/backend-api";
+import { CreateResource, PatchResource, UpdateResource } from "../../types/common";
 
 export class MiniApp<%= pascalName %>BridgeService {
   private bridge: MiniAppBridgeService;
@@ -31,23 +54,27 @@ export class MiniApp<%= pascalName %>BridgeService {
 
     <% if(action === 'list') { %>
       async list(params?: MiniAppApiListParam | undefined) {
-        return this.bridge.callApi(this.resourceName, "list", { body: params });
+        return this.bridge.callApi<Schema.<%= pascalName %>[]>(this.resourceName, "list", { body: params });
       }
     <% } else if(action === 'detail') { %>
       async detail(id: string) {
-        return this.bridge.callApi(this.resourceName, "detail", { id });
+        return this.bridge.callApi<Schema.<%= pascalName %>>(this.resourceName, "detail", { id });
       }
     <% } else if(action === 'create') { %>
-     async create(data: any) {
-        return this.bridge.callApi(this.resourceName, "create", { body: data });
+     async create(data: CreateResource<Schema.<%= pascalName %>>) {
+        return this.bridge.callApi<Schema.<%= pascalName %>>(this.resourceName, "create", { body: data });
       }
     <% } else if(action === 'update') { %>
-      async update(id: string, data: any) {
-        return this.bridge.callApi(this.resourceName, "update", { id, body: data });
+      async update(id: string, data: UpdateResource<Schema.<%= pascalName %>>) {
+        return this.bridge.callApi<Schema.<%= pascalName %>>(this.resourceName, "update", { id, body: data });
       }
     <% } else if(action === 'patch') { %>
-      async patch(id: string, data: any) {
-        return this.bridge.callApi(this.resourceName, "patch", { id, body: data });
+      async patch(id: string, data: PatchResource<Schema.<%= pascalName %>>) {
+        return this.bridge.callApi<Schema.<%= pascalName %>>(this.resourceName, "patch", { id, body: data });
+      }
+    <% } else if(action === 'patchMany') { %>
+      async patchMany(id: string, data: Schema.PatchManyRequest) {
+        return this.bridge.callApi<Schema.UpdateManyResponse>(this.resourceName, "patchMany", { id, body: data });
       }
     <% } else if(action === 'delete') { %>
       async delete(id: string) {
@@ -55,7 +82,7 @@ export class MiniApp<%= pascalName %>BridgeService {
       }
     <% } else if(action === 'autoComplete') { %>
       async autoComplete(query: string, data: any) {
-        return this.bridge.callApi(this.resourceName, "autoComplete", {
+        return this.bridge.callApi<Schema.<%= pascalName %>AutoComplete[]>(this.resourceName, "autoComplete", {
           query,
           body: data,
         });
@@ -94,13 +121,13 @@ export class MiniApp<%= pascalName %>BridgeService {
           }
 
           if (hasBody) {
-            args.push('data: any');
+            args.push(`data: ${getTypeName(apiSetting.schema)}`);
             output.push('body: data');
           }
         %>
           
         async <%= action %>(<%= args.join(', ') %>) {
-          return this.bridge.callApi(this.resourceName, "<%= action %>", {
+          return this.bridge.callApi<<%= getTypeName(apiSetting.responseType) %>>(this.resourceName, "<%= action %>", {
             <%= output.join(',\n  ') %>
           });
         }
