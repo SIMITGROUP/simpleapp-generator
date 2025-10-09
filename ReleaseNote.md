@@ -1,3 +1,7 @@
+[2.0.0y-alpha]
+
+1. Allow mini app adjust built in schema
+
 [2.0.0x-alpha]
 
 1. Fix patch many
