@@ -1,11 +1,11 @@
-import _ from 'lodash';
+import _ from "lodash";
 import {
   CustomFieldDataMode,
   CustomFieldMoreSchema,
-  CustomFieldMoreSchemaGroup
-} from '../types/common';
-import { CustomFieldDataModeEnum } from '../enums/common';
-import { DynamicObject, SimpleAppJSONSchema7Definition } from '~/types';
+  CustomFieldMoreSchemaGroup,
+} from "../types/common";
+import { CustomFieldDataModeEnum } from "../enums/common";
+import { DynamicObject, SimpleAppJSONSchema7Definition } from "~/types";
 
 export class CustomFieldService {
   // =============================== Prepare Schema Function ===============================
@@ -18,14 +18,18 @@ export class CustomFieldService {
     }
 
     const schema: CustomFieldMoreSchema = {
-      type: 'object',
+      type: "object",
       properties: {
         ...customFieldFromDB,
-        ...customFieldFromMiniApp
-      }
+        ...customFieldFromMiniApp,
+      },
     };
 
     return schema;
+  }
+
+  prepareSchemaPatches(collectionName: string) {
+    return this.findSchemaPatchFromMiniApp(collectionName);
   }
 
   private findCustomFieldSchemaFromDB(collectionName: string) {
@@ -48,9 +52,9 @@ export class CustomFieldService {
 
     const schema: CustomFieldMoreSchemaGroup = {
       default: {
-        title: 'Custom Field',
-        ...customField.form.jsonSchema
-      }
+        title: "Custom Field",
+        ...customField.form.jsonSchema,
+      },
     };
 
     return schema;
@@ -76,12 +80,32 @@ export class CustomFieldService {
     return schema;
   }
 
+  private findSchemaPatchFromMiniApp(collectionName: string) {
+    const { $miniAppStore } = useNuxtApp();
+
+    const miniAppForms = $miniAppStore.getForm(collectionName);
+    if (!miniAppForms || miniAppForms.length <= 0) {
+      return {};
+    }
+
+    for (let i = 0; i < miniAppForms.length; i++) {
+      const miniAppItem = miniAppForms[i];
+      const { patches } = miniAppItem;
+
+      if (patches && !_.isEmpty(patches)) {
+        return patches;
+      }
+    }
+
+    return {};
+  }
+
   // ================================ Prepare Data Function ================================
   prepareCustomFieldData<T extends DynamicObject>(
     collectionName: string,
     mode: CustomFieldDataMode,
     customSchema: CustomFieldMoreSchema | undefined,
-    resourceData: T | undefined
+    resourceData: T | undefined,
   ): T | undefined {
     if (
       !customSchema ||
@@ -103,18 +127,18 @@ export class CustomFieldService {
 
         return this.prepareCustomFieldWithExistingData(
           customSchema,
-          resourceData
+          resourceData,
         );
         break;
     }
   }
 
   private prepareCustomFieldWithDefaultData<T extends DynamicObject>(
-    customSchema: CustomFieldMoreSchema
+    customSchema: CustomFieldMoreSchema,
   ) {
     const data: DynamicObject = {};
     for (const [groupName, groupItem] of Object.entries(
-      customSchema.properties
+      customSchema.properties,
     )) {
       const defaultData = this.generateDefaultData(groupItem);
 
@@ -126,16 +150,16 @@ export class CustomFieldService {
 
   private prepareCustomFieldWithExistingData<T extends DynamicObject>(
     customSchema: CustomFieldMoreSchema,
-    resourceData: T
+    resourceData: T,
   ) {
     const data: DynamicObject = {};
     for (const [groupName, groupItem] of Object.entries(
-      customSchema.properties
+      customSchema.properties,
     )) {
       const defaultData = this.generateDefaultData(groupItem);
       const mergedData = this.mergeWithDefault(
         defaultData,
-        resourceData?.[groupName]
+        resourceData?.[groupName],
       );
 
       data[groupName] = mergedData;
@@ -146,13 +170,13 @@ export class CustomFieldService {
 
   private generateDefaultData(schema: SimpleAppJSONSchema7Definition): any {
     if (!_.isObject(schema)) {
-      return '';
+      return "";
     }
 
-    if (schema.type === 'object') {
+    if (schema.type === "object") {
       const result: any = {};
 
-      if (schema?.['x-foreignkey']) {
+      if (schema?.["x-foreignkey"]) {
         return undefined;
       }
 
@@ -163,31 +187,33 @@ export class CustomFieldService {
       return result;
     }
 
-    if (schema.type === 'array') {
+    if (schema.type === "array") {
       const itemSchema = schema.items;
       const minItems = schema.minItems || 0;
       const arr = [];
       const itemsCount = minItems > 0 ? 1 : 0;
       for (let i = 0; i < itemsCount; i++) {
         arr.push(
-          this.generateDefaultData(itemSchema as SimpleAppJSONSchema7Definition)
+          this.generateDefaultData(
+            itemSchema as SimpleAppJSONSchema7Definition,
+          ),
         );
       }
       return arr;
     }
 
-    if (typeof schema.default !== 'undefined') {
+    if (typeof schema.default !== "undefined") {
       return schema.default;
     }
 
     // handle primitive types fallback
     switch (schema.type) {
-      case 'string':
-        return '';
-      case 'number':
-      case 'integer':
+      case "string":
+        return "";
+      case "number":
+      case "integer":
         return 0;
-      case 'boolean':
+      case "boolean":
         return false;
       default:
         return null;
@@ -196,7 +222,7 @@ export class CustomFieldService {
 
   private mergeWithDefault<T extends DynamicObject>(
     defaultData: T,
-    collectionData: T | undefined
+    collectionData: T | undefined,
   ) {
     if (Array.isArray(defaultData)) {
       if (Array.isArray(collectionData)) {
@@ -213,17 +239,17 @@ export class CustomFieldService {
         // return defaultData;
         return [];
       }
-    } else if (typeof defaultData === 'object' && defaultData !== null) {
+    } else if (typeof defaultData === "object" && defaultData !== null) {
       const result: any = {};
       for (const key of Object.keys(defaultData)) {
         result[key] = this.mergeWithDefault(
           defaultData[key],
-          collectionData?.[key]
+          collectionData?.[key],
         );
       }
       return result;
     } else {
-      return typeof collectionData !== 'undefined'
+      return typeof collectionData !== "undefined"
         ? collectionData
         : defaultData;
     }

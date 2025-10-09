@@ -82,16 +82,17 @@ export class <%= upperFirstCase(it.name)%>Client extends SimpleAppClient<openapi
 
     <% if(it.customField.isEnable) { %>
       // FLAG::CUSTOM_FIELD
-      const { $customFieldStore, $miniAppStore } = useNuxtApp();
-      if (!this._customFieldWatch) {
-        this._customFieldWatch = watch(
-          [() => $customFieldStore.data, () => $miniAppStore.installedMiniApps],
-          ([newCustomField, newMiniApps], [oldCustomField, oldMiniApps]) => {
-            this.prepareCustomFieldJsonSchema();
-          },
-          { immediate: false, deep: true },
-        );
-      }
+      // const { $customFieldStore, $miniAppStore } = useNuxtApp();
+      // if (!this._customFieldWatch) {
+      //   this._customFieldWatch = watch(
+      //     [() => $customFieldStore.data, () => $miniAppStore.installedMiniApps],
+      //     ([newCustomField, newMiniApps], [oldCustomField, oldMiniApps]) => {
+      //       console.log("Run");
+      //       this.prepareCustomFieldJsonSchema();
+      //     },
+      //     { immediate: false, deep: true },
+      //   );
+      // }
     <% } %>
     
   }
