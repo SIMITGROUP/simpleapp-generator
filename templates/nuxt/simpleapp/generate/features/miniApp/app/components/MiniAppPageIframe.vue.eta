@@ -12,6 +12,7 @@
       "
       :title="pageInfo.title || t('miniAppLang.content')"
       sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-modals"
+      allow="clipboard-write"
       referrerpolicy="origin"
       loading="lazy"
       @error="handleError"
