@@ -1,3 +1,7 @@
+[2.0.1b-alpha]
+
+1. Update menu permission
+
 [2.0.1a-alpha]
 
 1. Add allow clipboard-write for mini app iframe

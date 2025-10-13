@@ -180,59 +180,57 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           this.roles.includes(permission),
         );
       },
-      canPerform(resourcename: string, action: string): boolean {        
+      canPerform(resourcename: string, action: string): boolean {
+        const normalizedResource = resourcename.toLowerCase();
+        
         if (
           this.roles.includes("superadmin") ||
           this.roles.includes("tenantowner") ||
           this.roles.includes("superuser")
         ) {
           return true;
-        } else if (resourcename == "Paymentverify") {
-          if (this.roles.includes("admin") || this.roles.includes("manager")) {
-            return true;
-          }
-        } else if (resourcename == "Reminder") {
-          if (this.roles.includes("admin") || this.roles.includes("manager")) {
-            return true;
-          }
-        } else if (resourcename == "Generateinvoice") {
-          if (
-            this.roles.includes("admin") ||
-            this.roles.includes("manager") ||
-            this.roles.includes("executive")
-          ) {
-            return true;
-          }
-        } else if (resourcename == "Upgradelevel") {
-          if (
-            this.roles.includes("admin") ||
-            this.roles.includes("manager") ||
-            this.roles.includes("executive")
-          ) {
-            return true;
-          }
-        } else if (resourcename == "Appintegration") {
-          if (this.roles.includes("admin") || this.roles.includes("manager")) {
-            return true;
-          }
-        } else if (resourcename == "Postingtosimbiz") {
-          if (this.roles.includes("admin")) {
-            return true;
-          }
-        } else if (resourcename == "Studentdescription") {
-          if (
-            this.roles.includes("admin") ||
-            this.roles.includes("manager") ||
-            this.roles.includes("executive")
-          ) {
-            return true;
-          }
-        } else {
-          const checkstr = `${resourcename}:${action}`;
-          // console.log("verify",checkstr)
-          return this.roles.includes(checkstr);
         }
-        return false;
+        
+        const specialCases: Record<string, string[]> = {
+          // paymentverify: ["admin", "manager"],
+          // reminder: ["admin", "manager"],
+          // generateinvoice: ["admin", "manager", "executive"],
+          // upgradelevel: ["admin", "manager", "executive"],
+          appintegration: ["admin", "manager"],
+          miniapp: ["admin", "manager"],
+          studentdescription: ["admin", "manager", "executive"],
+          miniappinstallation: ["admin", "manager"],
+        };
+        
+        if (specialCases[normalizedResource]) {
+          const requiredGroups = specialCases[normalizedResource];
+          if (requiredGroups.some((group) => this.roles.includes(group))) {
+            return true;
+          }
+        }
+        
+        try {
+          const routes = useRouter().getRoutes();
+          const route = routes.find((r) => {
+            const menuPath = r.meta?.menuPath as string | undefined;
+            return menuPath && menuPath.endsWith(`/${normalizedResource}`);
+          });
+          
+          if (route?.meta?.requiredGroups) {
+            const requiredGroups = route.meta.requiredGroups as string[];
+            const userGroups = this.groups || [];
+            
+            if (requiredGroups.some((group) => userGroups.includes(group))) {
+              return true;
+            }
+          }
+        } catch (e) {
+          console.error(e)
+        }
+        
+        const checkstr = `${normalizedResource}:${action}`;
+        const checkstrOriginal = `${resourcename}:${action}`;
+        return this.roles.includes(checkstr) || this.roles.includes(checkstrOriginal);
       },
       haveAccess(resourcename: string) {
         //super admin always full access right
@@ -244,11 +242,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           this.roles.includes("superuser")
         ) {
           return true;
-        } else if (resourcename == "Paymentverify") {
-          if (this.roles.includes("admin") || this.roles.includes("manager")) {
-            return true;
-          }
-        }
+        } 
         for (let i = 0; i < this.roles.length; i++) {
           const role: string = this.roles[i];
           if (role.includes(resourcename)) {
@@ -339,7 +333,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           },
         };
       }
-    }
+    } 
     // else
     //
   }

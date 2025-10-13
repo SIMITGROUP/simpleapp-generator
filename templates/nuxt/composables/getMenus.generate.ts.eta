@@ -68,3 +68,89 @@ export const getMenustFromPageMeta =() =>{
   return allmenus.sort((one:string, two:string) => (one > two ? -1 : 1))
   
 }
+export const hasAccessByPageMeta = (pageName: string): boolean => {
+  const userGroups = getUserStore().groups || []
+  const userRoles = getUserStore().roles || []
+  
+  if (
+    userRoles.includes('superadmin') ||
+    userRoles.includes('tenantowner') ||
+    userRoles.includes('superuser')
+  ) {
+    return true
+  }
+  
+  const routes = useRouter().getRoutes()
+  const route = routes.find((r) => {
+    const menuPath = r.meta?.menuPath as string | undefined
+    return menuPath && menuPath.endsWith(`/${pageName}`)
+  })
+  
+  if (!route || !route.meta) {
+    return false
+  }
+  
+  const requiredGroups = route.meta.requiredGroups as string[] | undefined
+  
+  if (!requiredGroups || requiredGroups.length === 0) {
+    return false
+  }
+  
+  return requiredGroups.some((group) => userGroups.includes(group))
+}
+
+export const getMenusWithPageMetaAccess = (xorg: string): MenuData[] => {
+  const routes = useRouter().getRoutes()
+  const allowedMenus: MenuData[] = []
+  const { getDescription, getIcon, getIconColor } = useSettingsMenu()
+  
+  const menuRoutes = routes.filter((route) => route.meta && route.meta.menuPath)
+  
+  for (const route of menuRoutes) {
+    const menuPath = route.meta.menuPath as string
+    const requiredGroups = route.meta.requiredGroups as string[] | undefined
+    
+    const pathParts = menuPath.split('/')
+    const pageName = pathParts[pathParts.length - 1]
+    
+    if (hasAccessByPageMeta(pageName)) {
+      const icon = getIcon(pageName)
+      const iconClass = getIconColor(pageName)
+      
+      const menuItem: MenuData = {
+        label: t(pageName),
+        url: `/${xorg}/${pageName}`,
+        isolationType: 'none',
+        icon: typeof icon === 'string' ? icon : '',
+      }
+      
+      allowedMenus.push(menuItem)
+    }
+  }
+  
+  return allowedMenus
+}
+
+export const getMenuMetadata = (pageName: string) => {
+  const routes = useRouter().getRoutes()
+  const route = routes.find((r) => {
+    const menuPath = r.meta?.menuPath as string | undefined
+    return menuPath && menuPath.endsWith(`/${pageName}`)
+  })
+  
+  if (route?.meta) {
+    return {
+      description: route.meta.description ? t(route.meta.description as string) : t(pageName),
+      icon: route.meta.icon || '',
+      colorClass: route.meta.colorClass || '',
+    }
+  }
+  
+  const { getDescription, getIcon, getIconColor } = useSettingsMenu()
+  
+  return {
+    description: t(getDescription(pageName)),
+    icon: getIcon(pageName),
+    colorClass: getIconColor(pageName),
+  }
+}
