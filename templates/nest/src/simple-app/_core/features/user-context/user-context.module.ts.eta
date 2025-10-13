@@ -15,8 +15,9 @@ import {TenantModule} from '../../resources/tenant/tenant.module'
 import {BranchModule} from '../../resources/branch/branch.module'
 import {OrganizationModule} from '../../resources/organization/organization.module'
 import { MiniAppInstallationModule } from '../../resources/mini-app-installation/mini-app-installation.module';
+import { MaintenanceModule } from '@core-features/maintenance/maintenance.module';
 @Module({
-  imports: [UserModule,PermissionModule,MiniAppInstallationModule],
+  imports: [UserModule,PermissionModule,MiniAppInstallationModule,MaintenanceModule],
   controllers: [],
   providers: [SimpleAppRobotUserService],
   exports: [SimpleAppRobotUserService],

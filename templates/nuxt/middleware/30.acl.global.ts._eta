@@ -1,0 +1,139 @@
+import { RouteLocationNormalizedGeneric } from 'vue-router';
+import { getUserProfile } from './../composables/getUserStore.generate';
+
+export default defineNuxtRouteMiddleware(async (to, from) => {
+  console.log(to.path)
+  const userProfile = getUserProfile()
+  const xorg = <string>to.params['xorg'] ?? 'MC0wLTA'
+  useNuxtApp().$userstore.xOrg=xorg
+  if(!userProfile?._id){
+    // console.error("middleware detect no user id, reload under xorg",xorg)    
+    await reloadUserStoreFromMiddleware(xorg)
+    // console.log("after reload",userProfile)
+  }else if(userProfile.branchId===0 && xorg !='MC0wLTA'){
+    // console.error("middleware detect wrong xorg reload profile for",xorg)
+    await reloadUserStoreFromMiddleware(xorg)
+    // console.log("after reload",userProfile)
+  }else{
+    // console.log("use exists, use back the user store")
+  }
+  
+  
+
+  const currentgroup = useCookie('currentGroup').value
+  if(currentgroup && userProfile.groups.includes(currentgroup)){
+    //use back ground
+  }else if(userProfile.groups.length>0){
+    goTo('pickgroup')
+  }
+    // if (!currentgroup)goTo('pickgroup')
+
+  // console.log("userProfile1",userProfile)
+  // console.log(xorg)
+
+  const { status } = useAuth();   
+  const metas = Object.keys(to.meta)
+
+  if(status.value=='unauthenticated'){
+    if(to.meta.auth===false){
+      return true
+    }else{
+        navigateTo('/login')
+    }    
+  }
+
+  const license = useLicense().getLicense()
+  console.log("metas check",metas)
+  if(metas.length == 0){
+    throw createError({
+        statusCode: 404,
+        statusMessage: 'pageDoesNotExists',
+        message: 'pageDoesNotExistsMsg',
+        fatal: true,
+      });    
+  }
+  if(to.meta['licenseWeight'] === undefined){
+    throw createError({
+        statusCode: 403,
+        statusMessage: 'undefinePageMetaLicenseWeight',
+        message: 'undefinePageMetaLicenseWeightMsg',
+        fatal: true,
+      });    
+  }
+  
+  if(to.meta['requiredGroups']===undefined || !Array.isArray(to.meta['requiredGroups'])){
+    throw createError({
+        statusCode: 403,
+        statusMessage: 'undefinePageMetaRequiredGroups',
+        message: 'undefinePageMetaRequiredGroupsMsg',
+        fatal: true,
+      });    
+  }
+
+  if(to.meta['licenseWeight'] && <number>to.meta['licenseWeight']> license.licenseWeight){
+    throw createError({
+        statusCode: 403,
+        statusMessage: 'upgradeSoftwareLicenseRequired',
+        message: 'upgradeSoftwareLicenseRequiredMsg',
+        fatal: true,
+      });    
+  }
+
+  
+  if(to.meta['requiredGroups']){
+    
+    const requiredGroups:string[] = to.meta['requiredGroups']
+    const userGroups = userProfile.groups
+    let allowAccess = false
+    if(['','/'].includes(to.path)) allowAccess= true
+
+    for(const g of requiredGroups){
+      
+      if(userGroups.includes(g)){
+        allowAccess = true
+      }
+      if(userProfile.roles.includes(g)){
+        allowAccess = true
+      }
+      
+    }
+    if(!allowAccess){
+      throw createError({
+            statusCode: 403,
+            statusMessage: 'insufficientPriviledge',
+            message: 'insufficientPriviledgeMsg',
+            fatal: true,
+      }); 
+    }
+  }
+  console.log("middleware check isexpired",useLicense().isExpired())
+  if(!useLicense().isExpired()) {
+    return true
+  }else if(allowAccessExpired(to)){
+    return true
+  }else{
+    throw createError({
+            statusCode: 402,
+            statusMessage: 'systemExpired',
+            message:'systemExpiredMsg',                        
+            fatal: true,
+        }); 
+    }
+  })
+
+
+  const allowAccessExpired = (to:RouteLocationNormalizedGeneric)=>{
+    const userProfile = getUserProfile()
+    let allowPass = false
+    const isSuperAdmin = userProfile.groups.includes('superadmin')    
+    if(isSuperAdmin){
+      allowPass=true
+    }
+    const allowedPath = ['/billing','/pickgroup']
+    for(const p of allowedPath){
+      console.log("to.path.includes",to.path,p)
+      if(to.path.includes(p))allowPass = true
+    }
+
+    return allowPass
+  }

@@ -10,11 +10,11 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import * as dbupdate from 'src/simple-app/config/db-update';
-import * as schemas from './schemas';
+import { Environment, UpgradeScript } from './schemas';
 @Injectable()
 export class MaintenanceService {
   constructor(
-    @InjectModel('Environment') private sysEnvdoc: Model<schemas.Environment>,
+    @InjectModel('Environment') private sysEnvdoc: Model<Environment>,
     @InjectConnection() private readonly connection: Connection,
   ) {
     this.initEnv();
@@ -32,7 +32,7 @@ export class MaintenanceService {
 
   async getUpdates(appuser: UserContext) {
     const keys = Object.keys(dbupdate);
-    const updatescripts: schemas.UpgradeScript[] = [];
+    const updatescripts: UpgradeScript[] = [];
     const key = keys[0];
     // console.log(dbupdate[key]())
 
@@ -62,15 +62,28 @@ export class MaintenanceService {
       throw new InternalServerErrorException(`Error db update (${versionId}): ${e.message}`);
     }
   }
-  async runGetServiceStatus(appuser: UserContext) {
-    const res = await this.sysEnvdoc.find();
-    if (res.length > 0) {
-      return res[0].systemEnable;
-    } else {
-      return true;
-    }
+  async runGetEnvironment(appUser: UserContext) {
+    const res = await this.sysEnvdoc.findOne();
+    return res;
   }
-  async runStopService(appuser: UserContext) {
+  async runUpdateEnvironment(appUser: UserContext, data: Environment) {
+    const finalData: Environment = {
+      systemEnable: data.systemEnable === undefined ? data.systemEnable : true,
+      stopUntil: data.stopUntil ?? '',
+      maintenanceMessage: data.maintenanceMessage ?? '',
+      adminEmails: data.adminEmails.map((item) => item.replace(' ', '')) ?? [],
+      billingEmails: data.billingEmails.map((item) => item.replace(' ', '')) ?? [],
+      supportEmails: data.supportEmails.map((item) => item.replace(' ', '')) ?? [],
+      taxRate: data.taxRate ?? 0.00,
+      taxName: data.taxName?? '',
+      updated: new Date().toISOString(),
+      updatedBy: appUser.getUid(),
+    };
+    const res = await this.sysEnvdoc.updateOne({}, finalData);
+    return res;
+  }
+
+  async runStopService(appUser: UserContext) {
     const res = await this.sysEnvdoc.find();
     if (res.length > 0) {
       res[0].systemEnable = false;
@@ -78,7 +91,7 @@ export class MaintenanceService {
     }
     return Promise.resolve(`status: ${res[0].systemEnable}`);
   }
-  async runStartService(appuser: UserContext) {
+  async runStartService(appUser: UserContext) {
     const res = await this.sysEnvdoc.find();
     if (res.length > 0) {
       res[0].systemEnable = true;

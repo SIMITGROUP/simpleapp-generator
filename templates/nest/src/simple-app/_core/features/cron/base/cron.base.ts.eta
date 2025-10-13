@@ -1,13 +1,13 @@
-import { UserContext } from "../../user-context/user.context";
-import { SimpleAppRobotUserService } from "../../user-context/robot-user.service";
-import {BaseUserContext} from '../../user-context/user-context.type'
+import { UserContext } from '../../user-context/user.context';
+import { SimpleAppRobotUserService } from '../../user-context/robot-user.service';
+import { BaseUserContext } from '../../user-context/user-context.type';
 export abstract class SimpleAppCronBaseClass {
-    private robotUser:SimpleAppRobotUserService
+  private robotUser: SimpleAppRobotUserService;
 
-    constructor(robotUser:SimpleAppRobotUserService){
-        this.robotUser=robotUser
-    }
-    getAppUser(user:BaseUserContext){
-        return this.robotUser.createDumyAppUser(user)
-    }
+  constructor(robotUser: SimpleAppRobotUserService) {
+    this.robotUser = robotUser;
+  }
+  async getAppUser(user: BaseUserContext) {
+    return await this.robotUser.createDumyAppUser(user);
+  }
 }

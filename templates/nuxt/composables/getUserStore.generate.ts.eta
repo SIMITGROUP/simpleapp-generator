@@ -12,6 +12,10 @@ export const getUserStore = () => {
   const { $userstore } = useNuxtApp();
   return $userstore;
 };
+export const reloadUserStoreFromMiddleware = async (xorg:string) => {
+  const { $userstore } = useNuxtApp();
+  await $userstore.loadRemoteUserFromXorg(xorg)
+};
 export const reloadUserStore = async () => {
   const { $userstore } = useNuxtApp();
   await $userstore.loadRemoteUserInfo();
@@ -25,17 +29,15 @@ export const isGuideComplete = (guidename: string): boolean => {
   } else return false;
 };
 export const setGuideComplete = async (guidename: string) => {
-  const userstore = useNuxtApp().$userstore;
-  await getProfileApi().runTourComplete(guidename);
-  if (getUserProfile() !== undefined) {
-    if (!Array.isArray(getUserProfile()?.moreProps.completedTours))
-      userstore.moreProps.completedTours = [guidename];
-    else userstore.moreProps.completedTours.push(guidename);
-  }
+  // const userstore = useNuxtApp().$userstore;
+  // await getProfileApi().runTourComplete(guidename);
+  // if (getUserProfile() !== undefined) {
+  //   if (!Array.isArray(getUserProfile()?.moreProps.completedTours))
+  //     userstore.moreProps.completedTours = [guidename];
+  //   else userstore.moreProps.completedTours.push(guidename);
+  // }
 };
-export const getCurrentXorg = () => {
-  return useRoute().params.xorg ? String(useRoute().params.xorg) : undefined;
-};
+export const getCurrentXorg = () => getUserStore().xOrg ?? ''
 export const getPageBaseUrl = (resourcename: string) => {
   return `/${getCurrentXorg()}/${resourcename}`;
 };
@@ -60,19 +62,13 @@ export const getProfileEmail = () => getUserProfile()?.email;
 export const getProfileUid = () => getUserProfile()?.uid;
 export const getProfileFullName = () => getUserProfile()?.fullName;
 
-export const refreshOrgLogo = async () => {
-  const logodata = await useNuxtApp().$OrganizationDoc().getApi().runGetlogo();
-  orgLogo = logodata.data;
-};
-export const getOrgLogo = () => orgLogo;
-export const setOrgLogo = (str: string) => (orgLogo = str);
-export const getCurrentBranch = () => {
-  const branchId = getUserStore().branchId;
-  const branchinfo = getUserStore().branches.find(
-    (item) => item.branch.branchId == branchId,
-  );
-  return branchinfo;
-};
+// export const refreshOrgLogo = async () => {
+//   const logodata = await useNuxtApp().$OrganizationDoc().getApi().runGetlogo();
+//   orgLogo = logodata.data;
+// };
+// export const getOrgLogo = () => orgLogo;
+// export const setOrgLogo = (str: string) => (orgLogo = str);
+export const getCurrentBranch = () => getUserProfile().branchInfo;
 
 export const getMySimpleAppUserPicker = () => {
   return {

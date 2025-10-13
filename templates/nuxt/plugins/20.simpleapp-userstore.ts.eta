@@ -53,12 +53,9 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     }),
 
     actions: {
-      async loadRemoteUserInfo() {
-        // console.log('loadRemoteUserInfo')
-
+      async loadRemoteUserFromXorg(xorg:string) {
         const { $axios, $miniAppStore, $customFieldStore } = useNuxtApp();
-        const route = useRoute();
-        let xorg = this.getCurrentXorg();
+        
         let apiurl = "";
         if (!xorg) {
           apiurl = `${useRuntimeConfig().public.appUrl}/api`;
@@ -76,7 +73,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
               return;
             }
             const res = tmp.data
-            
+            this.xOrg= xorg
             this._id = res._id;
             this.uName = res.uName;
             this.sessionId = res.sessionId;
@@ -103,7 +100,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
             this.groups = res.groups;
             this.roles = res.roles;
             this.time = res.time;
-            this.xOrg = res.xOrg;
+            
             this.invites = res.invites;
             this.moreProps = res.moreProps;
             // this.package = res.moreProps.package;
@@ -122,15 +119,14 @@ export default defineNuxtPlugin(async (nuxtApp) => {
             return Promise.reject(err);
           });
       },
+      async loadRemoteUserInfo() {
+        const route = useRoute();
+        let xorg = this.getCurrentXorg();
+        await this.loadRemoteUserFromXorg(xorg)
+        
+      },
       getCurrentXorg() {
-        const xorg = useRoute().params.xorg
-        let result = ''
-        if(typeof xorg == 'string'){
-          result = xorg
-        }else{
-          result =''
-        }
-        return result
+        return this.xOrg
       },
       async pingSession(): Promise<string> {
         let xorg = this.getCurrentXorg();

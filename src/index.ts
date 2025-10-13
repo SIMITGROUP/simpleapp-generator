@@ -115,8 +115,9 @@ if (continueexecute) {
   };
   const reGenBackend = async () => {
     fw.setConfiguration(configs);
-    generate.run(configs, ['nest'], () => {
-      fw.prettyNest();
+    await generate.run(configs, ['nest'], () => {
+      // console.log("reGenBackendreGenBackendreGenBackendreGenBackend")
+      // fw.prettyNest();
     });
   };
 
@@ -151,6 +152,7 @@ if (continueexecute) {
       break;
     case 'updatebackend':
       reGenBackend();
+      console.log("reGenBackend done")
       break;
     case 'frontend':
       runfrontend();

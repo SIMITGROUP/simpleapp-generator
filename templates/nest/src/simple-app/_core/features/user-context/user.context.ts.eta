@@ -27,6 +27,7 @@ import { Webhook } from 'src/simple-app/_core/features/webhook/schemas';
 import { UserContextInfo, ProfileUserBranch, ProfileUserInvites, TenantPermission } from 'src/simple-app/_core/features/profile/profile.schema';
 import { ModifiedRecords } from '../../framework/schemas';
 import { Role } from '../auth/role-guard/roles.enum';
+import { Environment } from '@core-features/maintenance/schemas';
 import * as rolegroups from '../auth/role-guard/roles.group';
 
 // import systemWebHooks from '../../webhooks';
@@ -136,10 +137,11 @@ export class UserContext extends UserContextInfo {
     private readonly permModel: Model<Permission>,
     // private readonly appModel: Model<Appintegration>,
     private readonly miniAppInstallationModel: Model<MiniAppInstallation>,
+    private systemEnvironment: Environment,
   ) {
     super();
   }
-
+  getEnvironment = ()=> this.systemEnvironment
   setDBSession = (dbsession: ClientSession) => {
     this.dbsession = dbsession;
   };
@@ -482,6 +484,7 @@ export class UserContext extends UserContextInfo {
 
   setUserToken = async (tokenStr: string) => {
     this.logger.debug(`===setUserToken===`);
+    const systemEnv = this.systemEnvironment;
     // Define token info
     const tokeninfo: jwt.JwtPayload = jwt.decode(tokenStr) as jwt.JwtPayload;
     this.token = tokenStr;
@@ -493,9 +496,9 @@ export class UserContext extends UserContextInfo {
     this.logger.debug(`User found ${this.uid}`);
 
     const userProfile = await this.obtainProfileFromDB();
+
     if (userProfile) {
       this.logger.debug(`User ${this.uid} exists in tenant (${this.tenantId})`);
-
       this._id = userProfile._id;
       this.branchCode = userProfile['branchCode'] ?? '';
       this.branchName = userProfile['branchName'] ?? '';
@@ -511,6 +514,7 @@ export class UserContext extends UserContextInfo {
       this.orgRecordId = userProfile['orgRecordId'] ?? '';
       this.branchRecordId = userProfile['branchRecordId'] ?? '';
       this.invites = userProfile.invites;
+
       userProfile['branches'].forEach((b) => {
         b.xOrg = this.generateXOrg(b.tenantId, b.orgId, b.branchId);
       });
@@ -522,9 +526,29 @@ export class UserContext extends UserContextInfo {
         webhook: false,
         support: false,
       };
-      this.roles = userProfile['roles'] ?? [Role.Everyone, Role.User];
+      this.roles = userProfile['roles'] ?? [Role.Everyone, Role.User,Role.CustomField_search,Role.QueueJob_search];
 
-      // console.log("rolegroups",rolegroups)
+      if (this.tenantInfo?.owner?.uid === this.uid) {
+        this.roles.push(Role.TenantOwner);
+      }
+      if (this.tenantInfo?.company && this.tenantInfo.company.billUserEmail === this.email) {
+        this.roles.push(Role.Billing);
+      }
+      if (systemEnv) {
+        // console.log("systemEnv",systemEnv)
+        const emailFields = {
+          adminEmails: 'SuperAdmin',
+          billingEmails: 'DevBilling',
+          supportEmails: 'DevSupport',
+        };
+        for (const f of Object.keys(emailFields)) {
+          if (Array.isArray(systemEnv[f]) && systemEnv[f].includes(this.email) && !this.roles.includes(Role[emailFields[f]])) {
+            this.roles.push(Role[emailFields[f]]);
+          }
+        }
+      }
+
+      // console.log('this.roles', this.roles);
       for (const group of this.groups) {
         const roles: Role[] = rolegroups[group]();
         //(<() => Role[]>rolegroups[group])();
@@ -1150,7 +1174,6 @@ export class UserContext extends UserContextInfo {
     return data;
   }
 
-  
   offsetDate(date: string): string {
     const timestamp = new Date(date).getTime();
     const offsets = this.getOffsetMinute() * 60000;

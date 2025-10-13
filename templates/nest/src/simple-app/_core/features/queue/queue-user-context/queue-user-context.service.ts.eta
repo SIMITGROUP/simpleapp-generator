@@ -15,11 +15,11 @@ export class QueueUserContext {
     @InjectModel('User') private userModel: Model<User>,
     @InjectModel('Permission') private permModel: Model<Permission>,
     @InjectModel('MiniAppInstallation') private miniAppInstallationModel: Model<MiniAppInstallation>,
-    private robotUserService: SimpleAppRobotUserService
-  ) { }
+    private robotUserService: SimpleAppRobotUserService,
+  ) {}
 
-  create(user) {
-    return this.robotUserService.createDumyAppUser(user)
+  async create(user) {
+    return await this.robotUserService.createDumyAppUser(user);
   }
 
   //   assign(userContext: QueuePayload.UserContext) {

@@ -24,8 +24,8 @@ export abstract class BaseQueueConsumer extends WorkerHost {
     super();
   }
 
-  createUserContext(user) {
-    return this.queueUserContext.create(user);
+  async createUserContext(user) {
+    return await this.queueUserContext.create(user);
   }
 
   async startSession(appUser: UserContext) {
@@ -37,7 +37,7 @@ export abstract class BaseQueueConsumer extends WorkerHost {
     // console.log("process job", job.data)
     const { userContext, payload } = job.data;
 
-    const appUser = this.createUserContext(userContext.user);
+    const appUser = await this.createUserContext(userContext.user);
     await this.startSession(appUser);
 
     try {
@@ -45,14 +45,14 @@ export abstract class BaseQueueConsumer extends WorkerHost {
       // this.queueUserContext.assign(userContext);
 
       await this.dispatch(appUser, job, payload);
-      if(appUser.getDBSession().inTransaction()) {
+      if (appUser.getDBSession().inTransaction()) {
         await appUser.getDBSession().commitTransaction();
       }
       return {
         success: true,
       };
     } catch (e) {
-      if(appUser.getDBSession().inTransaction()) {
+      if (appUser.getDBSession().inTransaction()) {
         await appUser.getDBSession().abortTransaction();
       }
       throw e;

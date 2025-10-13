@@ -5,7 +5,7 @@ import { PolicyService } from 'src/simple-app/_core/features/policy/policy.servi
 import { Role } from 'src/simple-app/_core/features/auth/role-guard/roles.enum';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { MiniApp } from '../dto';
-import * as licenseTypes from 'src/simple-app/config/license-types';
+import licenseTypes,{BaseLicense} from 'src/simple-app/config/license-types';
 @Injectable()
 export class MiniAppManagerPolicyService {
   readonly _RELEASED_STATUSES = [MiniAppStatusEnum.PUBLISHED];
@@ -33,8 +33,8 @@ export class MiniAppManagerPolicyService {
     // const requiredPlans = miniApp.access.requiredPlans ?? [];
 
     if (licenseTypes[currentLicense]) {
-      const licenseSetting = licenseTypes[currentLicense]();
-      return licenseSetting?.features?.advance?.features?.miniApp ?? false;
+      const licenseSetting:BaseLicense = licenseTypes[currentLicense]
+      return licenseSetting?.feature?.miniApp ?? false;
     } else {
       return false;
     }

@@ -4,12 +4,12 @@
  * last change 2025-09-01
  * Author: Ks Tan
  */
-import { Controller, Get, Post, Param, Logger, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post,Put, Param, Logger, HttpCode,Body } from '@nestjs/common';
 import { MaintenanceService } from './maintenance.service';
 import { ApiTags, ApiBody, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { Roles } from 'src/simple-app/_core/features/auth/role-guard/roles.decorator';
 import { Role } from 'src/simple-app/_core/features/auth/role-guard/roles.enum';
-import * as schemas from './schemas';
+import {Environment,UpgradeScript}  from './schemas';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { AppUser } from 'src/simple-app/_core/features/user-context/appuser.decorator';
 @ApiTags('maintenance')
@@ -21,12 +21,13 @@ export class MaintenanceController {
 
   @Get('/get-updates')
   @Roles(Role.SuperAdmin)
+  @ApiOperation({ operationId: 'getUpdates', description: 'get all available update scripts' })
   @ApiResponse({
     status: 200,
     description: 'Sample 200 response',
-    type: [schemas.UpgradeScript],
+    type: [UpgradeScript],
   })
-  async getUpdate(@AppUser() appuser: UserContext) {
+  async getUpdates(@AppUser() appuser: UserContext) {
     const result = await this.maintenanceService.getUpdates(appuser);
     return result;
   }
@@ -34,6 +35,7 @@ export class MaintenanceController {
   @Post('/run-updates/:id')
   @HttpCode(200)
   @Roles(Role.SuperAdmin)
+  @ApiOperation({ operationId: 'runUpdate', description: 'run specific update script' })
   @ApiResponse({
     status: 200,
     description: 'Sample 200 response',
@@ -46,17 +48,33 @@ export class MaintenanceController {
 
   @Get('/service-status')
   @Roles(Role.SuperAdmin)
+  @ApiOperation({ operationId: 'runGetEnvironment', description: 'get system status' })
   @ApiResponse({
     status: 200,
     description: 'Sample 200 response',
-    type: Boolean,
+    type: Environment,
   })
-  async runGetServiceStatus(@AppUser() appuser: UserContext) {
-    const result: Boolean = await this.maintenanceService.runGetServiceStatus(appuser);
+  async runGetEnvironment(@AppUser() appuser: UserContext) {
+    const result: Environment = await this.maintenanceService.runGetEnvironment(appuser);
+    return result;
+  }
+
+  @Put('/service-status')
+  @Roles(Role.SuperAdmin)
+  @ApiOperation({ operationId: 'runUpdateEnvironment', description: 'Update system status' })
+  @ApiBody({ description: 'Data', type: Environment })
+  @ApiResponse({
+    status: 200,
+    description: 'Sample 200 response',
+    type: Environment,
+  })
+  async runUpdateEnvironment(@AppUser() appuser: UserContext,@Body() data: Environment) {
+    const result = await this.maintenanceService.runUpdateEnvironment(appuser, data);
     return result;
   }
 
   @Post('/stop-service')
+  @ApiOperation({ operationId: 'runStopService', description: 'suspend backend, only superadmin can access' })
   @HttpCode(200)
   @Roles(Role.SuperAdmin)
   @ApiResponse({
@@ -70,6 +88,7 @@ export class MaintenanceController {
   }
 
   @Post('/start-service')
+  @ApiOperation({ operationId: 'runStartService', description: 'start backend, system back to usual' })
   @HttpCode(200)
   @Roles(Role.SuperAdmin)
   @ApiResponse({

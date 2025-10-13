@@ -8,8 +8,11 @@ export enum Role {
     Unknown = 'unknown',    // unuse yet
     Everyone = 'everyone',       //everyone
     SuperAdmin = 'superadmin',   //reserved for developers, no control, 
-    SuperUser = 'suerpuser',     //reserved, plan use by support 
+    SuperUser = 'superpuser',     //reserved, plan use by support 
     TenantOwner = 'tenantowner', //tenant owner/creator 
+    Billing = 'billing',
+    DevSupport = 'devsupport',
+    DevBilling = 'devbilling',
     User = 'user',
     //role generated from groups
     <% Object.getOwnPropertyNames(it.allroles).forEach((key)=>{%>

@@ -10,6 +10,9 @@
  */
 import profile from "../profile.vue";
 definePageMeta({
-//  menuPath:'setting/profile'
-})
+   menuPath:'setting/profile',
+  licenseWeight: 0,
+  requiredGroups: ["everyone",]
+
+});
 </script>

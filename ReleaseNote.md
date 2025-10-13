@@ -1,5 +1,11 @@
-[2.0.0y-alpha]
+[2.0.0z-alpha]
+1. add more roles like support, billings
+2. environment allow add more type of users
+3. user context can obtain environment collection value
+4. make frontend midleware changable, and support new license, permission strategy
+5. improve frontend userstore get xorg method
 
+[2.0.0y-alpha]
 1. Allow mini app adjust built in schema
 
 [2.0.0x-alpha]
