@@ -2,17 +2,24 @@ import { RouteLocationNormalizedGeneric } from 'vue-router';
 import { getUserProfile } from './../composables/getUserStore.generate';
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  console.log(to.path)
-  const userProfile = getUserProfile()
+  // console.log("to",to.path)
+  const uauth = useAuthState()  
+
+  if(isPublicPath(to.path)) return true
+  if(!uauth.data.value) return navigateTo('/login')  
+
+  let userProfile = getUserProfile()
   const xorg = <string>to.params['xorg'] ?? 'MC0wLTA'
   useNuxtApp().$userstore.xOrg=xorg
   if(!userProfile?._id){
     // console.error("middleware detect no user id, reload under xorg",xorg)    
     await reloadUserStoreFromMiddleware(xorg)
+    userProfile = getUserProfile() 
     // console.log("after reload",userProfile)
-  }else if(userProfile.branchId===0 && xorg !='MC0wLTA'){
+  }else if(userProfile?.branchId===0 && xorg !='MC0wLTA'){
     // console.error("middleware detect wrong xorg reload profile for",xorg)
     await reloadUserStoreFromMiddleware(xorg)
+    userProfile = getUserProfile()
     // console.log("after reload",userProfile)
   }else{
     // console.log("use exists, use back the user store")
@@ -21,9 +28,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   
 
   const currentgroup = useCookie('currentGroup').value
-  if(currentgroup && userProfile.groups.includes(currentgroup)){
+  if(currentgroup && userProfile?.groups?.includes(currentgroup)){
     //use back ground
-  }else if(userProfile.groups.length>0){
+  }else if(userProfile?.groups?.length>0){
     goTo('pickgroup')
   }
     // if (!currentgroup)goTo('pickgroup')
@@ -43,7 +50,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   }
 
   const license = useLicense().getLicense()
-  console.log("metas check",metas)
+  // console.log("metas check",metas)
   if(metas.length == 0){
     throw createError({
         statusCode: 404,
@@ -83,7 +90,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   if(to.meta['requiredGroups']){
     
     const requiredGroups:string[] = to.meta['requiredGroups']
-    const userGroups = userProfile.groups
+    const userGroups = userProfile?.groups || []
+    const userRoles = userProfile?.roles || []
     let allowAccess = false
     if(['','/'].includes(to.path)) allowAccess= true
 
@@ -92,7 +100,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       if(userGroups.includes(g)){
         allowAccess = true
       }
-      if(userProfile.roles.includes(g)){
+      if(userRoles.includes(g)){
         allowAccess = true
       }
       
@@ -106,7 +114,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       }); 
     }
   }
-  console.log("middleware check isexpired",useLicense().isExpired())
+  // console.log("middleware check isexpired",useLicense().isExpired())
   if(!useLicense().isExpired()) {
     return true
   }else if(allowAccessExpired(to)){
@@ -125,15 +133,22 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const allowAccessExpired = (to:RouteLocationNormalizedGeneric)=>{
     const userProfile = getUserProfile()
     let allowPass = false
-    const isSuperAdmin = userProfile.groups.includes('superadmin')    
+    const isSuperAdmin = userProfile?.groups?.includes('superadmin') ?? false
     if(isSuperAdmin){
       allowPass=true
     }
     const allowedPath = ['/billing','/pickgroup']
     for(const p of allowedPath){
-      console.log("to.path.includes",to.path,p)
+      // console.log("to.path.includes",to.path,p)
       if(to.path.includes(p))allowPass = true
     }
 
     return allowPass
+  }
+
+  const isPublicPath=(path:string)=>{
+    if(path.includes('/login')) return true
+    if(path.includes('/relogin')) return true
+    if(path.includes('/logout')) return true
+    return false
   }
