@@ -1316,63 +1316,63 @@ export class SimpleAppService<T extends SchemaFields> {
       },
     ];
 
-    // // Relation lookups
-    // Object.entries(option.relations).forEach(([relationName, relationOption]) => {
-    //   // Prevent mini api user lookup sensitive data
-    //   if (!allowedRelations.includes(relationName)) {
-    //     throw new BadRequestException(`Not allowed to lookup ${relationName}`);
-    //   }
+    // Relation lookups
+    Object.entries(option.relations).forEach(([relationName, relationOption]) => {
+      // Prevent mini api user lookup sensitive data
+      if (!allowedRelations.includes(relationName)) {
+        throw new BadRequestException(`Not allowed to lookup ${relationName}`);
+      }
 
-    //   const subPipeline: PipelineStage.Lookup['$lookup']['pipeline'] = [];
+      const subPipeline: PipelineStage.Lookup['$lookup']['pipeline'] = [];
 
-    //   subPipeline.push({
-    //     $match: {
-    //       $expr: { $eq: [`$${relationOption.foreignField}`, '$$localValue'] },
-    //     },
-    //     ...relationOption.filter,
-    //   });
+      subPipeline.push({
+        $match: {
+          $expr: { $eq: [`$${relationOption.foreignField}`, '$$localValue'] },
+        },
+        ...relationOption.filter,
+      });
 
-    //   // Relation sort
-    //   if (relationOption.sort) {
-    //     subPipeline.push({
-    //       $sort: relationOption.sort,
-    //     });
-    //   }
+      // Relation sort
+      if (relationOption.sort) {
+        subPipeline.push({
+          $sort: relationOption.sort,
+        });
+      }
 
-    //   // Relation projection
-    //   if (relationOption.projection) {
-    //     subPipeline.push({
-    //       $project: {
-    //         ...(relationOption.projection ?? {}),
-    //       },
-    //     });
-    //   }
+      // Relation projection
+      if (relationOption.projection) {
+        subPipeline.push({
+          $project: {
+            ...(relationOption.projection ?? {}),
+          },
+        });
+      }
 
-    //   pipeline.push({
-    //     $lookup: {
-    //       from: relationName.toLowerCase(),
-    //       as: `_${relationName}`,
-    //       let: { localValue: `$${relationOption.localField}` },
-    //       pipeline: subPipeline,
-    //     },
-    //   });
-    // });
+      pipeline.push({
+        $lookup: {
+          from: relationName.toLowerCase(),
+          as: `_${relationName}`,
+          let: { localValue: `$${relationOption.localField}` },
+          pipeline: subPipeline,
+        },
+      });
+    });
 
-    // // Root sort
-    // if (option.root?.sort) {
-    //   pipeline.push({
-    //     $sort: option.root.sort,
-    //   });
-    // }
+    // Root sort
+    if (option.root?.sort) {
+      pipeline.push({
+        $sort: option.root.sort,
+      });
+    }
 
-    // // Root Projection
-    // if (option.root.projection) {
-    //   pipeline.push({
-    //     $project: {
-    //       ...(option.root?.projection ?? {}),
-    //     },
-    //   });
-    // }
+    // Root Projection
+    if (option.root.projection) {
+      pipeline.push({
+        $project: {
+          ...(option.root?.projection ?? {}),
+        },
+      });
+    }
 
     return await this.aggregate(appUser, pipeline);
   }

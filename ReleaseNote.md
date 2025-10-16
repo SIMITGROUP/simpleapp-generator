@@ -1,3 +1,7 @@
+[2.0.1c-alpha]
+
+1. Reopen searchWithRelation code
+
 [2.0.1b-alpha]
 
 1. Update menu permission
