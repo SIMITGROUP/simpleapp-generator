@@ -8,7 +8,7 @@ export const <%= capitalizeFirstLetter(it.typename) %>MongoSchema = SchemaFactor
 .pre('save', function(next) {
     this.increment();
     return next();
-})
+}) .index({ 'tenantId': 1 })
 
   <% const config = it.jsonschema['x-simpleapp-config']%>   
   <% if(config['uniqueKey']) {%>

@@ -1,3 +1,8 @@
+[2.0.1d-alpha]
+
+1. Compulsory index tenantId for mongodb sharding
+
+
 [2.0.1c-alpha]
 
 1. Reopen searchWithRelation code
