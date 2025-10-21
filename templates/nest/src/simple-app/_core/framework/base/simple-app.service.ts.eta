@@ -357,106 +357,7 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
-  // seems no use, and confusing
-  // async createManyWithId(appuser: UserContext, datas: T[]) {
-  //   if (Array.isArray(datas)) {
-  //     for (let i = 0; i < datas.length; i++) {
-  //       const data = datas[i];
-  //       let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
-  //       isolationFilter = this.polishIsolationFilter(isolationFilter, data);
-
-  //       Object.assign(data, isolationFilter);
-  //       this.reCalculateValue(data);
-  //       await this.validateData(appuser, data);
-  //       this.applyNestedDateTime(appuser, data, 'create');
-  //     }
-
-  //     const dbsession = appuser.getDBSession();
-  //     if (dbsession && !dbsession.inTransaction()) {
-  //       dbsession.startTransaction({ readPreference: 'primary' });
-  //     }
-
-  //     const result = await this.doc.insertMany(datas, { session: dbsession });
-  //     await this.addManyAuditEvents(appuser, this.documentName, 'createMany', datas);
-  //     for (let i = 0; i < datas.length; i++) {
-  //       appuser.addInsertedRecordId(this.documentName, datas[i]._id);
-  //     }
-  //     return result;
-  //   } else {
-  //     throw new BadRequestException(this.getDocumentType() + ': create many only support array');
-  //   }
-  // }
-
-  /**
-   * create many from array with hooks (temporary used for generate sample data only)
-   * @param appuser
-   * @param datas
-   */
-  //seems nobody use. also confusing
-  // async createManyWithHook(appuser: UserContext, datas: T[]) {
-  //   if (Array.isArray(datas)) {
-  //     for (let i = 0; i < datas.length; i++) {
-  //       const data = datas[i];
-
-  //       let result;
-  //       const dbsession = appuser.getDBSession();
-  //       if (dbsession && !dbsession.inTransaction()) {
-  //         dbsession.startTransaction({ readPreference: 'primary' });
-  //       }
-
-  //       if (this.withDocNumberFormat && !data[this.documentIdentityCode]) {
-  //         await this.genNewDocNo(appuser, data);
-  //       }
-
-  //       let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
-  //       isolationFilter = this.polishIsolationFilter(isolationFilter, data);
-
-  //       Object.assign(data, isolationFilter);
-  //       this.reCalculateValue(data);
-  //       await this.validateData(appuser, data);
-  //       this.applyNestedDateTime(appuser, data, 'create');
-
-  //       //new way of hook
-  //       await this.runEvent(appuser, this.setHookName('beforeCreate'), { data: data }, false);
-
-  //       const newdoc = new this.doc(data);
-
-  //       try {
-  //         result = await newdoc.save({ session: dbsession });
-  //         await this.addAuditEvent(appuser, this.documentName, result._id, 'create', data);
-  //         appuser.addInsertedRecordId(this.documentName, result._id);
-  //       } catch (err) {
-  //         this.logger.error(err);
-  //         throw new ProcessErrorException('ERR_CREATE_MANY',err.message,{
-  //           err:err
-  //         })
-  //         // const processdata = await this.runEvent(appuser, 'processdata.processError', {
-  //         //   err: err,
-  //         // });
-
-  //         // if (!processdata) {
-  //         //   throw new InternalServerErrorException(err);
-  //         // } else {
-  //         //   throw new CustomException(processdata.code, processdata.msg);
-  //         // }
-  //       }
-
-  //       try {
-  //         //new way of hook
-  //         await this.runEvent(appuser, this.setHookName('afterCreate'), { data: data }, false);
-  //         await this.callWebhook(appuser, 'create', result);
-
-  //         // return result as T;
-  //       } catch (err) {
-  //         throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
-  //       }
-  //     }
-  //   } else {
-  //     throw new BadRequestException(this.getDocumentType() + ': create many only support array');
-  //   }
-  //   return 'ok';
-  // }
-
+ 
   /**
    * create many from array, for performance reason it submit all item in 1 go, so it won't implement hooks
    * @param appuser
@@ -476,7 +377,7 @@ export class SimpleAppService<T extends SchemaFields> {
       }
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction()) {
-        dbsession.startTransaction({ readPreference: 'primary' });
+        dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
       }
 
       try {
@@ -495,71 +396,6 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
-  //seems nobody use, also confusing
-  // async createWithId(appuser: UserContext, data: T) {
-  //   let result;
-
-  //   if (!data._id) {
-  //     data._id = crypto.randomUUID();
-  //   }
-  //   const dbsession = appuser.getDBSession();
-  //   if (dbsession && !dbsession.inTransaction()) {
-  //     dbsession.startTransaction({ readPreference: 'primary' });
-  //   }
-
-  //   this.logger.debug('this.withDocNumberFormat :' + this.withDocNumberFormat + '  && ' + '!data[this.documentIdentityCode] ==' + !data[this.documentIdentityCode]);
-  //   if (this.withDocNumberFormat && !data[this.documentIdentityCode]) {
-  //     await this.genNewDocNo(appuser, data);
-  //   }
-
-  //   let isolationFilter: any = { ...appuser.getCreateFilterWithId() };
-  //   isolationFilter = this.polishIsolationFilter(isolationFilter, data);
-
-  //   this.logger.debug('isolationFilter', 'SimpleAppService');
-  //   this.logger.debug(isolationFilter, 'SimpleAppService');
-  //   this.logger.debug('Create data before isolation', 'SimpleAppService');
-  //   this.logger.debug(data, 'SimpleAppService');
-  //   Object.assign(data, isolationFilter);
-  //   this.reCalculateValue(data);
-  //   await this.validateData(appuser, data);
-  //   this.logger.debug(data, `after create validation`);
-  //   this.applyNestedDateTime(appuser, data, 'create');
-
-  //   //new way of hook
-
-  //   await this.runEvent(appuser, this.setHookName('beforeCreate'), { data: data }, false);
-
-  //   this.logger.debug(data, `Create Record ${this.documentName}`);
-  //   const newdoc = new this.doc(data);
-  //   await this.identifyForeignKeys(appuser, data);
-  //   try {
-  //     result = await newdoc.save({ session: dbsession });
-  //     await this.addAuditEvent(appuser, this.documentName, result._id, 'create', data);
-  //     appuser.addInsertedRecordId(this.documentName, result._id);
-  //   } catch (err) {
-  //     this.logger.error(err);
-  //     const processdata = await this.runEvent(appuser, 'processdata.processError', {
-  //       err: err,
-  //     });
-
-  //     if (!processdata) {
-  //       throw new InternalServerErrorException(err);
-  //     } else {
-  //       throw new CustomException(processdata.code, processdata.msg);
-  //     }
-  //   }
-
-  //   try {
-  //     //new way of hook
-  //     await this.runEvent(appuser, this.setHookName('afterCreate'), { data: result }, false);
-
-  //     await this.callWebhook(appuser, 'create', result);
-  //     return result as T;
-  //   } catch (err) {
-  //     throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
-  //   }
-  // }
-
   async create(appuser: UserContext, data: T, noStartTransaction: boolean = false) {
     let result;
 
@@ -568,7 +404,7 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction() && !noStartTransaction) {
-      dbsession.startTransaction({ readPreference: 'primary' });
+      dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
     }
 
     this.logger.debug('this.withDocNumberFormat :' + this.withDocNumberFormat + '  && ' + '!data[this.documentIdentityCode] ==' + !data[this.documentIdentityCode]);
@@ -714,7 +550,7 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
-      dbsession.startTransaction({ readPreference: 'primary' });
+      dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
     }
 
     let dependency;
@@ -793,7 +629,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction() && !noStartTransaction) {
-        dbsession.startTransaction({ readPreference: 'primary' });
+        dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
       }
       // try {
       Object.assign(data, appuser.getUpdateFilter());
@@ -852,7 +688,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction()) {
-        dbsession.startTransaction({ readPreference: 'primary' });
+        dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
       }
       // try {
       // Object.assign(data, appuser.getUpdateFilter());
@@ -908,7 +744,7 @@ export class SimpleAppService<T extends SchemaFields> {
       await this.runEvent(appuser, this.setHookName('beforePatch'), { id: id, patchData: data, prevData: existingdata }, false);
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction()) {
-        dbsession.startTransaction({ readPreference: 'primary' });
+        dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
       }
       // try {
       Object.assign(data, appuser.getUpdateFilter());
@@ -963,7 +799,7 @@ export class SimpleAppService<T extends SchemaFields> {
     // Get DB Session
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
-      dbsession.startTransaction({ readPreference: 'primary' });
+      dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
     }
 
     const result = await this.doc.updateMany(isolationFilter, { $set: patch }, { session: dbsession });
