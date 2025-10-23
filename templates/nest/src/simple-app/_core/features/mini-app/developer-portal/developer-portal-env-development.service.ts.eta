@@ -76,6 +76,7 @@ export class DeveloperPortalEnvDevelopmentService {
       email: appUser.getEmail(),
     });
     if (users && users.length > 0) {
+      appUser.setId(users[0]._id);
       return;
     }
 

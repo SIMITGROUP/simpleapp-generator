@@ -1,3 +1,7 @@
+[2.0.1g-alpha]
+
+1. Fix mini app cannot publish
+
 [2.0.1f-alpha]
 
 1. Update image
