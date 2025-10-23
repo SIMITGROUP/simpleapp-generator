@@ -28,7 +28,11 @@ watch(()=>useRoute().fullPath,async (newval,oldvalue)=>{
    }
   if(getPathPara('xorg','')!=''){
   
-    if(!getUserProfile()?.currentGroup) goTo('pickgroup')
+    if(getCurrentXorg()===''){
+      navigateTo('/picktenant')
+    }else if(!getUserProfile()?.currentGroup){
+      goTo('pickgroup')
+    }
     setGraphqlServer()
   }  
 })
@@ -49,10 +53,12 @@ onMounted(async()=>{
     await reloadUserStore()
     const currentgroup = useCookie('currentGroup').value
     //if no xorg, no enforce pick group
-    if(getCurrentXorg()){
-      if (!currentgroup)goTo('pickgroup')
-      setGraphqlServer()
+    if(getCurrentXorg()===''){
+      goTo('picktenant')
+    }else if(!currentgroup){
+      goTo('pickgroup')
     }
+    setGraphqlServer()
   }else{
     if(useRoute().path!='/login'){
       navigateTo("/login");

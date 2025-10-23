@@ -10,9 +10,11 @@
  */
 import profile from "../profile.vue";
 definePageMeta({
-   menuPath:'setting/profile',
+  menuPath: "setting/profile",
   licenseWeight: 0,
-  requiredGroups: ["everyone",]
-
+  requiredGroups: ["everyone"],
+  description: "profiledesc",
+  icon: "pi pi-user",
+  colorClass: "text-icon-blue",
 });
 </script>

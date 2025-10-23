@@ -1,6 +1,13 @@
+[2.0.1f-alpha]
+
+1. Update image
+2. Remove useless docnoformat file
+3. Update profile page metadata
+4. Fix redirect page
+
 [2.0.1e-alpha]
 
-1. Fix developer portal cannot create app
+5. Fix developer portal cannot create app
 
 [2.0.1d-alpha]
 
