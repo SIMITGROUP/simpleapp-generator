@@ -1,7 +1,10 @@
+[2.0.1e-alpha]
+
+1. Fix developer portal cannot create app
+
 [2.0.1d-alpha]
 
 1. Compulsory index tenantId for mongodb sharding
-
 
 [2.0.1c-alpha]
 

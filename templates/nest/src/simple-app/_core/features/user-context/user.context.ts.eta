@@ -29,6 +29,7 @@ import { ModifiedRecords } from '../../framework/schemas';
 import { Role } from '../auth/role-guard/roles.enum';
 import { Environment } from '@core-features/maintenance/schemas';
 import * as rolegroups from '../auth/role-guard/roles.group';
+import { TenantLicenseEnum } from '@resources/tenant/tenant.enum';
 
 // import systemWebHooks from '../../webhooks';
 @Injectable({ scope: Scope.REQUEST })
@@ -141,7 +142,7 @@ export class UserContext extends UserContextInfo {
   ) {
     super();
   }
-  getEnvironment = ()=> this.systemEnvironment
+  getEnvironment = () => this.systemEnvironment;
   setDBSession = (dbsession: ClientSession) => {
     this.dbsession = dbsession;
   };
@@ -203,6 +204,18 @@ export class UserContext extends UserContextInfo {
   getMiniApiToken = () => this.miniApiToken;
 
   getMiniApiTokenInfo = () => this.miniApiTokenInfo;
+
+  setId = (id: string) => {
+    this._id = id;
+  };
+
+  setLicense = (license: TenantLicenseEnum) => {
+    if (!this.tenantInfo) {
+      this.tenantInfo = {} as any;
+    }
+
+    this.tenantInfo.license = license;
+  };
 
   setMiniApiToken = (token: string) => {
     this.miniApiToken = token;
@@ -526,7 +539,7 @@ export class UserContext extends UserContextInfo {
         webhook: false,
         support: false,
       };
-      this.roles = userProfile['roles'] ?? [Role.Everyone, Role.User,Role.CustomField_search,Role.QueueJob_search];
+      this.roles = userProfile['roles'] ?? [Role.Everyone, Role.User, Role.CustomField_search, Role.QueueJob_search];
 
       if (this.tenantInfo?.owner?.uid === this.uid) {
         this.roles.push(Role.TenantOwner);
@@ -1099,7 +1112,7 @@ export class UserContext extends UserContextInfo {
     if (this.isRealmAdmin() && !this.roles.includes(Role.SuperAdmin)) {
       this.roles.push(Role.SuperAdmin);
     }
-    this.logger.verbose(`User ${this.uid} have _id (${this.getId()}), groups (${this.groups.join(',')}) and roles (${this.getRoles().join(',')}).`);
+    // this.logger.verbose(`User ${this.uid} have _id (${this.getId()}), groups (${this.groups.join(',')}) and roles (${this.getRoles().join(',')}).`);
   }
 
   // getAppIntegration = () => this.appintegration;
