@@ -15,7 +15,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 //   errMsg: { type: String },
 //   errData: { type: Object },
 // };
-@Schema()
+@Schema({ collection: 'apievent' })
 export class ApiEvent {
   @Prop()
   _id: string;

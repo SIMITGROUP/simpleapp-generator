@@ -25,7 +25,7 @@ export class DocumentEventListItem {
   eventData: any;
 }
 
-@ObjectType()
+@Schema({ collection: 'documentevent' })
 @Schema()
 export class DocumentEvent {
   @Prop()

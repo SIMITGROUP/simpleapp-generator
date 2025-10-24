@@ -1,3 +1,6 @@
+[2.0.1k-alpha]
+1. apilog and documentevent collection remove 's'
+
 [2.0.1j-alpha]
 
 1. Fix documentnoformat x-foreign-key
