@@ -976,7 +976,7 @@ export class UserContext extends UserContextInfo {
     return results;
   }
 
-  setAsStaticUser = (uid: string, uname: string, name: string, email: string, xorg: string) => {
+  setAsStaticUser = async (uid: string, uname: string, name: string, email: string, xorg: string) => {
     // Define token info
     this.token = '';
     this.uid = uid;
@@ -986,6 +986,23 @@ export class UserContext extends UserContextInfo {
     this.ssoACL = {};
     this.roles = [Role.Everyone, Role.User, Role.SuperUser];
     this.setXOrg(xorg);
+    const pipeLine:PipelineStage[] = [
+      {$match:{ tenantId : -1 }},      
+      {$unionWith: { coll: "organization", pipeline: [ {$match:{orgId: this.orgId}}] } },
+      {$limit:1}
+    ]
+
+    // console.log("set as static user", pipeLine)
+    const result:Organization[] = await this.userModel.aggregate(pipeLine).exec();
+    // console.log("result",result)
+    if(result && result.length>0){
+      const res = result[0]
+      this.currency = res.currency
+      this.country = res.country
+      this.timeZone = res.timeZone
+      this.offsetMinute = res.offsetMinute
+    }
+
   };
 
   setGuestToken(tokenStr: string) {

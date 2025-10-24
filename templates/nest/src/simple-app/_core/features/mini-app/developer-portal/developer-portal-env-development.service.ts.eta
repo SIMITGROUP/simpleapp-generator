@@ -36,7 +36,7 @@ export class DeveloperPortalEnvDevelopmentService {
 
   async publish(appUser: UserContext, developerPortalAppId: string, dto: MiniApp) {
     this.assertDemoCompanyDefined();
-    appUser.setAsStaticUser(dto.author.uid, dto.author.email, dto.author.name, dto.author.email, process.env.DEMO_COMPANY_XORG);
+    await appUser.setAsStaticUser(dto.author.uid, dto.author.email, dto.author.name, dto.author.email, process.env.DEMO_COMPANY_XORG);
     appUser.setLicense(TenantLicenseEnum.ENTERPRISE); // else cannot install mini app
 
     const miniApp = await this.findMiniApp(developerPortalAppId, MiniAppManagerEnvEnum.DEV);
