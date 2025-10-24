@@ -885,6 +885,7 @@ export class UserContext extends UserContextInfo {
                           _id: '$org._id',
                           code: '$org.orgCode',
                           label: '$org.orgName',
+                          imageUrl: '$org.imageUrl',
                         },
                       },
                     },
@@ -925,6 +926,7 @@ export class UserContext extends UserContextInfo {
             groups: p.groups,
             branch: p.branch,
             orgRecordId: p.organization._id,
+            organization: p.organization,
             xOrg: this.generateXOrg(p.tenantId, p.orgId, p.branchId),
           });
         }

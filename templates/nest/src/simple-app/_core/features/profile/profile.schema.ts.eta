@@ -5,7 +5,7 @@ import { Permission } from 'src/simple-app/_core/resources/permission/permission
 import { Role } from '../auth/role-guard/roles.enum';
 import { Organization } from '../../resources/organization/organization.schema';
 import { Tenant } from '../../resources/tenant/tenant.schema';
-export {KeyValue} from '../../framework/schemas';
+export { KeyValue } from '../../framework/schemas';
 export class UserContextInfo {
   @ApiProperty({ type: String })
   _id: string;
@@ -106,6 +106,8 @@ export class ProfileUserBranch {
   orgRecordId: String;
   @ApiProperty({ type: String })
   xOrg: String;
+  @ApiProperty({ type: Object, required: false })
+  organization?: any;
 }
 
 export class TenantPermission {
