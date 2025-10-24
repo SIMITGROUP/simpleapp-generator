@@ -1,3 +1,7 @@
+[2.0.1i-alpha]
+
+1. Add org for user info
+
 [2.0.1h-alpha]
 
 1. Set robot user auto capture organization country, currency, timezone
