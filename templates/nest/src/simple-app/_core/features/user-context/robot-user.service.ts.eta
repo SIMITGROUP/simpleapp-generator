@@ -99,7 +99,7 @@ export class SimpleAppRobotUserService {
     const user = userContext;
     const xorg = appUser.generateXOrg(user.tenantId, user.orgId, user.branchId);
 
-    appUser.setAsStaticUser(user.uid ?? '00000000-0000-0000-0000-000000000000', user.uname ?? 'robot', user.fullName ?? 'Robot', user.email ?? 'robot@a.org', xorg);
+    await appUser.setAsStaticUser(user.uid ?? '00000000-0000-0000-0000-000000000000', user.uname ?? 'robot', user.fullName ?? 'Robot', user.email ?? 'robot@a.org', xorg);
     appUser.setTimeZone(user.timeZone ?? this.defaultTimeZone);
     appUser.setCountry(user.country ?? this.defaultCountry);
     appUser.setCurrency(user.currency ?? this.defaultCurrency);
@@ -111,7 +111,7 @@ export class SimpleAppRobotUserService {
     // console.log('prepareAppUserprepareAppUser');
     // this.appmodel,
     const appuser = new UserContext(this.userModel, this.permModel, this.miniAppInstallationModel,envs[0]);
-    appuser.setAsStaticUser('00000000-0000-0000-0000-000000000000', 'robot', 'Robot', 'robot@a.org', Base64URL.encodeText('0-0-0'));
+    await appuser.setAsStaticUser('00000000-0000-0000-0000-000000000000', 'robot', 'Robot', 'robot@a.org', Base64URL.encodeText('0-0-0'));
 
     const tenantId = data?.tenantId ?? 0;
     const orgId = data?.orgId ?? 0;

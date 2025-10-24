@@ -17,7 +17,7 @@ export class StaticApiKeyValidator implements IApiKeyValidator {
     const xOrg = req.get(HEADER_X_ORG) ?? Base64URL.encodeText('0-0-0');
     const guestAccessToken = req.get(HEADER_X_GUESS_ACCESS_TOKEN);
 
-    user.setAsStaticUser('00000000-0000-0000-0000-000000000000', 'robot', 'Robot', 'robot@a.org', xOrg);
+    await user.setAsStaticUser('00000000-0000-0000-0000-000000000000', 'robot', 'Robot', 'robot@a.org', xOrg);
     user.setUserType('robot');
 
     if (guestAccessToken) {

@@ -1,3 +1,7 @@
+[2.0.1h-alpha]
+
+1. Set robot user auto capture organization country, currency, timezone
+
 [2.0.1g-alpha]
 
 1. Fix mini app cannot publish
