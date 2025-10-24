@@ -59,7 +59,7 @@ export const readJsonSchemaBuilder = async (
     }
     const tmp = {
       type: 'object',
-      'x-foreignkey': 'docnoformat',
+      'x-foreignkey': 'documentnoformat',
       properties: { _id: { type: 'string' }, label: { type: 'string' } }
     };
     orijsondata.properties['docNoFormat'] = tmp as JSONSchema7Definition;
@@ -113,10 +113,10 @@ export const readJsonSchemaBuilder = async (
 
   //enforce format uuid for _id
   orijsondata.properties['_id']['format'] = 'uuid';
-  if(schemaconfigs.uploadPhoto){
-    orijsondata.properties['imageUrl']={type:'string'}
+  if (schemaconfigs.uploadPhoto) {
+    orijsondata.properties['imageUrl'] = { type: 'string' };
   }
- 
+
   // let newschema:JSONSchema7 & SchemaType = {
   //   type: 'object',
   //   "x-simpleapp-config":schemaconfigs,
