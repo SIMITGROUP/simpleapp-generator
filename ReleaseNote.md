@@ -1,3 +1,12 @@
+[2.0.1m-alpha]
+1. remove s from environment collection name 
+2. return maintenanceMessage when system under maintenance
+3. fix maintenanceMode cannot set in api
+4. 
+
+[2.0.1l-alpha]
+1. documentevent collection remove 's'
+
 [2.0.1k-alpha]
 1. apilog and documentevent collection remove 's'
 

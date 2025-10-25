@@ -63,19 +63,19 @@ export class MaintenanceService {
     }
   }
   async runGetEnvironment(appUser: UserContext) {
-    const res = await this.sysEnvdoc.findOne();
+    const res = await this.sysEnvdoc.findOne();    
     return res;
   }
   async runUpdateEnvironment(appUser: UserContext, data: Environment) {
     const finalData: Environment = {
-      systemEnable: data.systemEnable === undefined ? data.systemEnable : true,
+      systemEnable: data.systemEnable !== undefined ? data.systemEnable : true,
       stopUntil: data.stopUntil ?? '',
       maintenanceMessage: data.maintenanceMessage ?? '',
       adminEmails: data.adminEmails.map((item) => item.replace(' ', '')) ?? [],
       billingEmails: data.billingEmails.map((item) => item.replace(' ', '')) ?? [],
       supportEmails: data.supportEmails.map((item) => item.replace(' ', '')) ?? [],
-      taxRate: data.taxRate ?? 0.00,
-      taxName: data.taxName?? '',
+      taxRate: data.taxRate ?? 0.0,
+      taxName: data.taxName ?? '',
       updated: new Date().toISOString(),
       updatedBy: appUser.getUid(),
     };

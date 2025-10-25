@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-@Schema()
+@Schema({ collection: 'environment' })
 export class Environment {
   @Prop()
   @ApiProperty({ type: Boolean })

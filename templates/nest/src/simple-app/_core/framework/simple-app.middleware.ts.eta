@@ -50,6 +50,11 @@ export class SimpleAppMiddleware implements NestMiddleware {
     return true;
   }
 
+  getMaintenanceMessage (env:Environment){
+    return {
+          message: env.maintenanceMessage
+        }
+  } 
   async use(req: Request, res: Response, next: NextFunction) {
     if (req.baseUrl == '/oauth2-redirect.html') {
       next();
@@ -66,7 +71,7 @@ export class SimpleAppMiddleware implements NestMiddleware {
     tokenStr = tokenStr.replace('Bearer ', '');
     const xOrg = req.get('x-org') ?? this.defaultXOrg;
 
-    const user = new UserContext(this.userModel, this.permModel, this.miniAppInstallationModel,envs[0]);
+    const user = new UserContext(this.userModel, this.permModel, this.miniAppInstallationModel, envs[0]);
 
     if (req.baseUrl == '/graphql') {
       if (tokenStr) {
@@ -74,7 +79,7 @@ export class SimpleAppMiddleware implements NestMiddleware {
       }
 
       if (maintenanceMode && !user.isRealmAdmin()) {
-        throw new ServiceUnavailableException('System in maintenance mode');
+        throw new ServiceUnavailableException(this.getMaintenanceMessage(envs[0]));
       }
 
       req['sessionuser'] = user;
@@ -91,7 +96,7 @@ export class SimpleAppMiddleware implements NestMiddleware {
 
         req['sessionuser'] = user;
         if (maintenanceMode) {
-          throw new ServiceUnavailableException('System in maintenance mode');
+          throw new ServiceUnavailableException(this.getMaintenanceMessage(envs[0]));
         }
         next();
         return;
@@ -131,7 +136,7 @@ export class SimpleAppMiddleware implements NestMiddleware {
       await user.setCurrentUserInfo(tokenStr, xOrg, this.webhookModel);
 
       if (maintenanceMode && !user.isRealmAdmin()) {
-        throw new ServiceUnavailableException('System in maintenance mode');
+        throw new ServiceUnavailableException(this.getMaintenanceMessage(envs[0]));
       }
 
       user.detectMiniAppSdkRequest(req);

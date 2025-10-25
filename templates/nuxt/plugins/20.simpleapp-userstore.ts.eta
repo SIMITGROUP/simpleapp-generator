@@ -147,10 +147,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           }
         }
         const { $axios } = useNuxtApp();
-        try {
+        try {          
           const pingresult = await new PROFILEApi(
             undefined,
             apiurl,
+            axios
           ).getSession();
           if (pingresult.status < 300) return Promise.resolve("ok");
           else return Promise.reject("relogin");

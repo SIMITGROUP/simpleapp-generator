@@ -1,3 +1,4 @@
+import { AxiosInstance } from "axios";
 import { ShallowRef } from "vue";
 import { Customfield, CUSTOMFIELDApi } from "~/simpleapp/generate/openapi";
 
@@ -18,7 +19,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     actions: {
       async fetchList() {
         const config = getAxiosConfig();
-        const api = new CUSTOMFIELDApi(config);
+        const axiosObj:AxiosInstance =  useNuxtApp().$axios                
+        const api = new CUSTOMFIELDApi(config,config.basePath,axiosObj);
         const resp = await api.runSearch({
           filter: {},
           fields: ["_id", "collectionName", "form", "list"],
