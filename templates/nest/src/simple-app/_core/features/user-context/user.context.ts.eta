@@ -672,7 +672,7 @@ export class UserContext extends UserContextInfo {
         this.orgId = value2;
         this.branchId = value3;
       } else {
-        throw new BadRequestException('invalidXorg');
+        throw new BadRequestException(`Failed to set xorg, invalidXorg: ${xOrg}`);
       }
     } catch (err) {
       throw new BadRequestException(err);
@@ -694,7 +694,7 @@ export class UserContext extends UserContextInfo {
           branchId,
         };
       } else {
-        throw new BadRequestException('invalidXorg');
+        throw new BadRequestException(`Failed to decode xorg, invalidXorg: ${xOrg}`);
       }
     } catch (err) {
       throw new BadRequestException(err);
@@ -986,23 +986,18 @@ export class UserContext extends UserContextInfo {
     this.ssoACL = {};
     this.roles = [Role.Everyone, Role.User, Role.SuperUser];
     this.setXOrg(xorg);
-    const pipeLine:PipelineStage[] = [
-      {$match:{ tenantId : -1 }},      
-      {$unionWith: { coll: "organization", pipeline: [ {$match:{orgId: this.orgId}}] } },
-      {$limit:1}
-    ]
+    const pipeLine: PipelineStage[] = [{ $match: { tenantId: -1 } }, { $unionWith: { coll: 'organization', pipeline: [{ $match: { orgId: this.orgId } }] } }, { $limit: 1 }];
 
     // console.log("set as static user", pipeLine)
-    const result:Organization[] = await this.userModel.aggregate(pipeLine).exec();
+    const result: Organization[] = await this.userModel.aggregate(pipeLine).exec();
     // console.log("result",result)
-    if(result && result.length>0){
-      const res = result[0]
-      this.currency = res.currency
-      this.country = res.country
-      this.timeZone = res.timeZone
-      this.offsetMinute = res.offsetMinute
+    if (result && result.length > 0) {
+      const res = result[0];
+      this.currency = res.currency;
+      this.country = res.country;
+      this.timeZone = res.timeZone;
+      this.offsetMinute = res.offsetMinute;
     }
-
   };
 
   setGuestToken(tokenStr: string) {
