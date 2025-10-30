@@ -103,6 +103,31 @@ export default defineNuxtPlugin(async (nuxtApp) => {
             
             this.invites = res.invites;
             this.moreProps = res.moreProps;
+            
+            if (res.branches && Array.isArray(res.branches)) {
+              const currentBranch = res.branches.find(
+                (b: any) => b.branchId === res.branchId
+              );
+              
+              if (currentBranch) {
+                this.branchCode = currentBranch.branchCode;
+                this.branchName = currentBranch.branchName;
+                this.branchRecordId = currentBranch.branch?._id || currentBranch.branchRecordId;
+                this.orgCode = currentBranch.orgCode;
+                this.orgName = currentBranch.orgName;
+                
+                if (currentBranch.branch) {
+                  this.branchInfo = {
+                    ...this.branchInfo,
+                    _id: currentBranch.branch._id,
+                    branchId: currentBranch.branchId,
+                    branchCode: currentBranch.branchCode,
+                    branchName: currentBranch.branchName,
+                    imageUrl: currentBranch.branch.imageUrl,
+                  };
+                }
+              }
+            }
             // this.package = res.moreProps.package;
             // this.appintegration.einvoice = res.appintegration.einvoice;
             // this.appintegration.simbiz6 = res.appintegration.simbiz6;

@@ -1,3 +1,8 @@
+[2.0.1o-alpha]
+
+1. fetch branch image url, and fix maintenance mode data
+
+
 [2.0.1n-alpha]
 
 1. Add debug for invalid xorg
