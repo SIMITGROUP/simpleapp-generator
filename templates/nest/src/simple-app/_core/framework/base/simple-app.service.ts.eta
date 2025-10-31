@@ -357,7 +357,6 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
- 
   /**
    * create many from array, for performance reason it submit all item in 1 go, so it won't implement hooks
    * @param appuser
@@ -377,7 +376,7 @@ export class SimpleAppService<T extends SchemaFields> {
       }
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction()) {
-        dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
+        dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
       }
 
       try {
@@ -404,7 +403,7 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction() && !noStartTransaction) {
-      dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
+      dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
     }
 
     this.logger.debug('this.withDocNumberFormat :' + this.withDocNumberFormat + '  && ' + '!data[this.documentIdentityCode] ==' + !data[this.documentIdentityCode]);
@@ -550,7 +549,7 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
-      dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
+      dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
     }
 
     let dependency;
@@ -560,8 +559,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       // if (this.hooks.beforeDelete) await this.hooks.beforeDelete(appuser, id, deletedata);
       this.logger.debug('delete record', this.documentName, id);
-      dependency = await this.getRelatedRecords(appuser, id);
-      //console.log('dependency', dependency);
+      await this.identifyForeignKeys(appuser,deletedata)      
       if (!dependency) {
         const filterIsolation = this.getIsolationFilter(appuser);
         this.polishIsolationFilter(filterIsolation);
@@ -629,7 +627,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction() && !noStartTransaction) {
-        dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
+        dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
       }
       // try {
       Object.assign(data, appuser.getUpdateFilter());
@@ -688,7 +686,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction()) {
-        dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
+        dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
       }
       // try {
       // Object.assign(data, appuser.getUpdateFilter());
@@ -744,7 +742,7 @@ export class SimpleAppService<T extends SchemaFields> {
       await this.runEvent(appuser, this.setHookName('beforePatch'), { id: id, patchData: data, prevData: existingdata }, false);
       const dbsession = appuser.getDBSession();
       if (dbsession && !dbsession.inTransaction()) {
-        dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
+        dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
       }
       // try {
       Object.assign(data, appuser.getUpdateFilter());
@@ -782,7 +780,22 @@ export class SimpleAppService<T extends SchemaFields> {
       throw new InternalServerErrorException(err.message);
     }
   };
-
+  async deleteMany(appUser:UserContext, filter: FilterQuery<T>){
+    const dbsession = appUser.getDBSession();
+    if (dbsession && !dbsession.inTransaction()) {
+      dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
+    }
+    const searchResult = await this.search(appUser,filter,[])
+    const ids = searchResult.map(row=>row._id)
+    const result = await this.doc.deleteMany({_id: {$in: ids}})
+    console.log(`Delete ${this.documentName} ids`, ids,result)
+    for(const id of ids){
+      appUser.addDeletedRecordId(this.documentName,id)
+    }
+    return result
+    //updateMany(isolationFilter, { $set: patch }, { session: dbsession });
+  
+  }
   async patchMany<T>(appuser: UserContext, data: PatchManyRequest<T>) {
     // filter = {
     //   _id: '7eb2661a-6ea6-406e-b868-2e8b19c4658b',
@@ -799,7 +812,7 @@ export class SimpleAppService<T extends SchemaFields> {
     // Get DB Session
     const dbsession = appuser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
-      dbsession.startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
+      dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
     }
 
     const result = await this.doc.updateMany(isolationFilter, { $set: patch }, { session: dbsession });
