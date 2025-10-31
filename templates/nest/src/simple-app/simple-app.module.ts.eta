@@ -13,6 +13,7 @@ import { SimpleAppResourceApiModule } from './apis/resource-api.module';
 import { SimpleAppMiniAppsModule } from './mini-apps/mini-apps.module';
 import { SimpleAppQueueConsumersModule } from './queues/queues.module';
 import { SimpleAppMiniAppScopeModule } from '@core-features/mini-app/mini-app-scope/mini-app-scope.module';
+import { CronModule } from './crons/cron.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { SimpleAppMiniAppScopeModule } from '@core-features/mini-app/mini-app-sc
     SimpleAppMiniAppsModule,
     SimpleAppQueueConsumersModule,
     SimpleAppMiniAppScopeModule,
+    CronModule
   ],
   controllers: [],
   providers: [],
@@ -36,6 +38,7 @@ import { SimpleAppMiniAppScopeModule } from '@core-features/mini-app/mini-app-sc
     SimpleAppMiniAppsModule,
     SimpleAppQueueConsumersModule,
     SimpleAppMiniAppScopeModule,
+    CronModule
   ]
 })
 export class SimpleAppModule {}

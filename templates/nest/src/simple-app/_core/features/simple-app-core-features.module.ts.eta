@@ -18,6 +18,8 @@ import { ProfileModule } from './profile/profile.module';
 import { SimpleAppUserContextModule } from './user-context/user-context.module';
 import { SimpleAppWebhookModule } from './webhook/webhook.module';
 import { AutoIncreamentModule } from './auto-increament/auto-increament.module';
+import { SimpleAppCronModule } from './cron/cron.module';
+
 @Module({
   imports: [
     AutoIncreamentModule,
@@ -31,6 +33,7 @@ import { AutoIncreamentModule } from './auto-increament/auto-increament.module';
     SimpleAppWebhookModule,
     SimpleAppMiniAppModule,
     SimpleAppSoftwarePolicyModule,
+    SimpleAppCronModule
   ],
   controllers: [],
   providers: [],
@@ -46,6 +49,7 @@ import { AutoIncreamentModule } from './auto-increament/auto-increament.module';
     SimpleAppWebhookModule,
     SimpleAppMiniAppModule,
     SimpleAppSoftwarePolicyModule,
+    SimpleAppCronModule
   ],
 })
 export class SimpleAppCoreFeaturesModule {}

@@ -432,7 +432,7 @@ export class UserContext extends UserContextInfo {
                       foreignField: 'orgId',
                     },
                   },
-                  { $unwind: '$org' },
+                  { $unwind: { path: '$org', preserveNullAndEmptyArrays: true } },
                 ],
               },
             },
@@ -447,6 +447,7 @@ export class UserContext extends UserContextInfo {
                   branchCode: '$b.branchCode',
                   branchName: '$b.branchName',
                   branchId: '$b.branchId',
+                  imageUrl: '$b.imageUrl',
                 },
 
                 groups: 1,
@@ -761,12 +762,12 @@ export class UserContext extends UserContextInfo {
         const result = await res.save({ session: this.dbsession });
         this.logger.log(result, 'accept invitation 1');
         // Set permission of all user under this.user_id
-        const updateresult = await this.permModel.updateMany({ uid: '', user_id: res._id }, { uid: this.getUid() }).session(this.dbsession);
+        const updateresult = await this.permModel.updateMany({ uid: '', userId: res._id }, { uid: this.getUid() }).session(this.dbsession);
         this.logger.log(updateresult, 'update all permission');
         return true;
       } else {
         await this.userModel.deleteOne({ _id: id }).session(this.dbsession);
-        await this.permModel.deleteMany({ uid: '', user_id: res._id }).session(this.dbsession);
+        await this.permModel.deleteMany({ uid: '', userId: res._id }).session(this.dbsession);
         return true;
       }
     } else {
