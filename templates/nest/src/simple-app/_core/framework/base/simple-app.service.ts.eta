@@ -559,7 +559,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       // if (this.hooks.beforeDelete) await this.hooks.beforeDelete(appuser, id, deletedata);
       this.logger.debug('delete record', this.documentName, id);
-      await this.identifyForeignKeys(appuser,deletedata)      
+      dependency = await this.getRelatedRecords(appuser, id);
       if (!dependency) {
         const filterIsolation = this.getIsolationFilter(appuser);
         this.polishIsolationFilter(filterIsolation);
@@ -780,21 +780,20 @@ export class SimpleAppService<T extends SchemaFields> {
       throw new InternalServerErrorException(err.message);
     }
   };
-  async deleteMany(appUser:UserContext, filter: FilterQuery<T>){
+  async deleteMany(appUser: UserContext, filter: FilterQuery<T>) {
     const dbsession = appUser.getDBSession();
     if (dbsession && !dbsession.inTransaction()) {
       dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
     }
-    const searchResult = await this.search(appUser,filter,[])
-    const ids = searchResult.map(row=>row._id)
-    const result = await this.doc.deleteMany({_id: {$in: ids}})
-    console.log(`Delete ${this.documentName} ids`, ids,result)
-    for(const id of ids){
-      appUser.addDeletedRecordId(this.documentName,id)
+    const searchResult = await this.search(appUser, filter, []);
+    const ids = searchResult.map((row) => row._id);
+    const result = await this.doc.deleteMany({ _id: { $in: ids } });
+    console.log(`Delete ${this.documentName} ids`, ids, result);
+    for (const id of ids) {
+      appUser.addDeletedRecordId(this.documentName, id);
     }
-    return result
+    return result;
     //updateMany(isolationFilter, { $set: patch }, { session: dbsession });
-  
   }
   async patchMany<T>(appuser: UserContext, data: PatchManyRequest<T>) {
     // filter = {
@@ -849,10 +848,14 @@ export class SimpleAppService<T extends SchemaFields> {
           //not deleted in current session, check from database
           const filter = {};
           filter[fkey] = id;
-          const result = await collection.findOne(filter, {
+          const result:any = await collection.findOne(filter, {
             session: appuser.getDBSession(),
           });
           if (result) {
+            //record deleted but not yet commit, safely ignore
+            if(appuser.searchDeletedRecordId(collectionname, result._id))continue;
+
+
             this.logger.error(result, `related result found in ${collectionname} ${fkey} = ${id}`);
             return result;
           }
