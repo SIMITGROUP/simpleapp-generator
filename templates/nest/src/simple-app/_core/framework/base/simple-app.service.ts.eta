@@ -787,7 +787,7 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     const searchResult = await this.search(appUser, filter, []);
     const ids = searchResult.map((row) => row._id);
-    const result = await this.doc.deleteMany({ _id: { $in: ids } });
+    const result = await this.doc.deleteMany({ _id: { $in: ids } },{session: dbsession});
     console.log(`Delete ${this.documentName} ids`, ids, result);
     for (const id of ids) {
       appUser.addDeletedRecordId(this.documentName, id);
