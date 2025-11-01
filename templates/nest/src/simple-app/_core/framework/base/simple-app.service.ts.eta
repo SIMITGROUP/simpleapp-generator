@@ -13,7 +13,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import Ajv from 'ajv';
 import addErrors from 'ajv-errors';
 import addFormats from 'ajv-formats';
-import { FilterQuery, Model, PipelineStage, mongo } from 'mongoose';
+import { AnyKeys, AnyObject, FilterQuery, Model, PipelineStage, mongo } from 'mongoose';
 // import { CloudApiService } from 'src/cloudapi/cloudapi.service';
 import { foreignkeys } from '../../features/foreign-key/foreignkeys.dict';
 
@@ -601,6 +601,61 @@ export class SimpleAppService<T extends SchemaFields> {
   //   this.doc.updateOne(data);
   // };
 
+  findIdThenUnsetField = async (appuser: UserContext, id: string, data: AnyKeys<T> & AnyObject, noStartTransaction: boolean = false) => {
+    try {
+      // Check is record exist
+      const existingdata = await this.findById(appuser, id);
+      if (!existingdata) throw new NotFoundException(`${this.documentName} findIdThenUpdate:  _id:${id} not found`, 'not found');
+
+      this.logger.debug('update id: ' + id, this.documentName + ' findIdThenRemoveField');
+      if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
+        throw new BadRequestException(`You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`);
+      }
+
+      // Prepare update audit data
+      const auditData = {
+        ...appuser.getUpdateFilter(),
+        __v: existingdata.__v + 1,
+      };
+
+      // Start transaction
+      const dbsession = appuser.getDBSession();
+      if (dbsession && !dbsession.inTransaction() && !noStartTransaction) {
+        dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
+      }
+
+      // Isolation filter
+      const isolationFilter = { ...this.getIsolationFilter(appuser) };
+      this.polishIsolationFilter(isolationFilter);
+      isolationFilter['_id'] = id;
+
+      // Prevent unset _id
+      delete data['_id'];
+
+      const result = await this.doc.findOneAndUpdate(
+        isolationFilter,
+        {
+          $unset: data,
+          $set: auditData,
+        },
+        {
+          session: dbsession,
+          new: true,
+        },
+      );
+
+      // Add audit event
+      await this.addAuditEvent(appuser, this.documentName, id, 'update', data);
+
+      appuser.addUpdatedRecordId(this.documentName, data._id);
+
+      return result;
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerErrorException(err.message);
+    }
+  };
+
   findIdThenUpdate = async (appuser: UserContext, id: string, data: T, noStartTransaction: boolean = false) => {
     try {
       //version exists, need ensure different only 1
@@ -787,8 +842,8 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     const searchResult = await this.search(appUser, filter, []);
     const ids = searchResult.map((row) => row._id);
-    const result = await this.doc.deleteMany({ _id: { $in: ids } },{session: dbsession});
-    console.log(`Delete ${this.documentName} ids`, ids, result);
+    const result = await this.doc.deleteMany({ _id: { $in: ids } }, { session: dbsession });
+    // console.log(`Delete ${this.documentName} ids`, ids, result);
     for (const id of ids) {
       appUser.addDeletedRecordId(this.documentName, id);
     }
@@ -848,13 +903,12 @@ export class SimpleAppService<T extends SchemaFields> {
           //not deleted in current session, check from database
           const filter = {};
           filter[fkey] = id;
-          const result:any = await collection.findOne(filter, {
+          const result: any = await collection.findOne(filter, {
             session: appuser.getDBSession(),
           });
           if (result) {
             //record deleted but not yet commit, safely ignore
-            if(appuser.searchDeletedRecordId(collectionname, result._id))continue;
-
+            if (appuser.searchDeletedRecordId(collectionname, result._id)) continue;
 
             this.logger.error(result, `related result found in ${collectionname} ${fkey} = ${id}`);
             return result;
