@@ -1,3 +1,8 @@
+[2.0.1s-alpha]
+
+1. Fix cron set xorg failed. undefined-undefined-undefined
+2. Fix findInstalledMiniAppCode
+
 [2.0.1r-alpha]
 
 1. Add findIdThenUnsetField
