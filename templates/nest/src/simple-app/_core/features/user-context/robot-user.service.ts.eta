@@ -21,12 +21,12 @@ export class SimpleAppRobotUserService {
   logger = new Logger();
 
   constructor(
-  @InjectModel('User') private readonly userModel: Model<User>,
-  @InjectModel('Permission') private readonly permModel: Model<Permission>,
-  // @InjectModel('Appintegration') private readonly appmodel: Model<Appintegration>;
-  @InjectModel('MiniAppInstallation') private readonly miniAppInstallationModel: Model<MiniAppInstallation>,
-  @InjectModel('Environment') private envModel: Model<Environment>,
-) {
+    @InjectModel('User') private readonly userModel: Model<User>,
+    @InjectModel('Permission') private readonly permModel: Model<Permission>,
+    // @InjectModel('Appintegration') private readonly appmodel: Model<Appintegration>;
+    @InjectModel('MiniAppInstallation') private readonly miniAppInstallationModel: Model<MiniAppInstallation>,
+    @InjectModel('Environment') private envModel: Model<Environment>,
+  ) {
     this.init();
     // console.log('init SimpleAppRobotUserService');
   }
@@ -94,10 +94,10 @@ export class SimpleAppRobotUserService {
 
   async createDumyAppUser(userContext: BaseUserContext) {
     const envs = await this.envModel.find();
-    
-    const appUser = new UserContext(this.userModel, this.permModel, this.miniAppInstallationModel,envs[0]);
+
+    const appUser = new UserContext(this.userModel, this.permModel, this.miniAppInstallationModel, envs[0]);
     const user = userContext;
-    const xorg = appUser.generateXOrg(user.tenantId, user.orgId, user.branchId);
+    const xorg = appUser.generateXOrg(user.tenantId ?? 0, user.orgId ?? 0, user.branchId ?? 0);
 
     await appUser.setAsStaticUser(user.uid ?? '00000000-0000-0000-0000-000000000000', user.uname ?? 'robot', user.fullName ?? 'Robot', user.email ?? 'robot@a.org', xorg);
     appUser.setTimeZone(user.timeZone ?? this.defaultTimeZone);
@@ -110,7 +110,7 @@ export class SimpleAppRobotUserService {
     const envs = await this.envModel.find();
     // console.log('prepareAppUserprepareAppUser');
     // this.appmodel,
-    const appuser = new UserContext(this.userModel, this.permModel, this.miniAppInstallationModel,envs[0]);
+    const appuser = new UserContext(this.userModel, this.permModel, this.miniAppInstallationModel, envs[0]);
     await appuser.setAsStaticUser('00000000-0000-0000-0000-000000000000', 'robot', 'Robot', 'robot@a.org', Base64URL.encodeText('0-0-0'));
 
     const tenantId = data?.tenantId ?? 0;

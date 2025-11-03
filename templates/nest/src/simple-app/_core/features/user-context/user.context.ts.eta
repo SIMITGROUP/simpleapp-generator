@@ -1069,7 +1069,7 @@ export class UserContext extends UserContextInfo {
       orgId: this.orgId,
       branchId: this.branchId,
     });
-    return miniAppInstallation.miniApp;
+    return miniAppInstallation ? miniAppInstallation.miniApp : null;
   }
 
   async setUserProfileFromDB() {
