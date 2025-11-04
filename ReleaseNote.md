@@ -1,4 +1,10 @@
+[2.0.1u-alpha]
+
+1. Allow array string custom field to set input type
+2. Fix multi select input size diff
+
 [2.0.1t-alpha]
+
 1. add more field into queue for track execution time
 
 [2.0.1s-alpha]
