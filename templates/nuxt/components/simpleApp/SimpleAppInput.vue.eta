@@ -117,7 +117,13 @@
     <MultiSelect
       v-else-if="SimpleAppInputType.selectmultiple == inputType"
       v-model="modelValue"
-      :pt="pt"
+      :pt="
+        pt ?? {
+          label: {
+            class: '!text-sm !py-1.5',
+          },
+        }
+      "
       :input-id="slotprops.uuid"
       :path="setting.instancepath"
       :readonly="isReadonly"
@@ -162,13 +168,13 @@
       @change="onChange"
     >
       <template #header>
-        <slot name="header"/>
+        <slot name="header" />
       </template>
       <template #content>
-        <slot name="content"/>
+        <slot name="content" />
       </template>
       <template #option="{ index, option }">
-        <slot name="option" :index="index" :option="option"/>
+        <slot name="option" :index="index" :option="option" />
       </template>
     </SimpleAppUserPicker>
 
@@ -188,13 +194,13 @@
       @change="onChange"
     >
       <template #header>
-        <slot name="header"/>
+        <slot name="header" />
       </template>
       <template #content>
-        <slot name="content"/>
+        <slot name="content" />
       </template>
       <template #option="{ index, option }">
-        <slot name="option" :index="index" :option="option"/>
+        <slot name="option" :index="index" :option="option" />
       </template>
     </SimpleAppAutocomplete>
     <!-- v-bind:attributes="componentProps" -->
@@ -346,7 +352,7 @@
     />
     <!-- component require special treatment -->
 
-    <slot name="footer"/>
+    <slot name="footer" />
   </SimpleAppFieldContainer>
 </template>
 
