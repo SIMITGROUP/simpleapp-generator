@@ -25,7 +25,7 @@ export default defineNuxtPlugin( async(nuxtApp) => {
     // useNuxtApp().vueApp.use(DialogService)
     //const { csrf } = useCsrf()    
     //axios.defaults.headers.common = {"CSRF-TOKEN": csrf};
-    const myaxios = axios.create({timeout:5000})
+    const myaxios = axios.create({timeout:10000})
     myaxios.interceptors.response.use(
       (response) => {        
         return  response
