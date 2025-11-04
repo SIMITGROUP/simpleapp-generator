@@ -1,3 +1,6 @@
+[2.0.1t-alpha]
+1. add more field into queue for track execution time
+
 [2.0.1s-alpha]
 
 1. Fix cron set xorg failed. undefined-undefined-undefined

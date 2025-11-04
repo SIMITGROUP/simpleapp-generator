@@ -10,9 +10,9 @@ export namespace QueuePayload {
       currency: string;
       country: string;
       offsetMinute: number;
-      tenantId:number;
-      orgId:number;
-      branchId:number;
+      tenantId: number;
+      orgId: number;
+      branchId: number;
     };
     xOrg: string;
   };
@@ -22,8 +22,6 @@ export namespace QueuePayload {
     payload: T;
   };
 }
-
-
 
 export type QueuejobJob = {
   id: string; // {"type":"string","required":true,"default":""}
@@ -57,14 +55,15 @@ export type Queuejob = {
   orgId?: number; // {"type":"number","required":false,"default":1}
   branchId?: number; // {"type":"number","required":false,"default":1}
   job: QueuejobJob; //child object
-
+  initTime?: string;
+  startTime?: string;
+  endTime?: string;
   payload?: QueuejobPayload; //child object
 
   result?: QueuejobResult; //child object
 
   error?: QueuejobError; //child object
 };
-
 
 /***************************************** Start Auto Complete *****************************************/
 export type QueuejobAutoComplete = {

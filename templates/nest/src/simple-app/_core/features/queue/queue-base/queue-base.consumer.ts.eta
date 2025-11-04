@@ -74,7 +74,8 @@ export abstract class BaseQueueConsumer extends WorkerHost {
     await handler.call(this, appUser, job, payload);
   }
 
-  protected async updateQueueJobRecord(job: Job, status: 'completed' | 'failed', result: any) {
+  protected async updateQueueJobRecord(job: Job, status: 'completed' | 'failed', result: any) {    
+
     await this.queueJobModel.updateOne(
       {
         'job.id': job.id,
@@ -82,8 +83,11 @@ export abstract class BaseQueueConsumer extends WorkerHost {
         'job.processor': this.processor,
       },
       {
-        'job.status': status,
-        updated: new Date().toISOString(),
+
+        'job.status': status,        
+        initTime: new Date(job.timestamp).toISOString(),
+        startTime: new Date(job.processedOn).toISOString(),
+        endTime: new Date(job.finishedOn).toISOString(),
         result: status === 'completed' ? result : undefined,
         error: status === 'failed' ? result : undefined,
       },
