@@ -485,6 +485,8 @@ export class SimpleAppService<T extends SchemaFields> {
 
     ajv.addKeyword({ keyword: 'x-foreignkey', schemaType: 'string' });
     ajv.addKeyword({ keyword: 'x-simpleapp-config', schemaType: 'object' });
+    ajv.addKeyword({ keyword: 'x-remote', schemaType: 'object' });
+    ajv.addKeyword({ keyword: 'x-readonly', schemaType: 'boolean' });
     this.logger.debug('run hook during validation');
     let issuccess = true;
     // if (this.hooks.beforeValidation) {

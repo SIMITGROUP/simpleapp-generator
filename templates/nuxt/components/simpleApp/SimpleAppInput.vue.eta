@@ -114,6 +114,20 @@
       @change="onChange"
     />
 
+    <SimpleAppRemoteSelect
+      v-else-if="SimpleAppInputType.remoteselect == inputType"
+      v-model="modelValue"
+      :pt="pt"
+      :input-id="slotprops.uuid"
+      :path="setting.instancepath"
+      :readonly="isReadonly"
+      class="w w-full lg:w-full"
+      :placeholder="placeholder"
+      :setting="setting"
+      v-bind="componentProps"
+      @change="onChange"
+    />
+
     <MultiSelect
       v-else-if="SimpleAppInputType.selectmultiple == inputType"
       v-model="modelValue"
@@ -390,6 +404,7 @@ import type { TextareaProps } from "primevue/textarea";
 import Textarea from "primevue/textarea";
 import Editor from "primevue/editor";
 import { SimpleAppInputType } from "~/types";
+import SimpleAppRemoteSelect from "./SimpleAppRemoteSelect.vue";
 const resetcount = ref(0);
 const instancepath = ref("");
 const modelValue = defineModel<any>({ required: true });
@@ -459,6 +474,10 @@ watch(props.setting.errors, (newvalue, oldvalue) => {
   watchOnChange.value = true;
 });
 const isReadonly = computed(() => {
+  if (props.setting?.fieldsetting?.["x-readonly"]) {
+    return props.setting?.fieldsetting?.["x-readonly"];
+  }
+
   if (props.readonly) {
     return props.readonly;
   } else if (props.setting.readonly) {

@@ -4,66 +4,65 @@
  * last change 2024-02-23
  * Author: Ks Tan
  */
-export enum SimpleAppInputType  {
-    'text'='text',
-    'textarea'='textarea',
-    'html'='html',
-    
-    'date'='date',
-    'time'='time',
-    'calendar'='calendar',
-    'datetime'='datetime',
+export enum SimpleAppInputType {
+  "text" = "text",
+  "textarea" = "textarea",
+  "html" = "html",
 
-    'autocomplete'='autocomplete',
-    'autocompletemultiple'='autocompletemultiple',
+  "date" = "date",
+  "time" = "time",
+  "calendar" = "calendar",
+  "datetime" = "datetime",
 
-    'selectmultiple'='selectmultiple',
-    'listmultiple'='listmultiple',
+  "autocomplete" = "autocomplete",
+  "autocompletemultiple" = "autocompletemultiple",
 
-    'radio'='radio',
-    'select'='select',
-    'list'='list',
+  "selectmultiple" = "selectmultiple",
+  "listmultiple" = "listmultiple",
+  "remoteselect" = "remoteselect",
 
-    'chip'='chip', 
+  "radio" = "radio",
+  "select" = "select",
+  "list" = "list",
 
-    'checkbox'='checkbox',
-    'switch'='switch',
-    
-    
-    'documentno'='documentno',
-    'password'='password',
+  "chip" = "chip",
 
-    'number'='number',
-    'money'='money',
-    'rating'='rating',
-    'slider'='slider',
-    'user'='user',
+  "checkbox" = "checkbox",
+  "switch" = "switch",
+
+  "documentno" = "documentno",
+  "password" = "password",
+
+  "number" = "number",
+  "money" = "money",
+  "rating" = "rating",
+  "slider" = "slider",
+  "user" = "user",
 }
 
-
-export type autocompletetype={
-    _id:string
-    label:string
-    code:string
-    [key:string]:any
-}
-export enum FormCrudEvent  {
-    'mount'='mount',
-    'exit'='exit',
-    'create'='create',
-    'update'='update',
-    'delete'='delete',
-    'setDocStatus'='setDocStatus',        
+export type autocompletetype = {
+  _id: string;
+  label: string;
+  code: string;
+  [key: string]: any;
+};
+export enum FormCrudEvent {
+  "mount" = "mount",
+  "exit" = "exit",
+  "create" = "create",
+  "update" = "update",
+  "delete" = "delete",
+  "setDocStatus" = "setDocStatus",
 }
 export type FormActions = {
-    [key:string]:string[]    
-}
+  [key: string]: string[];
+};
 
 export type FormMenu = {
-    type?:string
-    action?:string    
-    label?: string | ((...args: any) => string) | undefined
-    command? : Function
-    event?:FormCrudEvent
-    [key:string] : any
-}
+  type?: string;
+  action?: string;
+  label?: string | ((...args: any) => string) | undefined;
+  command?: Function;
+  event?: FormCrudEvent;
+  [key: string]: any;
+};

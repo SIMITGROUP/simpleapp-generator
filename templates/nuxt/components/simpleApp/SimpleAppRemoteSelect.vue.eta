@@ -1,0 +1,110 @@
+<template>
+  <Select
+    v-model="modelValue"
+    :pt="pt"
+    :input-id="inputId"
+    :path="setting.instancepath"
+    :readonly="readonly"
+    class="w w-full lg:w-full"
+    :disabled="readonly ? true : false"
+    :options="options ?? []"
+    option-label="label"
+    option-value="value"
+    :placeholder="placeholder"
+    @change="handleChange"
+  />
+</template>
+
+<script setup lang="ts">
+const props = defineProps<{
+  setting: any;
+  readonly?: boolean;
+  placeholder?: string;
+  hidelabel?: boolean;
+  inputId: string;
+  pt?: any;
+}>();
+
+const modelValue = defineModel();
+
+const options = ref([]);
+
+const abortController = ref<AbortController | null>(null);
+
+function handleChange(newValue: any) {
+  const remoteConfig = props.setting.fieldsetting?.["x-remote"];
+  const actions = remoteConfig?.onChangeAction ?? [];
+  if (!Array.isArray(actions) || actions.length === 0) return;
+
+  const modelObject = props.setting.modelObject ?? {};
+  const selectedOption = options.value.find(
+    (opt: any) => opt.value === newValue,
+  );
+
+  for (const action of actions) {
+    if (!action.updateField) continue;
+
+    let updateVal: any = action.updateValue;
+
+    if (
+      typeof updateVal === "string" &&
+      updateVal.startsWith("{") &&
+      updateVal.endsWith("}")
+    ) {
+      // ✅ Replace {path.to.value} using selectedOption
+      const path = updateVal.slice(1, -1).trim();
+      const resolvedVal = resolvePath(selectedOption ?? {}, path);
+      updateVal = resolvedVal !== undefined ? resolvedVal : "";
+    }
+
+    setPath(modelObject, action.updateField, updateVal);
+  }
+}
+
+watchEffect(async (onCleanup) => {
+  const remoteConfig = props.setting.fieldsetting?.["x-remote"] ?? {};
+  if (!remoteConfig.url) {
+    options.value = [];
+    return;
+  }
+
+  // Abort any previous fetch
+  if (abortController.value) {
+    abortController.value.abort();
+  }
+
+  const controller = new AbortController();
+  abortController.value = controller;
+
+  const { url, labelField, valueField } = remoteConfig;
+  const modelObject = props.setting.modelObject ?? {};
+  const finalUrl = interpolateUrl(url, modelObject);
+
+  try {
+    const resp = await fetch(finalUrl, { signal: controller.signal });
+    const data = await resp.json();
+
+    options.value = data.map((item: any) => ({
+      ...item,
+      label: item[labelField],
+      value: item[valueField],
+    }));
+  } catch (err: any) {
+    if (err.name === "AbortError") {
+      console.log("Fetch aborted");
+    } else {
+      console.error("Failed to load options:", err);
+    }
+  }
+
+  // Cleanup when dependency changes or component unmounts
+  onCleanup(() => controller.abort());
+});
+
+// also ensure cleanup on unmount
+onBeforeUnmount(() => {
+  if (abortController.value) {
+    abortController.value.abort();
+  }
+});
+</script>
