@@ -1,3 +1,8 @@
+[2.0.1v-alpha]
+
+1. Cron add debugger
+2. Add remote selection
+
 [2.0.1u-alpha]
 
 1. Allow array string custom field to set input type
