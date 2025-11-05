@@ -85,17 +85,11 @@ export class SimpleAppInterceptor implements NestInterceptor {
           error: err.options,
         };
 
-        // eventObj.statusCode = err.status;
-        // eventObj.errMsg = responseBody.message;
-        // const endtime = new Date();
-        // eventObj.updated = endtime.toISOString();
-        // eventObj.data = req.body;
-        // eventObj.errData = responseBody.error;
-        // eventObj.status = 'NG';
-        // eventObj.duration =
-        // endtime.getTime() - new Date(eventObj.created).getTime();
-        // eventObj.save();
-
+        eventObj.statusCode = err.status;
+        eventObj.errMsg = responseBody.message ;
+        eventObj.data = req.body;
+        eventObj.status = 'NG'
+        eventObj.errData = responseBody.error;
         resp.status(err?.status ?? 500);
         return responseBody;
       }),
@@ -105,7 +99,8 @@ export class SimpleAppInterceptor implements NestInterceptor {
         eventObj.isNew = false;
         eventObj.statusCode = resp['statusCode'];
         eventObj.updated = endtime.toISOString();
-        eventObj.status = 'OK';
+        eventObj.status = eventObj.status == 'D' ? 'OK' : eventObj.status;
+
         eventObj.duration = endtime.getTime() - starttime.getTime();
         await eventObj.save();
 

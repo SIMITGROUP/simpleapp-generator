@@ -1,10 +1,13 @@
+import { BadRequestException, Injectable, Logger, NestMiddleware, ServiceUnavailableException } from '@nestjs/common';
 import { UserContext } from '../../user-context/user.context';
 import { SimpleAppRobotUserService } from '../../user-context/robot-user.service';
 import { BaseUserContext } from '../../user-context/user-context.type';
 export abstract class SimpleAppCronBaseClass {
+  protected logger:Logger;
   private robotUser: SimpleAppRobotUserService;
 
   constructor(robotUser: SimpleAppRobotUserService) {
+    this.logger = new Logger(this.constructor.name);
     this.robotUser = robotUser;
   }
   async getAppUser(user: BaseUserContext) {

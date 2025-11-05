@@ -3,21 +3,22 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Cron } from '@nestjs/schedule';
 import { Model } from 'mongoose';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
-import {SimpleAppCronBaseClass} from '../base/cron.base'
-import {ApiEvent,QueueJob} from './schemas'
-import { SimpleAppRobotUserService } from "../../user-context/robot-user.service";
-export class CronSystemService extends SimpleAppCronBaseClass{
+import { SimpleAppCronBaseClass } from '../base/cron.base';
+import { ApiEvent, QueueJob } from './schemas';
+import { SimpleAppRobotUserService } from '../../user-context/robot-user.service';
+export class CronSystemService extends SimpleAppCronBaseClass {
   constructor(
     @InjectModel('ApiEvent') private apiEventModel: Model<ApiEvent>,
-    @InjectModel('QueueJob') private queueJobModel: Model<QueueJob>, 
-    robotUserService:SimpleAppRobotUserService   
+    @InjectModel('QueueJob') private queueJobModel: Model<QueueJob>,
+    robotUserService: SimpleAppRobotUserService,
   ) {
-    super(robotUserService)
+    super(robotUserService);
   }
-  
+
   @Cron('0 1 * * *')
   async deleteApiLog() {
-    if (process.env.ON_CRONTAB == 'true') {      
+    if (process.env.ON_CRONTAB == 'true') {
+      this.logger.debug('run CronSystemService.deleteApiLog 0 1 * * *')
       const today = new Date();
       const newDate = new Date(today.getTime());
       const cutoffdate = new Date(newDate.setDate(newDate.getDate() - 90)).toISOString();
@@ -28,10 +29,11 @@ export class CronSystemService extends SimpleAppCronBaseClass{
   @Cron('30 0 * * *')
   async deleteQueueJob() {
     if (process.env.ON_CRONTAB == 'true') {
+      this.logger.debug('run deleteQueueJob.deleteApiLog 30 0 * * *')
       const today = new Date();
       const newDate = new Date(today.getTime());
       const cutoffdate = new Date(newDate.setDate(newDate.getDate() - 90)).toISOString();
       await this.queueJobModel.deleteMany({ created: { $lte: cutoffdate } });
     }
-  }  
+  }
 }
