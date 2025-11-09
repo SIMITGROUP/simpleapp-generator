@@ -15,25 +15,25 @@ export class CronSystemService extends SimpleAppCronBaseClass {
     super(robotUserService);
   }
 
-  @Cron('0 1 * * *')
+  //@Cron('0 1 * * *')
   async deleteApiLog() {
-    if (process.env.ON_CRONTAB == 'true') {
-      this.logger.debug('run CronSystemService.deleteApiLog 0 1 * * *')
+    //if (process.env.ON_CRONTAB == 'true') {
+      this.logger.debug('run CronSystemService.deleteApiLog')
       const today = new Date();
       const newDate = new Date(today.getTime());
       const cutoffdate = new Date(newDate.setDate(newDate.getDate() - 90)).toISOString();
       await this.apiEventModel.deleteMany({ created: { $lte: cutoffdate } });
-    }
+    //}
   }
 
-  @Cron('30 0 * * *')
+  //@Cron('30 0 * * *')
   async deleteQueueJob() {
-    if (process.env.ON_CRONTAB == 'true') {
-      this.logger.debug('run deleteQueueJob.deleteApiLog 30 0 * * *')
+    //if (process.env.ON_CRONTAB == 'true') {
+      this.logger.debug('run deleteQueueJob.deleteApiLog')
       const today = new Date();
       const newDate = new Date(today.getTime());
       const cutoffdate = new Date(newDate.setDate(newDate.getDate() - 90)).toISOString();
       await this.queueJobModel.deleteMany({ created: { $lte: cutoffdate } });
-    }
+    //}
   }
 }

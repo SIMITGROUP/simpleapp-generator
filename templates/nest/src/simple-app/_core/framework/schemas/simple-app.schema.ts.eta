@@ -143,6 +143,7 @@ export class DynamicParam {
 export class TextSearchBody {
   keyword: string;
   fields?: string[];
+  filters?: string[];
   sorts?: string[][];
   lookup?: Record<string, string>;
 }

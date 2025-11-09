@@ -286,27 +286,24 @@ export class SimpleAppService<T extends SchemaFields> {
 
   async fullTextSearch(appuser: UserContext, body: TextSearchBody) {
     try {
+      //{filters:string[],fields:string[]}
       const isolationFilter = { ...this.getIsolationFilter(appuser) };
       this.polishIsolationFilter(isolationFilter);
       const keyword = body.keyword;
-
+      // console.log("bodybody",body)
       // Prepare regex filter
       const orConditions: any[] = [];
-      if (body.fields && body.fields.length > 0) {
-        body.fields.forEach((field: string) => {
-          if (field != 'defaultPrice' && field != 'amount' && field != 'active' && field != 'updated') {
+      const regex = new RegExp(keyword, 'i')
+
+      if (body.filters && body.filters.length > 0) {
+        body.filters.forEach((field: string) => {        
             orConditions.push({
-              [field]: { $regex: keyword, $options: 'i' },
-            });
-          } else {
-            if (!isNaN(Number(keyword)) && (field == 'defaultPrice' || field == 'amount')) {
-              orConditions.push({
-                [field]: { $gte: keyword },
-              });
-            }
-          }
+              [field]: { $regex: regex },
+            });          
         });
       }
+
+
       const filter = {
         $or: orConditions,
       };
@@ -318,7 +315,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       const fields = body.fields || {};
       const sorts = body.sorts || {};
-
+      // console.log("newfilters",JSON.stringify(newfilters),fields)
       // Ensure `this.doc` is a Mongoose model or similar
       const results = await this.doc.find(newfilters, fields).sort(sorts).exec();
 
@@ -499,7 +496,7 @@ export class SimpleAppService<T extends SchemaFields> {
         errormsg.push(this.errorlist[i].message);
       }
 
-      throw new BadRequestException(errormsg as HttpExceptionOptions,'Before validation hook failed');
+      throw new BadRequestException(errormsg as HttpExceptionOptions, 'Before validation hook failed');
     }
 
     let validate;
@@ -513,7 +510,7 @@ export class SimpleAppService<T extends SchemaFields> {
     if (!valid) {
       this.logger.error(JSON.stringify(data));
       this.logger.error(JSON.stringify(validate.errors), 'validate errors:');
-      throw new BadRequestException(validate.errors as HttpExceptionOptions,'Data validation failed');
+      throw new BadRequestException(validate.errors as HttpExceptionOptions, 'Data validation failed');
     }
   }
 
@@ -1089,7 +1086,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
     if (!unionresult) {
       this.logger.error('foreign key control failed ', 'identifyForeignKeys');
-      throw new InternalServerErrorException(pipelines as HttpExceptionOptions,'Foreignkey check execution error');
+      throw new InternalServerErrorException(pipelines as HttpExceptionOptions, 'Foreignkey check execution error');
     } else {
       const searchresult: any = {};
       unionresult.forEach((item) => {
@@ -1099,7 +1096,7 @@ export class SimpleAppService<T extends SchemaFields> {
           searchresult[item.collection] = [item._id];
         }
       });
-      this.logger.debug( this.documentType + ' search Result',unionresult);
+      this.logger.debug(this.documentType + ' search Result', unionresult);
 
       //search is it all foreign key exists in db
       for (let i = 0; i < collections.length; i++) {

@@ -1,4 +1,10 @@
+[2.0.1x-alpha]
+
+1. disable system cron auto run
+2. fix search text syntax mess up
+
 [2.0.1w-alpha]
+
 1. touch up abit debugger in simple-app.service
 2. add default queue job option code
 
