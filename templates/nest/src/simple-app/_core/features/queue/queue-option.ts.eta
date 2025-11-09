@@ -1,0 +1,16 @@
+import { DefaultJobOptions } from 'bullmq';
+export const getDefaultQueueOption = ():DefaultJobOptions => ({
+  attempts: 1,
+  backoff: {
+    type: 'exponential',
+    delay: 3000,
+  },
+  delay: 1000,
+  removeOnComplete: {
+    age: 90 * 24 * 60 * 60, // 7,776,000 seconds (90 days)
+    count: 3000,
+  },
+  removeOnFail: {
+    count: 1000,
+  },
+})

@@ -1,3 +1,7 @@
+[2.0.1w-alpha]
+1. touch up abit debugger in simple-app.service
+2. add default queue job option code
+
 [2.0.1v-alpha]
 
 1. Cron add debugger

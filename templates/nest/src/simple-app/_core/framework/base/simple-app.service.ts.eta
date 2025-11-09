@@ -499,7 +499,7 @@ export class SimpleAppService<T extends SchemaFields> {
         errormsg.push(this.errorlist[i].message);
       }
 
-      throw new BadRequestException('Before validation hook failed', errormsg as HttpExceptionOptions);
+      throw new BadRequestException(errormsg as HttpExceptionOptions,'Before validation hook failed');
     }
 
     let validate;
@@ -513,7 +513,7 @@ export class SimpleAppService<T extends SchemaFields> {
     if (!valid) {
       this.logger.error(JSON.stringify(data));
       this.logger.error(JSON.stringify(validate.errors), 'validate errors:');
-      throw new BadRequestException('Data validation failed', validate.errors as HttpExceptionOptions);
+      throw new BadRequestException(validate.errors as HttpExceptionOptions,'Data validation failed');
     }
   }
 
@@ -1089,7 +1089,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
     if (!unionresult) {
       this.logger.error('foreign key control failed ', 'identifyForeignKeys');
-      throw new InternalServerErrorException('Foreignkey check execution error', pipelines as HttpExceptionOptions);
+      throw new InternalServerErrorException(pipelines as HttpExceptionOptions,'Foreignkey check execution error');
     } else {
       const searchresult: any = {};
       unionresult.forEach((item) => {
@@ -1099,7 +1099,7 @@ export class SimpleAppService<T extends SchemaFields> {
           searchresult[item.collection] = [item._id];
         }
       });
-      this.logger.debug(unionresult, this.documentType + ' search Result');
+      this.logger.debug( this.documentType + ' search Result',unionresult);
 
       //search is it all foreign key exists in db
       for (let i = 0; i < collections.length; i++) {
