@@ -269,6 +269,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   @Post(':id/set-<%=statusname%>')
   @ApiBody({ description: 'Document data', type: Object })
   @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_${statusname}`%>)
+  <%~ drawMiniAppScope(statusname) %>
   async setStatus<%=capitalizeFirstLetter(statusname)%>(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data:any,){
           return await this.service.setDocumentStatus(appuser,id,data,'<%=statusname%>',)
   }
