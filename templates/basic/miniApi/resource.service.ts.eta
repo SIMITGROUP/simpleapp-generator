@@ -4,6 +4,7 @@
   const uglyName = upperFirstCase(it.name ?? '');
   const schemaName = `SimtrainSchema.${pascalName}Dto`;
   const schemaAutoCompleteName = `SimtrainSchema.${pascalName}AutoCompleteDto`;
+  const resourceName = it.resourceName;
 
   const getTypeName = (typeName) => {
     const systemTypes = ['boolean', 'string', 'number', 'object', 'integer'];
@@ -105,6 +106,18 @@ export class <%= pascalName %>Service {
         return resp.data;
       }
     <% } else if(action === 'current') { %>
+    <% } else if(action === 'confirm') { %>
+      async confirm(headers: ApiHeader, id: string, resourceDto: any) {
+        const api = this.getApi(headers);
+        const resp = await api.<%= resourceName %>ControllerSetStatusConfirm(id, resourceDto);
+        return resp.data;
+      }
+    <% } else if(action === 'void') { %>
+      async void(headers: ApiHeader, id: string, resourceDto: any) {
+        const api = this.getApi(headers);
+        const resp = await api.<%= resourceName %>ControllerSetStatusVoid(id, resourceDto);
+        return resp.data;
+      }
     <% } else { %>
       <% const api = it.apiSettings.find(item => item.action === action); %>
       <% if (api) { %>

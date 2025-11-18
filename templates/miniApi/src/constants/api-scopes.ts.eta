@@ -59,6 +59,16 @@
         case 'current':
           return;
 
+        case 'confirm':
+          method = 'post';
+          description = `Confirm and finalize the specified ${resourceTitleName}.`;
+          break;
+
+        case 'void':
+          method = 'post';
+          description = `Invalidate and mark the specified ${resourceTitleName} as void.`;
+          break;
+
         default:
           const additionalApiConfig = (additionalApis ?? []).find(item => item.action === action);
           method = additionalApiConfig?.method ?? '';

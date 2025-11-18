@@ -164,6 +164,34 @@ export class <%= pascalName %>Controller {
                 return await this.<%= serviceVariable %>.autocomplete(headers, query, filter);
             }
         <% } else if(action === 'current') { %>
+        <% } else if(action === 'confirm') { %>
+            @Post(':id/confirm')
+            @ApiOperation({ operationId: 'confirm' })
+            @ApiBody({ type: <%= schemaName %>, required: true })
+            @ApiResponse({ status: 200, description: 'Success', type: <%= schemaName %> })
+            @ApiResponse({ status: 400, description: 'Bad Request' })
+            @ApiResponse({ status: 500, description: 'Internal Error' })
+            async confirm(
+                @Headers() headers: ApiHeader,
+                @Param('id') id: string,
+                @Body() resourceDto: any,
+            ) {
+                return await this.<%= serviceVariable %>.confirm(headers, id, resourceDto);
+            }
+        <% } else if(action === 'void') { %>
+            @Post(':id/void')
+            @ApiOperation({ operationId: 'void' })
+            @ApiBody({ type: <%= schemaName %>, required: true })
+            @ApiResponse({ status: 200, description: 'Success', type: <%= schemaName %> })
+            @ApiResponse({ status: 400, description: 'Bad Request' })
+            @ApiResponse({ status: 500, description: 'Internal Error' })
+            async void(
+                @Headers() headers: ApiHeader,
+                @Param('id') id: string,
+                @Body() resourceDto: any,
+            ) {
+                return await this.<%= serviceVariable %>.void(headers, id, resourceDto);
+            }
         <% } else { %>
             <% const api = it.apiSettings.find(item => item.action === action); %>
             <% if (api) { %>
