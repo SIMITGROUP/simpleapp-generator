@@ -1,3 +1,7 @@
+[2.0.1z-alpha]
+
+1. Handle whitelist confirm and void api
+
 [2.0.1y-alpha]
 
 1. Handle whitelist confirm and void api
