@@ -6,6 +6,7 @@
   const uglyName = upperFirstCase(it.name ?? '');
   const schemaName = `SimtrainSchema.${pascalName}Dto`;
   const schemaAutoCompleteName = `SimtrainSchema.${pascalName}AutoCompleteDto`;
+  const partialSchemaName = `SimtrainPartialSchema.Partial${pascalName}Dto`;
 
   const serviceVariable = it.resourceName + 'Service';
 
@@ -49,6 +50,7 @@ import { <%= pascalName %>Service } from './<%= kebabName %>.service';
 import { ResourceApiListDto } from '../../dto/resource-api.schema';
 import * as SimtrainSchema from '../../../../openapi/backend-dto/dtos/Api';
 import { Filter } from 'mongodb';
+import * as SimtrainPartialSchema from 'src/openapi/backend-dto/dtos/PartialType';
 
 @ApiTags('<%= titleName %>')
 @Controller('resources/<%= kebabName %>')
@@ -108,7 +110,7 @@ export class <%= pascalName %>Controller {
         <% } else if(action === 'patch') { %>
             @Patch(':id')
             @ApiOperation({ operationId: 'patch' })
-            @ApiBody({ type: PartialType(<%= schemaName %>), required: true })
+            @ApiBody({ type: <%= partialSchemaName %>, required: true })
             @ApiResponse({ status: 200, description: 'Success', type: <%= schemaName %> })
             @ApiResponse({ status: 400, description: 'Bad Request' })
             @ApiResponse({ status: 404, description: 'Not Found' })
