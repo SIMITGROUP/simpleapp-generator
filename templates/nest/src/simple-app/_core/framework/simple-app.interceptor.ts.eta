@@ -114,7 +114,7 @@ export class SimpleAppInterceptor implements NestInterceptor {
             await session.commitTransaction(); //.then(()=>session.endSession());
           }
         }
-        // session.endSession()
+        await session.endSession()
       }),
     );
   }
