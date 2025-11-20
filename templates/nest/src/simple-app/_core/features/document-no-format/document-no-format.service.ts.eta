@@ -59,6 +59,9 @@ export class SimpleAppDocumentNoFormatService {
     const filter = { docNoType: doctype, active: true };
     if (id) {
       filter['_id'] = id;
+    } else {
+      // Only use default formats when no specific format ID is provided
+      filter['default'] = true;
     }
     //
     Object.assign(filter, appUser.getBranchFilter());

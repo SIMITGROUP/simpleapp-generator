@@ -448,6 +448,7 @@ export class UserContext extends UserContextInfo {
                   branchName: '$b.branchName',
                   branchId: '$b.branchId',
                   imageUrl: '$b.imageUrl',
+                  active: '$b.active'
                 },
 
                 groups: 1,

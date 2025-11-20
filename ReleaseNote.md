@@ -1,3 +1,11 @@
+[2.0.2a-alpha]
+
+1. interceptor set await close session
+2. allow use env variable skip session in document numbering generator
+3. some partial type improvement
+4. fix some document no format
+
+
 [2.0.1z-alpha]
 
 1. Handle whitelist confirm and void api
