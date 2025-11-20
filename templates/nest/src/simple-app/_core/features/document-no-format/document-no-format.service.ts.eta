@@ -198,6 +198,8 @@ export class SimpleAppDocumentNoFormatService {
     const filter = { docNoType: doctype, active: true };
     if (id) {
       filter['_id'] = id;
+    } else {
+      filter['default'] = true;
     }
     //
     Object.assign(filter, appUser.getBranchFilter());

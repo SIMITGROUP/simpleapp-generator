@@ -1,3 +1,7 @@
+[2.0.2b-alpha]
+
+1. fix generate no bugs
+
 [2.0.2a-alpha]
 
 1. interceptor set await close session
