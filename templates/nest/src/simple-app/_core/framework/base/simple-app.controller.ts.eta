@@ -51,16 +51,13 @@ export class SimpleAppController<TService extends ServiceType, TApiSchema> {
     return this.service.fullTextSearch(appuser, body);
   }
 
-  async _search(appuser: UserContext, searchObject: SearchBody, res?: Response) {    
-    const items = await this.service.searchWithPageInfo(
-      appuser,
-      searchObject['filter'],
-      searchObject['fields'],
-      searchObject['sorts'],
-      searchObject['lookup'],
-      searchObject['pagination'],
-    );
-    
+  async _search(appuser: UserContext, searchObject: SearchBody, res?: Response) {
+    //return this.service.search(appuser, searchObject['filter'], searchObject['fields'], searchObject['sorts'], searchObject['lookup']);
+    const items = await this.service.searchWithPageInfo(appuser, searchObject['filter'], searchObject['fields'], searchObject['sorts'], searchObject['lookup'], searchObject['pagination']);
+    const total = await this.service.getTotalCount(appuser, searchObject['filter'] || {});
+    const pageSize = searchObject['pagination']?.pageSize || items.length;
+    const pageNo = searchObject['pagination']?.pageNo || 0;
+    this.service.setPaginationHeaders(res, total, { pageSize, pageNo });
     return items;
   }
 
