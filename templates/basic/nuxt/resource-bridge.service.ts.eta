@@ -79,7 +79,7 @@ export class MiniApp<%= pascalName %>BridgeService {
     <% if (value !== true && typeof value !== 'object') { return; } %>
 
     <% if(action === 'list') { %>
-      protected async handleList(message: MiniAppBridgeMessageApi<MiniAppStudentActions>) {
+      protected async handleList(message: MiniAppBridgeMessageApi<<%= typeActionName %>>) {
         const rawBody: any = message.params.body ?? {};
         const pageSize = rawBody.pagination?.pageSize ?? rawBody.pageSize ?? 200;
         const pageNo = rawBody.pagination?.pageNo ?? rawBody.pageNo ?? 0;

@@ -1,3 +1,8 @@
+[2.0.2e-alpha]
+
+1. fix wrong datatype in miniapp search
+
+
 [2.0.2d-alpha]
 
 1. fix pagination issue
