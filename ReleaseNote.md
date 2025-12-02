@@ -1,3 +1,9 @@
+[2.0.2f-alpha]
+
+1. fix mini-app search condition
+
+
+
 [2.0.2e-alpha]
 
 1. fix wrong datatype in miniapp search
