@@ -22,8 +22,9 @@ import { SimpleAppDocumentNoFormatService } from '../../features/document-no-for
 import { SimpleAppLogService } from '../../features/log/log.service';
 import { UserContext } from '../../features/user-context/user.context';
 import { RunWebhookService } from '../../features/webhook/run-webhook.service';
-import { DeleteResultType, IsolationType, MoreProjectionType, PatchManyRequest, SchemaFields, TextSearchBody, UniqueKeyExistResponse } from '../schemas';
+import { DeleteResultType, IsolationType, MoreProjectionType, PatchManyRequest, SchemaFields, SearchBody, TextSearchBody, UniqueKeyExistResponse } from '../schemas';
 import { SearchWithRelation } from './dto/simple-app-search-with-relation.dto';
+import { Response } from 'express';
 
 @Injectable()
 export class SimpleAppService<T extends SchemaFields> {
@@ -108,29 +109,29 @@ export class SimpleAppService<T extends SchemaFields> {
     return false;
   }
   reCalculateValue(data: T) {}
-  getIsolationFilter = (appuser: UserContext) => {
+  getIsolationFilter = (appUser: UserContext) => {
     let isolationFilter = {};
     switch (this.isolationtype) {
       case 'none':
         isolationFilter = {};
         break;
       case 'branch':
-        isolationFilter = appuser.getBranchFilter();
+        isolationFilter = appUser.getBranchFilter();
         break;
       case 'tenant':
-        isolationFilter = appuser.getTenantFilter();
+        isolationFilter = appUser.getTenantFilter();
         break;
       case 'org':
       default:
-        isolationFilter = appuser.getOrgFilter();
+        isolationFilter = appUser.getOrgFilter();
         break;
     }
     return isolationFilter;
   };
-  async list(appuser: UserContext) {
+  async list(appUser: UserContext) {
     try {
       //console.log("this.isolationFilter",this.getIsolationFilter())
-      const products = await this.doc.find(this.getIsolationFilter(appuser));
+      const products = await this.doc.find(this.getIsolationFilter(appUser));
       // console.log(products)
       const productlist = products.map((p: T) => {
         return p;
@@ -150,7 +151,7 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     // console.log(this.moreAutoCompleteField);
   };
-  async getAutoComplete(appuser: UserContext, keyword: string, data?: T) {
+  async getAutoComplete(appUser: UserContext, keyword: string, data?: T) {
     try {
       const filter1: any = {};
       const filter2: any = {};
@@ -164,7 +165,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       const filterobj = { $or: filters };
       Object.assign(filterobj, data);
-      Object.assign(filterobj, this.getIsolationFilter(appuser));
+      Object.assign(filterobj, this.getIsolationFilter(appUser));
       const projections = {
         label: `\$${this.documentIdentityLabel}`,
         code: `\$${this.documentIdentityCode}`,
@@ -187,18 +188,18 @@ export class SimpleAppService<T extends SchemaFields> {
 
   /**
    * Special search function which can by pass data isolation. reserved and try not use
-   * @param appuser
+   * @param appUser
    * @param filters
    * @returns
    */
-  async searchNoIsolation(appuser: UserContext, filters: FilterQuery<T>) {
+  async searchNoIsolation(appUser: UserContext, filters: FilterQuery<T>) {
     try {
-      //if (this.hooks.beforeSearch) await this.hooks.beforeSearch(appuser, filters);
+      //if (this.hooks.beforeSearch) await this.hooks.beforeSearch(appUser, filters);
       const products = await this.doc.find(filters);
       const productlist = products.map((p) => {
         return p;
       });
-      //if (this.hooks.afterSearch) await this.hooks.afterSearch(appuser, productlist);
+      //if (this.hooks.afterSearch) await this.hooks.afterSearch(appUser, productlist);
 
       //   console.log(products);
       return productlist;
@@ -207,13 +208,13 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     // return this;
   }
-  async aggregateNoIsolation(appuser: UserContext, pipeline: PipelineStage[]) {
+  async aggregateNoIsolation(appUser: UserContext, pipeline: PipelineStage[]) {
     if (pipeline[0] && pipeline[0]['$match']) {
       try {
         this.logger.verbose(pipeline, `${this.documentName} aggregate:`);
 
         return await this.doc.aggregate(pipeline, {
-          session: appuser.getDBSession(),
+          session: appUser.getDBSession(),
         });
       } catch (err) {
         throw new InternalServerErrorException(err);
@@ -222,23 +223,23 @@ export class SimpleAppService<T extends SchemaFields> {
       throw new InternalServerErrorException('first aggregate pipelinestage shall use $match');
     }
   }
-  async aggregate<T = any>(appuser: UserContext, pipeline: PipelineStage[]) {
+  async aggregate<T = any>(appUser: UserContext, pipeline: PipelineStage[]) {
     if (pipeline[0] && pipeline[0]['$match']) {
       try {
-        const isolationFilter = { ...this.getIsolationFilter(appuser) };
+        const isolationFilter = { ...this.getIsolationFilter(appUser) };
         this.polishIsolationFilter(isolationFilter);
 
         Object.assign(pipeline[0]['$match'], isolationFilter);
         this.logger.verbose(pipeline, `${this.documentName} aggregate:`);
 
-        // if(appuser.getId() == ''){
+        // if(appUser.getId() == ''){
         //   console.log(JSON.stringify(pipeline))
         // }
         const res = await this.doc.aggregate<T>(pipeline, {
-          session: appuser.getDBSession(),
+          session: appUser.getDBSession(),
         });
 
-        // if(appuser.getId() == ''){
+        // if(appUser.getId() == ''){
         //   console.log(res)
         // }
         return res;
@@ -249,32 +250,47 @@ export class SimpleAppService<T extends SchemaFields> {
       throw new InternalServerErrorException('first aggregate pipelinestage shall use $match');
     }
   }
-  async search(appuser: UserContext, filters: FilterQuery<T>, projection: string[] = undefined, sort: any = undefined, lookup: { [key: string]: string } = undefined) {
+  async search(
+    appUser: UserContext,
+    filters: FilterQuery<T>,
+    projection: string[] = undefined,
+    sort: any = undefined,
+    lookup: { [key: string]: string } = undefined,
+     pagination?: { pageSize?: number; pageNo?: number },
+  ) {
     try {
-      const isolationFilter = { ...this.getIsolationFilter(appuser) };
+      
+      const isolationFilter = { ...this.getIsolationFilter(appUser) };
       this.polishIsolationFilter(isolationFilter);
 
       // console.log("initial search",filters)
       const newfilters: FilterQuery<T> = { ...filters, ...isolationFilter };
 
-      // if (this.hooks.beforeSearch) await this.hooks.beforeSearch(appuser, newfilters);
+      // if (this.hooks.beforeSearch) await this.hooks.beforeSearch(appUser, newfilters);
       // console.log("before _find",newfilters)
       // console.log("this.doc",this.doc)
       let searchResults: T[] = [];
       if (lookup === undefined) {
         this.logger.debug('after search', newfilters);
-        searchResults = await this.doc.find(newfilters, projection, { session: appuser.getDBSession() }).sort(sort);
+        let query = this.doc.find(newfilters, projection, { session: appUser.getDBSession() }).sort(sort);
+        
+        if (pagination) {
+          const { pageSize, pageNo, skip } = this.buildPagination(pagination);
+          query = query.skip(skip).limit(pageSize);
+        }
+        
+        searchResults = await query.exec();
       } else {
-        const pipelines = this.searchToAggregate(appuser, newfilters, projection, sort, lookup);
+        const pipelines = this.searchToAggregate(appUser, newfilters, projection, sort, lookup, pagination);
         this.logger.debug('after aggregate', pipelines);
-        searchResults = await this.aggregate(appuser, pipelines);
+        searchResults = await this.aggregate(appUser, pipelines);
       }
 
       const list: T[] = searchResults.map((p: T) => {
         return p;
       });
       // console.log("after map",productlist)
-      // if (this.hooks.afterSearch) await this.hooks.afterSearch(appuser, list);
+      // if (this.hooks.afterSearch) await this.hooks.afterSearch(appUser, list);
 
       //   console.log(products);
       return list;
@@ -284,25 +300,175 @@ export class SimpleAppService<T extends SchemaFields> {
     // return this;
   }
 
-  async fullTextSearch(appuser: UserContext, body: TextSearchBody) {
+  /**
+   * Search with pagination that returns page info (pageCount, pageSize, pageNo, total) along with items.
+   * For aggregation queries (with lookup), uses $facet to get both metadata and data in a single query.
+   */
+  async searchWithPageInfo(
+    appUser: UserContext,
+    filters: FilterQuery<T> = {},
+    projection: string[] = undefined,
+    sort: any = undefined,
+    lookup: { [key: string]: string } = undefined,
+    pagination?: { pageSize?: number; pageNo?: number },
+  ) {
+    try {
+      const isolationFilter = { ...this.getIsolationFilter(appUser) };
+      this.polishIsolationFilter(isolationFilter);
+
+      const newfilters: FilterQuery<T> = { ...(filters as FilterQuery<T>), ...isolationFilter };
+
+      let pageSize: number;
+      let pageNo: number;
+      let skip: number;
+      
+      if (pagination !== undefined) {
+        const paginationResult = this.buildPagination(pagination);
+        pageSize = paginationResult.pageSize;
+        pageNo = paginationResult.pageNo;
+        skip = paginationResult.skip;
+      } else {
+        pageSize = 10000;
+        pageNo = 0;
+        skip = 0;
+      }
+
+      let items: T[] = [];
+      let total = 0;
+
+      if (lookup === undefined) {
+        this.logger.debug('after searchWithPageInfo', newfilters);
+        const baseQuery = this.doc.find(newfilters, projection, { session: appUser.getDBSession() }).sort(sort);
+        const query = baseQuery.skip(skip).limit(pageSize);
+
+        const [rows, count] = await Promise.all([
+          query.exec(),
+          this.doc.countDocuments(newfilters).session(appUser.getDBSession()),
+        ]);
+        items = rows;
+        total = count;
+      } else {
+        const pipelines = this.searchToAggregate(
+          appUser,
+          newfilters,
+          projection as any,
+          sort as any,
+          lookup as any,
+          { pageSize, pageNo },
+        );
+
+        const countPipeline: PipelineStage[] = [
+          { $match: newfilters },
+        ];
+        const collections = Object.keys(lookup);
+        collections.forEach((tokey: string) => {
+          const toarr = tokey.split('.');
+          const to = toarr[0];
+          toarr.splice(0, 1);
+          const foreignField = toarr.join('.') ?? '_id';
+          countPipeline.push({
+            $lookup: {
+              from: to,
+              as: '_' + to,
+              localField: lookup[tokey],
+              foreignField: foreignField,
+              pipeline: [{ $match: { tenantId: appUser.getTenantId() } }],
+            },
+          });
+        });
+        countPipeline.push({ $count: 'total' });
+
+        this.logger.debug('after aggregate searchWithPageInfo', pipelines);
+
+        const [rows, countResult] = await Promise.all([
+          this.aggregate(appUser, pipelines),
+          this.aggregate(appUser, countPipeline),
+        ]);
+        
+        items = rows as T[];
+        total = countResult && countResult.length > 0 ? (countResult[0]['total'] || 0) : 0;
+      }
+
+      return items;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
+
+  async getTotalCount(appUser: UserContext, filters: FilterQuery<T>) {
+    try {
+      const isolationFilter = { ...this.getIsolationFilter(appUser) };
+      this.polishIsolationFilter(isolationFilter);
+      const newfilters: FilterQuery<T> = { ...filters, ...isolationFilter };
+      return await this.doc.countDocuments(newfilters, { session: appUser.getDBSession() });
+    } catch (err) {
+      this.logger.error(err, 'getTotalCount error');
+      return 0;
+    }
+  }
+
+  setPaginationHeaders(res: Response, total?: number, pagination?: { pageSize?: number; pageNo?: number }) {
+    if (!res || typeof res.setHeader !== 'function') return;
+    
+    if (total !== undefined && total !== null && pagination) {
+      const { pageSize, pageNo } = this.buildPagination(pagination);
+      const pageCount = pageSize > 0 && total > 0 ? Math.ceil(total / pageSize) : (total > 0 ? 1 : 0);
+      res.setHeader('x-page-count', pageCount);
+      res.setHeader('x-page-size', pageSize);
+      res.setHeader('x-page-no', pageNo);
+      res.setHeader('x-total-count', total);
+    } else {
+      res.setHeader('x-page-count', 0);
+      res.setHeader('x-page-size', 0);
+      res.setHeader('x-page-no', 0);
+      res.setHeader('x-total-count', 0);
+    }
+  }
+
+  buildPagination(pagination?: { pageSize?: number; pageNo?: number }) {
+    let finalPageSize: number;
+    if (pagination && typeof pagination.pageSize === 'number' && pagination.pageSize > 0) {
+      finalPageSize = pagination.pageSize;
+    } else if (pagination !== undefined) {
+      finalPageSize = 10000;
+    } else {
+      finalPageSize = this.LIMITPERPAGE;
+    }
+    
+    const rawPageNo = Number.isFinite(pagination?.pageNo) ? pagination.pageNo : 0;
+    const pageNo = rawPageNo < 0 ? 0 : rawPageNo;
+    const skip = pageNo * finalPageSize;
+    
+    this.logger.debug('buildPagination result:', { 
+      input: pagination, 
+      finalPageSize, 
+      pageNo, 
+      skip 
+    });
+    
+    return { pageSize: finalPageSize, skip, pageNo };
+  }
+
+  
+
+  async fullTextSearch(appUser: UserContext, body: TextSearchBody) {
     try {
       //{filters:string[],fields:string[]}
-      const isolationFilter = { ...this.getIsolationFilter(appuser) };
+      const isolationFilter = { ...this.getIsolationFilter(appUser) };
       this.polishIsolationFilter(isolationFilter);
       const keyword = body.keyword;
       // console.log("bodybody",body)
       // Prepare regex filter
       const orConditions: any[] = [];
-      const regex = new RegExp(keyword, 'i')
+      const regex = new RegExp(keyword, 'i');
 
       if (body.filters && body.filters.length > 0) {
-        body.filters.forEach((field: string) => {        
-            orConditions.push({
-              [field]: { $regex: regex },
-            });          
+        body.filters.forEach((field: string) => {
+          orConditions.push({
+            [field]: { $regex: regex },
+          });
         });
       }
-
 
       const filter = {
         $or: orConditions,
@@ -326,11 +492,11 @@ export class SimpleAppService<T extends SchemaFields> {
       throw new Error('Failed to perform search');
     }
   }
-  async findById(appuser: UserContext, id: string) {
-    // if (this.hooks.beforeFetchRecord) await this.hooks.beforeFetchRecord(appuser, id);
+  async findById(appUser: UserContext, id: string) {
+    // if (this.hooks.beforeFetchRecord) await this.hooks.beforeFetchRecord(appUser, id);
 
-    const data = await this.search(appuser, { _id: id as any });
-    // if (this.hooks.afterFetchRecord) await this.hooks.afterFetchRecord(appuser, data[0]);
+    const data = await this.search(appUser, { _id: id as any });
+    // if (this.hooks.afterFetchRecord) await this.hooks.afterFetchRecord(appUser, data[0]);
 
     if (data.length == 1) {
       // console.log('data0', data[0]);
@@ -340,11 +506,11 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
-  async findByIdNoIsolation(appuser: UserContext, id: string) {
-    // if (this.hooks.beforeFetchRecord) await this.hooks.beforeFetchRecord(appuser, id);
+  async findByIdNoIsolation(appUser: UserContext, id: string) {
+    // if (this.hooks.beforeFetchRecord) await this.hooks.beforeFetchRecord(appUser, id);
 
-    const data = await this.searchNoIsolation(appuser, { _id: id as any });
-    // if (this.hooks.afterFetchRecord) await this.hooks.afterFetchRecord(appuser, data[0]);
+    const data = await this.searchNoIsolation(appUser, { _id: id as any });
+    // if (this.hooks.afterFetchRecord) await this.hooks.afterFetchRecord(appUser, data[0]);
 
     if (data.length == 1) {
       // console.log('data0', data[0]);
@@ -356,31 +522,35 @@ export class SimpleAppService<T extends SchemaFields> {
 
   /**
    * create many from array, for performance reason it submit all item in 1 go, so it won't implement hooks
-   * @param appuser
+   * @param appUser
    * @param datas
    */
-  async createMany(appuser: UserContext, datas: T[]) {
+  async createMany(appUser: UserContext, datas: T[]) {
     if (Array.isArray(datas)) {
       for (let i = 0; i < datas.length; i++) {
         const data = datas[i];
-        let isolationFilter: any = { ...appuser.getCreateFilter() };
+        let isolationFilter: any = { ...appUser.getCreateFilter() };
         isolationFilter = this.polishIsolationFilter(isolationFilter, data);
 
         Object.assign(data, isolationFilter);
         this.reCalculateValue(data);
-        await this.validateData(appuser, data);
-        this.applyNestedDateTime(appuser, data, 'create');
+        await this.validateData(appUser, data);
+        this.applyNestedDateTime(appUser, data, 'create');
       }
-      const dbsession = appuser.getDBSession();
-      if (dbsession && !dbsession.inTransaction()) {
-        dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
+      const dbsession = appUser.getDBSession();
+      if (!appUser.inTransaction()) {
+        appUser.startTransaction();
       }
 
       try {
         const result = await this.doc.insertMany(datas, { session: dbsession });
-        await this.addManyAuditEvents(appuser, this.documentName, 'createMany', datas);
+        const allIds = datas.map(item=>item._id)
+        const allLogData = datas.map(item=>null)
+        appUser.addTransactionStep('createMany',this.documentName,allIds,allLogData);
+
+        await this.addManyAuditEvents(appUser, this.documentName, 'createMany', datas);
         for (const data of datas) {
-          appuser.addInsertedRecordId(this.documentName, data._id);
+          appUser.addInsertedRecordId(this.documentName, data._id);
         }
 
         return result;
@@ -392,23 +562,23 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
-  async create(appuser: UserContext, data: T, noStartTransaction: boolean = false) {
+  async create(appUser: UserContext, data: T, noStartTransaction: boolean = false) {
     let result;
 
     if (!data._id) {
       data._id = crypto.randomUUID();
     }
-    const dbsession = appuser.getDBSession();
-    if (dbsession && !dbsession.inTransaction() && !noStartTransaction) {
-      dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
+    const dbsession = appUser.getDBSession();
+    if (!appUser.inTransaction() && !noStartTransaction) {
+      appUser.startTransaction();
     }
 
     this.logger.debug('this.withDocNumberFormat :' + this.withDocNumberFormat + '  && ' + '!data[this.documentIdentityCode] ==' + !data[this.documentIdentityCode]);
     if (this.withDocNumberFormat && !data[this.documentIdentityCode]) {
-      await this.genNewDocNo(appuser, data);
+      await this.genNewDocNo(appUser, data);
     }
 
-    let isolationFilter: any = { ...appuser.getCreateFilter() };
+    let isolationFilter: any = { ...appUser.getCreateFilter() };
     isolationFilter = this.polishIsolationFilter(isolationFilter, data);
 
     this.logger.debug('isolationFilter', 'SimpleAppService');
@@ -417,20 +587,21 @@ export class SimpleAppService<T extends SchemaFields> {
     this.logger.debug(data, 'SimpleAppService');
     Object.assign(data, isolationFilter);
     this.reCalculateValue(data);
-    await this.validateData(appuser, data);
+    await this.validateData(appUser, data);
     this.logger.debug(data, `after create validation`);
-    this.applyNestedDateTime(appuser, data, 'create');
+    this.applyNestedDateTime(appUser, data, 'create');
 
     //new way of hook
-    await this.runEvent(appuser, this.setHookName('beforeCreate'), { data: data }, false);
+    await this.runEvent(appUser, this.setHookName('beforeCreate'), { data: data }, false);
 
     this.logger.debug(data, `Create Record ${this.documentName}`);
     const newdoc = new this.doc(data);
-    await this.identifyForeignKeys(appuser, data);
+    await this.identifyForeignKeys(appUser, data);
     try {
       result = await newdoc.save({ session: dbsession });
-      await this.addAuditEvent(appuser, this.documentName, result._id, 'create', data);
-      appuser.addInsertedRecordId(this.documentName, result._id);
+      appUser.addTransactionStep('create',this.documentName,[data._id],[null]);
+      await this.addAuditEvent(appUser, this.documentName, result._id, 'create', data);
+      appUser.addInsertedRecordId(this.documentName, result._id);
     } catch (err) {
       this.logger.error(err);
       throw err;
@@ -438,36 +609,36 @@ export class SimpleAppService<T extends SchemaFields> {
 
     try {
       //new way of hook
-      await this.runEvent(appuser, this.setHookName('afterCreate'), { data: result }, false);
+      await this.runEvent(appUser, this.setHookName('afterCreate'), { data: result }, false);
 
-      await this.callWebhook(appuser, 'create', result);
+      await this.callWebhook(appUser, 'create', result);
       return result as T;
     } catch (err) {
       throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
     }
   }
 
-  applyNestedDateTime = (appuser: UserContext, data: any, transtype: string) => {
+  applyNestedDateTime = (appUser: UserContext, data: any, transtype: string) => {
     const props = Object.getOwnPropertyNames(data);
     for (let i = 0; i < props.length; i++) {
       const key = props[i];
       //need to apply nested
       if (Array.isArray(data[key]) && data[key].length > 0 && typeof data[key][0] == 'object') {
         for (let j = 0; j < data[key].length; j++) {
-          this.applyNestedDateTime(appuser, data[key][j], transtype);
+          this.applyNestedDateTime(appUser, data[key][j], transtype);
         }
       } else if (key == 'created') {
         data['created'] = transtype == 'create' || !data['created'] ? new Date().toISOString() : data['created'];
       } else if (key == 'createdBy') {
-        data['createdBy'] = transtype == 'create' || !data['createdBy'] ? appuser.getUid() : data['createdBy'];
+        data['createdBy'] = transtype == 'create' || !data['createdBy'] ? appUser.getUid() : data['createdBy'];
       } else if (key == 'updated') {
         data['updated'] = new Date().toISOString();
       } else if (key == 'updatedBy') {
-        data['updatedBy'] = appuser.getUid();
+        data['updatedBy'] = appUser.getUid();
       }
     }
   };
-  async validateData(appuser: UserContext, data: T, _id?: string) {
+  async validateData(appUser: UserContext, data: T, _id?: string) {
     // console.log('validatedata');
     const ajv = new Ajv({ allErrors: true, useDefaults: true });
     addFormats(ajv);
@@ -487,9 +658,9 @@ export class SimpleAppService<T extends SchemaFields> {
     this.logger.debug('run hook during validation');
     let issuccess = true;
     // if (this.hooks.beforeValidation) {
-    //   issuccess = await this.hooks.beforeValidation(appuser, data, _id);
+    //   issuccess = await this.hooks.beforeValidation(appUser, data, _id);
     // }
-    // const issuccess = await this.hook(appuser, HookType.beforeValidation, data);
+    // const issuccess = await this.hook(appUser, HookType.beforeValidation, data);
     if (!issuccess) {
       const errormsg: string[] = [];
       for (let i = 0; i < this.errorlist.length; i++) {
@@ -541,35 +712,37 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     return filterIsolation;
   };
-  async findIdThenDelete(appuser: UserContext, id: string): Promise<any> {
-    const deletedata = await this.findById(appuser, id);
+  async findIdThenDelete(appUser: UserContext, id: string): Promise<any> {
+    const deletedata = await this.findById(appUser, id);
     if (!deletedata) {
       throw new NotFoundException(`${id} not found`, 'not found');
     }
-    const dbsession = appuser.getDBSession();
-    if (dbsession && !dbsession.inTransaction()) {
-      dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
+    const dbsession = appUser.getDBSession();
+    if (!appUser.inTransaction()) {
+      appUser.startTransaction();
     }
 
     let dependency;
     try {
       //new way of hook
-      await this.runEvent(appuser, this.setHookName('beforeDelete'), { id: id, deleteData: deletedata }, false);
+      await this.runEvent(appUser, this.setHookName('beforeDelete'), { id: id, deleteData: deletedata }, false);
 
-      // if (this.hooks.beforeDelete) await this.hooks.beforeDelete(appuser, id, deletedata);
+      // if (this.hooks.beforeDelete) await this.hooks.beforeDelete(appUser, id, deletedata);
       this.logger.debug('delete record', this.documentName, id);
-      dependency = await this.getRelatedRecords(appuser, id);
+      dependency = await this.getRelatedRecords(appUser, id);
       if (!dependency) {
-        const filterIsolation = this.getIsolationFilter(appuser);
+        const filterIsolation = this.getIsolationFilter(appUser);
         this.polishIsolationFilter(filterIsolation);
 
         filterIsolation['_id'] = id;
         this.logger.debug('delete filter', filterIsolation);
         const result = await this.doc.deleteOne(filterIsolation).session(dbsession);
+        appUser.addTransactionStep('delete',this.documentName,[id],[deletedata]);
 
-        await this.addAuditEvent(appuser, this.documentName, id, 'delete', deletedata);
 
-        appuser.addDeletedRecordId(this.documentName, id);
+        await this.addAuditEvent(appUser, this.documentName, id, 'delete', deletedata);
+
+        appUser.addDeletedRecordId(this.documentName, id);
         const deleteresult: DeleteResultType<T> = {
           result: result,
           data: deletedata,
@@ -578,9 +751,9 @@ export class SimpleAppService<T extends SchemaFields> {
         // this.doc.findByIdAndDelete(id)
 
         //new way of hook
-        await this.runEvent(appuser, this.setHookName('afterDelete'), { id: id, deleteData: deletedata }, false);
+        await this.runEvent(appUser, this.setHookName('afterDelete'), { id: id, deleteData: deletedata }, false);
 
-        await this.callWebhook(appuser, 'delete', deletedata);
+        await this.callWebhook(appUser, 'delete', deletedata);
         return deleteresult;
       } else {
         this.logger.debug('reject query', dependency);
@@ -596,14 +769,14 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
-  // updateOne = async (appuser:UserContext,data: T) => {
+  // updateOne = async (appUser:UserContext,data: T) => {
   //   this.doc.updateOne(data);
   // };
 
-  findIdThenUnsetField = async (appuser: UserContext, id: string, data: AnyKeys<T> & AnyObject, noStartTransaction: boolean = false) => {
+  findIdThenUnsetField = async (appUser: UserContext, id: string, data: AnyKeys<T> & AnyObject, noStartTransaction: boolean = false) => {
     try {
       // Check is record exist
-      const existingdata = await this.findById(appuser, id);
+      const existingdata = await this.findById(appUser, id);
       if (!existingdata) throw new NotFoundException(`${this.documentName} findIdThenUpdate:  _id:${id} not found`, 'not found');
 
       this.logger.debug('update id: ' + id, this.documentName + ' findIdThenRemoveField');
@@ -613,18 +786,18 @@ export class SimpleAppService<T extends SchemaFields> {
 
       // Prepare update audit data
       const auditData = {
-        ...appuser.getUpdateFilter(),
+        ...appUser.getUpdateFilter(),
         __v: existingdata.__v + 1,
       };
 
       // Start transaction
-      const dbsession = appuser.getDBSession();
-      if (dbsession && !dbsession.inTransaction() && !noStartTransaction) {
-        dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
+      const dbsession = appUser.getDBSession();
+      if (!appUser.inTransaction() && !noStartTransaction) {
+        appUser.startTransaction();
       }
 
       // Isolation filter
-      const isolationFilter = { ...this.getIsolationFilter(appuser) };
+      const isolationFilter = { ...this.getIsolationFilter(appUser) };
       this.polishIsolationFilter(isolationFilter);
       isolationFilter['_id'] = id;
 
@@ -644,9 +817,9 @@ export class SimpleAppService<T extends SchemaFields> {
       );
 
       // Add audit event
-      await this.addAuditEvent(appuser, this.documentName, id, 'update', data);
+      await this.addAuditEvent(appUser, this.documentName, id, 'update', data);
 
-      appuser.addUpdatedRecordId(this.documentName, data._id);
+      appUser.addUpdatedRecordId(this.documentName, data._id);
 
       return result;
     } catch (err) {
@@ -655,10 +828,10 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   };
 
-  findIdThenUpdate = async (appuser: UserContext, id: string, data: T, noStartTransaction: boolean = false) => {
+  findIdThenUpdate = async (appUser: UserContext, id: string, data: T, noStartTransaction: boolean = false) => {
     try {
       //version exists, need ensure different only 1
-      const existingdata = await this.findById(appuser, id);
+      const existingdata = await this.findById(appUser, id);
       if (!existingdata) throw new NotFoundException(`${this.documentName} findIdThenUpdate:  _id:${id} not found`, 'not found');
 
       this.logger.debug('update id:' + id, this.documentName + ' findIdThenUpdate');
@@ -672,53 +845,55 @@ export class SimpleAppService<T extends SchemaFields> {
       // }
       // this.logger.debug('warn2');
 
-      await this.identifyForeignKeys(appuser, data);
+      await this.identifyForeignKeys(appUser, data);
 
       //new way of hook
-      await this.runEvent(appuser, this.setHookName('beforeUpdate'), { id: id, prevData: existingdata, newData: data }, false);
+      await this.runEvent(appUser, this.setHookName('beforeUpdate'), { id: id, prevData: existingdata, newData: data }, false);
 
-      // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appuser, id, existingdata, data);
+      // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appUser, id, existingdata, data);
 
-      const dbsession = appuser.getDBSession();
-      if (dbsession && !dbsession.inTransaction() && !noStartTransaction) {
-        dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
+      const dbsession = appUser.getDBSession();
+      if (!appUser.inTransaction() && !noStartTransaction) {
+        appUser.startTransaction();
       }
       // try {
-      Object.assign(data, appuser.getUpdateFilter());
+      Object.assign(data, appUser.getUpdateFilter());
       // Object.assign(existingdata, data);
 
       delete data['_id'];
       this.reCalculateValue(data);
 
       // existingdata['_id']=''
-      await this.validateData(appuser, data, id);
+      await this.validateData(appUser, data, id);
 
-      const isolationFilter = { ...this.getIsolationFilter(appuser) };
+      const isolationFilter = { ...this.getIsolationFilter(appUser) };
       this.polishIsolationFilter(isolationFilter);
       isolationFilter['_id'] = id;
-      this.applyNestedDateTime(appuser, data, 'update');
+      this.applyNestedDateTime(appUser, data, 'update');
 
       const result = await this.doc.findOneAndReplace(isolationFilter, data, {
         session: dbsession,
         new: true,
       });
-      await this.addAuditEvent(appuser, this.documentName, id, 'update', data);
 
-      appuser.addUpdatedRecordId(this.documentName, data._id);
-      await this.runEvent(appuser, this.setHookName('afterUpdate'), { id: id, prevData: existingdata, newData: data }, false);
+      appUser.addTransactionStep('update',this.documentName,[id],[existingdata]);
+      await this.addAuditEvent(appUser, this.documentName, id, 'update', data);
 
-      await this.callWebhook(appuser, 'update', result);
-      return result; // await this.findById(appuser, id);
+      appUser.addUpdatedRecordId(this.documentName, data._id);
+      await this.runEvent(appUser, this.setHookName('afterUpdate'), { id: id, prevData: existingdata, newData: data }, false);
+
+      await this.callWebhook(appUser, 'update', result);
+      return result; // await this.findById(appUser, id);
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerErrorException(err.message);
     }
   };
 
-  findIdThenUpdateNoIsolation = async (appuser: UserContext, id: string, data: T) => {
+  findIdThenUpdateNoIsolation = async (appUser: UserContext, id: string, data: T) => {
     try {
       //version exists, need ensure different only 1
-      const existingdata = await this.findByIdNoIsolation(appuser, id);
+      const existingdata = await this.findByIdNoIsolation(appUser, id);
       if (!existingdata) throw new NotFoundException(`${this.documentName} findIdThenUpdate:  _id:${id} not found`, 'not found');
 
       this.logger.debug('update id:' + id, this.documentName + ' findIdThenUpdate');
@@ -732,51 +907,53 @@ export class SimpleAppService<T extends SchemaFields> {
       // }
       // this.logger.debug('warn2');
 
-      await this.identifyForeignKeys(appuser, data);
+      await this.identifyForeignKeys(appUser, data);
 
-      await this.runEvent(appuser, this.setHookName('beforeUpdate'), { data: data }, false);
+      await this.runEvent(appUser, this.setHookName('beforeUpdate'), { data: data }, false);
 
-      // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appuser, id, existingdata, data);
+      // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appUser, id, existingdata, data);
 
-      const dbsession = appuser.getDBSession();
-      if (dbsession && !dbsession.inTransaction()) {
-        dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
+      const dbsession = appUser.getDBSession();
+      if (!appUser.inTransaction()) {
+        appUser.startTransaction();
       }
       // try {
-      // Object.assign(data, appuser.getUpdateFilter());
+      // Object.assign(data, appUser.getUpdateFilter());
       // Object.assign(existingdata, data);
 
       delete data['_id'];
       this.reCalculateValue(data);
 
       // existingdata['_id']=''
-      await this.validateData(appuser, data, id);
+      await this.validateData(appUser, data, id);
 
       const isolationFilter = {};
       // this.polishIsolationFilter(isolationFilter);
       isolationFilter['_id'] = id;
-      this.applyNestedDateTime(appuser, data, 'update');
+      this.applyNestedDateTime(appUser, data, 'update');
 
       const result = await this.doc.findOneAndReplace(isolationFilter, data, {
         session: dbsession,
         new: true,
       });
-      await this.addAuditEvent(appuser, this.documentName, id, 'update', data);
 
-      await this.runEvent(appuser, this.setHookName('afterUpdate'), { id: id, prevData: existingdata, newData: result }, false);
-      appuser.addUpdatedRecordId(this.documentName, data._id);
+      appUser.addTransactionStep('update',this.documentName,[id],[existingdata]);
+      await this.addAuditEvent(appUser, this.documentName, id, 'update', data);
 
-      await this.callWebhook(appuser, 'update', result);
-      return result; // await this.findById(appuser, id);
+      await this.runEvent(appUser, this.setHookName('afterUpdate'), { id: id, prevData: existingdata, newData: result }, false);
+      appUser.addUpdatedRecordId(this.documentName, data._id);
+
+      await this.callWebhook(appUser, 'update', result);
+      return result; // await this.findById(appUser, id);
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerErrorException(err.message);
     }
   };
 
-  findIdThenPatch = async (appuser: UserContext, id: string, data: Partial<T>, session: mongo.ClientSession = undefined, skipLog: boolean = false) => {
+  findIdThenPatch = async (appUser: UserContext, id: string, data: Partial<T>, session: mongo.ClientSession = undefined, skipLog: boolean = false) => {
     try {
-      const existingdata = await this.findById(appuser, id);
+      const existingdata = await this.findById(appUser, id);
       if (!existingdata) {
         throw new NotFoundException(`${id} not found`, 'not found');
       }
@@ -789,17 +966,17 @@ export class SimpleAppService<T extends SchemaFields> {
       }
       data.__v = existingdata.__v + 1;
 
-      await this.identifyForeignKeys(appuser, data);
+      await this.identifyForeignKeys(appUser, data);
 
       //patch not suitable trigger afterupdate
-      // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appuser, id, existingdata, data);
-      await this.runEvent(appuser, this.setHookName('beforePatch'), { id: id, patchData: data, prevData: existingdata }, false);
-      const dbsession = appuser.getDBSession();
-      if (dbsession && !dbsession.inTransaction()) {
-        dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
+      // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appUser, id, existingdata, data);
+      await this.runEvent(appUser, this.setHookName('beforePatch'), { id: id, patchData: data, prevData: existingdata }, false);
+      const dbsession = appUser.getDBSession();
+      if (!appUser.inTransaction()) {
+        appUser.startTransaction();
       }
       // try {
-      Object.assign(data, appuser.getUpdateFilter());
+      Object.assign(data, appUser.getUpdateFilter());
       delete data['_id'];
 
       //patch not suitable trigger afterupdate
@@ -808,26 +985,27 @@ export class SimpleAppService<T extends SchemaFields> {
       // existingdata['_id']=''
       // console.log("newdata",data)
       //path record no validation
-      // await this.validateData(appuser, data);
+      // await this.validateData(appUser, data);
 
-      const isolationFilter = { ...this.getIsolationFilter(appuser) };
+      const isolationFilter = { ...this.getIsolationFilter(appUser) };
       this.polishIsolationFilter(isolationFilter);
 
       isolationFilter['_id'] = id;
-      this.applyNestedDateTime(appuser, data, 'update');
+      this.applyNestedDateTime(appUser, data, 'update');
       // console.log('findid patch ', data);
 
       const result = await this.doc.findOneAndUpdate(isolationFilter, data, {
         session: dbsession,
         new: true,
       });
+      appUser.addTransactionStep('update',this.documentName,[id],[existingdata]);
       //skip audit trail, useful when want to patch x-foreignkey code,label
       if (!skipLog) {
-        await this.addAuditEvent(appuser, this.documentName, id, 'patch', data);
+        await this.addAuditEvent(appUser, this.documentName, id, 'patch', data);
       }
-      appuser.addUpdatedRecordId(this.documentName, data._id);
-      await this.runEvent(appuser, this.setHookName('afterPatch'), { id: id, patchData: data, prevData: existingdata }, false);
-      return result; //await this.findById(appuser, id);
+      appUser.addUpdatedRecordId(this.documentName, data._id);
+      await this.runEvent(appUser, this.setHookName('afterPatch'), { id: id, patchData: data, prevData: existingdata }, false);
+      return result; //await this.findById(appUser, id);
     } catch (err) {
       this.logger.error(err.message, 'findIdThenPath error');
       console.error(err);
@@ -836,12 +1014,19 @@ export class SimpleAppService<T extends SchemaFields> {
   };
   async deleteMany(appUser: UserContext, filter: FilterQuery<T>) {
     const dbsession = appUser.getDBSession();
-    if (dbsession && !dbsession.inTransaction()) {
-      dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
+    if (!appUser.inTransaction()) {
+      appUser.startTransaction();
     }
     const searchResult = await this.search(appUser, filter, []);
     const ids = searchResult.map((row) => row._id);
+
+    // const result = await this.doc.insertMany(datas, { session: dbsession });
+    // const allIds = datas.map(item=>item._id)
+    // const allLogData = datas.map(item=>null)
+    
+
     const result = await this.doc.deleteMany({ _id: { $in: ids } }, { session: dbsession });
+    appUser.addTransactionStep('deleteMany',this.documentName,ids,searchResult);
     // console.log(`Delete ${this.documentName} ids`, ids, result);
     for (const id of ids) {
       appUser.addDeletedRecordId(this.documentName, id);
@@ -849,7 +1034,7 @@ export class SimpleAppService<T extends SchemaFields> {
     return result;
     //updateMany(isolationFilter, { $set: patch }, { session: dbsession });
   }
-  async patchMany<T>(appuser: UserContext, data: PatchManyRequest<T>) {
+  async patchMany<T>(appUser: UserContext, data: PatchManyRequest<T>) {
     // filter = {
     //   _id: '7eb2661a-6ea6-406e-b868-2e8b19c4658b',
     //   'tuitionClass._id': '5aa69cee-f651-45f4-bad8-0f52a3fb92b5',
@@ -858,26 +1043,30 @@ export class SimpleAppService<T extends SchemaFields> {
     const filter = data.filter;
     const patch = data.data as Object;
 
-    const isolationFilter = { ...this.getIsolationFilter(appuser), ...(filter || {}) };
+    const isolationFilter = { ...this.getIsolationFilter(appUser), ...(filter || {}) };
     this.polishIsolationFilter(isolationFilter);
-    this.applyNestedDateTime(appuser, patch, 'update');
+    this.applyNestedDateTime(appUser, patch, 'update');
 
     // Get DB Session
-    const dbsession = appuser.getDBSession();
-    if (dbsession && !dbsession.inTransaction()) {
-      dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });
+    const dbsession = appUser.getDBSession();
+    if (!appUser.inTransaction()) {
+      appUser.startTransaction();
     }
 
+    const searchResult = await this.search(appUser, filter, []);
+    const ids = searchResult.map((row) => row._id);
+
     const result = await this.doc.updateMany(isolationFilter, { $set: patch }, { session: dbsession });
-    await this.addManyAuditEvents(appuser, this.documentName, 'patchMany', [patch]);
+    appUser.addTransactionStep('updateMany',this.documentName,ids,searchResult);
+    await this.addManyAuditEvents(appUser, this.documentName, 'patchMany', [patch]);
 
     return result;
   }
 
   //find what foreign key constraint
-  async getRelatedRecords(appuser: UserContext, id: string) {
+  async getRelatedRecords(appUser: UserContext, id: string) {
     this.logger.debug('get foreignkey for delete:', id);
-    // console.log('session modifeds', appuser.getModifieds());
+    // console.log('session modifeds', appUser.getModifieds());
     if (foreignkeys === undefined) {
       this.logger.error('foreignkeys object undetected');
       throw new InternalServerErrorException('foreignkeys object undetected');
@@ -903,11 +1092,11 @@ export class SimpleAppService<T extends SchemaFields> {
           const filter = {};
           filter[fkey] = id;
           const result: any = await collection.findOne(filter, {
-            session: appuser.getDBSession(),
+            session: appUser.getDBSession(),
           });
           if (result) {
             //record deleted but not yet commit, safely ignore
-            if (appuser.searchDeletedRecordId(collectionname, result._id)) continue;
+            if (appUser.searchDeletedRecordId(collectionname, result._id)) continue;
 
             this.logger.error(result, `related result found in ${collectionname} ${fkey} = ${id}`);
             return result;
@@ -932,7 +1121,7 @@ export class SimpleAppService<T extends SchemaFields> {
    * @param docstatus
    * @returns Promise
    */
-  async setDocumentStatus(appuser: UserContext, id: string, data: T, docstatus: string) {
+  async setDocumentStatus(appUser: UserContext, id: string, data: T, docstatus: string) {
     id = id.trim();
 
     if (!id) {
@@ -941,45 +1130,45 @@ export class SimpleAppService<T extends SchemaFields> {
     if (data['_id'] && data['_id'] != id) {
       throw new BadRequestException(`_id in data(${data['_id']} different with path param ${id})`, 'set documentstatus id not match with submited data');
     }
-    const existdata = await this.findById(appuser, id);
+    const existdata = await this.findById(appUser, id);
     if (existdata && existdata['documentStatus'] == docstatus) {
       throw new BadRequestException(`Same document status "${docstatus}" is not allowed`);
     }
     data['documentStatus'] = docstatus;
-    // await this.hook(appuser, HookType.beforeSetStatus, data);
-    await this.runEvent(appuser, this.setHookName('beforeSetStatus'), { docStatus: docstatus, prevData: existdata, newData: data }, false);
+    // await this.hook(appUser, HookType.beforeSetStatus, data);
+    await this.runEvent(appUser, this.setHookName('beforeSetStatus'), { docStatus: docstatus, prevData: existdata, newData: data }, false);
 
-    // if (this.hooks.beforeSetStatus) await this.hooks.beforeSetStatus(appuser, docstatus, data, existdata);
+    // if (this.hooks.beforeSetStatus) await this.hooks.beforeSetStatus(appUser, docstatus, data, existdata);
 
     if (data && !data['created']) {
-      const createresult = await this.create(appuser, data);
-      await this.runEvent(appuser, this.setHookName('afterSetStatus'), { docStatus: docstatus, data: createresult }, false);
-      // if (this.hooks.afterSetStatus) await this.hooks.afterSetStatus(appuser, docstatus, createresult);
-      await this.addAuditEvent(appuser, this.documentName, id, docstatus, data);
+      const createresult = await this.create(appUser, data);
+      await this.runEvent(appUser, this.setHookName('afterSetStatus'), { docStatus: docstatus, data: createresult }, false);
+      // if (this.hooks.afterSetStatus) await this.hooks.afterSetStatus(appUser, docstatus, createresult);
+      await this.addAuditEvent(appUser, this.documentName, id, docstatus, data);
 
       return createresult;
     } else {
-      const updateresult = await this.findIdThenPatch(appuser, id, data);
-      const finaldata = await this.findById(appuser, id);
-      await this.runEvent(appuser, this.setHookName('afterSetStatus'), { docStatus: docstatus, data: finaldata }, false);
-      await this.addAuditEvent(appuser, this.documentName, id, docstatus, data);
+      const updateresult = await this.findIdThenPatch(appUser, id, data);
+      const finaldata = await this.findById(appUser, id);
+      await this.runEvent(appUser, this.setHookName('afterSetStatus'), { docStatus: docstatus, data: finaldata }, false);
+      await this.addAuditEvent(appUser, this.documentName, id, docstatus, data);
 
-      await this.callWebhook(appuser, docstatus, finaldata);
+      await this.callWebhook(appUser, docstatus, finaldata);
       return updateresult;
     }
   }
 
   /**
    * similar like runEvent, but it is syncronizely add event into queue and return.
-   * No result will return from this method,  it also lose appuser db's transaction
+   * No result will return from this method,  it also lose appUser db's transaction
    * due out of request flow
    *
-   * @param      {UserContext}  appuser    The appuser
+   * @param      {UserContext}  appUser    The appUser
    * @param      {string}       eventName  The event name
    * @param      {any}          data       The data
    */
-  runBackgroundWorker(appuser: UserContext, eventName: string, payloads: any) {
-    this.eventEmitter.emit(eventName, appuser, payloads);
+  runBackgroundWorker(appUser: UserContext, eventName: string, payloads: any) {
+    this.eventEmitter.emit(eventName, appUser, payloads);
   }
 
   /**
@@ -990,21 +1179,21 @@ export class SimpleAppService<T extends SchemaFields> {
    *      complex task service class may pass to worker class.
    *   2. it not cause circulate injection hell, which is useful in complex dependency
    * this run foreground event which can async/await to obtain execution result,
-   * the appuser dbtransaction remain usable. however, the execution may delay response
+   * the appUser dbtransaction remain usable. however, the execution may delay response
    *
    *
-   * @param      {UserContext}  appuser    The appuser
+   * @param      {UserContext}  appUser    The appUser
    * @param      {string}       eventName  The event name
    * @param      {any}          data       The data
    * @return     {Promise}      { description_of_the_return_value }
    */
-  async runEvent(appuser: UserContext, eventName: string, payloads: any, enforce: boolean = true) {
+  async runEvent(appUser: UserContext, eventName: string, payloads: any, enforce: boolean = true) {
     try {
       if (enforce && !this.eventEmitter.hasListeners(eventName)) {
         throw new InternalServerErrorException(`${eventName} seems no listener`);
       } else if (this.eventEmitter.hasListeners(eventName)) {
         console.log('run eventName', eventName);
-        const res = await this.eventEmitter.emitAsync(eventName, appuser, payloads);
+        const res = await this.eventEmitter.emitAsync(eventName, appUser, payloads);
 
         if (!res) {
           throw new InternalServerErrorException(`${eventName} is invalid worker`);
@@ -1019,24 +1208,24 @@ export class SimpleAppService<T extends SchemaFields> {
       throw e;
     }
   }
-  // startWorkflow(appuser: UserContext, processName: WorkflowName, workflowData: any) {
-  //   return this.eventEmitter.emit('workflow.start', appuser, processName, workflowData);
+  // startWorkflow(appUser: UserContext, processName: WorkflowName, workflowData: any) {
+  //   return this.eventEmitter.emit('workflow.start', appUser, processName, workflowData);
   // }
 
-  async genNewDocNo(appuser: UserContext, data: T) {
+  async genNewDocNo(appUser: UserContext, data: T) {
     this.logger.debug('genNewDocNo');
     // console.log('before genNewDocNo');
-    const result = await this.docnogenerator.generateNextNumberFromDocument(appuser, this.documentType, data);
+    const result = await this.docnogenerator.generateNextNumberFromDocument(appUser, this.documentType, data);
     // console.log('after genNewDocNo');
     this.logger.debug(result, 'genNewDocNo');
 
     // been for to convert become object
     (data as any)[this.documentIdentityCode] = result;
   }
-  async runDefault(appuser: UserContext): Promise<unknown> {
+  async runDefault(appUser: UserContext): Promise<unknown> {
     return 'Hello this is ' + this.getDocumentType() + ': ' + this.getDocumentName();
   }
-  async identifyForeignKeys(appuser: UserContext, data: Partial<T>) {
+  async identifyForeignKeys(appUser: UserContext, data: Partial<T>) {
     /**
      * 1. looping schemas identify what foreign key exists
      * 2. loop through record obtain all foreign key value
@@ -1109,11 +1298,11 @@ export class SimpleAppService<T extends SchemaFields> {
           const key = keys[k];
           if (searchresult[collectionname] && searchresult[collectionname].includes(key)) {
             this.logger.debug(`foreignkey ${collectionname}->${key} exists`);
-          } else if (appuser.searchInsertedRecordId(collectionname, key)) {
+          } else if (appUser.searchInsertedRecordId(collectionname, key)) {
             this.logger.debug(`foreignkey ${collectionname} exists in user context which not yet commited`);
           } else {
             this.logger.warn(`${this.documentType}: Foreignkey ${key} at collection ${collectionname} does not exist`, 'identifyForeignKeys');
-            this.logger.debug(appuser.getModifieds, 'appuser.getModifieds');
+            this.logger.debug(appUser.getModifieds, 'appUser.getModifieds');
             const errordata = { key: key, collection: collectionname };
             throw new BadRequestException(`${this.documentType}: Foreignkey ${key} at collection ${collectionname} does not exist`, JSON.stringify(errordata));
           }
@@ -1122,19 +1311,19 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
-  // async print(appuser: UserContext, id: string, formatId: string) {
-  //   // const pdfresult = await this.printapi.getBase64Pdf(appuser, formatid, id);
-  //   const pdfresult = await this.runEvent(appuser, 'print.getbase64pdf', { id: id, formatId: formatId }, true);
+  // async print(appUser: UserContext, id: string, formatId: string) {
+  //   // const pdfresult = await this.printapi.getBase64Pdf(appUser, formatid, id);
+  //   const pdfresult = await this.runEvent(appUser, 'print.getbase64pdf', { id: id, formatId: formatId }, true);
   //   // return pdfresult;
   //   return Promise.resolve('ok');
   // }
 
-  async checkUniqueKeyExist(appuser: UserContext, data: string[]): Promise<UniqueKeyExistResponse[]> {
+  async checkUniqueKeyExist(appUser: UserContext, data: string[]): Promise<UniqueKeyExistResponse[]> {
     const response: UniqueKeyExistResponse[] = [];
     const unionKey = this.getDocumentIdentityCode();
     const searchQuery: any = { [unionKey]: { $in: data } };
     // search for multiple union exist
-    const result = await this.search(appuser, searchQuery);
+    const result = await this.search(appUser, searchQuery);
     for (const item of data) {
       const found = result.find((x) => x[unionKey] === item);
       response.push({ [item]: found ? 1 : 0 });
@@ -1143,7 +1332,14 @@ export class SimpleAppService<T extends SchemaFields> {
     return response;
   }
 
-  searchToAggregate(appuser: UserContext, filter: FilterQuery<T>, columns: string[], sort: string[][], lookup: { [key: string]: string }) {
+  searchToAggregate(
+    appUser: UserContext,
+    filter: FilterQuery<T>,
+    columns: string[],
+    sort: string[][],
+    lookup: { [key: string]: string },
+    pagination?: { pageSize?: number; pageNo?: number },
+  ) {
     const pipelines: PipelineStage[] = [];
     const projection = {};
     // console.log('sortsort', sort);
@@ -1167,7 +1363,7 @@ export class SimpleAppService<T extends SchemaFields> {
           as: '_' + to,
           localField: lookup[tokey],
           foreignField: foreignField,
-          pipeline: [{ $match: { tenantId: appuser.getTenantId() } }],
+          pipeline: [{ $match: { tenantId: appUser.getTenantId() } }],
         },
       });
 
@@ -1186,6 +1382,13 @@ export class SimpleAppService<T extends SchemaFields> {
       });
       pipelines.push({ $sort: sortobj });
     }
+    
+    if (pagination) {
+      const { pageSize, skip } = this.buildPagination(pagination);
+      pipelines.push({ $skip: skip });
+      pipelines.push({ $limit: pageSize });
+    }
+    
     //this.logger.warn( pipelines,'pipelinespipelinespipelines',);
 
     return pipelines;
@@ -1196,9 +1399,9 @@ export class SimpleAppService<T extends SchemaFields> {
     return camelToKebab(resourceName) + '.' + camelToKebab(hookName);
   }
   //only realtime webhook supported at this moment
-  async callWebhook(appuser: UserContext, actionName: string, data: any) {
+  async callWebhook(appUser: UserContext, actionName: string, data: any) {
     try {
-      await this.runWebHook.run(appuser, this.documentName, actionName, data);
+      await this.runWebHook.run(appUser, this.documentName, actionName, data);
     } catch (e) {
       throw new InternalServerErrorException(e);
     }

@@ -20,6 +20,10 @@ export class MiniAppScopeGuard implements CanActivate {
     }
 
     const req = context.switchToHttp().getRequest();
+
+    if(req.url==='/health'){
+      return true
+    }    
     const appUser: UserContext = req?.sessionuser;
     if (!appUser) {
       throw new BadRequestException('User Context Not Found');

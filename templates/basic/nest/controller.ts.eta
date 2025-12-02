@@ -99,8 +99,8 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   @ApiBody({ description: 'Data', type: schemas.SearchBody })
   @ApiOperation({ operationId: 'runSearch' })
   <%~ drawMiniAppScope('list') %>
-  async search(@AppUser() appuser: UserContext,@Body() data: schemas.SearchBody) {
-    return await this._search(appuser,data)
+  async search(@AppUser() appuser: UserContext,@Body() data: schemas.SearchBody, @Res({ passthrough: true }) res: Response) {
+    return await this._search(appuser,data, res)
   }
 
 <% if(simpleappconfig.search !==undefined){%>

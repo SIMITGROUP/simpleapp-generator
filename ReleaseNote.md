@@ -1,3 +1,14 @@
+[2.0.2d-alpha]
+
+1. fix pagination issue
+
+
+[2.0.2c-alpha]
+
+1. support environment variable off mongodb transaction
+2. add /health check endpoint which no need credentials
+3. add still buggy pagination setting
+
 [2.0.2b-alpha]
 
 1. fix generate no bugs

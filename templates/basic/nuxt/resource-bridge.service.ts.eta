@@ -79,12 +79,20 @@ export class MiniApp<%= pascalName %>BridgeService {
     <% if (value !== true && typeof value !== 'object') { return; } %>
 
     <% if(action === 'list') { %>
-      protected async handleList(message: MiniAppBridgeMessageApi<<%= typeActionName %>>) {
-        return (await this.api!.runSearch({
-          fields: message.params.body?.fields,
-          sorts: message.params.body?.sorts,
-          filter: message.params.body?.filters,
-        })).data;
+      protected async handleList(message: MiniAppBridgeMessageApi<MiniAppStudentActions>) {
+        const rawBody: any = message.params.body ?? {};
+        const pageSize = rawBody.pagination?.pageSize ?? rawBody.pageSize ?? 200;
+        const pageNo = rawBody.pagination?.pageNo ?? rawBody.pageNo ?? 0;
+        const res = await this.api!.runSearch({
+          filter: rawBody.filters,
+          fields: rawBody.fields,
+          sorts: rawBody.sorts,
+          pagination: {
+            pageSize,
+            pageNo,
+          },
+        } as any);
+        return res.data;
       }
     <% } else if(action === 'detail') { %>
       protected async handleDetail(message: MiniAppBridgeMessageApi<<%= typeActionName %>>) {

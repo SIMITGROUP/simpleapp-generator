@@ -4,7 +4,8 @@
  * last change 2025-09-01
  * Author: Ks Tan
  */
-import { Controller, Get, Put, Post, Delete, Body, Param, Type } from '@nestjs/common';
+import { Controller, Get, Put, Post, Delete, Body, Param, Type, Res } from '@nestjs/common';
+import { Response } from 'express';
 // import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { UserContext } from '../../features/user-context/user.context';
 import { SearchBody, TextSearchBody, PatchManyRequest } from '../schemas';
@@ -15,6 +16,9 @@ const doctype = 'person'.toUpperCase();
 type ServiceType = {
   list: Function;
   search: Function;
+  searchWithPageInfo: Function;
+  setPaginationHeaders: Function;
+  getTotalCount: Function;
   create: Function;
   //update: Function;
   //delete: Function;
@@ -47,8 +51,17 @@ export class SimpleAppController<TService extends ServiceType, TApiSchema> {
     return this.service.fullTextSearch(appuser, body);
   }
 
-  async _search(appuser: UserContext, searchObject: SearchBody) {
-    return this.service.search(appuser, searchObject['filter'], searchObject['fields'], searchObject['sorts'], searchObject['lookup']);
+  async _search(appuser: UserContext, searchObject: SearchBody, res?: Response) {    
+    const items = await this.service.searchWithPageInfo(
+      appuser,
+      searchObject['filter'],
+      searchObject['fields'],
+      searchObject['sorts'],
+      searchObject['lookup'],
+      searchObject['pagination'],
+    );
+    
+    return items;
   }
 
   async _autocomplete(appuser: UserContext, keyword: string, data?: TApiSchema) {

@@ -3,10 +3,11 @@ import { SimpleAppInterceptor } from './simple-app.interceptor';
 import { SimpleAppMiddleware } from './simple-app.middleware';
 import { SimpleAppCoreFeaturesModule } from '../features/simple-app-core-features.module';
 import {SimpleAppCoreResourcesModule} from '../resources/core-resources.module'
+import { SimpleAppDbRevertService } from './simple-app-db-revert.service';
 @Module({
   imports: [SimpleAppCoreFeaturesModule,SimpleAppCoreResourcesModule],
   controllers: [],
-  providers: [SimpleAppMiddleware, SimpleAppInterceptor],
-  exports: [SimpleAppCoreFeaturesModule,SimpleAppCoreResourcesModule,SimpleAppMiddleware, SimpleAppInterceptor],
+  providers: [SimpleAppMiddleware, SimpleAppInterceptor,SimpleAppDbRevertService],
+  exports: [SimpleAppCoreFeaturesModule,SimpleAppCoreResourcesModule,SimpleAppMiddleware, SimpleAppInterceptor,SimpleAppDbRevertService],
 })
 export class SimpleAppFrameworkModule {}

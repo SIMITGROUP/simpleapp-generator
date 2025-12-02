@@ -30,12 +30,15 @@ import { Role } from '../auth/role-guard/roles.enum';
 import { Environment } from '@core-features/maintenance/schemas';
 import * as rolegroups from '../auth/role-guard/roles.group';
 import { TenantLicenseEnum } from '@resources/tenant/tenant.enum';
+import { SimpleAppDbRevertService } from '../../framework/simple-app-db-revert.service';
+import { StepData } from 'src/simple-app/_core/resources/permission/permission.schema';
 
 // import systemWebHooks from '../../webhooks';
 @Injectable({ scope: Scope.REQUEST })
 export class UserContext extends UserContextInfo {
   sessionId: string = crypto.randomUUID();
-
+  protected isTransaction = false  
+  protected transSteps:StepData[] = []
   protected logger = new Logger(this.constructor.name);
 
   // protected uid: string = '';
@@ -148,7 +151,7 @@ export class UserContext extends UserContextInfo {
   };
 
   getDBSession = (): ClientSession => this.dbsession;
-
+  getTransStep = () => this.transSteps
   getId = () => this._id;
 
   getUid = () => this.uid;
@@ -448,7 +451,7 @@ export class UserContext extends UserContextInfo {
                   branchName: '$b.branchName',
                   branchId: '$b.branchId',
                   imageUrl: '$b.imageUrl',
-                  active: '$b.active'
+                  active: '$b.active',
                 },
 
                 groups: 1,
@@ -1216,8 +1219,56 @@ export class UserContext extends UserContextInfo {
     const isodate = new Date(timestamp + -offsets).toISOString().split('.')[0] + 'Z';
     return isodate;
   }
+
+
+  addTransactionStep (action:string,collection:string,id:string[], data:any[]) {
+    this.transSteps.push({action:action,collection:collection,id:id,data:data})
+  } 
+
+  
+  inTransaction(){
+    if(process.env.MONGO_TRANS==='false')
+      return this.isTransaction
+    else 
+      return this.dbsession && this.dbsession.inTransaction() ? true : false
+  }
+  startTransaction(){
+    if(process.env.MONGO_TRANS==='false'){
+      this.isTransaction=true
+      this.transSteps=[]      
+      
+
+    }else{
+      this.dbsession.startTransaction({ readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, readPreference: 'primary' });    
+    }
+  }
+  async commitTransaction(){
+    if(process.env.MONGO_TRANS==='false'){
+      this.isTransaction=false
+      this.transSteps=[]
+    }else{
+      if(this.dbsession.inTransaction())
+      await this.dbsession.commitTransaction()
+    }
+  }
+  async rollBackTransaction(dbService:SimpleAppDbRevertService){
+    if(process.env.MONGO_TRANS==='false'){
+      await dbService.revertSteps(this.transSteps)
+      this.isTransaction=false
+      this.transSteps=[]
+
+    }else{
+      if(this.dbsession.inTransaction())
+      await this.dbsession.abortTransaction()
+    }
+  }
+  async endSession(){    
+      await this.dbsession.endSession()    
+  }
 }
 
+
+// type StepData = {action:string,collection:string,id:string[],data:any[]}
 /**
  * Define a type for userinfo
  */

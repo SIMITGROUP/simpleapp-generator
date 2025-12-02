@@ -1,9 +1,9 @@
 import { AxiosInstance } from "axios";
 import { ShallowRef } from "vue";
-import { Customfield, CUSTOMFIELDApi } from "~/simpleapp/generate/openapi";
+import { CustomField, CUSTOMFIELDApi } from "~/simpleapp/generate/openapi";
 
 type CustomFieldStoreData = Pick<
-  Customfield,
+  CustomField,
   "_id" | "collectionName" | "form" | "list"
 >[];
 

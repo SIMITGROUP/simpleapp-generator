@@ -4,22 +4,22 @@
  * last change 2023-10-28
  * Author: Ks Tan
  */
-import { Controller, Get,Logger } from '@nestjs/common';
+import { Controller, Get, Logger } from '@nestjs/common';
 import { AppService } from './app.service';
-
+import { Roles } from 'src/simple-app/_core/features/auth/role-guard/roles.decorator';
+import { Role } from 'src/simple-app/_core/features/auth/role-guard/roles.enum';
 @Controller()
 export class AppController {
-  private logger = new Logger()
+  private logger = new Logger();
   constructor(private readonly appService: AppService) {
-    if(process.env.DRYRUN=='true'){
-      this.logger.warn("DRY run Mode, transaction will roll back")
+    if (process.env.DRYRUN == 'true') {
+      this.logger.warn('DRY run Mode, transaction will roll back');
     }
-      
-    
   }
 
-  @Get()
-  async getHello() {
-    return 'hello'
+  @Get('/health')
+  @Roles(Role.Everyone)
+  async getHealth() {
+    return Promise.resolve('ok');
   }
 }

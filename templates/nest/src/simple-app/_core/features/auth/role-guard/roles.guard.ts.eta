@@ -4,13 +4,7 @@
  * last change 2024-03-17
  * Author: Ks Tan
  */
-import {
-  Injectable,
-  Inject,
-  CanActivate,
-  ExecutionContext,
-  Scope,
-} from '@nestjs/common';
+import { Injectable, Inject, CanActivate, ExecutionContext, Scope } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from './roles.enum';
 import { ROLES_KEY } from './roles.decorator';
@@ -21,18 +15,13 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]) || [];
+    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [context.getHandler(), context.getClass()]) || [];
     const criticalRoles = [Role.SuperAdmin, Role.SuperUser, Role.TenantOwner];
-
     criticalRoles.forEach((role) => {
       if (!requiredRoles.includes(role)) {
         requiredRoles.push(role);
       }
     });
-
     let sessionuser: UserContext;
     if (context.getType() == 'http') {
       const request = context.switchToHttp().getRequest();
@@ -41,17 +30,15 @@ export class RolesGuard implements CanActivate {
       const req = context.getArgs()[2].req;
       sessionuser = req['sessionuser'];
     }
-
+    
     if (!requiredRoles) {
       return true;
     }
-
-    const roles = sessionuser.getRoles();
+    const roles = sessionuser ? sessionuser.getRoles() : [Role.Everyone];
     if (!roles) {
       return false;
     }
-    const result = requiredRoles.some((role) => roles.includes(role));
-
+    const result = requiredRoles.some((role) => roles.includes(role));        
     return result;
     // return true
   }

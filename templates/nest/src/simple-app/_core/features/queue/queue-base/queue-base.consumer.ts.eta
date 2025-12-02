@@ -7,19 +7,21 @@ import { UserContext } from '../../user-context/user.context';
 import { QueueUserContext } from '../queue-user-context/queue-user-context.service';
 import { Queuejob } from '../queue.type';
 // import { QueueName } from '../queue.enum';
-import { forwardRef, Inject, InternalServerErrorException } from '@nestjs/common';
+import { forwardRef, Inject, Logger, InternalServerErrorException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import _ from 'lodash';
+import { SimpleAppDbRevertService } from 'src/simple-app/_core/framework/simple-app-db-revert.service';
 
 export abstract class BaseQueueConsumer extends WorkerHost {
   // protected abstract readonly processor: QueueName;
   protected abstract readonly processor: string;
-
+  protected logger = new Logger()
   constructor(
     protected readonly queueUserContext: QueueUserContext,
     @InjectModel('Queuejob') protected queueJobModel: Model<Queuejob>,
     @InjectConnection() private readonly connection: Connection,
     protected eventEmitter: EventEmitter2,
+    protected simpleAppDbRevertService: SimpleAppDbRevertService
   ) {
     super();
   }
@@ -36,6 +38,7 @@ export abstract class BaseQueueConsumer extends WorkerHost {
   async process(job: Job) {
     // console.log("process job", job.data)
     const { userContext, payload } = job.data;
+    this.logger.debug(payload,`run queue job ${job.name}`)    
 
     const appUser = await this.createUserContext(userContext.user);
     await this.startSession(appUser);
@@ -45,19 +48,19 @@ export abstract class BaseQueueConsumer extends WorkerHost {
       // this.queueUserContext.assign(userContext);
 
       await this.dispatch(appUser, job, payload);
-      if (appUser.getDBSession().inTransaction()) {
-        await appUser.getDBSession().commitTransaction();
-      }
+      // if (appUser.getDBSession().inTransaction()) {
+        await appUser.commitTransaction() //.getDBSession().commitTransaction();
+      // }
       return {
         success: true,
       };
     } catch (e) {
-      if (appUser.getDBSession().inTransaction()) {
-        await appUser.getDBSession().abortTransaction();
-      }
+      // if (appUser.getDBSession().inTransaction()) {
+        await appUser.rollBackTransaction(this.simpleAppDbRevertService) //.getDBSession().abortTransaction();
+      // }
       throw e;
     } finally {
-      appUser.getDBSession().endSession();
+      await appUser.endSession()//getDBSession().endSession();
     }
   }
 
@@ -74,8 +77,7 @@ export abstract class BaseQueueConsumer extends WorkerHost {
     await handler.call(this, appUser, job, payload);
   }
 
-  protected async updateQueueJobRecord(job: Job, status: 'completed' | 'failed', result: any) {    
-
+  protected async updateQueueJobRecord(job: Job, status: 'completed' | 'failed', result: any) {
     await this.queueJobModel.updateOne(
       {
         'job.id': job.id,
@@ -83,8 +85,7 @@ export abstract class BaseQueueConsumer extends WorkerHost {
         'job.processor': this.processor,
       },
       {
-
-        'job.status': status,        
+        'job.status': status,
         initTime: new Date(job.timestamp).toISOString(),
         startTime: new Date(job.processedOn).toISOString(),
         endTime: new Date(job.finishedOn).toISOString(),

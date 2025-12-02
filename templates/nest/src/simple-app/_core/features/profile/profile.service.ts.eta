@@ -87,14 +87,16 @@ export class ProfileService {
     return userinfo;
   }
 
-  async createTenant(appuser: UserContext, tenantName: string, timeZone: string, utcOffset: number, businessType: string,mobileNo:string) {
+  async createTenant(appuser: UserContext, tenantName: string, timeZone: string, utcOffset: number, businessType: string, mobileNo: string) {
     // try{
+
+    
     const timezonedata = countrytimezone.getCountriesForTimezone(timeZone)[0];
     const countryCode = timezonedata['id'];
     const countryName = timezonedata['name'];
     const currencyCode = countryToCurrency[countryCode];
 
-    appuser.getDBSession().startTransaction({readConcern:{level:"snapshot"},writeConcern:{w:"majority"}, readPreference: 'primary' });
+    appuser.startTransaction()
     const tenantdata: Tenant = {
       tenantId: 1,
       tenantName: tenantName,
@@ -111,12 +113,12 @@ export class ProfileService {
         uid: appuser.getUid(),
       },
     };
-    this.logger.log(tenantdata, 'createTenant data');
+    this.logger.debug(tenantdata, 'createTenant data');
     const tenantResult = await this.tenantService.create(appuser, tenantdata);
     if (!tenantResult) {
       throw new BadRequestException('Create tenant failed');
     }
-    this.logger.log(tenantResult, 'createTenant result');
+    this.logger.debug(tenantResult, 'createTenant result');
     const tenantId = tenantResult.tenantId;
 
     // return tenantResult
@@ -133,7 +135,7 @@ export class ProfileService {
       orgId: 1,
     };
 
-    this.logger.log(orgdata, 'createOrg data');
+    this.logger.debug(orgdata, 'createOrg data');
     const orgResult = await this.orgService.create(appuser, orgdata);
     if (!orgResult) {
       throw new BadRequestException('Create Org failed');
@@ -168,14 +170,14 @@ export class ProfileService {
       tenantId: tenantResult.tenantId,
       organization: { _id: orgRecordId, label: tenantName },
     };
-    this.logger.log(branchdata, 'createbranch data');
+    this.logger.debug(branchdata, 'createbranch data');
 
     const branchResult = await this.branchService.create(appuser, branchdata);
     if (!branchResult) {
       throw new BadRequestException('Create Branch failed');
     }
     const branchRecordId = branchResult._id.toString();
-    this.logger.log(branchResult, 'createbranch result');
+    this.logger.debug(branchResult, 'createbranch result');
 
     const userdata: User = {
       tenantId: tenantResult.tenantId,
@@ -186,14 +188,14 @@ export class ProfileService {
       email: appuser.getEmail(),
       active: true,
     };
-    this.logger.log(userdata, 'createtenant user data');
+    this.logger.debug(userdata, 'createtenant user data');
     const userResult = await this.userService.create(appuser, userdata);
     // if(true ){
     if (!userResult) {
       throw new BadRequestException('Create User failed');
     }
 
-    this.logger.log(userResult, 'createtenant user result');
+    this.logger.debug(userResult, 'createtenant user result');
     const userRecordId = userResult._id.toString();
 
     const permdata: Permission = {
@@ -204,13 +206,13 @@ export class ProfileService {
       userId: userRecordId,
       groups: ['admin'],
     };
-    this.logger.log(permdata, 'create Permission data');
+    this.logger.debug(permdata, 'create Permission data');
     const permResult = await this.permService.create(appuser, permdata);
     if (!permResult) {
       throw new BadRequestException('Create permResult failed');
     }
 
-    this.logger.log(permResult, 'create Permission result');
+    this.logger.debug(permResult, 'create Permission result');
 
     //tenant owner shall map to userId for that tenant
 
@@ -228,6 +230,8 @@ export class ProfileService {
       orgId: orgResult.orgId,
       branchId: branchResult.branchId,
     };
+
+    // console.log("finalresult, is transaction",finalresult,appuser.getDBSession().inTransaction())
     return finalresult;
     // }catch(e){
     //   this.logger.error("Couldn't generate tenant or subsequence records")

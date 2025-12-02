@@ -48,6 +48,8 @@ export class SimpleAppLogService {
     return data;
   }
   async addEvent(appUser: UserContext, documentName: string, id: string, eventType: string, data: any) {
+    if(process.env.DISABLE_DOCUMENT_EVENT==='true') return false
+
     const eventdata: DocumentEvent = {
       _id: crypto.randomUUID(),
       documentName: documentName,
@@ -68,6 +70,7 @@ export class SimpleAppLogService {
     const newdoc = new this.doc(eventdata);
     const dbsession = appUser.getDBSession();
     const result = await newdoc.save({ session: dbsession });
+    appUser.addTransactionStep('create','documentevent',[eventdata._id],[null])
   }
 
   async addManyEvents(appUser: UserContext, documentName: string, eventType: string, datas: any[]) {
@@ -93,11 +96,13 @@ export class SimpleAppLogService {
       alldata.push(eventdata);
     }
     const dbsession = appUser.getDBSession();
-    try{
-      await this.doc.insertMany(alldata, { session: dbsession });  
-    }catch(e){
-      throw e
+    try {
+      await this.doc.insertMany(alldata, { session: dbsession });
+      const allIds = alldata.map(item=>item._id)
+      const allLogData = alldata.map(item=>null)
+      appUser.addTransactionStep('create','documentevent',allIds,allLogData)
+    } catch (e) {
+      throw e;
     }
-    
   }
 }

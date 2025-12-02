@@ -79,6 +79,10 @@ export type SearchBody = {
 
   sorts?: any[];
   lookup?: { [key: string]: string };
+  pagination?: {
+    pageSize?: number;
+    pageNo?: number;
+  };
 };
 
 export type DynamicObject = {

@@ -100,6 +100,7 @@ export class AppModule implements NestModule {
     consumer
       .apply(SimpleAppMiddleware)
       // .exclude('/graphql')
+      .exclude('/health')
       .exclude('/api-yaml')
       .exclude('/api-json')
       .exclude('/api')
