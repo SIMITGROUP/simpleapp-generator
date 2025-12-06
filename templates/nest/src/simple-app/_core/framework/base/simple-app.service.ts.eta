@@ -53,7 +53,8 @@ export class SimpleAppService<T extends SchemaFields> {
   protected documentIdentityLabel = 'label';
   protected documentName = '-unknowndocname-';
   protected documentType = '-unknowndoctype-';
-  protected LIMITPERPAGE = 20;
+  protected LIMITPERPAGE = 500;
+  protected MAX_PAGE_SIZE = 100000;
   protected moreAutoCompleteField: MoreProjectionType = {};
   protected isolationtype: IsolationType = IsolationType.org;
   protected isolationFilter: any = {};
@@ -256,10 +257,9 @@ export class SimpleAppService<T extends SchemaFields> {
     projection: string[] = undefined,
     sort: any = undefined,
     lookup: { [key: string]: string } = undefined,
-     pagination?: { pageSize?: number; pageNo?: number },
+    pagination?: { pageSize?: number; pageNo?: number },
   ) {
     try {
-      
       const isolationFilter = { ...this.getIsolationFilter(appUser) };
       this.polishIsolationFilter(isolationFilter);
 
@@ -273,12 +273,12 @@ export class SimpleAppService<T extends SchemaFields> {
       if (lookup === undefined) {
         this.logger.debug('after search', newfilters);
         let query = this.doc.find(newfilters, projection, { session: appUser.getDBSession() }).sort(sort);
-        
+
         if (pagination) {
           const { pageSize, pageNo, skip } = this.buildPagination(pagination);
           query = query.skip(skip).limit(pageSize);
         }
-        
+
         searchResults = await query.exec();
       } else {
         const pipelines = this.searchToAggregate(appUser, newfilters, projection, sort, lookup, pagination);
@@ -321,7 +321,7 @@ export class SimpleAppService<T extends SchemaFields> {
       let pageSize: number;
       let pageNo: number;
       let skip: number;
-      
+
       if (pagination !== undefined) {
         const paginationResult = this.buildPagination(pagination);
         pageSize = paginationResult.pageSize;
@@ -341,25 +341,13 @@ export class SimpleAppService<T extends SchemaFields> {
         const baseQuery = this.doc.find(newfilters, projection, { session: appUser.getDBSession() }).sort(sort);
         const query = baseQuery.skip(skip).limit(pageSize);
 
-        const [rows, count] = await Promise.all([
-          query.exec(),
-          this.doc.countDocuments(newfilters).session(appUser.getDBSession()),
-        ]);
+        const [rows, count] = await Promise.all([query.exec(), this.doc.countDocuments(newfilters).session(appUser.getDBSession())]);
         items = rows;
         total = count;
       } else {
-        const pipelines = this.searchToAggregate(
-          appUser,
-          newfilters,
-          projection as any,
-          sort as any,
-          lookup as any,
-          { pageSize, pageNo },
-        );
+        const pipelines = this.searchToAggregate(appUser, newfilters, projection as any, sort as any, lookup as any, { pageSize, pageNo });
 
-        const countPipeline: PipelineStage[] = [
-          { $match: newfilters },
-        ];
+        const countPipeline: PipelineStage[] = [{ $match: newfilters }];
         const collections = Object.keys(lookup);
         collections.forEach((tokey: string) => {
           const toarr = tokey.split('.');
@@ -380,13 +368,10 @@ export class SimpleAppService<T extends SchemaFields> {
 
         this.logger.debug('after aggregate searchWithPageInfo', pipelines);
 
-        const [rows, countResult] = await Promise.all([
-          this.aggregate(appUser, pipelines),
-          this.aggregate(appUser, countPipeline),
-        ]);
-        
+        const [rows, countResult] = await Promise.all([this.aggregate(appUser, pipelines), this.aggregate(appUser, countPipeline)]);
+
         items = rows as T[];
-        total = countResult && countResult.length > 0 ? (countResult[0]['total'] || 0) : 0;
+        total = countResult && countResult.length > 0 ? countResult[0]['total'] || 0 : 0;
       }
 
       return items;
@@ -409,10 +394,10 @@ export class SimpleAppService<T extends SchemaFields> {
 
   setPaginationHeaders(res: Response, total?: number, pagination?: { pageSize?: number; pageNo?: number }) {
     if (!res || typeof res.setHeader !== 'function') return;
-    
+
     if (total !== undefined && total !== null && pagination) {
       const { pageSize, pageNo } = this.buildPagination(pagination);
-      const pageCount = pageSize > 0 && total > 0 ? Math.ceil(total / pageSize) : (total > 0 ? 1 : 0);
+      const pageCount = pageSize > 0 && total > 0 ? Math.ceil(total / pageSize) : total > 0 ? 1 : 0;
       res.setHeader('x-page-count', pageCount);
       res.setHeader('x-page-size', pageSize);
       res.setHeader('x-page-no', pageNo);
@@ -427,29 +412,27 @@ export class SimpleAppService<T extends SchemaFields> {
 
   buildPagination(pagination?: { pageSize?: number; pageNo?: number }) {
     let finalPageSize: number;
-    if (pagination && typeof pagination.pageSize === 'number' && pagination.pageSize > 0) {
-      finalPageSize = pagination.pageSize;
+    if (pagination && typeof pagination.pageSize === 'number') {
+      if (pagination.pageSize === 0) {
+        finalPageSize = this.MAX_PAGE_SIZE;
+      } else if (pagination.pageSize > 0) {
+        finalPageSize = Math.min(pagination.pageSize, this.MAX_PAGE_SIZE);
+      } else {
+        finalPageSize = this.MAX_PAGE_SIZE;
+      }
     } else if (pagination !== undefined) {
-      finalPageSize = 10000;
+      finalPageSize = this.MAX_PAGE_SIZE;
     } else {
       finalPageSize = this.LIMITPERPAGE;
     }
-    
+
     const rawPageNo = Number.isFinite(pagination?.pageNo) ? pagination.pageNo : 0;
     const pageNo = rawPageNo < 0 ? 0 : rawPageNo;
     const skip = pageNo * finalPageSize;
-    
-    this.logger.debug('buildPagination result:', { 
-      input: pagination, 
-      finalPageSize, 
-      pageNo, 
-      skip 
-    });
-    
+
+
     return { pageSize: finalPageSize, skip, pageNo };
   }
-
-  
 
   async fullTextSearch(appUser: UserContext, body: TextSearchBody) {
     try {
@@ -544,9 +527,9 @@ export class SimpleAppService<T extends SchemaFields> {
 
       try {
         const result = await this.doc.insertMany(datas, { session: dbsession });
-        const allIds = datas.map(item=>item._id)
-        const allLogData = datas.map(item=>null)
-        appUser.addTransactionStep('createMany',this.documentName,allIds,allLogData);
+        const allIds = datas.map((item) => item._id);
+        const allLogData = datas.map((item) => null);
+        appUser.addTransactionStep('createMany', this.documentName, allIds, allLogData);
 
         await this.addManyAuditEvents(appUser, this.documentName, 'createMany', datas);
         for (const data of datas) {
@@ -592,28 +575,21 @@ export class SimpleAppService<T extends SchemaFields> {
     this.applyNestedDateTime(appUser, data, 'create');
 
     //new way of hook
-    await this.runEvent(appUser, this.setHookName('beforeCreate'), { data: data }, false);
+    await this.runEvent(appUser, 'beforeCreate', { data: data }, false);
 
     this.logger.debug(data, `Create Record ${this.documentName}`);
     const newdoc = new this.doc(data);
     await this.identifyForeignKeys(appUser, data);
     try {
       result = await newdoc.save({ session: dbsession });
-      appUser.addTransactionStep('create',this.documentName,[data._id],[null]);
+      appUser.addTransactionStep('create', this.documentName, [data._id], [null]);
       await this.addAuditEvent(appUser, this.documentName, result._id, 'create', data);
       appUser.addInsertedRecordId(this.documentName, result._id);
-    } catch (err) {
-      this.logger.error(err);
-      throw err;
-    }
-
-    try {
-      //new way of hook
-      await this.runEvent(appUser, this.setHookName('afterCreate'), { data: result }, false);
-
+      await this.runEvent(appUser, 'afterCreate', { data: result }, false);
       await this.callWebhook(appUser, 'create', result);
       return result as T;
     } catch (err) {
+      await this.runErrorEvent(appUser, 'errorCreate', data, err)
       throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
     }
   }
@@ -725,7 +701,7 @@ export class SimpleAppService<T extends SchemaFields> {
     let dependency;
     try {
       //new way of hook
-      await this.runEvent(appUser, this.setHookName('beforeDelete'), { id: id, deleteData: deletedata }, false);
+      await this.runEvent(appUser, 'beforeDelete', { id: id, deleteData: deletedata }, false);
 
       // if (this.hooks.beforeDelete) await this.hooks.beforeDelete(appUser, id, deletedata);
       this.logger.debug('delete record', this.documentName, id);
@@ -737,8 +713,7 @@ export class SimpleAppService<T extends SchemaFields> {
         filterIsolation['_id'] = id;
         this.logger.debug('delete filter', filterIsolation);
         const result = await this.doc.deleteOne(filterIsolation).session(dbsession);
-        appUser.addTransactionStep('delete',this.documentName,[id],[deletedata]);
-
+        appUser.addTransactionStep('delete', this.documentName, [id], [deletedata]);
 
         await this.addAuditEvent(appUser, this.documentName, id, 'delete', deletedata);
 
@@ -751,7 +726,7 @@ export class SimpleAppService<T extends SchemaFields> {
         // this.doc.findByIdAndDelete(id)
 
         //new way of hook
-        await this.runEvent(appUser, this.setHookName('afterDelete'), { id: id, deleteData: deletedata }, false);
+        await this.runEvent(appUser, 'afterDelete', { id: id, deleteData: deletedata }, false);
 
         await this.callWebhook(appUser, 'delete', deletedata);
         return deleteresult;
@@ -764,6 +739,7 @@ export class SimpleAppService<T extends SchemaFields> {
       if (err instanceof ForbiddenException) {
         throw new ForbiddenException(err);
       } else {
+        await this.runErrorEvent(appUser, 'errorDelete', deletedata, err)
         throw new InternalServerErrorException(err);
       } //JSON.stringify(dependency),JSON.stringify(dependency)
     }
@@ -848,7 +824,7 @@ export class SimpleAppService<T extends SchemaFields> {
       await this.identifyForeignKeys(appUser, data);
 
       //new way of hook
-      await this.runEvent(appUser, this.setHookName('beforeUpdate'), { id: id, prevData: existingdata, newData: data }, false);
+      await this.runEvent(appUser, 'beforeUpdate', { id: id, prevData: existingdata, newData: data }, false);
 
       // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appUser, id, existingdata, data);
 
@@ -876,16 +852,17 @@ export class SimpleAppService<T extends SchemaFields> {
         new: true,
       });
 
-      appUser.addTransactionStep('update',this.documentName,[id],[existingdata]);
+      appUser.addTransactionStep('update', this.documentName, [id], [existingdata]);
       await this.addAuditEvent(appUser, this.documentName, id, 'update', data);
 
       appUser.addUpdatedRecordId(this.documentName, data._id);
-      await this.runEvent(appUser, this.setHookName('afterUpdate'), { id: id, prevData: existingdata, newData: data }, false);
+      await this.runEvent(appUser, 'afterUpdate', { id: id, prevData: existingdata, newData: data }, false);
 
       await this.callWebhook(appUser, 'update', result);
       return result; // await this.findById(appUser, id);
     } catch (err) {
       this.logger.error(err);
+      await this.runErrorEvent(appUser, 'errorUpdate', data, err)
       throw new InternalServerErrorException(err.message);
     }
   };
@@ -909,7 +886,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       await this.identifyForeignKeys(appUser, data);
 
-      await this.runEvent(appUser, this.setHookName('beforeUpdate'), { data: data }, false);
+      await this.runEvent(appUser, 'beforeUpdate', { data: data }, false);
 
       // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appUser, id, existingdata, data);
 
@@ -937,10 +914,10 @@ export class SimpleAppService<T extends SchemaFields> {
         new: true,
       });
 
-      appUser.addTransactionStep('update',this.documentName,[id],[existingdata]);
+      appUser.addTransactionStep('update', this.documentName, [id], [existingdata]);
       await this.addAuditEvent(appUser, this.documentName, id, 'update', data);
 
-      await this.runEvent(appUser, this.setHookName('afterUpdate'), { id: id, prevData: existingdata, newData: result }, false);
+      await this.runEvent(appUser, 'afterUpdate', { id: id, prevData: existingdata, newData: result }, false);
       appUser.addUpdatedRecordId(this.documentName, data._id);
 
       await this.callWebhook(appUser, 'update', result);
@@ -970,7 +947,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       //patch not suitable trigger afterupdate
       // if (this.hooks.beforeUpdate) await this.hooks.beforeUpdate(appUser, id, existingdata, data);
-      await this.runEvent(appUser, this.setHookName('beforePatch'), { id: id, patchData: data, prevData: existingdata }, false);
+      await this.runEvent(appUser, 'beforePatch', { id: id, patchData: data, prevData: existingdata }, false);
       const dbsession = appUser.getDBSession();
       if (!appUser.inTransaction()) {
         appUser.startTransaction();
@@ -998,13 +975,13 @@ export class SimpleAppService<T extends SchemaFields> {
         session: dbsession,
         new: true,
       });
-      appUser.addTransactionStep('update',this.documentName,[id],[existingdata]);
+      appUser.addTransactionStep('update', this.documentName, [id], [existingdata]);
       //skip audit trail, useful when want to patch x-foreignkey code,label
       if (!skipLog) {
         await this.addAuditEvent(appUser, this.documentName, id, 'patch', data);
       }
       appUser.addUpdatedRecordId(this.documentName, data._id);
-      await this.runEvent(appUser, this.setHookName('afterPatch'), { id: id, patchData: data, prevData: existingdata }, false);
+      await this.runEvent(appUser, 'afterPatch', { id: id, patchData: data, prevData: existingdata }, false);
       return result; //await this.findById(appUser, id);
     } catch (err) {
       this.logger.error(err.message, 'findIdThenPath error');
@@ -1023,10 +1000,9 @@ export class SimpleAppService<T extends SchemaFields> {
     // const result = await this.doc.insertMany(datas, { session: dbsession });
     // const allIds = datas.map(item=>item._id)
     // const allLogData = datas.map(item=>null)
-    
 
     const result = await this.doc.deleteMany({ _id: { $in: ids } }, { session: dbsession });
-    appUser.addTransactionStep('deleteMany',this.documentName,ids,searchResult);
+    appUser.addTransactionStep('deleteMany', this.documentName, ids, searchResult);
     // console.log(`Delete ${this.documentName} ids`, ids, result);
     for (const id of ids) {
       appUser.addDeletedRecordId(this.documentName, id);
@@ -1057,7 +1033,7 @@ export class SimpleAppService<T extends SchemaFields> {
     const ids = searchResult.map((row) => row._id);
 
     const result = await this.doc.updateMany(isolationFilter, { $set: patch }, { session: dbsession });
-    appUser.addTransactionStep('updateMany',this.documentName,ids,searchResult);
+    appUser.addTransactionStep('updateMany', this.documentName, ids, searchResult);
     await this.addManyAuditEvents(appUser, this.documentName, 'patchMany', [patch]);
 
     return result;
@@ -1136,25 +1112,28 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     data['documentStatus'] = docstatus;
     // await this.hook(appUser, HookType.beforeSetStatus, data);
-    await this.runEvent(appUser, this.setHookName('beforeSetStatus'), { docStatus: docstatus, prevData: existdata, newData: data }, false);
+    await this.runEvent(appUser, 'beforeSetStatus', { docStatus: docstatus, prevData: existdata, newData: data }, false);
 
     // if (this.hooks.beforeSetStatus) await this.hooks.beforeSetStatus(appUser, docstatus, data, existdata);
+    try{
+      if (data && !data['created']) {
+        const createresult = await this.create(appUser, data);
+        await this.runEvent(appUser, 'afterSetStatus', { docStatus: docstatus, data: createresult }, false);
+        // if (this.hooks.afterSetStatus) await this.hooks.afterSetStatus(appUser, docstatus, createresult);
+        await this.addAuditEvent(appUser, this.documentName, id, docstatus, data);
 
-    if (data && !data['created']) {
-      const createresult = await this.create(appUser, data);
-      await this.runEvent(appUser, this.setHookName('afterSetStatus'), { docStatus: docstatus, data: createresult }, false);
-      // if (this.hooks.afterSetStatus) await this.hooks.afterSetStatus(appUser, docstatus, createresult);
-      await this.addAuditEvent(appUser, this.documentName, id, docstatus, data);
+        return createresult;
+      } else {
+        const updateresult = await this.findIdThenPatch(appUser, id, data);
+        const finaldata = await this.findById(appUser, id);
+        await this.runEvent(appUser, 'afterSetStatus', { docStatus: docstatus, data: finaldata }, false);
+        await this.addAuditEvent(appUser, this.documentName, id, docstatus, data);
 
-      return createresult;
-    } else {
-      const updateresult = await this.findIdThenPatch(appUser, id, data);
-      const finaldata = await this.findById(appUser, id);
-      await this.runEvent(appUser, this.setHookName('afterSetStatus'), { docStatus: docstatus, data: finaldata }, false);
-      await this.addAuditEvent(appUser, this.documentName, id, docstatus, data);
-
-      await this.callWebhook(appUser, docstatus, finaldata);
-      return updateresult;
+        await this.callWebhook(appUser, docstatus, finaldata);
+        return updateresult;
+      }
+    }catch(e){
+      await this.runErrorEvent(appUser, 'errorSetStatus', data, e)
     }
   }
 
@@ -1187,7 +1166,8 @@ export class SimpleAppService<T extends SchemaFields> {
    * @param      {any}          data       The data
    * @return     {Promise}      { description_of_the_return_value }
    */
-  async runEvent(appUser: UserContext, eventName: string, payloads: any, enforce: boolean = true) {
+  async runEvent(appUser: UserContext, shortEventName: string, payloads: any, enforce: boolean = true) {
+    const eventName = this.setHookName(shortEventName)
     try {
       if (enforce && !this.eventEmitter.hasListeners(eventName)) {
         throw new InternalServerErrorException(`${eventName} seems no listener`);
@@ -1207,6 +1187,19 @@ export class SimpleAppService<T extends SchemaFields> {
       console.error(e);
       throw e;
     }
+  }
+
+   async runErrorEvent(appUser: UserContext, shortEventName: string, payloads: any, error:any) {
+    const eventName = this.setHookName(shortEventName)
+      try{
+        if (this.eventEmitter.hasListeners(eventName)) {
+          console.log('run eventName', eventName);
+          const res = await this.eventEmitter.emitAsync(eventName, appUser, payloads,error);
+        }
+      }catch(e){
+        //runErrorEvent wont handle more error
+      }
+
   }
   // startWorkflow(appUser: UserContext, processName: WorkflowName, workflowData: any) {
   //   return this.eventEmitter.emit('workflow.start', appUser, processName, workflowData);
@@ -1332,14 +1325,7 @@ export class SimpleAppService<T extends SchemaFields> {
     return response;
   }
 
-  searchToAggregate(
-    appUser: UserContext,
-    filter: FilterQuery<T>,
-    columns: string[],
-    sort: string[][],
-    lookup: { [key: string]: string },
-    pagination?: { pageSize?: number; pageNo?: number },
-  ) {
+  searchToAggregate(appUser: UserContext, filter: FilterQuery<T>, columns: string[], sort: string[][], lookup: { [key: string]: string }, pagination?: { pageSize?: number; pageNo?: number }) {
     const pipelines: PipelineStage[] = [];
     const projection = {};
     // console.log('sortsort', sort);
@@ -1382,13 +1368,13 @@ export class SimpleAppService<T extends SchemaFields> {
       });
       pipelines.push({ $sort: sortobj });
     }
-    
+
     if (pagination) {
       const { pageSize, skip } = this.buildPagination(pagination);
       pipelines.push({ $skip: skip });
       pipelines.push({ $limit: pageSize });
     }
-    
+
     //this.logger.warn( pipelines,'pipelinespipelinespipelines',);
 
     return pipelines;

@@ -177,3 +177,15 @@ export class BranchPermission extends Permission {
 }
 
 export type StepData = {action:string,collection:string,id:string[],data:any[]}
+
+export type DocumentDictEntry = {
+  docName: string;
+  docType: string;
+  page: string;
+  isolationType: string;
+  documentDate: string;
+  docNumber: boolean;
+  docNoPattern: string;
+  webhook?: string[];
+  uniqueKey?: string;
+};

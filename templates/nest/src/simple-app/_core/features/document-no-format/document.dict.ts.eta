@@ -4,7 +4,8 @@
  * last change 2023-10-28
  * Author: Ks Tan
  */
-export const alldocuments:any[] = [
+import { DocumentDictEntry } from 'src/simple-app/_core/framework/schemas';
+export const alldocuments:DocumentDictEntry[] = [
     <%for(let i=0; i<it.modules.length;i++){ %>
       <% const d = it.modules[i] %>      
       <% const conf =  d.schema["x-simpleapp-config"] %>

@@ -1,0 +1,5 @@
+import { UserContext } from '../../user-context/user.context';
+import { BeforeSetStatusPayload } from '../event.type';
+export interface EventErrorSetStatus<T> {
+  errorSetStatus(appUser: UserContext, payload: BeforeSetStatusPayload<T>,err:any): Promise<void>;
+}

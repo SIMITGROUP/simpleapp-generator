@@ -1,0 +1,5 @@
+import { UserContext } from '../../user-context/user.context';
+import { PatchPayload } from '../event.type';
+export interface EventErrorPatch<T> {
+  errorPatch(appUser: UserContext, payload: PatchPayload<T>,err:any): Promise<void>;
+}

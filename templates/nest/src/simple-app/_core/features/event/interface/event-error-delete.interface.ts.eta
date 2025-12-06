@@ -1,0 +1,5 @@
+import { UserContext } from '../../user-context/user.context';
+import { DeletePayload } from '../event.type';
+export interface EventErrorDelete<T> {
+  errorDelete(appUser: UserContext, payload: DeletePayload<T>,err:any): Promise<void>;
+}

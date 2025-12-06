@@ -1,7 +1,7 @@
 import { UserContext } from '../user-context/user.context';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, FilterQuery } from 'mongoose';
-import { DocNumberFormatResult, ForeignKey, SchemaFields } from '../../framework/schemas';
+import { DocNumberFormatResult, ForeignKey, IsolationType, SchemaFields } from '../../framework/schemas';
 import { DocumentNoFormat, DocumentNoFormatPreview } from './document-no-format.schema';
 import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { alldocuments } from './document.dict';
@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 
 export class SimpleAppDocumentNoFormatService {
   constructor(@InjectModel('DocumentNoFormat') private docformat: Model<DocumentNoFormat>) {}
+  getDocumentMeta = (docType:string)=> alldocuments.find(x => x.docType === docType)
 
   async runListDocFormats(appUser: UserContext, doctype: string) {
     doctype = doctype.toUpperCase();
@@ -69,13 +70,26 @@ export class SimpleAppDocumentNoFormatService {
     const result = await this.docformat.find(filter).session(session);
     if (result && result.length > 0) {
       const d: DocumentNoFormat = result[0];
+      const initNumber = d.nextNumber
       const recordId = d._id;
-      const newdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);
-      const newnextnumber = d.nextNumber + 1;
+      // const newdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);
+
+      const checker = await this.documentNumberChecker(appUser,doctype,d)
+
+      if(!checker.accept){
+        d.nextNumber = initNumber
+        const errdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);        
+        throw new InternalServerErrorException(`Unique Key ${errdocno} conflict`);
+      }
+
+      const newdocno = checker.newDocNo
+      const newnextnumber = initNumber + checker.offset;
       const updatedata = { nextNumber: newnextnumber } as DocumentNoFormat;
 
       const options = process.env.BlockGenerateDocNumberWithSession ? {} : { session: session };
       const updateresult = await this.docformat.findByIdAndUpdate(recordId, updatedata, options);
+      result[0].nextNumber = initNumber
+      // console.log('add transaction step for update document no',[result[0]])
       appUser.addTransactionStep('update','documentnoformat',[recordId],[result[0]])
       if (updateresult) {
         const result: DocNumberFormatResult = {
@@ -211,17 +225,27 @@ export class SimpleAppDocumentNoFormatService {
     //
     Object.assign(filter, appUser.getBranchFilter());
     const result = await this.docformat.find(filter).session(appUser.getDBSession());
+
     if (result && result.length > 0) {
       const d: DocumentNoFormat = result[0];
-      const recordId = d._id;
+      const initNumber = d.nextNumber
+      const checker = await this.documentNumberChecker(appUser,doctype,d)
 
-      for (let i = 0; i < quantity; i++) {
-        d.nextNumber++;
+      if(!checker.accept){
+        d.nextNumber = initNumber
+        const errdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);        
+        throw new InternalServerErrorException(`Unique Key ${errdocno} conflict during request-multiple-number`);
+      }
+
+
+      d.nextNumber=initNumber + checker.offset - 1 //offset will return >=1, we want start from 0
+      const recordId = d._id;
+      for (let i = 0; i < quantity; i++) {        
         const newdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);
         documentNumbers.push(newdocno);
+        d.nextNumber++;
       }
-      const updatedata = { nextNumber: d.nextNumber + 1 } as DocumentNoFormat;
-
+      const updatedata = { nextNumber: d.nextNumber } as DocumentNoFormat;
       const options = process.env.BlockGenerateDocNumberWithSession ? {} : { session: appUser.getDBSession(), };
       const updateresult = await this.docformat.findByIdAndUpdate(recordId, updatedata, options);
       appUser.addTransactionStep('update','documentnoformat',[recordId],[result[0]])
@@ -229,5 +253,52 @@ export class SimpleAppDocumentNoFormatService {
     } else {
       throw new BadRequestException(`No active document number found for ${doctype}. Please update in Settings > Document Numbering Format`);
     }
+  }
+
+  applyIsolationFilter (appUser:UserContext, filter:any, docType:string){
+    const docMeta = this.getDocumentMeta(docType)
+    if(docMeta.isolationType===IsolationType.tenant) {
+      filter['tenantId'] = appUser.tenantId
+    }
+    if(docMeta.isolationType===IsolationType.org) {
+      filter['tenantId'] = appUser.tenantId
+      filter['orgId'] = appUser.orgId
+    }
+    if(docMeta.isolationType===IsolationType.branch) {
+      filter['tenantId'] = appUser.tenantId
+      filter['orgId'] = appUser.orgId
+      filter['branchId'] = appUser.branchId
+    }
+      
+    return filter
+  }
+
+
+  async documentNumberChecker(appUser:UserContext,docType:string,docFormat:DocumentNoFormat){
+
+    const docMeta = this.getDocumentMeta(docType)
+    const collectionName = docMeta.docName.toLowerCase()
+    const collection = this.docformat.db.collection(collectionName);
+    const codeField = docMeta.uniqueKey 
+    let newdocno = ''
+    let attempt = 0;
+    let accept = false;
+    // console.log("run documentNumberChecker")
+    for (attempt = 0; attempt < 10; attempt++) {      
+      newdocno = SimpleAppDocumentNoFormatService.previewDocNo(docFormat);        
+      const tmpFilter = { [codeField]: newdocno}
+      const filter = this.applyIsolationFilter(appUser, tmpFilter,docType)
+      // console.log("filter",filter)
+      const existDoc = await collection.findOne(filter);
+      docFormat.nextNumber += 1
+      if (existDoc) {
+        continue;
+      }
+      accept=true;
+      // console.log('accepted at attempt=',attempt)
+      break;      
+    }
+    // console.log('finally attempt',attempt+1)
+    return Promise.resolve({accept:accept,offset:attempt+1, newDocNo:newdocno})
   }
 }

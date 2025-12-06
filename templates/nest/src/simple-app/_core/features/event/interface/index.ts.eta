@@ -6,3 +6,7 @@ export * from './event-before-delete.interface';
 export * from './event-after-delete.interface';
 export * from './event-before-set-status.interface';
 export * from './event-after-set-status.interface';
+export * from './event-error-create.interface';
+export * from './event-error-update.interface';
+export * from './event-error-delete.interface';
+export * from './event-error-set-status.interface';
