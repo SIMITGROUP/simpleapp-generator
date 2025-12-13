@@ -1,4 +1,9 @@
-[2.0.2h-alpha]
+[2.0.2i-alpha]
+
+1. fix bugs cannot run backend
+2. fix default search page size to 500
+
+[2.0.2i-alpha]
 
 1. added error handling event for create,update,delete,setStatus
 2. improve saga document number generator check max 10 number ahead base on target document's unique key (with data isolation)

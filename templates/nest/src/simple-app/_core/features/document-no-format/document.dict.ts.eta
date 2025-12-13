@@ -17,7 +17,8 @@ export const alldocuments:DocumentDictEntry[] = [
         documentDate:'<%=conf['documentDate']??""%>', 
         docNumber:<%=conf['generateDocumentNumber']??false%>,
         docNoPattern: '<%=conf['docNoPattern']%>',
-        webhook:<%~ JSON.stringify(conf['webhook'])%>
+        webhook:<%~ JSON.stringify(conf['webhook'])%>,
+        uniqueKey: '<%~ conf['uniqueKey'] ?? '' %>'
         },
     <%}%>
   ]

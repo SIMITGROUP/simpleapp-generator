@@ -151,7 +151,8 @@ export class UserContext extends UserContextInfo {
   };
 
   getDBSession = (): ClientSession => this.dbsession;
-  getTransStep = () => this.transSteps
+  getTransSteps = () => this.transSteps;
+  setTransSteps = (steps: StepData[]) => this.transSteps = steps;
   getId = () => this._id;
 
   getUid = () => this.uid;
