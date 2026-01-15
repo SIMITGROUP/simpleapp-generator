@@ -1123,6 +1123,40 @@ export class UserContext extends UserContextInfo {
         }
       }
 
+      if (this.roles.includes(Role.DevSupport)) {
+        const tenantRoles = [
+          Role.Tenant_access,
+          Role.Tenant_search,
+          Role.Tenant_create,
+          Role.Tenant_update,
+          Role.Tenant_delete,
+        ];
+        for (let r = 0; r < tenantRoles.length; r++) {
+          if (!this.roles.includes(tenantRoles[r])) {
+            this.roles.push(tenantRoles[r]);
+          }
+        }
+      }
+
+      if (this.roles.includes(Role.DevBilling)) {
+        const tenantInvoiceRoles = [
+          Role.TenantInvoice_access,
+          Role.TenantInvoice_search,
+          Role.TenantInvoice_create,
+          Role.TenantInvoice_update,
+          Role.TenantInvoice_delete,
+          Role.TenantInvoice_draft,
+          Role.TenantInvoice_void,
+          Role.TenantInvoice_confirm,
+          Role.TenantInvoice_print,
+        ];
+        for (let r = 0; r < tenantInvoiceRoles.length; r++) {
+          if (!this.roles.includes(tenantInvoiceRoles[r])) {
+            this.roles.push(tenantInvoiceRoles[r]);
+          }
+        }
+      }
+
       this.moreProps = this.setMoreProps(userProfile);
     } else {
       this.logger.debug(`User ${this.uid} not exists in tenant (${this.tenantId})`);
