@@ -116,8 +116,9 @@ export class ProfileController {
     @Body('timeZone') timeZone: string,
     @Body('utcOffset') utcOffset: number,
     @Body('businessType') businessType: string,
+    @Body('interestedInSales') interestedInSales?: boolean,
   ) {
-    const result = await this.profileservice.createTenant(appUser, tenantName, timeZone, utcOffset, businessType,mobileNo);
+    const result = await this.profileservice.createTenant(appUser, tenantName, timeZone, utcOffset, businessType, mobileNo, interestedInSales);
     if (result) {
       return result;
     } else {

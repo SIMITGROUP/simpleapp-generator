@@ -87,7 +87,7 @@ export class ProfileService {
     return userinfo;
   }
 
-  async createTenant(appuser: UserContext, tenantName: string, timeZone: string, utcOffset: number, businessType: string, mobileNo: string) {
+  async createTenant(appuser: UserContext, tenantName: string, timeZone: string, utcOffset: number, businessType: string, mobileNo: string, interestedInSales?: boolean) {
     // try{
 
     
@@ -111,6 +111,8 @@ export class ProfileService {
         _id: appuser.getId(),
         label: appuser.getFullname(),
         uid: appuser.getUid(),
+        mobileNo: mobileNo,
+        email: appuser.getEmail(),
       },
     };
     this.logger.debug(tenantdata, 'createTenant data');
@@ -149,21 +151,21 @@ export class ProfileService {
       branchName: tenantName,
       companyName: tenantName,
       registrationNo: '',
-      paymentRemark: '',
-      invoiceRemark: '',
-      cnRemark: '',
-      refundRemark: '',
+      paymentRemark: 'This document is system-generated and does not require a signature. For any questions, please contact our support team.',
+      invoiceRemark: 'This document is system-generated and does not require a signature. For any questions, please contact our support team.',
+      cnRemark: 'This document is system-generated and does not require a signature. For any questions, please contact our support team.',
+      refundRemark: 'This document is system-generated and does not require a signature. For any questions, please contact our support team.',
       workStart: '09:00:00',
       workEnd: '22:00:00',
       workingHours: [],
       offdays: ['sat', 'sun'],
-      street1: '11,my street 1',
-      street2: 'my street 2',
+      street1: '11, My Street 1',
+      street2: 'My Street 2',
       postcode: '11111',
-      city: 'my city',
+      city: 'My City',
       tel: mobileNo,
       email: appuser.getEmail(),
-      region: 'my region',
+      region: 'My Region',
       country: countryName,
       active: true,
       orgId: orgResult.orgId,
@@ -187,6 +189,8 @@ export class ProfileService {
       fullName: appuser.getFullname(),
       email: appuser.getEmail(),
       active: true,
+      mobileNo: mobileNo,
+      interestedInSales: interestedInSales,
     };
     this.logger.debug(userdata, 'createtenant user data');
     const userResult = await this.userService.create(appuser, userdata);
@@ -219,6 +223,7 @@ export class ProfileService {
     const tenantUpdateData = await this.tenantService.findById(appuser, tenantResult._id);
     this.logger.log(tenantUpdateData, `update tenant owner(${tenantResult._id})`);
     tenantUpdateData.owner._id = userRecordId;
+    (tenantUpdateData.owner as any).mobileNo = mobileNo;
     const updateTenantOwnerResult = await this.tenantService.findIdThenUpdate(appuser, tenantResult._id, tenantUpdateData);
     if (!updateTenantOwnerResult) {
       throw new BadRequestException('Update tenant owner failed');

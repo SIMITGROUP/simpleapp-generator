@@ -1,3 +1,9 @@
+[2.0.2k-alpha]
+
+1. add permission devbilling can access tenant invoice page
+2. add permission devsupport can access tenant page
+3. update profile tenant for user friendly when create tenant
+
 [2.0.2i-alpha]
 
 1. fix bugs cannot run backend
