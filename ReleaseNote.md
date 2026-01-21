@@ -1,3 +1,10 @@
+[2.0.2l-alpha]
+
+1. change date to [dd/mm/yyyy]
+2. add new role such isBillingUser, isInternalUser and isDevSupport to access certain page
+3. adjust template for make the banner free and expired warning appear
+4. Added new paras prop for passing additional parameters on input
+
 [2.0.2k-alpha]
 
 1. add permission devbilling can access tenant invoice page

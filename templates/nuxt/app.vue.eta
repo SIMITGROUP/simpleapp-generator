@@ -9,6 +9,8 @@
     <EventDocumentViewer></EventDocumentViewer>      
     <EventDecision/>
     <EventNotification/>
+    <SubscriptionExpirationWarning/>
+    <SubscriptionFreeBanner/>
     <NuxtPage/>
   </NuxtLayout>
 </template>
@@ -20,6 +22,7 @@
  * last change 2024-03-17
  * Author: Ks Tan
  */
+import SubscriptionFreeBanner from "~/components/subscription/SubscriptionFreeBanner.vue";
 let currentXorg = getCurrentXorg()
 watch(()=>useRoute().fullPath,async (newval,oldvalue)=>{
    if(getCurrentXorg()!=currentXorg){
@@ -29,9 +32,9 @@ watch(()=>useRoute().fullPath,async (newval,oldvalue)=>{
   if(getPathPara('xorg','')!=''){
   
     if(getCurrentXorg()===''){
-      navigateTo('/picktenant')
+      goTo('/picktenant')
     }else if(!getUserProfile()?.currentGroup){
-      goTo('pickgroup')
+      navigateTo('pickgroup')
     }
     setGraphqlServer()
   }  
@@ -54,9 +57,9 @@ onMounted(async()=>{
     const currentgroup = useCookie('currentGroup').value
     //if no xorg, no enforce pick group
     if(getCurrentXorg()===''){
-      navigateTo('/picktenant')
+      goTo('/picktenant')
     }else if(!currentgroup){
-      goTo('/pickgroup')
+      navigateTo('/pickgroup')
     }
     setGraphqlServer()
   }else{
