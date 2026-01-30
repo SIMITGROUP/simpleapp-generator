@@ -117,6 +117,33 @@ const scopes = {
       description: "Check online payment status",
     },
   },
+  
+  directDebit: {
+    createDda: {
+      method: "post",
+      description: "Create direct debit authorization",
+    },
+    cancelDda: {
+      method: "post",
+      description: "Cancel direct debit authorization",
+    },
+    enquiryDdaByDdaRefNo: {
+      method: "get",
+      description: "Enquiry direct debit authorization by ref no",
+    },
+    createDdi: {
+      method: "post",
+      description: "Create direct debit instruction",
+    },
+    cancelDdi: {
+      method: "post",
+      description: "Cancel direct debit instruction",
+    },
+    enquiryDdiByDdiOrderNo: {
+      method: "get",
+      description: "Enquiry direct debit instruction by order no",
+    },
+  },
 };
 
 export default scopes;
