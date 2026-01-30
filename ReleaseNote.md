@@ -1,3 +1,7 @@
+[2.0.2l-alpha]
+
+1. Add direct debit mini api scope
+
 [2.0.2k-alpha]
 
 1. add permission devbilling can access tenant invoice page
