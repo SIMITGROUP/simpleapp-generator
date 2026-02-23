@@ -16,24 +16,24 @@ export const today = () => useDayjs()().format('YYYY-MM-DD')
 /**
  * convert date object or ISO8601 date become local datetime string
  * @param date date|string
- * @returns local shortform date-time
+ * @returns local shortform date-time (DD/MM/YYYY HH:mm)
  */
 export const dateRenderToDateTimeStr = (date:Date|string) => 
-  convertToDate(date).toLocaleString().replace(',', ' ').slice(0,-3)
+  useDayjs()(date).format('DD/MM/YYYY HH:mm')
 /**
  * convert date object or ISO datestring become local date string
  * @param date date|string
- * @returns local short form date
+ * @returns local short form date (DD/MM/YYYY)
  */
 export const dateRenderToDateStr = (date:Date|string) => 
-  convertToDate(date).toLocaleDateString().replace(',', ' ')
+  useDayjs()(date).format('DD/MM/YYYY')
 /**
  * convert date object or ISO datestring become time string (without seconds)
  * @param date date|string
  * @returns 
  */
 export const dateRenderToTimeStr = (date:Date|string) => 
-  convertToDate(date).toLocaleTimeString().slice(0,-3)
+  useDayjs()(date).format('HH:mm')
 
 
 /**

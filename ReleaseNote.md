@@ -1,3 +1,9 @@
+[2.0.2m-alpha]
+
+1. Change date format follow DD/MM/YYYY instead of user laptop
+2. Define isBillingUser, isInternalUser and isDevSupport for easy to called role
+3. Add escapeRegExp for search student list
+
 [2.0.2l-alpha]
 
 1. Add direct debit mini api scope

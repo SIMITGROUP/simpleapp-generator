@@ -9,6 +9,8 @@
     <EventDocumentViewer></EventDocumentViewer>      
     <EventDecision/>
     <EventNotification/>
+    <SubscriptionExpirationWarning/>
+    <SubscriptionFreeBanner/>
     <NuxtPage/>
   </NuxtLayout>
 </template>
@@ -29,9 +31,9 @@ watch(()=>useRoute().fullPath,async (newval,oldvalue)=>{
   if(getPathPara('xorg','')!=''){
   
     if(getCurrentXorg()===''){
-      navigateTo('/picktenant')
+      goTo('/picktenant')
     }else if(!getUserProfile()?.currentGroup){
-      goTo('pickgroup')
+      navigateTo('pickgroup')
     }
     setGraphqlServer()
   }  
@@ -54,9 +56,9 @@ onMounted(async()=>{
     const currentgroup = useCookie('currentGroup').value
     //if no xorg, no enforce pick group
     if(getCurrentXorg()===''){
-      navigateTo('/picktenant')
+      goTo('/picktenant')
     }else if(!currentgroup){
-      goTo('/pickgroup')
+      navigateTo('/pickgroup')
     }
     setGraphqlServer()
   }else{

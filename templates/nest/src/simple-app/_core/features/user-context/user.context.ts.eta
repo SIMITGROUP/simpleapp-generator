@@ -578,15 +578,9 @@ export class UserContext extends UserContextInfo {
         }
       }
 
-      // Tenant permissions for DevSupport role
-      if (this.roles.includes(Role.DevSupport)) {
-        const tenantRoles = [
-          Role.Tenant_access,
-          Role.Tenant_search,
-          Role.Tenant_create,
-          Role.Tenant_update,
-          Role.Tenant_delete,
-        ];
+      // Tenant permissions for DevSupport and DevBilling roles
+      const tenantRoles = [Role.Tenant_access, Role.Tenant_search, Role.Tenant_create, Role.Tenant_update, Role.Tenant_delete];
+      if (this.roles.includes(Role.DevSupport) || this.roles.includes(Role.DevBilling)) {
         for (let r = 0; r < tenantRoles.length; r++) {
           if (!this.roles.includes(tenantRoles[r])) {
             this.roles.push(tenantRoles[r]);
@@ -611,6 +605,20 @@ export class UserContext extends UserContextInfo {
           if (!this.roles.includes(tenantInvoiceRoles[r])) {
             this.roles.push(tenantInvoiceRoles[r]);
           }
+        }
+      }
+
+      // Grant Admin role to DevSupport and DevBilling for e-invoice
+      if (this.roles.includes(Role.DevSupport) || this.roles.includes(Role.DevBilling)) {
+        if (!this.roles.includes(Role.Admin)) {
+          this.roles.push(Role.Admin);
+        }
+      }
+
+      // Grant Billing role to DevBilling for tenant billing operations
+      if (this.roles.includes(Role.DevBilling)) {
+        if (!this.roles.includes(Role.Billing)) {
+          this.roles.push(Role.Billing);
         }
       }
 

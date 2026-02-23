@@ -160,6 +160,7 @@
                 getDocument(setting.fieldsetting['x-foreignkey']).viewer,
               )
             "
+            :paras="props.paras"
             @after="
               async (eventType: FormCrudEvent, data: any, result: any) =>
                 await afterRenderMobileForm(eventType, data)
@@ -206,6 +207,7 @@ const props = withDefaults(
     componentProps?: AutoCompleteProps;
     autocompleteFilter?: any;
     pt?: any;
+    paras?: any;
   }>(),
   {
     allowAddNew: true,
@@ -358,6 +360,7 @@ const openViewer = (readonly: boolean) => {
       readonly: readonly,
       viewer: getDocument(docname)?.viewer,
       documentName: docname,
+      paras: props.paras,
 
       //after create, auto copy value into auto complete
       after: async (eventType: FormCrudEvent, data: any) => {

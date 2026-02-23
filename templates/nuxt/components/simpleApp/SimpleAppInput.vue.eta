@@ -179,6 +179,7 @@
       :readonly="isReadonly"
       :placeholder="placeholder"
       :autocomplete-filter="autocompleteFilter"
+      :paras="paras"
       @change="onChange"
     >
       <template #header>
@@ -419,13 +420,14 @@ const props = withDefaults(
     setting: any;
     type?: string;
     instancepath?: string;
-    options?: string[];
+    options?: string[] | Array<{ value: string; label: string }>;
     hidelabel?: boolean;
     readonly?: boolean;
     autofocus?: boolean;
     pt?: any;
     placeholder?: string;
     autocompleteFilter?: any;
+    paras?: any;
     componentProps?:
       | InputNumberProps
       | InputSwitchProps
