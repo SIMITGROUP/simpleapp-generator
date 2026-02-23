@@ -74,7 +74,7 @@ export class DocumentEvent {
   @Prop({ type: () => Object })
   @Field(() => GraphQLJSON)
   @ApiProperty({ type: () => Object, required: false, default: {} })
-  eventData: Object;
+  eventData: object;
 }
 
 /***************************************** Start Auto Complete *****************************************/

@@ -18,12 +18,12 @@ export class DocNumberFormatResult {
 }
 
 export class SearchBody {
-  filter?: Object;
+  filter?: object;
 
   fields?: any[];
 
   sorts?: any[];
-  lookup?: Object;
+  lookup?: object;
   pagination?: {
     pageSize?: number;
     pageNo?: number;

@@ -17,14 +17,14 @@ import { AnyKeys, AnyObject, FilterQuery, Model, PipelineStage, mongo } from 'mo
 // import { CloudApiService } from 'src/cloudapi/cloudapi.service';
 import { foreignkeys } from '../../features/foreign-key/foreignkeys.dict';
 
+import { Response } from 'express';
 import { camelToKebab } from 'src/simple-app/_core/utils/string-utils';
 import { SimpleAppDocumentNoFormatService } from '../../features/document-no-format/document-no-format.service';
 import { SimpleAppLogService } from '../../features/log/log.service';
 import { UserContext } from '../../features/user-context/user.context';
 import { RunWebhookService } from '../../features/webhook/run-webhook.service';
-import { DeleteResultType, IsolationType, MoreProjectionType, PatchManyRequest, SchemaFields, SearchBody, TextSearchBody, UniqueKeyExistResponse } from '../schemas';
+import { DeleteResultType, IsolationType, MoreProjectionType, PatchManyRequest, SchemaFields, TextSearchBody, UniqueKeyExistResponse } from '../schemas';
 import { SearchWithRelation } from './dto/simple-app-search-with-relation.dto';
-import { Response } from 'express';
 
 @Injectable()
 export class SimpleAppService<T extends SchemaFields> {
@@ -209,12 +209,12 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     // return this;
   }
-  async aggregateNoIsolation(appUser: UserContext, pipeline: PipelineStage[]) {
+  async aggregateNoIsolation<T>(appUser: UserContext, pipeline: PipelineStage[]) {
     if (pipeline[0] && pipeline[0]['$match']) {
       try {
         this.logger.verbose(pipeline, `${this.documentName} aggregate:`);
 
-        return await this.doc.aggregate(pipeline, {
+        return await this.doc.aggregate<T>(pipeline, {
           session: appUser.getDBSession(),
         });
       } catch (err) {
@@ -316,7 +316,7 @@ export class SimpleAppService<T extends SchemaFields> {
       const isolationFilter = { ...this.getIsolationFilter(appUser) };
       this.polishIsolationFilter(isolationFilter);
 
-      const newfilters: FilterQuery<T> = { ...(filters as FilterQuery<T>), ...isolationFilter };
+      const newfilters: FilterQuery<T> = { ...filters, ...isolationFilter };
 
       let pageSize: number;
       let pageNo: number;
@@ -345,7 +345,7 @@ export class SimpleAppService<T extends SchemaFields> {
         items = rows;
         total = count;
       } else {
-        const pipelines = this.searchToAggregate(appUser, newfilters, projection as any, sort as any, lookup as any, { pageSize, pageNo });
+        const pipelines = this.searchToAggregate(appUser, newfilters, projection as any, sort, lookup as any, { pageSize, pageNo });
 
         const countPipeline: PipelineStage[] = [{ $match: newfilters }];
         const collections = Object.keys(lookup);
@@ -429,7 +429,6 @@ export class SimpleAppService<T extends SchemaFields> {
     const rawPageNo = Number.isFinite(pagination?.pageNo) ? pagination.pageNo : 0;
     const pageNo = rawPageNo < 0 ? 0 : rawPageNo;
     const skip = pageNo * finalPageSize;
-
 
     return { pageSize: finalPageSize, skip, pageNo };
   }
@@ -589,7 +588,7 @@ export class SimpleAppService<T extends SchemaFields> {
       await this.callWebhook(appUser, 'create', result);
       return result as T;
     } catch (err) {
-      await this.runErrorEvent(appUser, 'errorCreate', data, err)
+      await this.runErrorEvent(appUser, 'errorCreate', data, err);
       throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
     }
   }
@@ -632,7 +631,7 @@ export class SimpleAppService<T extends SchemaFields> {
     ajv.addKeyword({ keyword: 'x-remote', schemaType: 'object' });
     ajv.addKeyword({ keyword: 'x-readonly', schemaType: 'boolean' });
     this.logger.debug('run hook during validation');
-    let issuccess = true;
+    const issuccess = true;
     // if (this.hooks.beforeValidation) {
     //   issuccess = await this.hooks.beforeValidation(appUser, data, _id);
     // }
@@ -739,7 +738,7 @@ export class SimpleAppService<T extends SchemaFields> {
       if (err instanceof ForbiddenException) {
         throw new ForbiddenException(err);
       } else {
-        await this.runErrorEvent(appUser, 'errorDelete', deletedata, err)
+        await this.runErrorEvent(appUser, 'errorDelete', deletedata, err);
         throw new InternalServerErrorException(err);
       } //JSON.stringify(dependency),JSON.stringify(dependency)
     }
@@ -862,7 +861,7 @@ export class SimpleAppService<T extends SchemaFields> {
       return result; // await this.findById(appUser, id);
     } catch (err) {
       this.logger.error(err);
-      await this.runErrorEvent(appUser, 'errorUpdate', data, err)
+      await this.runErrorEvent(appUser, 'errorUpdate', data, err);
       throw new InternalServerErrorException(err.message);
     }
   };
@@ -1017,7 +1016,7 @@ export class SimpleAppService<T extends SchemaFields> {
     // };
 
     const filter = data.filter;
-    const patch = data.data as Object;
+    const patch = data.data as object;
 
     const isolationFilter = { ...this.getIsolationFilter(appUser), ...(filter || {}) };
     this.polishIsolationFilter(isolationFilter);
@@ -1115,7 +1114,7 @@ export class SimpleAppService<T extends SchemaFields> {
     await this.runEvent(appUser, 'beforeSetStatus', { docStatus: docstatus, prevData: existdata, newData: data }, false);
 
     // if (this.hooks.beforeSetStatus) await this.hooks.beforeSetStatus(appUser, docstatus, data, existdata);
-    try{
+    try {
       if (data && !data['created']) {
         const createresult = await this.create(appUser, data);
         await this.runEvent(appUser, 'afterSetStatus', { docStatus: docstatus, data: createresult }, false);
@@ -1132,8 +1131,8 @@ export class SimpleAppService<T extends SchemaFields> {
         await this.callWebhook(appUser, docstatus, finaldata);
         return updateresult;
       }
-    }catch(e){
-      await this.runErrorEvent(appUser, 'errorSetStatus', data, e)
+    } catch (e) {
+      await this.runErrorEvent(appUser, 'errorSetStatus', data, e);
     }
   }
 
@@ -1167,7 +1166,7 @@ export class SimpleAppService<T extends SchemaFields> {
    * @return     {Promise}      { description_of_the_return_value }
    */
   async runEvent(appUser: UserContext, shortEventName: string, payloads: any, enforce: boolean = true) {
-    const eventName = this.setHookName(shortEventName)
+    const eventName = this.setHookName(shortEventName);
     try {
       if (enforce && !this.eventEmitter.hasListeners(eventName)) {
         throw new InternalServerErrorException(`${eventName} seems no listener`);
@@ -1189,17 +1188,16 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
-   async runErrorEvent(appUser: UserContext, shortEventName: string, payloads: any, error:any) {
-    const eventName = this.setHookName(shortEventName)
-      try{
-        if (this.eventEmitter.hasListeners(eventName)) {
-          console.log('run eventName', eventName);
-          const res = await this.eventEmitter.emitAsync(eventName, appUser, payloads,error);
-        }
-      }catch(e){
-        //runErrorEvent wont handle more error
+  async runErrorEvent(appUser: UserContext, shortEventName: string, payloads: any, error: any) {
+    const eventName = this.setHookName(shortEventName);
+    try {
+      if (this.eventEmitter.hasListeners(eventName)) {
+        console.log('run eventName', eventName);
+        const res = await this.eventEmitter.emitAsync(eventName, appUser, payloads, error);
       }
-
+    } catch (e) {
+      //runErrorEvent wont handle more error
+    }
   }
   // startWorkflow(appUser: UserContext, processName: WorkflowName, workflowData: any) {
   //   return this.eventEmitter.emit('workflow.start', appUser, processName, workflowData);

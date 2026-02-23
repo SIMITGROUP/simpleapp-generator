@@ -34,9 +34,9 @@ export class ApiEvent {
   @Prop()
   method: string;
   @Prop({type:Object})
-  headers: Object;  
+  headers: object;  
   @Prop({type:Object})
-  data?: Object;
+  data?: object;
   @Prop()
   statusCode: number;
   @Prop()
@@ -44,7 +44,7 @@ export class ApiEvent {
   @Prop()
   errMsg?: string;
   @Prop({type:Object})
-  errData?: Object;
+  errData?: object;
 }
 
 export const ApiEventMongoSchema = SchemaFactory.createForClass(ApiEvent)
