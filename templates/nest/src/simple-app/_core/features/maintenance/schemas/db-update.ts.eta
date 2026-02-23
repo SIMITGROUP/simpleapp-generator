@@ -9,9 +9,9 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UpgradeScript {
     @ApiProperty({ type: String})
-    id: String
+    id: string
     @ApiProperty({ type: String})
-    subject:String
+    subject:string
     @ApiProperty({ type: String})
-    description:String
+    description:string
 }

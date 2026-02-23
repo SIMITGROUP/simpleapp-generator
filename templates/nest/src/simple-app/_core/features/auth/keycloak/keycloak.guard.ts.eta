@@ -31,7 +31,7 @@ export class CustomKeycloakGuard implements CanActivate {
     // If API key is not present, fall back to Keycloak authentication
     try {
       const canActivate = await this.resourceGuard.canActivate(context);
-      return canActivate as boolean;
+      return canActivate;
     } catch (error) {
       throw new UnauthorizedException('Invalid API key or Keycloak token');
     }

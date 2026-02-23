@@ -19,6 +19,8 @@ export * from 'src/simple-app/_core/framework/schemas';
     let tmptypename = typename.replace('[','').replace(']','')        
     if(proptype=='schema'){
       tmptypename= upperFirstCase(tmptypename)        
+    }else if(systemtypes.includes(typename)){
+        tmptypename = tmptypename.toLowerCase();
     }
     
     if(typename.includes('[')){
@@ -44,27 +46,27 @@ export * from 'src/simple-app/_core/framework/schemas';
             @Prop({type: Object})
             @Field(()=>GraphQLJSON)            
             @ApiProperty({ type:()=>Object,required: <%= required %>, default: {} })
-            <%= key %> <%=required ? '' :'?' %>: Object;
+            <%= key %> <%=required ? '' :'?' %>: object;
         <% } else { %>
            
             @Prop()
             @Field()
             <% const newtypename=  toTypeName(it.resourceName ,obj) %>
             @ApiProperty({type: ()=><%=newtypename%>, required: <%= required %>})
-            <%= key %> <%=required ? '' :'?' %>:  <%= newtypename %>;
+            <%= key %> <%=required ? '' :'?' %>:  <%= getFieldType('type', newtypename, '') %>;
         <% } %>
     <%} else if(typeof obj.default !='undefined' && JSON.stringify(obj.default)=='{}'){%>    
         @Prop({type: Object})
         @Field(()=>GraphQLJSON)
         @ApiProperty({ type:()=>Object,required: <%= required %>, default: {} })
-        <%= key %> <%=required ? '' :'?' %>: Object;
+        <%= key %> <%=required ? '' :'?' %>: object;
     <% } else if( Array.isArray( obj)){%>
-        
+
         <% const newtypename= toTypeName(it.resourceName ,obj[0])%>
         @Prop()
         @Field(() => [<%=newtypename %>])
         @ApiProperty({type: ()=>[<%= newtypename  %>], required: <%= required %> })                    
-        <%= key %> <%=required ? '' :'?' %>:  <%= newtypename %>[];        
+        <%= key %> <%=required ? '' :'?' %>:  <%= getFieldType('type', newtypename, '') %>[];        
     <% }else{%>
         @Prop()
         @Field()                

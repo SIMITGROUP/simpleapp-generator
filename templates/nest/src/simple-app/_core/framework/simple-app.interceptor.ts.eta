@@ -4,11 +4,11 @@
  * last change 2023-03-17
  * Author: Ks Tan
  */
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, BadGatewayException, HttpException } from '@nestjs/common';
-import { Observable, throwError } from 'rxjs';
-import { catchError, tap, map } from 'rxjs/operators';
-import { Model, Connection, ClientSession } from 'mongoose';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { Connection, Model } from 'mongoose';
+import { Observable } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { UserContext } from '../features/user-context/user.context';
 import { ApiEvent } from './schemas';
 import { SimpleAppDbRevertService } from './simple-app-db-revert.service';
@@ -17,11 +17,10 @@ export class SimpleAppInterceptor implements NestInterceptor {
   constructor(
     @InjectConnection() private readonly connection: Connection,
     @InjectModel('ApiEvent') private apieventmodel: Model<ApiEvent>,
-    private simpleAppDbRevertService:SimpleAppDbRevertService
+    private simpleAppDbRevertService: SimpleAppDbRevertService,
   ) {}
 
   async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
-    
     //not http request then exclude such as graphql
     if (context.getType() != 'http') {
       // obtain usersession here
@@ -35,7 +34,6 @@ export class SimpleAppInterceptor implements NestInterceptor {
     const resp = context.switchToHttp().getResponse();
     //console.log("want to get user session:", Object.keys(req))
 
-
     if (req.url == '/health') {
       return next.handle().pipe(
         tap(async () => {
@@ -43,7 +41,6 @@ export class SimpleAppInterceptor implements NestInterceptor {
         }),
       );
     }
-
 
     const usersession: UserContext = req['sessionuser'];
     //console.log("after read user session:",usersession)
@@ -86,7 +83,7 @@ export class SimpleAppInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => {
         if (data && typeof data === 'object' && 'pagination' in data && 'items' in data) {
-          return data; 
+          return data;
         }
         return data;
       }),
@@ -94,7 +91,7 @@ export class SimpleAppInterceptor implements NestInterceptor {
         // console.log('**************catchError at interceptor ',method,url)
         if (usersession.inTransaction()) {
           // await usersession.rollBackTransaction();
-          await usersession.rollBackTransaction(this.simpleAppDbRevertService)
+          await usersession.rollBackTransaction(this.simpleAppDbRevertService);
 
           canCommit = false;
         }
@@ -127,12 +124,12 @@ export class SimpleAppInterceptor implements NestInterceptor {
 
         if (process.env.DRYRUN == 'true') {
           // console.warn('--------dryrun! roll back everything-----------');
-          if ( canCommit) {            
-            await usersession.rollBackTransaction(this.simpleAppDbRevertService)
+          if (canCommit) {
+            await usersession.rollBackTransaction(this.simpleAppDbRevertService);
           }
         } else {
-          if ( canCommit) {
-            await usersession.commitTransaction()
+          if (canCommit) {
+            await usersession.commitTransaction();
           }
         }
         await usersession.endSession();

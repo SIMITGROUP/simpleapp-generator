@@ -103,9 +103,9 @@ export class ProfileUserBranch {
   @ApiProperty({ type: BranchMinInfo })
   branch: BranchMinInfo;
   @ApiProperty({ type: String })
-  orgRecordId: String;
+  orgRecordId: string;
   @ApiProperty({ type: String })
-  xOrg: String;
+  xOrg: string;
   @ApiProperty({ type: Object, required: false })
   organization?: any;
 }
@@ -124,20 +124,20 @@ export class RegTenant {
     examples: ['my company 1'],
     default: '',
   })
-  tenantName: String;
+  tenantName: string;
   @ApiProperty({
     type: String,
     required: true,
     examples: ['Asia/Kuala_Lumpur'],
     default: '',
   })
-  timeZone: String;
+  timeZone: string;
   @ApiProperty({
     type: Number,
     required: true,
     examples: [0, -460],
   })
-  utcOffset: Number;
+  utcOffset: number;
 }
 /****************------unchecked schema------********************/
 

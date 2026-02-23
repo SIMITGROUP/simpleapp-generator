@@ -19,7 +19,7 @@ export class PatchManyRequest<T> {
   data: Partial<T>;
 
   @ApiProperty({ type: () => Object, required: false })  
-  filter?: Object | null;
+  filter?: object | null;
 }
 
 @ObjectType()

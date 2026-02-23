@@ -1,3 +1,7 @@
+[2.0.2n-alpha]
+
+1. Fix generated code eslint error
+
 [2.0.2m-alpha]
 
 1. Change date format follow DD/MM/YYYY instead of user laptop

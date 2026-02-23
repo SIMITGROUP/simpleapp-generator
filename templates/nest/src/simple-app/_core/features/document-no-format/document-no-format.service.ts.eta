@@ -23,7 +23,7 @@ export class SimpleAppDocumentNoFormatService {
       { $sort: { default: -1 } },
     ]);
 
-    let data: DocumentNoFormatPreview[] = [];
+    const data: DocumentNoFormatPreview[] = [];
     for (let i = 0; i < searchresult.length; i++) {
       const s = searchresult[i];
       if (s.active && s.docNoPattern) {
