@@ -1,3 +1,7 @@
+[2.0.2m-alpha]
+
+1. Fix generated code eslint error
+
 [2.0.2l-alpha]
 
 1. Add direct debit mini api scope
