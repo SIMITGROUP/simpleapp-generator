@@ -1,3 +1,8 @@
+[2.0.2o-alpha]
+
+1. Revert date.generate.ts for universal use
+2. Adjust SimpleAppInput add paras on autocomplete
+
 [2.0.2n-alpha]
 
 1. Fix generated code eslint error
