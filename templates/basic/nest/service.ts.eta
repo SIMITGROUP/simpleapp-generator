@@ -88,8 +88,9 @@ export class <%= it.typename %>Service extends SimpleAppService<schema.<%= it.ty
           // <%~ JSON.stringify(fml) %>
           //const tmp = jsonpath.query(vdata,fieldpath).filter((item:string)=>item!='')
           
-          jsonpath.apply($data, '<%~ fml.jsonPath %>', function($item:any) { return <%~fml.formula %> });
-
+            jsonpath.apply($data, '<%~ fml.jsonPath %>', function ($item: schema.<%= it.typename %>) {
+              return <%~fml.formula %>
+            })
         <%}) %>
       <%} %>
     

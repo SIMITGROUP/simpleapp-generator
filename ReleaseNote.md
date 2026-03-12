@@ -1,6 +1,21 @@
+[2.0.2p-alpha]
+
+1. Added explicit return types in generated controller endpoints to improve TypeScript type safety and resolve ESLint `no-unsafe-return` warnings
+
+[2.0.2o-alpha]
+
+1. Revert date.generate.ts for universal use
+2. Adjust SimpleAppInput add paras on autocomplete
+
 [2.0.2n-alpha]
 
 1. Fix generated code eslint error
+
+[2.0.2m-alpha]
+
+1. Change date format follow DD/MM/YYYY instead of user laptop
+2. Define isBillingUser, isInternalUser and isDevSupport for easy to called role
+3. Add escapeRegExp for search student list
 
 [2.0.2l-alpha]
 

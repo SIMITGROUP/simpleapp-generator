@@ -9,6 +9,8 @@
     <EventDocumentViewer></EventDocumentViewer>      
     <EventDecision/>
     <EventNotification/>
+    <SubscriptionExpirationWarning/>
+    <SubscriptionFreeBanner/>
     <NuxtPage/>
   </NuxtLayout>
 </template>

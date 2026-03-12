@@ -327,6 +327,17 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       isExecutive() {
         return this.currentGroup == "executive";
       },
+      isBillingUser() {
+        const roles = this.roles;
+        return roles.includes("tenantowner") || roles.includes("billing") || roles.includes("superadmin") || roles.includes("devbilling") || roles.includes("devsupport");
+      },
+      isInternalUser() {
+        const roles = this.roles;
+        return roles.includes("superadmin") || roles.includes("devbilling") || roles.includes("devsupport");
+      },
+      isDevSupport() {
+        return this.roles.includes("devsupport");
+      },
     },
   });
 

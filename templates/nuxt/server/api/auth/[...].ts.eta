@@ -72,10 +72,18 @@ export default NuxtAuthHandler({
                 token.accessToken = account.access_token;
                 token.refreshToken = account.refresh_token;
                 token.expiresAt = account.expires_at;
-            } else if (Date.now() < (<number>token.expiresAt) * 1000) {
                 return token;
-            }
-
+              }
+            
+              const buffer = 60;
+            
+              if (Date.now() < (<number>token.expiresAt - buffer) * 1000) {
+                return token;
+              }
+            
+              if (!token.refreshToken) {
+                return token;
+              }
             // try refresh token
             const response = await fetch(`${process.env.OAUTH2_CONFIGURL}/protocol/openid-connect/token`, {
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -92,7 +100,12 @@ export default NuxtAuthHandler({
 
             if(!response.ok) {
                 /** @todo handle refresh token failed */
-                return token
+                return {
+                    ...token,
+                    accessToken: null,
+                    expiresAt: 0,
+                    error: "RefreshAccessTokenError"
+                  };
             }
 
             return {
@@ -102,7 +115,7 @@ export default NuxtAuthHandler({
                 expiresAt: Math.floor(Date.now() / 1000 + newToken.expires_in),
                 // Fall back to old refresh token, but note that
                 // many providers may only allow using a refresh token once.
-                refreshToken: newToken.refresh_token ?? token.refresh_token,
+                refreshToken: newToken.refresh_token ?? token.refreshToken
             }
         },
         async session({ session, token, user }) {

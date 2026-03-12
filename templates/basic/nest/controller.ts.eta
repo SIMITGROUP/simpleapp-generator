@@ -99,7 +99,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   @ApiBody({ description: 'Data', type: schemas.SearchBody })
   @ApiOperation({ operationId: 'runSearch' })
   <%~ drawMiniAppScope('list') %>
-  async search(@AppUser() appuser: UserContext,@Body() data: schemas.SearchBody, @Res({ passthrough: true }) res: Response) {
+  async search(@AppUser() appuser: UserContext,@Body() data: schemas.SearchBody, @Res({ passthrough: true }) res: Response): Promise<schemas.<%= it.typename %>[]> {
     return await this._search(appuser,data, res)
   }
 
@@ -169,7 +169,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   async autoComplete(@AppUser() appuser: UserContext,
   @Query('keyword') keyword:string,
   @Body() data: schemas.<%=it.typename%>,
-  ) {
+  ): Promise<schemas.<%= it.typename %>AutoComplete[]> {
     return this._autocomplete(appuser, keyword,data);
   }
 
@@ -220,7 +220,8 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   @ApiBody({ description: 'Data', type: schemas.PatchManyRequest<schemas.<%= it.typename%>> })
   @ApiOperation({ operationId: 'runPatchMany' })
   <%~ drawMiniAppScope('patchMany') %>
-  async patchMany(@AppUser() appuser: UserContext, @Body() patchManyData: schemas.PatchManyRequest<schemas.<%= it.typename%>>) {
+  async patchMany(@AppUser() appuser: UserContext, @Body() patchManyData: schemas.PatchManyRequest<schemas.<%= it.typename%>>
+  ): Promise<schemas.UpdateManyResponse> {
     return await this._patchMany(appuser, patchManyData);
   }
 
@@ -258,7 +259,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   @ApiResponse({ status: 500, description: 'Internal error' })
   @ApiOperation({ operationId: 'runDelete' })
   <%~ drawMiniAppScope('delete') %>
-  async delete(@AppUser() appuser: UserContext,@Param('id') id: string) {
+  async delete(@AppUser() appuser: UserContext,@Param('id') id: string): Promise<schemas.<%= it.typename %>> {
     return this._delete(appuser,id);
   }
 
