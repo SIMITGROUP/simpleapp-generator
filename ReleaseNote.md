@@ -1,3 +1,7 @@
+[2.0.2p-alpha]
+
+1. Added explicit return types in generated controller endpoints to improve TypeScript type safety and resolve ESLint `no-unsafe-return` warnings
+
 [2.0.2o-alpha]
 
 1. Revert date.generate.ts for universal use

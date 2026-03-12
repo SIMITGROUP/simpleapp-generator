@@ -31,9 +31,9 @@ watch(()=>useRoute().fullPath,async (newval,oldvalue)=>{
   if(getPathPara('xorg','')!=''){
   
     if(getCurrentXorg()===''){
-      goTo('/picktenant')
+      navigateTo('/picktenant')
     }else if(!getUserProfile()?.currentGroup){
-      navigateTo('pickgroup')
+      goTo('pickgroup')
     }
     setGraphqlServer()
   }  
@@ -56,9 +56,9 @@ onMounted(async()=>{
     const currentgroup = useCookie('currentGroup').value
     //if no xorg, no enforce pick group
     if(getCurrentXorg()===''){
-      goTo('/picktenant')
+      navigateTo('/picktenant')
     }else if(!currentgroup){
-      navigateTo('/pickgroup')
+      goTo('/pickgroup')
     }
     setGraphqlServer()
   }else{
