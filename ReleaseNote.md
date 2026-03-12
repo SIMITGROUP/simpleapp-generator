@@ -1,3 +1,7 @@
+[2.0.2q-alpha]
+
+1. Added 'schema' on the TypeScript type
+
 [2.0.2p-alpha]
 
 1. Added explicit return types in generated controller endpoints to improve TypeScript type safety and resolve ESLint `no-unsafe-return` warnings

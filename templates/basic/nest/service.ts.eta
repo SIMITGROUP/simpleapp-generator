@@ -87,9 +87,15 @@ export class <%= it.typename %>Service extends SimpleAppService<schema.<%= it.ty
           <% let fml = it.jsonschema['x-simpleapp-config']['formulas'][index] %>
           // <%~ JSON.stringify(fml) %>
           //const tmp = jsonpath.query(vdata,fieldpath).filter((item:string)=>item!='')
+          <%
+            const m = String(fml.jsonPath || '').match(/^\$\.(\w+)\[\*\]/);
+            const prop = m ? m[1] : '';
+            const pascalProp = prop ? (prop[0].toUpperCase() + prop.slice(1)) : '';
+            const itemType = m ? `schema.${it.typename}${pascalProp}` : 'unknown';
+          %>
           
-            jsonpath.apply($data, '<%~ fml.jsonPath %>', function ($item: schema.<%= it.typename %>) {
-              return <%~fml.formula %>
+            jsonpath.apply($data, '<%~ fml.jsonPath %>', function ($item: <%= itemType %>) {
+              return <%~ fml.formula %>
             })
         <%}) %>
       <%} %>
