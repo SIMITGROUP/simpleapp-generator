@@ -8,7 +8,7 @@ import * as schema from './<%= camelToKebab(it.resourceName) %>.schema'
 
 <%Object.keys(it.models).forEach(function(modelname) { %>    
 
-export const Default<%= toTypeName(it.resourceName ,modelname) %> = (uuid:string) : <%= toTypeName(it.resourceName ,modelname) %> | undefined =>{
+export const Default<%= toTypeName(it.resourceName ,modelname) %> = (uuid:string) : schema.<%= toTypeName(it.resourceName ,modelname) %> | undefined =>{
     <% let model = it.models[modelname].model%>    
     <% if(model['_id'] && model['code'] && model['label']){%>
       let data: schema.<%= toTypeName(it.resourceName ,modelname) %> | undefined

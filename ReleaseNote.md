@@ -1,3 +1,8 @@
+[2.0.2r-alpha]
+
+1. Fix define types on controller fulltextsearch and setStatus
+2. Define paramType on json to update define type on service file
+
 [2.0.2q-alpha]
 
 1. Added 'schema' on the TypeScript type
