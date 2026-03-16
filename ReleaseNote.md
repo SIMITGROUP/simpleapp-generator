@@ -1,3 +1,7 @@
+[2.0.2t-alpha]
+
+1. Fix define type on service file
+
 [2.0.2s-alpha]
 
 1. Reduce expired-token issues
