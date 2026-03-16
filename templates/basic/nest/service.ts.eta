@@ -72,8 +72,13 @@ export class <%= it.typename %>Service extends SimpleAppService<schema.<%= it.ty
       <%}%>
       <%if(it.jsonschema.properties['documentStatus']){%>
         const docstatus = this.data.documentStatus
-        const statussetting = this.jsonschema['x-simpleapp-config'].allStatus?.find((item)=>item.status==docstatus)
-        if(statussetting && statussetting.readOnly) return true
+        const schemaJson = this.jsonschema as {
+          ['x-simpleapp-config']?: { allStatus?: { status: string; readOnly?: boolean }[] }
+        }
+        const statussetting = schemaJson['x-simpleapp-config']?.allStatus?.find(
+          (item) => item.status === docstatus
+        )
+        if(statussetting?.readOnly) return true
       <%}%>      
       return false            
     } 
@@ -88,7 +93,7 @@ export class <%= it.typename %>Service extends SimpleAppService<schema.<%= it.ty
           // <%~ JSON.stringify(fml) %>
           //const tmp = jsonpath.query(vdata,fieldpath).filter((item:string)=>item!='')
             jsonpath.apply($data, '<%~ fml.jsonPath %>', function ($item: schema.<%= fml?.paramType || it.typename %>) {
-              return <%~ fml.formula %>
+                return (<%~ fml.formula %>) as schema.<%= fml?.paramType || it.typename %>;
             })
         <%}) %>
       <%} %>

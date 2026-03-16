@@ -1,3 +1,8 @@
+[2.0.2s-alpha]
+
+1. Reduce expired-token issues
+2. Define type on service for readonly
+
 [2.0.2r-alpha]
 
 1. Fix define types on controller fulltextsearch and setStatus
