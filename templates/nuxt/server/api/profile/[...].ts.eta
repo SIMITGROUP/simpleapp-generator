@@ -135,7 +135,13 @@ export default defineEventHandler(async (event:any) => {
             }else{
 
                 if (error.response?.status && error.response.status == 401) {
-                    return sendRedirect(event, '/login', 401)
+                    // return sendRedirect(event, "/login", 401);
+                    reject({
+                        statusMessage: error.response.statusText,
+                        statusCode: 401,
+                        data: error.response.data,
+                    });
+                    return;
                 }
                 reject({ 
                     statusMessage: error.response.statusText, 
