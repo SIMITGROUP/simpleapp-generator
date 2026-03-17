@@ -6,22 +6,26 @@
  */
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ResourceGuard } from 'nest-keycloak-connect';
+import { AuthGuard, ResourceGuard } from 'nest-keycloak-connect';
+import type { Request } from 'express';
 
 @Injectable()
 export class CustomKeycloakGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
+    private authGuard: AuthGuard,
     private resourceGuard: ResourceGuard,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
 
     //graphql no http request, exclude from capability of x-apikey
     if (request?.headers) {
-      const apiKey = request.headers['x-apikey'];
-      const apiSecret = request.headers['x-apisecret'];
+      const apiKeyHeader = request.headers['x-apikey'];
+      const apiSecretHeader = request.headers['x-apisecret'];
+      const apiKey = Array.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader;
+      const apiSecret = Array.isArray(apiSecretHeader) ? apiSecretHeader[0] : apiSecretHeader;
       // validate apikey and apisecret at middleware level, reach here mean approved as robot
       if (apiKey && apiSecret) {
         return true;
@@ -30,8 +34,15 @@ export class CustomKeycloakGuard implements CanActivate {
 
     // If API key is not present, fall back to Keycloak authentication
     try {
-      const canActivate = await this.resourceGuard.canActivate(context);
-      return canActivate;
+      // validate and authenticate the token with keycloak
+      const authCanActivate = await this.authGuard.canActivate(context);
+      if (!authCanActivate) {
+        throw new UnauthorizedException('Invalid Keycloak token');
+      }
+
+      // then enforce resource and role based access control
+      const resourceCanActivate = await this.resourceGuard.canActivate(context);
+      return resourceCanActivate;
     } catch (error) {
       throw new UnauthorizedException('Invalid API key or Keycloak token');
     }

@@ -1,3 +1,9 @@
+[2.0.2u-alpha]
+
+1. Enforced strict Keycloak token validation on backend (via AuthGuard + UserContext), returning clear 401 for invalid/expired tokens
+2. Blocked user creation when required JWT claims are missing (e.g. uid, email)
+3. Improved frontend session handling: refresh-token failures and consistently redirect to login on 401
+
 [2.0.2t-alpha]
 
 1. Fix define type on service file
