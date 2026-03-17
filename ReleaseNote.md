@@ -1,3 +1,8 @@
+[2.0.2v-alpha]
+
+1. Stability on startup: app initialization no longer fatals on 401/302 from profile/session checks. it triggers the normal relogin flow
+3. Navigate to /login when XHR requests are transparently redirected, preventing retry loops
+
 [2.0.2u-alpha]
 
 1. Enforced strict Keycloak token validation on backend (via AuthGuard + UserContext), returning clear 401 for invalid/expired tokens

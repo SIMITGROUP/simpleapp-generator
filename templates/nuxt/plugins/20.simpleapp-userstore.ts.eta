@@ -357,7 +357,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         statusMessage: e.message,
         fatal: true,
       });
-    } else if (e?.response?.status == 302) {
+    } else if (e?.response?.status == 302 || e?.response?.status == 401) {
       //no session
       //need authentication, relogin
       if (useRoute().meta.auth !== false) {
