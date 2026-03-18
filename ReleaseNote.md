@@ -1,3 +1,32 @@
+[2.0.2v-alpha]
+
+1. Stability on startup: app initialization no longer fatals on 401/302 from profile/session checks. it triggers the normal relogin flow
+3. Navigate to /login when XHR requests are transparently redirected, preventing retry loops
+
+[2.0.2u-alpha]
+
+1. Enforced strict Keycloak token validation on backend (via AuthGuard + UserContext), returning clear 401 for invalid/expired tokens
+2. Blocked user creation when required JWT claims are missing (e.g. uid, email)
+3. Improved frontend session handling: refresh-token failures and consistently redirect to login on 401
+
+[2.0.2t-alpha]
+
+1. Fix define type on service file
+
+[2.0.2s-alpha]
+
+1. Reduce expired-token issues
+2. Define type on service for readonly
+
+[2.0.2r-alpha]
+
+1. Fix define types on controller fulltextsearch and setStatus
+2. Define paramType on json to update define type on service file
+
+[2.0.2q-alpha]
+
+1. Added 'schema' on the TypeScript type
+
 [2.0.2p-alpha]
 
 1. Added explicit return types in generated controller endpoints to improve TypeScript type safety and resolve ESLint `no-unsafe-return` warnings

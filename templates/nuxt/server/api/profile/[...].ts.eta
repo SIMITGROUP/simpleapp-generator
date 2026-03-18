@@ -6,6 +6,7 @@
  */
  
 import axios from 'axios';
+import fs from "node:fs";
 import { getServerSession } from '#auth'
 import type { Session } from 'next-auth';
 import { pathJoin } from '~/server/utils/path';
@@ -22,7 +23,7 @@ export default defineEventHandler(async (event:any) => {
         return sendRedirect(event, '/login', 401)
     }
     if(!session) {
-        throw createError({ statusText: 'Unauthorized', status: 302 })
+        return sendRedirect(event, "/login", 302);
      }
     return new Promise<any>(async (resolve, reject) => {
         
@@ -32,6 +33,10 @@ export default defineEventHandler(async (event:any) => {
         let forwardData: any = {};
 
         const req = event.node.req;
+
+        if (!accessToken || typeof accessToken !== "string") {
+            return sendRedirect(event, "/login", 302);
+        }
 
         if(req.method == 'POST' || req.method == 'PUT'  || req.method == 'PATCH') {
 
@@ -135,7 +140,9 @@ export default defineEventHandler(async (event:any) => {
             }else{
 
                 if (error.response?.status && error.response.status == 401) {
-                    return sendRedirect(event, '/login', 401)
+                    // rejecting would bubble a 401 into the client and often renders the Nuxt error page.
+                    // Instead, end the request with a redirect so the browser can enter the login flow.
+                    return sendRedirect(event, "/login", 401);
                 }
                 reject({ 
                     statusMessage: error.response.statusText, 

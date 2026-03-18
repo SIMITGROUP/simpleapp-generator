@@ -100,7 +100,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   @ApiOperation({ operationId: 'runSearch' })
   <%~ drawMiniAppScope('list') %>
   async search(@AppUser() appuser: UserContext,@Body() data: schemas.SearchBody, @Res({ passthrough: true }) res: Response): Promise<schemas.<%= it.typename %>[]> {
-    return await this._search(appuser,data, res)
+    return (await this._search(appuser, data, res)) as schemas.<%= it.typename %>[];
   }
 
 <% if(simpleappconfig.search !==undefined){%>
@@ -119,8 +119,8 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   async fulltextsearch(
     @AppUser() appuser: UserContext,
     @Body() data: schemas.TextSearchBody,
-  ) {
-    return await this._fulltextsearch(appuser, data);
+  ): Promise<schemas.<%= it.typename %>[]> {
+    return (await this._fulltextsearch(appuser, data)) as schemas.<%= it.typename %>[];
   }
 <%}%>
 
@@ -170,7 +170,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   @Query('keyword') keyword:string,
   @Body() data: schemas.<%=it.typename%>,
   ): Promise<schemas.<%= it.typename %>AutoComplete[]> {
-    return this._autocomplete(appuser, keyword,data);
+    return (await this._autocomplete(appuser, keyword, data)) as schemas.<%= it.typename %>AutoComplete[];
   }
 
   @Post()
@@ -222,7 +222,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   <%~ drawMiniAppScope('patchMany') %>
   async patchMany(@AppUser() appuser: UserContext, @Body() patchManyData: schemas.PatchManyRequest<schemas.<%= it.typename%>>
   ): Promise<schemas.UpdateManyResponse> {
-    return await this._patchMany(appuser, patchManyData);
+    return (await this._patchMany(appuser, patchManyData)) as schemas.UpdateManyResponse;
   }
 
   @Patch(':id')
@@ -260,7 +260,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   @ApiOperation({ operationId: 'runDelete' })
   <%~ drawMiniAppScope('delete') %>
   async delete(@AppUser() appuser: UserContext,@Param('id') id: string): Promise<schemas.<%= it.typename %>> {
-    return this._delete(appuser,id);
+    return (await this._delete(appuser, id)) as schemas.<%= it.typename %>;
   }
 
 /***************************** start status control api definitions *****************************************/
@@ -271,7 +271,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   @ApiBody({ description: 'Document data', type: Object })
   @Roles(Role.SuperAdmin,Role.<%= `${it.typename}_${statusname}`%>)
   <%~ drawMiniAppScope(statusname) %>
-  async setStatus<%=capitalizeFirstLetter(statusname)%>(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data:any,){
+  async setStatus<%=capitalizeFirstLetter(statusname)%>(@AppUser() appuser: UserContext,@Param('id') id: string, @Body() data:schemas.<%= it.typename %>,){
           return await this.service.setDocumentStatus(appuser,id,data,'<%=statusname%>',)
   }
 <%}%>

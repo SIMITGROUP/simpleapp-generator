@@ -75,8 +75,12 @@ export default NuxtAuthHandler({
                 return token;
               }
             
-              const buffer = 60;
+              const buffer = 300;
             
+              if (!token.expiresAt) {
+                return token;
+              }
+
               if (Date.now() < (<number>token.expiresAt - buffer) * 1000) {
                 return token;
               }
@@ -103,6 +107,7 @@ export default NuxtAuthHandler({
                 return {
                     ...token,
                     accessToken: null,
+                    refreshToken: null,
                     expiresAt: 0,
                     error: "RefreshAccessTokenError"
                   };
@@ -122,6 +127,13 @@ export default NuxtAuthHandler({
             // console.log("session", session);
             // Send properties to the client, like an access_token from a provider.
             const sessiondata:any = {...session}
+
+            if (!token.accessToken || token['error'] === 'RefreshAccessTokenError') {
+                sessiondata.accessToken = null;
+                sessiondata.error = token['error'] ?? 'MissingAccessToken';
+                return sessiondata;
+            }
+
             sessiondata.accessToken = <string>token.accessToken;
             return sessiondata;
         },

@@ -58,7 +58,7 @@ onMounted(async()=>{
     if(getCurrentXorg()===''){
       navigateTo('/picktenant')
     }else if(!currentgroup){
-      goTo('/pickgroup')
+      goTo('pickgroup')
     }
     setGraphqlServer()
   }else{
