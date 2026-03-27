@@ -1,6 +1,6 @@
+import { Field, ObjectType } from '@nestjs/graphql';
 import { ApiProperty } from '@nestjs/swagger';
-import { Field, ObjectType, ID } from '@nestjs/graphql';
-import { JSONSchema7, JSONSchema7Type, JSONSchema7Version, JSONSchema7TypeName, JSONSchema7Definition } from 'json-schema';
+import { JSONSchema7 } from 'json-schema';
 import { Permission } from 'src/simple-app/_core/resources/permission/permission.schema';
 
 export class ModifiedCollection {
@@ -168,6 +168,7 @@ export class SchemaFields {
 
 export class SimpleAppJSONSchema7 implements JSONSchema7 {
   'x-simpleapp-config': SchemaConfig;
+  type?: JSONSchema7['type'];
 }
 export const SimpleAppJSONSchema7Definition = SimpleAppJSONSchema7;
 
@@ -176,7 +177,7 @@ export class BranchPermission extends Permission {
   branch: ForeignKey;
 }
 
-export type StepData = {action:string,collection:string,id:string[],data:any[]}
+export type StepData = { action: string; collection: string; id: string[]; data: any[] };
 
 export type DocumentDictEntry = {
   docName: string;
