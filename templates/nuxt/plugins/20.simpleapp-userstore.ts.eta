@@ -52,7 +52,15 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       time: ref(""),
       xOrg: ref(""),
       moreProps: ref(),
-      tenantHealth: ref<TenantHealth>({ status: "ACTIVE" }),
+      tenantHealth: ref<TenantHealth>({
+        status: "ACTIVE",
+        message: "",
+        isLicenseAddOnAllowed: false,
+        isLicenseCancellable: false,
+        isLicenseDowngradable: false,
+        isLicenseRenewable: false,
+        isLicenseUpgradable: false,
+      }),
       // package: ref(),
       // appintegration: ref({
       //   einvoice: false,
@@ -380,7 +388,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           },
         };
       }
-    } 
+    }
     // else
     //
   }
