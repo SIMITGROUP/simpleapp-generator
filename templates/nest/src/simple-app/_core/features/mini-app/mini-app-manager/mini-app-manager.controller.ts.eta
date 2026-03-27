@@ -1,14 +1,13 @@
 import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
-import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { AppUser } from 'src/simple-app/_core/features/user-context/appuser.decorator';
 import { Roles } from 'src/simple-app/_core/features/auth/role-guard/roles.decorator';
 import { Role } from 'src/simple-app/_core/features/auth/role-guard/roles.enum';
+import { AppUser } from 'src/simple-app/_core/features/user-context/appuser.decorator';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 
 import * as schemas from '../dto';
 import { MiniAppManagerBridgeService } from './mini-app-manager-bridge.service';
-
 
 @ApiTags('MINIAPPMANAGER')
 @Controller('mini-app-manager')

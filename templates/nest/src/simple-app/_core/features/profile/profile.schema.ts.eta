@@ -1,11 +1,40 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { ForeignKey } from '../../framework/schemas';
+import { TenantHealthStatusEnum } from '@core-features/user-context/user-context.enum';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Branch } from 'src/simple-app/_core/resources/branch/branch.schema';
-import { Permission } from 'src/simple-app/_core/resources/permission/permission.schema';
-import { Role } from '../auth/role-guard/roles.enum';
 import { Organization } from '../../resources/organization/organization.schema';
 import { Tenant } from '../../resources/tenant/tenant.schema';
+import { Role } from '../auth/role-guard/roles.enum';
 export { KeyValue } from '../../framework/schemas';
+
+export class TenantHealth {
+  @ApiProperty({ enum: TenantHealthStatusEnum })
+  status: TenantHealthStatusEnum;
+
+  @ApiProperty({ type: String })
+  message: string;
+
+  @ApiProperty({ type: Boolean })
+  isLicenseRenewable: boolean;
+
+  @ApiProperty({ type: Boolean, description: 'Decide subscription portal allowed downgrade or not. Downgrade effect next renewal' })
+  isLicenseDowngradable: boolean;
+
+  @ApiProperty({ type: Boolean, description: 'Cancel effect immediatly' })
+  isLicenseCancellable: boolean;
+
+  @ApiProperty({ type: Boolean })
+  isLicenseUpgradable: boolean;
+
+  @ApiProperty({ type: Boolean })
+  isLicenseAddOnAllowed: boolean;
+
+  @ApiPropertyOptional({ type: String })
+  localGracePeriodStartDate?: string;
+
+  @ApiPropertyOptional({ type: String })
+  localGracePeriodEndDate?: string;
+}
+
 export class UserContextInfo {
   @ApiProperty({ type: String })
   _id: string;
@@ -68,6 +97,9 @@ export class UserContextInfo {
 
   @ApiProperty({ type: () => Object, description: 'Store all the rest of useful fields regarding user or branch' })
   moreProps?: Record<string, any>;
+
+  @ApiProperty({ type: () => TenantHealth, required: false })
+  tenantHealth?: TenantHealth;
 }
 
 export class ProfileUserInvites {

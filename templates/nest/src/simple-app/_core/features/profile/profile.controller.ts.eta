@@ -3,14 +3,14 @@
  * MODIFICATION OVERRIDE BY GENERATEOR
  * Author: Ks Tan
  */
-import { Controller, Get, Put, Post, Patch, Delete, Body, Query, Param, Type, Res, HttpStatus, Inject, Injectable, Scope, Req, HttpException, Request, Logger } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Logger, Param, Post } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../auth/role-guard/roles.decorator';
 import { Role } from '../auth/role-guard/roles.enum';
-import { ApiTags, ApiBody, ApiResponse, ApiOperation } from '@nestjs/swagger';
-import { UserContext } from '../user-context/user.context';
-import { ProfileService } from './profile.service';
 import { AppUser } from '../user-context/appuser.decorator';
-import { UserContextInfo, TenantPermission, RegTenant, KeyValue } from './profile.schema';
+import { UserContext } from '../user-context/user.context';
+import { KeyValue, RegTenant, TenantPermission, UserContextInfo } from './profile.schema';
+import { ProfileService } from './profile.service';
 @ApiTags('PROFILE')
 @Controller('/profile')
 export class ProfileController {
@@ -34,8 +34,8 @@ export class ProfileController {
   async getProfile(@AppUser() appUser: UserContext) {
     this.logger.debug(`access getProfile API by ${appUser.getUid()},(${appUser.getId()})`);
     const result = await this.profileservice.getProfile(appUser);
-    this.logger.debug('getProfile result is:');
-    this.logger.debug(result);
+    // this.logger.debug('getProfile result is:');
+    // this.logger.debug(result);
     if (result) {
       return result;
     } else {

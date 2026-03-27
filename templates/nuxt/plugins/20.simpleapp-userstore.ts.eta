@@ -5,12 +5,19 @@
  * Author: Ks Tan
  */
 import { defineNuxtPlugin } from "#app";
-import { PROFILEApi,ProfileUserBranch,UserContextInfo , Branch, Tenant,Organization} from "../simpleapp/generate/openapi";
-import { UserProfile } from "~/types";
-import axios, { Axios, AxiosError, AxiosResponse } from "axios";
+import axios, { AxiosResponse } from "axios";
 import _ from "lodash";
-import { group } from "console";
 import { HIGH_PRIVILEGE_ROLES } from "~/data/constant";
+import {
+  Branch,
+  Organization,
+  PROFILEApi,
+  ProfileUserBranch,
+  ProfileUserInvites,
+  Tenant,
+  TenantHealth,
+  UserContextInfo,
+} from "../simpleapp/generate/openapi";
 
 export default defineNuxtPlugin(async (nuxtApp) => {
   const useUserStore = defineStore("userstore", {
@@ -41,10 +48,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       groups: ref<string[]>([]),
       currentGroup: ref(""),
       branches: ref<ProfileUserBranch[]>([]),
-      invites: ref([]),
+      invites: ref<ProfileUserInvites[]>([]),
       time: ref(""),
-      xOrg: ref(''),
+      xOrg: ref(""),
       moreProps: ref(),
+      tenantHealth: ref<TenantHealth>({ status: "ACTIVE" }),
       // package: ref(),
       // appintegration: ref({
       //   einvoice: false,
@@ -53,9 +61,9 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     }),
 
     actions: {
-      async loadRemoteUserFromXorg(xorg:string) {
+      async loadRemoteUserFromXorg(xorg: string) {
         const { $axios, $miniAppStore, $customFieldStore } = useNuxtApp();
-        
+
         let apiurl = "";
         if (!xorg) {
           apiurl = `${useRuntimeConfig().public.appUrl}/api`;
@@ -68,12 +76,12 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         }
         return await new PROFILEApi(undefined, apiurl, $axios)
           .getProfile()
-          .then((tmp: AxiosResponse) => {            
+          .then((tmp: AxiosResponse) => {
             if (!tmp) {
               return;
             }
-            const res = tmp.data
-            this.xOrg= xorg
+            const res = tmp.data;
+            this.xOrg = xorg;
             this._id = res._id;
             this.uName = res.uName;
             this.sessionId = res.sessionId;
@@ -100,22 +108,21 @@ export default defineNuxtPlugin(async (nuxtApp) => {
             this.groups = res.groups;
             this.roles = res.roles;
             this.time = res.time;
-            
+            this.tenantHealth = res.tenantHealth ?? { status: "ACTIVE" };
+
             this.invites = res.invites;
             this.moreProps = res.moreProps;
-            
+
             if (res.branches && Array.isArray(res.branches)) {
-              const currentBranch = res.branches.find(
-                (b: any) => b.branchId === res.branchId
-              );
-              
+              const currentBranch = res.branches.find((b: any) => b.branchId === res.branchId);
+
               if (currentBranch) {
                 this.branchCode = currentBranch.branchCode;
                 this.branchName = currentBranch.branchName;
                 this.branchRecordId = currentBranch.branch?._id || currentBranch.branchRecordId;
                 this.orgCode = currentBranch.orgCode;
                 this.orgName = currentBranch.orgName;
-                
+
                 if (currentBranch.branch) {
                   this.branchInfo = {
                     ...this.branchInfo,
@@ -147,11 +154,10 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       async loadRemoteUserInfo() {
         const route = useRoute();
         let xorg = this.getCurrentXorg();
-        await this.loadRemoteUserFromXorg(xorg)
-        
+        await this.loadRemoteUserFromXorg(xorg);
       },
       getCurrentXorg() {
-        return this.xOrg
+        return this.xOrg;
       },
       async pingSession(): Promise<string> {
         let xorg = this.getCurrentXorg();
@@ -172,12 +178,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           }
         }
         const { $axios } = useNuxtApp();
-        try {          
-          const pingresult = await new PROFILEApi(
-            undefined,
-            apiurl,
-            axios
-          ).getSession();
+        try {
+          const pingresult = await new PROFILEApi(undefined, apiurl, axios).getSession();
           if (pingresult.status < 300) return Promise.resolve("ok");
           else return Promise.reject("relogin");
         } catch (e) {
@@ -188,11 +190,10 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         const apiurl = `${useRuntimeConfig().public.appUrl}/api`;
         const { $axios } = useNuxtApp();
         // console.log("decideInvitation",id,decision)
-        const result = await new PROFILEApi(
-          undefined,
-          apiurl,
-          $axios,
-        ).decideInvitation(id, decision);
+        const result = await new PROFILEApi(undefined, apiurl, $axios).decideInvitation(
+          id,
+          decision,
+        );
 
         if (result) {
           // console.log(result)
@@ -202,13 +203,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         //().then((res:AxiosResponse)=>{ }
       },
       hasHighPrivilege() {
-        return HIGH_PRIVILEGE_ROLES.some((permission) =>
-          this.roles.includes(permission),
-        );
+        return HIGH_PRIVILEGE_ROLES.some((permission) => this.roles.includes(permission));
       },
       canPerform(resourcename: string, action: string): boolean {
         const normalizedResource = resourcename.toLowerCase();
-        
+
         if (
           this.roles.includes("superadmin") ||
           this.roles.includes("tenantowner") ||
@@ -216,7 +215,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         ) {
           return true;
         }
-        
+
         const specialCases: Record<string, string[]> = {
           // paymentverify: ["admin", "manager"],
           // reminder: ["admin", "manager"],
@@ -227,33 +226,33 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           studentdescription: ["admin", "manager", "executive"],
           miniappinstallation: ["admin", "manager"],
         };
-        
+
         if (specialCases[normalizedResource]) {
           const requiredGroups = specialCases[normalizedResource];
           if (requiredGroups.some((group) => this.roles.includes(group))) {
             return true;
           }
         }
-        
+
         try {
           const routes = useRouter().getRoutes();
           const route = routes.find((r) => {
             const menuPath = r.meta?.menuPath as string | undefined;
             return menuPath && menuPath.endsWith(`/${normalizedResource}`);
           });
-          
+
           if (route?.meta?.requiredGroups) {
             const requiredGroups = route.meta.requiredGroups as string[];
             const userGroups = this.groups || [];
-            
+
             if (requiredGroups.some((group) => userGroups.includes(group))) {
               return true;
             }
           }
         } catch (e) {
-          console.error(e)
+          console.error(e);
         }
-        
+
         const checkstr = `${normalizedResource}:${action}`;
         const checkstrOriginal = `${resourcename}:${action}`;
         return this.roles.includes(checkstr) || this.roles.includes(checkstrOriginal);
@@ -268,7 +267,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           this.roles.includes("superuser")
         ) {
           return true;
-        } 
+        }
         for (let i = 0; i < this.roles.length; i++) {
           const role: string = this.roles[i];
           if (role.includes(resourcename)) {
@@ -288,7 +287,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         navigateTo(tourl, { external: true });
       },
       getUserInfo() {
-        const userinfo: UserContextInfo & {currentGroup:string} = {
+        const userinfo: UserContextInfo & { currentGroup: string } = {
           _id: this._id,
           sessionId: this.sessionId,
           tenantId: this.tenantId,
@@ -309,16 +308,17 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           offsetMinute: this.offsetMinute,
           tenantInfo: this.tenantInfo,
           orgInfo: this.orgInfo,
-          branchInfo:this.branchInfo,
+          branchInfo: this.branchInfo,
 
           fullName: this.fullName,
           branches: this.branches ?? [],
           invites: this.invites ?? [],
           roles: this.roles,
           groups: this.groups,
-          currentGroup: this.currentGroup,          
+          currentGroup: this.currentGroup,
           moreProps: this.moreProps,
-          xOrg: this.getCurrentXorg()
+          xOrg: this.getCurrentXorg(),
+          tenantHealth: this.tenantHealth,
           // package: this.package,
           // appintegration: this.appintegration,
         };
@@ -329,11 +329,21 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       },
       isBillingUser() {
         const roles = this.roles;
-        return roles.includes("tenantowner") || roles.includes("billing") || roles.includes("superadmin") || roles.includes("devbilling") || roles.includes("devsupport");
+        return (
+          roles.includes("tenantowner") ||
+          roles.includes("billing") ||
+          roles.includes("superadmin") ||
+          roles.includes("devbilling") ||
+          roles.includes("devsupport")
+        );
       },
       isInternalUser() {
         const roles = this.roles;
-        return roles.includes("superadmin") || roles.includes("devbilling") || roles.includes("devsupport");
+        return (
+          roles.includes("superadmin") ||
+          roles.includes("devbilling") ||
+          roles.includes("devsupport")
+        );
       },
       isDevSupport() {
         return this.roles.includes("devsupport");
