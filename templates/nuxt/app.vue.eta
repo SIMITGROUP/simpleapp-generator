@@ -1,17 +1,16 @@
 <template>
-  <NuxtLayout>     
-    
+  <NuxtLayout>
     <!-- <NuxtLayout :name="getLayout()">      -->
-    <ConfirmDialog></ConfirmDialog>         
+    <ConfirmDialog></ConfirmDialog>
     <DynamicDialog />
-    <SessionBlock/>
-    <OverlayHoldscreen/>
-    <EventDocumentViewer></EventDocumentViewer>      
-    <EventDecision/>
-    <EventNotification/>
-    <SubscriptionExpirationWarning/>
-    <SubscriptionFreeBanner/>
-    <NuxtPage/>
+    <SessionBlock />
+    <OverlayHoldscreen />
+    <EventDocumentViewer></EventDocumentViewer>
+    <EventDecision />
+    <EventNotification />
+    <SubscriptionFreeBanner />
+    <SubscriptionGracePeriodBanner />
+    <NuxtPage />
   </NuxtLayout>
 </template>
 
@@ -22,50 +21,50 @@
  * last change 2024-03-17
  * Author: Ks Tan
  */
-let currentXorg = getCurrentXorg()
-watch(()=>useRoute().fullPath,async (newval,oldvalue)=>{
-   if(getCurrentXorg()!=currentXorg){
-      currentXorg = getCurrentXorg()      
-      await reloadUserStore()  
-   }
-  if(getPathPara('xorg','')!=''){
-  
-    if(getCurrentXorg()===''){
-      navigateTo('/picktenant')
-    }else if(!getUserProfile()?.currentGroup){
-      goTo('pickgroup')
+let currentXorg = getCurrentXorg();
+watch(
+  () => useRoute().fullPath,
+  async (newval, oldvalue) => {
+    if (getCurrentXorg() != currentXorg) {
+      currentXorg = getCurrentXorg();
+      await reloadUserStore();
     }
-    setGraphqlServer()
-  }  
-})
+    if (getPathPara("xorg", "") != "") {
+      if (getCurrentXorg() === "") {
+        navigateTo("/picktenant");
+      } else if (!getUserProfile()?.currentGroup) {
+        goTo("pickgroup");
+      }
+      setGraphqlServer();
+    }
+  },
+);
 
-const getLayout = ()=>{
-  // const { status } = useAuth();   
-   
+const getLayout = () => {
+  // const { status } = useAuth();
   // if(status.value=='unauthenticated') return 'loginlayout'
   // else {
   //   if (isMobile()) return 'mobile'
   //   else 'default'
-  // } 
-}
+  // }
+};
 
-onMounted(async()=>{
-    const x = useAuthState()
-  if(x.data.value?.expires && x.data.value?.expires > new Date().toISOString()){
-    await reloadUserStore()
-    const currentgroup = useCookie('currentGroup').value
+onMounted(async () => {
+  const x = useAuthState();
+  if (x.data.value?.expires && x.data.value?.expires > new Date().toISOString()) {
+    await reloadUserStore();
+    const currentgroup = useCookie("currentGroup").value;
     //if no xorg, no enforce pick group
-    if(getCurrentXorg()===''){
-      navigateTo('/picktenant')
-    }else if(!currentgroup){
-      goTo('pickgroup')
+    if (getCurrentXorg() === "") {
+      navigateTo("/picktenant");
+    } else if (!currentgroup) {
+      goTo("pickgroup");
     }
-    setGraphqlServer()
-  }else{
-    if(useRoute().path!='/login'){
+    setGraphqlServer();
+  } else {
+    if (useRoute().path != "/login") {
       navigateTo("/login");
-    }    
-  } 
-    
-})
+    }
+  }
+});
 </script>
