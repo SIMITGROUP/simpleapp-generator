@@ -1,28 +1,29 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
+import isBetween from 'dayjs/plugin/isBetween';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 
 dayjs.extend(utc);
 dayjs.extend(duration);
 dayjs.extend(timezone);
+dayjs.extend(isBetween);
 
 export const getDayJs = () => {
   return dayjs;
 };
 
-
 /**
-   * this function is used to convert user time date to UTC
-   * @param date
-   * @param timeZone from appuser, example Asia/Malaysia
-   * @returns
-   */
+ * this function is used to convert user time date to UTC
+ * @param date
+ * @param timeZone from appuser, example Asia/Malaysia
+ * @returns
+ */
 export const convertToStartOfDayUTC = (date: string, timeZone: string): string => {
   const startOfDay = dayjs.tz(date, timeZone).startOf('day');
   const utcTime = startOfDay.utc().format();
   return utcTime;
-}
+};
 
 /**
  * this function is used to convert user time date to UTC
@@ -34,7 +35,7 @@ export const convertToEndOfDayUTC = (date: string, timeZone: string): string => 
   const endOfDay = dayjs.tz(date, timeZone).endOf('day');
   const utcTime = endOfDay.utc().format();
   return utcTime;
-}
+};
 
 /**
  * this function is used to convert UTC time to user timezone
@@ -44,4 +45,4 @@ export const convertToEndOfDayUTC = (date: string, timeZone: string): string => 
 export const convertUTCToTimezone = (date: string, timeZone: string): string => {
   const localTime = dayjs(date).tz(timeZone).format();
   return localTime;
-}
+};
