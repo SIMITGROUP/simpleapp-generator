@@ -1,3 +1,10 @@
+[2.0.2w-alpha]
+1. Add tenant health to user context
+2. Add Day js isBetween plugin
+3. Fix JSON schema error
+4. Fix session error
+
+
 [2.0.2v-alpha]
 
 1. Stability on startup: app initialization no longer fatals on 401/302 from profile/session checks. it triggers the normal relogin flow
