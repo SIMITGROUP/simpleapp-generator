@@ -3,6 +3,8 @@
 2. Add Day js isBetween plugin
 3. Fix JSON schema error
 4. Fix session error
+5. Refactor user-context types and improve inactive user filtering
+6. Add utcToLocalOffset utility to dayjs.
 
 
 [2.0.2v-alpha]

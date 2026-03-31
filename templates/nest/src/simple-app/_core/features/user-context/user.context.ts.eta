@@ -17,7 +17,7 @@ import { TMiniApiTokenInfo, TUserType } from 'src/simple-app/_core/framework/sch
 import { MiniAppInstallation } from 'src/simple-app/_core/resources/mini-app-installation/mini-app-installation.schema';
 
 import { Organization } from 'src/simple-app/_core/resources/organization/organization.schema';
-import { TenantClientSetting } from 'src/simple-app/_core/resources/tenant/tenant.schema';
+import { Tenant, TenantClientSetting } from 'src/simple-app/_core/resources/tenant/tenant.schema';
 
 import { Environment } from '@core-features/maintenance/schemas';
 import { TenantLicenseEnum } from '@resources/tenant/tenant.enum';
@@ -30,6 +30,7 @@ import { SimpleAppDbRevertService } from '../../framework/simple-app-db-revert.s
 import { Role } from '../auth/role-guard/roles.enum';
 import * as rolegroups from '../auth/role-guard/roles.group';
 import { TenantHealthStatusEnum } from './user-context.enum';
+import { ENV_EMAIL_ROLE_MAP, EnvEmailFieldKey, RoleGroupResolver, TenantPermissionAggregateRow } from './user-context.type';
 
 // import systemWebHooks from '../../webhooks';
 @Injectable({ scope: Scope.REQUEST })
@@ -223,7 +224,7 @@ export class UserContext extends UserContextInfo {
 
   setLicense = (license: TenantLicenseEnum) => {
     if (!this.tenantInfo) {
-      this.tenantInfo = {} as any;
+      this.tenantInfo = {} as Tenant;
     }
 
     this.tenantInfo.license = license;
@@ -300,8 +301,8 @@ export class UserContext extends UserContextInfo {
     //   return this.obtainNoTenantProfile();
     // }
     const pipelines: PipelineStage[] = [
-      //get profile
-      { $match: { uid: this.uid, tenantId: this.tenantId } },
+      //get profile (inactive users must not load org/branch/groups)
+      { $match: { uid: this.uid, tenantId: this.tenantId, active: { $ne: false } } },
       {
         $lookup: {
           from: 'tenant',
@@ -509,7 +510,7 @@ export class UserContext extends UserContextInfo {
       },
     ];
 
-    const userProfiles: UserContextInfo[] = await this.userModel.aggregate(pipelines).exec();
+    const userProfiles = await this.userModel.aggregate<UserContextInfo>(pipelines).exec();
     return userProfiles[0];
   }
 
@@ -551,7 +552,7 @@ export class UserContext extends UserContextInfo {
       });
       this.branches = userProfile['branches'];
       this.groups = userProfile['groups'] ?? [];
-      this.clientSetting = userProfile['clientSetting'] ?? {
+      this.clientSetting = userProfile.tenantInfo?.clientSetting ?? {
         auditTrail: false,
         disableClassReminder: true,
         webhook: false,
@@ -568,22 +569,20 @@ export class UserContext extends UserContextInfo {
         this.roles.push(Role.TenantInvoice_search);
       }
       if (systemEnv) {
-        // console.log("systemEnv",systemEnv)
-        const emailFields = {
-          adminEmails: 'SuperAdmin',
-          billingEmails: 'DevBilling',
-          supportEmails: 'DevSupport',
-        };
-        for (const f of Object.keys(emailFields)) {
-          if (Array.isArray(systemEnv[f]) && systemEnv[f].includes(this.email) && !this.roles.includes(Role[emailFields[f]])) {
-            this.roles.push(Role[emailFields[f]]);
+        for (const f of Object.keys(ENV_EMAIL_ROLE_MAP) as EnvEmailFieldKey[]) {
+          const emails = systemEnv[f];
+          const targetRole = ENV_EMAIL_ROLE_MAP[f];
+          if (Array.isArray(emails) && emails.includes(this.email) && !this.roles.includes(targetRole)) {
+            this.roles.push(targetRole);
           }
         }
       }
 
       // console.log('this.roles', this.roles);
       for (const group of this.groups) {
-        const roles: Role[] = rolegroups[group]();
+        const roleResolver = (rolegroups as Record<string, RoleGroupResolver | undefined>)[group];
+        if (!roleResolver) continue;
+        const roles: Role[] = roleResolver();
         //(<() => Role[]>rolegroups[group])();
         for (let r = 0; r < roles.length; r++) {
           if (!this.roles.includes(roles[r])) {
@@ -902,6 +901,8 @@ export class UserContext extends UserContextInfo {
             tenantId: {
               $gt: 0,
             },
+            // Inactive user rows must not appear on pick-tenant / org switcher
+            active: { $ne: false },
           },
         },
         {
@@ -979,10 +980,10 @@ export class UserContext extends UserContextInfo {
         },
       ];
 
-      const datas = await this.userModel.aggregate(pipelines);
+      const datas = await this.userModel.aggregate<TenantPermissionAggregateRow>(pipelines);
       for (const r of datas) {
         const perms: ProfileUserBranch[] = [];
-        for (const p of r.perms) {
+        for (const p of r.perms ?? []) {
           perms.push({
             permissionId: p._id,
             tenantId: p.tenantId,
@@ -1054,7 +1055,7 @@ export class UserContext extends UserContextInfo {
     const pipeLine: PipelineStage[] = [{ $match: { tenantId: -1 } }, { $unionWith: { coll: 'organization', pipeline: [{ $match: { orgId: this.orgId } }] } }, { $limit: 1 }];
 
     // console.log("set as static user", pipeLine)
-    const result: Organization[] = await this.userModel.aggregate(pipeLine).exec();
+    const result = await this.userModel.aggregate<Organization>(pipeLine).exec();
     // console.log("result",result)
     if (result && result.length > 0) {
       const res = result[0];
@@ -1165,7 +1166,7 @@ export class UserContext extends UserContextInfo {
       });
       this.branches = userProfile['branches'];
       this.groups = userProfile['groups'] ?? [];
-      this.clientSetting = userProfile['clientSetting'] ?? {
+      this.clientSetting = userProfile.tenantInfo?.clientSetting ?? {
         auditTrail: false,
         disableClassReminder: true,
         webhook: false,
@@ -1174,7 +1175,9 @@ export class UserContext extends UserContextInfo {
       this.roles = userProfile['roles'] ?? [Role.Everyone, Role.User];
 
       for (const group of this.groups) {
-        const roles: Role[] = rolegroups[group]();
+        const roleResolver = (rolegroups as Record<string, RoleGroupResolver | undefined>)[group];
+        if (!roleResolver) continue;
+        const roles: Role[] = roleResolver();
         for (let r = 0; r < roles.length; r++) {
           if (!this.roles.includes(roles[r])) {
             this.roles.push(roles[r]);
@@ -1248,8 +1251,9 @@ export class UserContext extends UserContextInfo {
   /**
    * Define additional properties from user into moreProps
    */
-  setMoreProps(userProfile: UserContextInfo): Record<string, any> {
+  setMoreProps(userProfile: UserContextInfo): Record<string, unknown> {
     const allprops = Object.keys(userProfile);
+    const profileRecord = userProfile as unknown as Record<string, unknown>;
     const excludekeys = [
       'created',
       'createdBy',
@@ -1280,11 +1284,11 @@ export class UserContext extends UserContextInfo {
       'uid',
       'orgRecordId',
     ];
-    const data: Record<string, any> = {};
+    const data: Record<string, unknown> = {};
     for (let i = 0; i < allprops.length; i++) {
       const key = allprops[i];
       if (!excludekeys.includes(key)) {
-        data[key] = userProfile[key];
+        data[key] = profileRecord[key];
       }
     }
 
@@ -1308,7 +1312,7 @@ export class UserContext extends UserContextInfo {
     return isodate;
   }
 
-  addTransactionStep(action: string, collection: string, id: string[], data: any[]) {
+  addTransactionStep(action: string, collection: string, id: string[], data: StepData['data']) {
     this.transSteps.push({ action: action, collection: collection, id: id, data: data });
   }
 

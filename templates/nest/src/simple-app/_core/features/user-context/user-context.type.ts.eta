@@ -1,15 +1,45 @@
-  export type BaseUserContext = {    
-      _id?: string;
-      uid?: string;
-      uname?: string;
-      fullName?: string;
-      email?: string;
-      timeZone?: string;
-      currency?: string;
-      country?: string;
-      offsetMinute?: number;
-      tenantId?:number;
-      orgId?:number;
-      branchId?:number;
+import { ProfileUserBranch } from 'src/simple-app/_core/features/profile/profile.schema';
+import { Role } from '../auth/role-guard/roles.enum';
 
+export type BaseUserContext = {
+  _id?: string;
+  uid?: string;
+  uname?: string;
+  fullName?: string;
+  email?: string;
+  timeZone?: string;
+  currency?: string;
+  country?: string;
+  offsetMinute?: number;
+  tenantId?: number;
+  orgId?: number;
+  branchId?: number;
+};
+
+export type RoleGroupResolver = () => Role[];
+
+export type EnvEmailFieldKey = 'adminEmails' | 'billingEmails' | 'supportEmails';
+
+export interface TenantPermissionAggregatePerm {
+  _id?: string;
+  tenantId?: number;
+  orgId?: number;
+  branchId?: number;
+  groups?: string[];
+  branch?: ProfileUserBranch['branch'];
+  organization?: {
+    _id?: string;
+    [key: string]: unknown;
   };
+}
+
+export interface TenantPermissionAggregateRow {
+  tenantName?: string;
+  perms?: TenantPermissionAggregatePerm[];
+}
+
+export const ENV_EMAIL_ROLE_MAP: Record<EnvEmailFieldKey, Role> = {
+  adminEmails: Role.SuperAdmin,
+  billingEmails: Role.DevBilling,
+  supportEmails: Role.DevSupport,
+};

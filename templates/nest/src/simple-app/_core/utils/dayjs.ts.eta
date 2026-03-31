@@ -46,3 +46,7 @@ export const convertUTCToTimezone = (date: string, timeZone: string): string => 
   const localTime = dayjs(date).tz(timeZone).format();
   return localTime;
 };
+
+export const utcToLocalOffset = (utcTime: string, timeZoneOffset: number) => {
+  return dayjs.utc(utcTime).utcOffset(Number(timeZoneOffset));
+};
