@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { ApiProperty } from '@nestjs/swagger';
 import { JSONSchema7 } from 'json-schema';
+import { PipelineStage } from 'mongoose';
 import { Permission } from 'src/simple-app/_core/resources/permission/permission.schema';
 
 export class ModifiedCollection {
@@ -18,12 +19,14 @@ export class DocNumberFormatResult {
 }
 
 export class SearchBody {
-  filter?: object;
+  filter?: PipelineStage.Match['$match'];
 
-  fields?: any[];
+  fields?: PipelineStage.Project['$project'];
 
-  sorts?: any[];
-  lookup?: object;
+  sorts?: PipelineStage.Sort['$sort'];
+
+  lookup?: PipelineStage.Lookup['$lookup'];
+
   pagination?: {
     pageSize?: number;
     pageNo?: number;
@@ -38,22 +41,6 @@ export enum IsolationType {
 }
 export class MoreProjectionType {
   [key: string]: string;
-}
-export class ApiEvent {
-  _id: string;
-  created: string;
-  updated?: string;
-  duration: number;
-  createdBy: string;
-  path: string;
-  ip: string;
-  method: string;
-  headers: any;
-  data?: any;
-  statusCode: number;
-  status: string;
-  errMsg?: string;
-  errData?: any;
 }
 
 export class DeleteResultType<T> {
@@ -70,6 +57,7 @@ export class DocumentStatus {
   readOnly: boolean;
   actions: string[]; //api name ['confirm','revert','close','void' and etc]
 }
+
 export enum RESTMethods {
   'post' = 'post',
   'get' = 'get',
@@ -126,14 +114,21 @@ export class ForeignKey {
   @Field()
   @ApiProperty({ type: () => String })
   _id?: string;
+
   @Field()
   @ApiProperty({ type: () => String })
   code?: string;
+
   @Field()
   @ApiProperty({ type: () => String })
   label?: string;
-  [key: string]: any;
+
+  // ! DO NOT use an index signature on your own schemas. ForeignKey is intentionally strict — only
+  // ! `_id`, `code`, and `label` are allowed. For fields with extra dynamic properties, extend this
+  // ! class or use the appropriate XxxAutoComplete type instead.
+  // [key: string]: any;
 }
+
 export class MyForeignKey {
   [collectionname: string]: string[];
 }
@@ -141,6 +136,9 @@ export class MyForeignKey {
 export class NoParam {}
 
 export class DynamicParam {
+  // ! `any` is intentional here. DynamicParam represents a fully open key-value map where both
+  // ! the keys and value types are unknown at compile time. Do not use this class for typed fields.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -163,7 +161,6 @@ export class SchemaFields {
   updatedBy?: string;
   __v?: number;
   documentStatus?: string;
-  [key: string]: any; //SimpleAppJSONSchema7 | SimpleAppJSONSchema7[] | undefined;
 }
 
 export class SimpleAppJSONSchema7 implements JSONSchema7 {
@@ -177,7 +174,18 @@ export class BranchPermission extends Permission {
   branch: ForeignKey;
 }
 
-export type StepData = { action: string; collection: string; id: string[]; data: any[] };
+export type StepData = {
+  action: string;
+
+  collection: string;
+
+  id: string[];
+
+  // ! `any[]` is intentional here. Each step in a SAGA transaction can carry data from any
+  // ! MongoDB collection, so the shape is not known until runtime.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any[];
+};
 
 export type DocumentDictEntry = {
   docName: string;

@@ -4,14 +4,27 @@
  * last change 2024-02-23
  * Author: Ks Tan
  */
-export default defineEventHandler(async (event) => {
-    const path = `${
-        process.env.OAUTH2_CONFIGURL
-    }/protocol/openid-connect/logout?redirect_uri=${encodeURIComponent(
-        process.env.AUTH_ORIGIN ?? ""
-    )}`;
+import { getToken } from '#auth';
 
-    return {
-        path: path
+export default defineEventHandler(async (event) => {
+    const token = await getToken({ event });
+    const idToken = token?.idToken as string | undefined;
+
+    // NOTE: AUTH_ORIGIN is encoded but intentionally without trailing slash —
+    // the logout composable appends the encoded path (e.g. %2Flogin%3F...) directly
+    // so Keycloak decodes the full absolute URL: https://origin/login?callbackUrl=...
+    // id_token_hint is required in Keycloak 18+ to skip the logout confirmation page.
+    // post_logout_redirect_uri MUST be last — the logout composable appends the
+    // encoded path directly to this string (e.g. %2Flogin%3FcallbackUrl%3D...)
+    // so it becomes part of the redirect URI value, not a new param.
+    let path = `${process.env.OAUTH2_CONFIGURL}/protocol/openid-connect/logout`
+        + `?client_id=${encodeURIComponent(process.env.OAUTH2_CLIENTID ?? '')}`;
+
+    if (idToken) {
+        path += `&id_token_hint=${encodeURIComponent(idToken)}`;
     }
+
+    path += `&post_logout_redirect_uri=${encodeURIComponent(process.env.AUTH_ORIGIN ?? '')}`;
+
+    return { path };
 });

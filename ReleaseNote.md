@@ -1,3 +1,8 @@
+
+[2.0.2x-alpha]
+1. Add id_token_hint to Keycloak logout 
+2. tighten types
+
 [2.0.2w-alpha]
 1. Add tenant health to user context
 2. Add Day js isBetween plugin

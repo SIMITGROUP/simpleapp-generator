@@ -33,7 +33,7 @@ export class ProfileController {
   @ApiResponse({ status: 401, type: Object, description: 'Undefine profile' })
   async getProfile(@AppUser() appUser: UserContext) {
     this.logger.debug(`access getProfile API by ${appUser.getUid()},(${appUser.getId()})`);
-    const result = await this.profileservice.getProfile(appUser);
+    const result = (await this.profileservice.getProfile(appUser)) as UserContextInfo;
     // this.logger.debug('getProfile result is:');
     // this.logger.debug(result);
     if (result) {

@@ -1,19 +1,20 @@
-import { UserContext } from '../user-context/user.context';
+import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, FilterQuery } from 'mongoose';
-import { DocNumberFormatResult, ForeignKey, IsolationType, SchemaFields } from '../../framework/schemas';
-import { DocumentNoFormat, DocumentNoFormatPreview } from './document-no-format.schema';
-import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
-import { alldocuments } from './document.dict';
+import { Branch } from '@resources/branch/branch.schema';
 import dayjs from 'dayjs';
+import { AnyObject, FilterQuery, Model } from 'mongoose';
+import { DocNumberFormatResult, ForeignKey, IsolationType } from '../../framework/schemas';
+import { UserContext } from '../user-context/user.context';
+import { DocumentNoFormat, DocumentNoFormatPreview } from './document-no-format.schema';
+import { alldocuments } from './document.dict';
 
 export class SimpleAppDocumentNoFormatService {
   constructor(@InjectModel('DocumentNoFormat') private docformat: Model<DocumentNoFormat>) {}
-  getDocumentMeta = (docType:string)=> alldocuments.find(x => x.docType === docType)
+  getDocumentMeta = (docType: string) => alldocuments.find((x) => x.docType === docType);
 
   async runListDocFormats(appUser: UserContext, doctype: string) {
     doctype = doctype.toUpperCase();
-    const searchresult = await this.docformat.aggregate([
+    const searchresult = await this.docformat.aggregate<DocumentNoFormat>([
       {
         $match: {
           docNoType: doctype,
@@ -40,7 +41,15 @@ export class SimpleAppDocumentNoFormatService {
     }
     return data;
   }
-  async generateNextNumberFromDocument(appUser: UserContext, docType: string, data: any) {
+
+  async generateNextNumberFromDocument(
+    appUser: UserContext,
+    docType: string,
+    // ! Not sure what this type is. Where does "DocumentNoFormat" come from??? Why this field is PascalCase???
+    data: object & {
+      DocumentNoFormat?: ForeignKey;
+    },
+  ) {
     let formatId = '';
     if (data.DocumentNoFormat && data.DocumentNoFormat._id) {
       formatId = data.DocumentNoFormat._id;
@@ -51,6 +60,7 @@ export class SimpleAppDocumentNoFormatService {
       code: docnoobj.formatName,
       label: docnoobj.formatName,
     };
+
     data.DocumentNoFormat = result;
     return docnoobj.result;
   }
@@ -70,27 +80,27 @@ export class SimpleAppDocumentNoFormatService {
     const result = await this.docformat.find(filter).session(session);
     if (result && result.length > 0) {
       const d: DocumentNoFormat = result[0];
-      const initNumber = d.nextNumber
+      const initNumber = d.nextNumber;
       const recordId = d._id;
       // const newdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);
 
-      const checker = await this.documentNumberChecker(appUser,doctype,d)
+      const checker = await this.documentNumberChecker(appUser, doctype, d);
 
-      if(!checker.accept){
-        d.nextNumber = initNumber
-        const errdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);        
+      if (!checker.accept) {
+        d.nextNumber = initNumber;
+        const errdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);
         throw new InternalServerErrorException(`Unique Key ${errdocno} conflict`);
       }
 
-      const newdocno = checker.newDocNo
+      const newdocno = checker.newDocNo;
       const newnextnumber = initNumber + checker.offset;
       const updatedata = { nextNumber: newnextnumber } as DocumentNoFormat;
 
       const options = process.env.BlockGenerateDocNumberWithSession ? {} : { session: session };
       const updateresult = await this.docformat.findByIdAndUpdate(recordId, updatedata, options);
-      result[0].nextNumber = initNumber
+      result[0].nextNumber = initNumber;
       // console.log('add transaction step for update document no',[result[0]])
-      appUser.addTransactionStep('update','documentnoformat',[recordId],[result[0]])
+      appUser.addTransactionStep('update', 'documentnoformat', [recordId], [result[0]]);
       if (updateresult) {
         const result: DocNumberFormatResult = {
           formatId: d._id,
@@ -107,7 +117,7 @@ export class SimpleAppDocumentNoFormatService {
     }
   }
 
-  async generateBranchDefaultDocNumbers(appUser: UserContext, data: SchemaFields) {
+  async generateBranchDefaultDocNumbers(appUser: UserContext, data: Branch) {
     const branchName = data.branchName;
     const branchCode = data.branchCode;
     const recordId = data._id;
@@ -126,9 +136,8 @@ export class SimpleAppDocumentNoFormatService {
     const docformats = alldocuments.filter((item) => item.docNumber);
     const allFormats: DocumentNoFormat[] = [];
     for (let i = 0; i < docformats.length; i++) {
-
       const doc = docformats[i];
-      if(['tenantinvoice'].includes(doc.docType)) continue;
+      if (['tenantinvoice'].includes(doc.docType)) continue;
       const pattern = doc.docNoPattern.replace('@BranchCode', branchCode);
       const formatdata: DocumentNoFormat = {
         _id: crypto.randomUUID(),
@@ -154,10 +163,10 @@ export class SimpleAppDocumentNoFormatService {
     try {
       //rollback when not able to create branch
       const result = await this.docformat.insertMany(allFormats, { session: appUser.getDBSession() });
-      const allRecordIds = result.map(item=>item._id)
-      const allLogData = result.map(item=>null)
-      
-      appUser.addTransactionStep('create','documentnoformat',allRecordIds,allLogData)
+      const allRecordIds = result.map((item) => item._id);
+      const allLogData = result.map((item) => null);
+
+      appUser.addTransactionStep('create', 'documentnoformat', allRecordIds, allLogData);
       if (!result) {
         throw new InternalServerErrorException(`Generate ${allFormats.length} document formats for "${branchCode}" failed.`, 'generateDefaultDocNumbers');
       }
@@ -203,7 +212,7 @@ export class SimpleAppDocumentNoFormatService {
     }
   };
 
-  async search(appUser, filter: FilterQuery<DocumentNoFormat>) {
+  async search(appUser: UserContext, filter: FilterQuery<DocumentNoFormat>) {
     const isolationFilter: FilterQuery<DocumentNoFormat> = {
       tenantId: appUser.tenantId,
       orgId: appUser.orgId,
@@ -228,77 +237,74 @@ export class SimpleAppDocumentNoFormatService {
 
     if (result && result.length > 0) {
       const d: DocumentNoFormat = result[0];
-      const initNumber = d.nextNumber
-      const checker = await this.documentNumberChecker(appUser,doctype,d)
+      const initNumber = d.nextNumber;
+      const checker = await this.documentNumberChecker(appUser, doctype, d);
 
-      if(!checker.accept){
-        d.nextNumber = initNumber
-        const errdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);        
+      if (!checker.accept) {
+        d.nextNumber = initNumber;
+        const errdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);
         throw new InternalServerErrorException(`Unique Key ${errdocno} conflict during request-multiple-number`);
       }
 
-
-      d.nextNumber=initNumber + checker.offset - 1 //offset will return >=1, we want start from 0
+      d.nextNumber = initNumber + checker.offset - 1; //offset will return >=1, we want start from 0
       const recordId = d._id;
-      for (let i = 0; i < quantity; i++) {        
+      for (let i = 0; i < quantity; i++) {
         const newdocno = SimpleAppDocumentNoFormatService.previewDocNo(d);
         documentNumbers.push(newdocno);
         d.nextNumber++;
       }
       const updatedata = { nextNumber: d.nextNumber } as DocumentNoFormat;
-      const options = process.env.BlockGenerateDocNumberWithSession ? {} : { session: appUser.getDBSession(), };
+      const options = process.env.BlockGenerateDocNumberWithSession ? {} : { session: appUser.getDBSession() };
       const updateresult = await this.docformat.findByIdAndUpdate(recordId, updatedata, options);
-      appUser.addTransactionStep('update','documentnoformat',[recordId],[result[0]])
+      appUser.addTransactionStep('update', 'documentnoformat', [recordId], [result[0]]);
       return documentNumbers;
     } else {
       throw new BadRequestException(`No active document number found for ${doctype}. Please update in Settings > Document Numbering Format`);
     }
   }
 
-  applyIsolationFilter (appUser:UserContext, filter:any, docType:string){
-    const docMeta = this.getDocumentMeta(docType)
-    if(docMeta.isolationType===IsolationType.tenant) {
-      filter['tenantId'] = appUser.tenantId
+  applyIsolationFilter(appUser: UserContext, filter: AnyObject, docType: string) {
+    const docMeta = this.getDocumentMeta(docType);
+    if ((docMeta.isolationType as IsolationType) === IsolationType.tenant) {
+      filter['tenantId'] = appUser.tenantId;
     }
-    if(docMeta.isolationType===IsolationType.org) {
-      filter['tenantId'] = appUser.tenantId
-      filter['orgId'] = appUser.orgId
+    if ((docMeta.isolationType as IsolationType) === IsolationType.org) {
+      filter['tenantId'] = appUser.tenantId;
+      filter['orgId'] = appUser.orgId;
     }
-    if(docMeta.isolationType===IsolationType.branch) {
-      filter['tenantId'] = appUser.tenantId
-      filter['orgId'] = appUser.orgId
-      filter['branchId'] = appUser.branchId
+    if ((docMeta.isolationType as IsolationType) === IsolationType.branch) {
+      filter['tenantId'] = appUser.tenantId;
+      filter['orgId'] = appUser.orgId;
+      filter['branchId'] = appUser.branchId;
     }
-      
-    return filter
+
+    return filter;
   }
 
-
-  async documentNumberChecker(appUser:UserContext,docType:string,docFormat:DocumentNoFormat){
-
-    const docMeta = this.getDocumentMeta(docType)
-    const collectionName = docMeta.docName.toLowerCase()
+  async documentNumberChecker(appUser: UserContext, docType: string, docFormat: DocumentNoFormat) {
+    const docMeta = this.getDocumentMeta(docType);
+    const collectionName = docMeta.docName.toLowerCase();
     const collection = this.docformat.db.collection(collectionName);
-    const codeField = docMeta.uniqueKey 
-    let newdocno = ''
+    const codeField = docMeta.uniqueKey;
+    let newdocno = '';
     let attempt = 0;
     let accept = false;
     // console.log("run documentNumberChecker")
-    for (attempt = 0; attempt < 10; attempt++) {      
-      newdocno = SimpleAppDocumentNoFormatService.previewDocNo(docFormat);        
-      const tmpFilter = { [codeField]: newdocno}
-      const filter = this.applyIsolationFilter(appUser, tmpFilter,docType)
+    for (attempt = 0; attempt < 10; attempt++) {
+      newdocno = SimpleAppDocumentNoFormatService.previewDocNo(docFormat);
+      const tmpFilter = { [codeField]: newdocno };
+      const filter = this.applyIsolationFilter(appUser, tmpFilter, docType);
       // console.log("filter",filter)
       const existDoc = await collection.findOne(filter);
-      docFormat.nextNumber += 1
+      docFormat.nextNumber += 1;
       if (existDoc) {
         continue;
       }
-      accept=true;
+      accept = true;
       // console.log('accepted at attempt=',attempt)
-      break;      
+      break;
     }
     // console.log('finally attempt',attempt+1)
-    return Promise.resolve({accept:accept,offset:attempt+1, newDocNo:newdocno})
+    return Promise.resolve({ accept: accept, offset: attempt + 1, newDocNo: newdocno });
   }
 }
