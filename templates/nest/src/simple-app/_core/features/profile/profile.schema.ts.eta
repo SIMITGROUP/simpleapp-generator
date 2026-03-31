@@ -96,7 +96,7 @@ export class UserContextInfo {
   branchInfo: Branch;
 
   @ApiProperty({ type: () => Object, description: 'Store all the rest of useful fields regarding user or branch' })
-  moreProps?: Record<string, any>;
+  moreProps?: Record<string, unknown>;
 
   @ApiProperty({ type: () => TenantHealth, required: false })
   tenantHealth?: TenantHealth;
@@ -139,7 +139,7 @@ export class ProfileUserBranch {
   @ApiProperty({ type: String })
   xOrg: string;
   @ApiProperty({ type: Object, required: false })
-  organization?: any;
+  organization?: Record<string, unknown>;
 }
 
 export class TenantPermission {
