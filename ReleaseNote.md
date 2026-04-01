@@ -1,3 +1,5 @@
+[2.0.2y-alpha]
+1. Add utcToLocalOffset function
 
 [2.0.2x-alpha]
 1. Add id_token_hint to Keycloak logout 
