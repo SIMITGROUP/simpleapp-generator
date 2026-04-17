@@ -1,3 +1,6 @@
+[2.0.3a-alpha]
+1. Add createMany controller for all nestJs resources
+
 [2.0.2y-alpha]
 1. Add utcToLocalOffset function
 

@@ -29,6 +29,7 @@ type ServiceType = {
   setData: Function;
   getAutoComplete: Function;
   fullTextSearch: Function;
+  createMany: Function;
   patchMany: Function;
 };
 
@@ -92,6 +93,10 @@ export class SimpleAppController<TService extends ServiceType, TApiSchema> {
 
   async _delete(appuser: UserContext, id: string) {
     return this.service.findIdThenDelete(appuser, id);
+  }
+
+  async _createMany(appuser: UserContext, data: TApiSchema[]) {
+    return this.service.createMany(appuser, data) as TApiSchema[];
   }
 
   async _patchMany(appuser: UserContext, patchManyData: PatchManyRequest<TApiSchema>) {

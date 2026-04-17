@@ -212,6 +212,17 @@ export class <%= it.typename %>Controller extends SimpleAppController<
     return await this._update(appuser,id, data) ;
   }
 
+  @Post('bulk-create')
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.<%= it.typename%>_create)
+  @ApiResponse({ status: 201,description: 'success',type: [schemas.<%= it.typename%>] })
+  @ApiResponse({ status: 400, description: 'bad request' })
+  @ApiResponse({ status: 500, description: 'internal error' })
+  @ApiBody({ description: 'Data', type: [schemas.<%= it.typename%>] })
+  @ApiOperation({ operationId: 'runCreateMany' })
+  async createMany(@AppUser() appuser: UserContext, @Body() data: schemas.<%= it.typename%>[]) {
+    return await this._createMany(appuser, data);
+  }
+
   @Patch('bulk-patch')
   @ApiResponse({ status: 200, description: 'success', type: schemas.UpdateManyResponse})
   @Roles(Role.SuperAdmin, Role.SuperUser, Role.<%= it.typename%>_update)
