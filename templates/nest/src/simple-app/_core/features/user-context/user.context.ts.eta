@@ -352,7 +352,7 @@ export class UserContext extends UserContextInfo {
                 as: 'o',
                 localField: 'orgId',
                 foreignField: 'orgId',
-                pipeline: [{ $project: { orgCode: 1, orgName: 1, offsetMinute: 1, timeZone: 1, currency: 1, country: 1 } }],
+                pipeline: [{ $project: { orgCode: 1, orgName: 1, offsetMinute: 1, timeZone: 1, currency: 1, country: 1, dateFormat: 1 } }],
               },
             },
             {
@@ -542,6 +542,7 @@ export class UserContext extends UserContextInfo {
       this.timeZone = userProfile['timeZone'] ?? '';
       this.currency = userProfile['currency'] ?? '';
       this.country = userProfile['country'] ?? '';
+      this.dateFormat = userProfile['dateFormat'] ?? '';
       this.offsetMinute = userProfile['offsetMinute'] ?? 0;
       this.orgRecordId = userProfile['orgRecordId'] ?? '';
       this.branchRecordId = userProfile['branchRecordId'] ?? '';
@@ -800,6 +801,7 @@ export class UserContext extends UserContextInfo {
       timeZone: this.timeZone,
       currency: this.currency,
       country: this.country,
+      dateFormat: this.dateFormat,
       //offset in minute, malaysia -480
       offsetMinute: this.offsetMinute,
       email: this.email,
@@ -1157,6 +1159,7 @@ export class UserContext extends UserContextInfo {
       this.timeZone = userProfile['timeZone'] ?? '';
       this.currency = userProfile['currency'] ?? '';
       this.country = userProfile['country'] ?? '';
+      this.dateFormat = userProfile['dateFormat'] ?? '';
       this.offsetMinute = userProfile['offsetMinute'] ?? 0;
       this.orgRecordId = userProfile['orgRecordId'] ?? '';
       this.branchRecordId = userProfile['branchRecordId'] ?? '';

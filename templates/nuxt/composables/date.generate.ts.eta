@@ -4,6 +4,11 @@
  * last change 2024-04-13
  * Author: Ks Tan
  */
+import { DateTime } from "luxon";
+import {
+  dayjsDateFormatToPrimeVue,
+  getDefaultDateFormatForCountryCode,
+} from "~/simpleapp/generate/share-libs";
 import { DurationType } from "~/types";
 
 const convertToDate = (date: Date | string) => {
@@ -13,20 +18,24 @@ const convertToDate = (date: Date | string) => {
 //after review
 export const today = () => useDayjs()().format("YYYY-MM-DD");
 
+export const formatDateByOrgFormat = (date: Date | string) =>
+  useDayjs()(date).format(getDateFormat());
+
+export const formatDateTimeByOrgFormat = (date: Date | string) =>
+  useDayjs()(date).format(getDateTimeFormat());
+
 /**
  * convert date object or ISO8601 date become local datetime string
  * @param date date|string
  * @returns local shortform date-time
  */
-export const dateRenderToDateTimeStr = (date: Date | string) =>
-  convertToDate(date).toLocaleString().replace(",", " ").slice(0, -3);
+export const dateRenderToDateTimeStr = (date: Date | string) => formatDateTimeByOrgFormat(date);
 /**
  * convert date object or ISO datestring become local date string
  * @param date date|string
  * @returns local short form date
  */
-export const dateRenderToDateStr = (date: Date | string) =>
-  convertToDate(date).toLocaleDateString().replace(",", " ");
+export const dateRenderToDateStr = (date: Date | string) => formatDateByOrgFormat(date);
 /**
  * convert date object or ISO datestring become time string (without seconds)
  * @param date date|string
@@ -116,18 +125,32 @@ export const toUTCDate = (date: string | Date) => useDayjs().utc(date).format(ge
 export const toUTCDateTime = (date: string | Date) =>
   useDayjs().utc(date).format(getDateTimeFormat());
 export const toUTCTime = (date: string | Date) => useDayjs().utc(date).format("HH:mm");
-export const getDateFormat = (): string => "DD-MM-YYYY";
-export const getDateTimeFormat = (): string => "DD-MM-YYYY HH:mm";
+export const getDateFormat = (): string => {
+  const profile = getUserProfile();
+  const orgDateFormat = profile?.orgInfo?.dateFormat?.trim();
+  if (orgDateFormat) return orgDateFormat;
+  return getDefaultDateFormatForCountryCode(profile?.country);
+};
+
+export const getDateTimeFormat = (): string => `${getDateFormat()} HH:mm`;
 export const calculateHourDifferent = (date1: Date, date2: Date) =>
   (date1.getTime() - date2.getTime()) / 60 / 60 / 1000;
-export const getPrimevueCalendarDateFormat = () => {
-  const country = <string>getUserProfile()?.country;
-  return "dd/mm/yy";
-};
+export const getPrimevueCalendarDateFormat = () => dayjsDateFormatToPrimeVue(getDateFormat());
 
 export const addTime = (date: Date | string, duration: number, unit: DurationType) =>
   getDayJs()(date).add(duration, "hour").toDate();
 
 export const utcToLocalOffset = (utcTime: string, timeZoneOffset: number) => {
   return useDayjs().utc(utcTime).utcOffset(Number(timeZoneOffset));
+};
+
+export const getOffsetMinutesTimeZone = (timeZone: string, date: Date = new Date()): number => {
+  try {
+    // Keep JS Date.getTimezoneOffset sign convention:
+    // UTC+7 => -420, UTC-5 => 300
+    const luxonOffset = DateTime.fromJSDate(date).setZone(timeZone).offset;
+    return luxonOffset * -1;
+  } catch {
+    return new Date().getTimezoneOffset();
+  }
 };
