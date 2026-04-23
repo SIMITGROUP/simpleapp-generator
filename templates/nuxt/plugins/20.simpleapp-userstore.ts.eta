@@ -36,6 +36,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       timeZone: ref(""),
       currency: ref(""),
       country: ref(""),
+      dateFormat: ref(""),
       offsetMinute: ref(0),
       tenantInfo: ref<Tenant>({} as Tenant),
       orgInfo: ref<Organization>({} as Organization),
@@ -105,6 +106,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
             this.timeZone = res.timeZone;
             this.currency = res.currency;
             this.country = res.country;
+            this.dateFormat = res.dateFormat ?? "";
             this.offsetMinute = res.offsetMinute;
             this.tenantInfo = res?.tenantInfo;
             this.orgInfo = res?.orgInfo;
@@ -313,6 +315,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           currency: this.currency,
           timeZone: this.timeZone,
           country: this.country,
+          dateFormat: this.dateFormat,
           offsetMinute: this.offsetMinute,
           tenantInfo: this.tenantInfo,
           orgInfo: this.orgInfo,

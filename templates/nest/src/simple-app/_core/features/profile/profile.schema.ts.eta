@@ -68,6 +68,8 @@ export class UserContextInfo {
   currency: string;
   @ApiProperty({ type: String })
   country: string;
+  @ApiProperty({ type: String })
+  dateFormat?: string;
   @ApiProperty({ type: Number })
   offsetMinute: number;
   @ApiProperty({ type: String })

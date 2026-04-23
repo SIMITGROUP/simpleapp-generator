@@ -1,3 +1,8 @@
+[2.0.3b-alpha]
+1. Add dateformat in user context
+2. Add allow downloads
+3. Add getTimezoneOffsetMinutesByTimeZone (minutes to add to local time to get UTC, which flips the sign)
+
 [2.0.3a-alpha]
 1. Add createMany controller for all nestJs resources
 
