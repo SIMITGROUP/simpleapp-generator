@@ -4,42 +4,53 @@
  * last change 2024-02-24
  * Author: Ks Tan
  */
-import {getAllDocuments} from '~/simpleapp/generate/commons/documents'
-import { FormCrudEvent,SimpleAppDocumentType } from '~/types'
-export const getDocument = (docname:SimpleAppDocumentType) =>{
-        return getAllDocuments().find((item)=>item.docName==docname)   //?.docClass
-}
+import { getAllDocuments } from "~/simpleapp/generate/commons/documents";
+import { FormCrudEvent, SimpleAppDocumentType } from "~/types";
+export const getDocument = (docname: SimpleAppDocumentType | string) => {
+  const normalizedDocName = `${docname ?? ""}`.trim().toLowerCase();
+  if (!normalizedDocName) return undefined;
+
+  return getAllDocuments().find((item) => item.docName?.toLowerCase() == normalizedDocName); //?.docClass
+};
 
 // (appuser: UserContext, filter: any) => Promise<void>;
-export const onScreenAddDocument = <T>(docname:SimpleAppDocumentType,paras?:T,after?:(eventType:FormCrudEvent, data:T,visible:Ref<boolean>)=>Promise<void>)=>{
-        useNuxtApp().$event('ViewRecord',{
-            documentName: docname,
-            eventId:randomUUID(),
-            _id:'new',
-            paras:paras,
-            document: getDocument(docname)?.docClass,
-            viewer: getDocument(docname)?.viewer,    
-            after: (eventType:FormCrudEvent, data: any,visible:Ref<boolean>) => {
-                //do nothing
-                if(after)after(eventType,data as T,visible)
-            },
-            label:t(docname)
-        
-          })
-    }
-    export const onScreenEditDocument = <T>(docname:SimpleAppDocumentType,_id:string,after?:(eventType:FormCrudEvent, data:T,visible:Ref<boolean>)=>Promise<void>,autoclose:number=1)=>{
-        
-        useNuxtApp().$event('ViewRecord',{
-            documentName: docname,
-            eventId:randomUUID(),
-            _id:_id,
-            autoclose:autoclose,
-            document: getDocument(docname)?.docClass,
-            viewer: getDocument(docname)?.viewer,    
-            after: async (eventType:FormCrudEvent, data: any,visible:Ref<boolean>) => {
-                //do nothing
-                 if(after)after(eventType,data as T,visible)
-            },
-            label:t(docname)        
-          })
-    }
+export const onScreenAddDocument = <T>(
+  docname: SimpleAppDocumentType,
+  paras?: T,
+  after?: (eventType: FormCrudEvent, data: T, visible: Ref<boolean>) => Promise<void>,
+) => {
+  useNuxtApp().$event("ViewRecord", {
+    documentName: docname,
+    eventId: randomUUID(),
+    _id: "new",
+    paras: paras,
+    document: getDocument(docname)?.docClass,
+    viewer: getDocument(docname)?.viewer,
+    after: (eventType: FormCrudEvent, data: any, visible: Ref<boolean>) => {
+      //do nothing
+      if (after) after(eventType, data as T, visible);
+    },
+    label: t(docname),
+  });
+};
+
+export const onScreenEditDocument = <T>(
+  docname: SimpleAppDocumentType,
+  _id: string,
+  after?: (eventType: FormCrudEvent, data: T, visible: Ref<boolean>) => Promise<void>,
+  autoclose: number = 1,
+) => {
+  useNuxtApp().$event("ViewRecord", {
+    documentName: docname,
+    eventId: randomUUID(),
+    _id: _id,
+    autoclose: autoclose,
+    document: getDocument(docname)?.docClass,
+    viewer: getDocument(docname)?.viewer,
+    after: async (eventType: FormCrudEvent, data: any, visible: Ref<boolean>) => {
+      //do nothing
+      if (after) after(eventType, data as T, visible);
+    },
+    label: t(docname),
+  });
+};

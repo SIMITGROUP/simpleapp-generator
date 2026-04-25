@@ -4,27 +4,25 @@
  * Author: Ks Tan
  */
 
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import countrytimezone from 'countries-and-timezones';
-import countryToCurrency, { Currencies, Countries } from 'country-to-currency';
-import { Injectable, Scope, Inject, Logger, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import countryToCurrency from 'country-to-currency';
 import { UserContext } from '../user-context/user.context';
 // import { RegTenant } from './profile.types';
-import * as mongoose from 'mongoose';
-import { InjectConnection } from '@nestjs/mongoose';
-import { TenantService } from '../../resources/tenant/tenant.service';
-import { OrganizationService } from '../../resources/organization/organization.service';
 import { BranchService } from '../../resources/branch/branch.service';
-import { UserService } from '../../resources/user/user.service';
+import { OrganizationService } from '../../resources/organization/organization.service';
 import { PermissionService } from '../../resources/permission/permission.service';
+import { TenantService } from '../../resources/tenant/tenant.service';
+import { UserService } from '../../resources/user/user.service';
 
-import { Tenant } from '../../resources/tenant/tenant.schema';
-import { Organization } from '../../resources/organization/organization.schema';
 import { Branch } from '../../resources/branch/branch.schema';
-import { User } from '../../resources/user/user.schema';
+import { Organization } from '../../resources/organization/organization.schema';
 import { KeyValue, Permission } from '../../resources/permission/permission.schema';
+import { Tenant } from '../../resources/tenant/tenant.schema';
+import { User } from '../../resources/user/user.schema';
 
-import { UserContextInfo } from './profile.schema';
 import { PhotoService } from 'src/simple-app/features/upload-file/photo/photo.service';
+import { UserContextInfo } from './profile.schema';
 const Base64URL = require('@darkwolf/base64url');
 @Injectable()
 export class ProfileService {
@@ -90,13 +88,12 @@ export class ProfileService {
   async createTenant(appuser: UserContext, tenantName: string, timeZone: string, utcOffset: number, businessType: string, mobileNo: string, interestedInSales?: boolean) {
     // try{
 
-    
     const timezonedata = countrytimezone.getCountriesForTimezone(timeZone)[0];
     const countryCode = timezonedata['id'];
     const countryName = timezonedata['name'];
     const currencyCode = countryToCurrency[countryCode];
 
-    appuser.startTransaction()
+    appuser.startTransaction();
     const tenantdata: Tenant = {
       tenantId: 1,
       tenantName: tenantName,
@@ -159,13 +156,13 @@ export class ProfileService {
       workEnd: '22:00:00',
       workingHours: [],
       offdays: ['sat', 'sun'],
-      street1: '11, My Street 1',
-      street2: 'My Street 2',
-      postcode: '11111',
-      city: 'My City',
+      street1: '',
+      street2: '',
+      postcode: '',
+      city: '',
       tel: mobileNo,
       email: appuser.getEmail(),
-      region: 'My Region',
+      region: '',
       country: countryName,
       active: true,
       orgId: orgResult.orgId,

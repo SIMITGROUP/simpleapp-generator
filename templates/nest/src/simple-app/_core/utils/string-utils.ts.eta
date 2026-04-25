@@ -1,4 +1,27 @@
-export const camelToKebab = (value) => value.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+export const camelToKebab = (value: string) => value.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
-export const escapeRegExp = (value: string): string =>
-  value.replace(/[\\^$.*+?()\[\]{}|]/g, '\\$&');
+export const isValidEmail = (value: unknown): value is string => typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+export const nameFromEmail = (email: string): string => {
+  return email.split('@')[0];
+};
+
+export const escapeRegExp = (value: string): string => value.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+
+export function paddedUniqueCodeGenerator(usedCodes: Set<string>, prefix = 'LVL', padSize = 3) {
+  let index = 1;
+
+  const format = (n: number) => `${prefix}_${String(n).padStart(padSize, '0')}`;
+
+  return () => {
+    let code: string;
+
+    do {
+      code = format(index++);
+    } while (usedCodes.has(code));
+
+    usedCodes.add(code);
+
+    return code;
+  };
+}

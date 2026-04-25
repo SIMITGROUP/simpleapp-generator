@@ -1,3 +1,8 @@
+[2.0.3c-alpha]
+1. Remove profile service default data
+2. Fix simple app intercepter cannot capture correct error message
+3. Add various string utils
+
 [2.0.3b-alpha]
 1. Add dateformat in user context
 2. Add allow downloads
