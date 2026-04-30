@@ -1,3 +1,7 @@
+[2.0.3d-alpha]
+1. Fix generator no generate sub level enum
+2. Fix schema no use enum
+
 [2.0.3c-alpha]
 1. Remove profile service default data
 2. Fix simple app intercepter cannot capture correct error message

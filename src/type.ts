@@ -39,6 +39,7 @@ export type FieldModel = {
   required?: boolean;
   example?: any;
   //   examples?: any;
+  enum?: any[]; // allowed values — preserved so templates can render enum props correctly
 };
 
 // export type SchemaCategoryModel = {

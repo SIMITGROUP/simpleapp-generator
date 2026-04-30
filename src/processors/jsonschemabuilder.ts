@@ -384,6 +384,7 @@ const getField = (
   if (obj.description) f.description = obj.description;
   if (obj.format) f.format = obj.format;
   if (obj.examples) f.example = obj.examples;
+  if (obj.enum) f.enum = obj.enum as any[];
   if (obj.default) {
     f.default = obj.default;
   } else {

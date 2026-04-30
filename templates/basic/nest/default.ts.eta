@@ -6,6 +6,36 @@
  */
 import * as schema from './<%= camelToKebab(it.resourceName) %>.schema'
 
+<%
+  /**
+   * PRE-PASS: collect every enum class name used across all models.
+   *
+   * WHY: enum fields are typed as their enum class (e.g. TenantLicenseTypeEnum),
+   * so any default value must be written as EnumClass.KEY — not a raw string.
+   * We need to import those classes at the top of the generated file.
+   *
+   * buildDefEnumMap / resolveEnumBaseName / toTypeName are helpers injected by
+   * getCodeGenHelper() in generate.ts and available in every template context.
+   *
+   * We use toTypeName(it.resourceName, modelName) so that a raw model key like
+   * "Tuitionclass" is normalized to the correct typename "TuitionClass" before
+   * being used as an enum name prefix — matching what enum.ts.eta generates.
+   */
+  const defEnumMap = buildDefEnumMap(it.jsonschema);
+  const usedEnumNames = new Set();
+  for (const [modelName, modelData] of Object.entries(it.models)) {
+    for (const [fieldName, fieldObj] of Object.entries(modelData.model)) {
+      if (fieldObj && typeof fieldObj === 'object' && !Array.isArray(fieldObj) &&
+          fieldObj.type === 'string' && Array.isArray(fieldObj.enum) && fieldObj.enum.length > 0) {
+        usedEnumNames.add(resolveEnumBaseName(fieldObj.enum, defEnumMap, toTypeName(it.resourceName, modelName), fieldName) + 'Enum');
+      }
+    }
+  }
+%>
+<% if (usedEnumNames.size > 0) { %>
+import { <%~ [...usedEnumNames].join(', ') %> } from './<%= camelToKebab(it.resourceName) %>.enum';
+<% } %>
+
 <%Object.keys(it.models).forEach(function(modelname) { %>    
 
 export const Default<%= toTypeName(it.resourceName ,modelname) %> = (uuid:string) : schema.<%= toTypeName(it.resourceName ,modelname) %> | undefined =>{
@@ -36,8 +66,37 @@ export const Default<%= toTypeName(it.resourceName ,modelname) %> = (uuid:string
             branchId : 0,  //it will override by save handle
           <%}else if(key=='doctype'){ %>
             doctype : '<%=it.doctype.toUpperCase()%>',
-          <% } else if(typeof field.default !='undefined' && field.type=='string'){%> 
-            <%=key%> : '<%= field.default  %>',          
+          <% } else if(typeof field === 'object' && !Array.isArray(field) && Array.isArray(field.enum) && field.enum.length > 0) { %>
+            <%
+              /**
+               * ENUM DEFAULT: output EnumClass.KEY instead of a raw string.
+               *
+               * WHY: the field is typed as the enum class (e.g. TenantLicenseTypeEnum),
+               * so assigning a plain string like 'free' would be a TypeScript type error.
+               * We must write TenantLicenseTypeEnum.FREE instead.
+               *
+               * WHY check field.enum.includes(field.default):
+               * getField() in jsonschemabuilder.ts always sets f.default='' for string fields,
+               * even when the schema has no explicit default. If '' is not an enum value, that
+               * synthetic default is meaningless — outputting EnumClass.NONE would be wrong.
+               * Only emit a concrete enum value when the default is actually in the enum list;
+               * otherwise fall back to undefined so TypeScript/Mongoose use their own defaults.
+               *
+               * Key mapping rule: '' → 'NONE', otherwise value.toUpperCase()
+               * This must match the key names generated in enum.ts.eta.
+               */
+              const enumBaseName = resolveEnumBaseName(field.enum, defEnumMap, toTypeName(it.resourceName, modelname), key);
+              const enumClassName = enumBaseName + 'Enum';
+              const hasValidDefault = field.enum.includes(field.default);
+              const enumKey = field.default === '' ? 'NONE' : camelToScreamingSnake(String(field.default));
+            %>
+            <% if (hasValidDefault) { %>
+            <%=key%> : <%=enumClassName%>.<%=enumKey%>,
+            <% } else { %>
+            <%=key%> : undefined,
+            <% } %>
+          <% } else if(typeof field.default !='undefined' && field.type=='string'){%>
+            <%=key%> : '<%= field.default  %>',
           <%} else if(typeof field.default !='undefined' && JSON.stringify(field.default)=='{}'){%>           
           //  <%=key%> : <%~ JSON.stringify(field.default) %>,
           <%} else if(typeof field.default !='undefined'){%>           

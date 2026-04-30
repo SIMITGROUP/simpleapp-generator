@@ -1,16 +1,90 @@
-<% 
-const properties = it.jsonschema.properties
-const fnames = Object.keys(properties) 
-for(const fname of fnames){
-    const obj = properties[fname]
+<%
+/**
+ * ENUM GENERATOR TEMPLATE
+ *
+ * Generates TypeScript enum declarations from a JSON Schema.
+ *
+ * HOW IT WORKS:
+ *   1. Enums defined in "$defs" are generated first (shared/reusable enums, no typename prefix).
+ *   2. Inline enums found on properties are generated next (typename + field path as prefix).
+ *   3. DEDUPLICATION: $RefParser.dereference() is called before this template runs,
+ *      meaning all "$ref" pointers are already replaced with the actual schema inline.
+ *      Without deduplication, a property that originally had "$ref": "#/$defs/licenseType"
+ *      would generate its own enum even though LicenseTypeEnum already exists from step 1.
+ *      To prevent this, we fingerprint each $defs enum (sorted values joined as string)
+ *      and skip any inline property whose enum values match that fingerprint.
+ */
 
-    if(obj.type=='string' && Array.isArray(obj.enum) && obj.enum.length>0){ 
-        %>
-    export enum <%=it.typename%><%= upperFirstCase(fname)%>Enum{
-        <%for(const val of obj.enum){        
+// buildDefEnumMap and resolveEnumBaseName are shared helpers injected by getCodeGenHelper() in generate.ts.
+// buildDefEnumMap: reads $defs, returns Map<fingerprint, baseName> (e.g. "TenantLicenseType")
+// resolveEnumBaseName: looks up fingerprint in map, falls back to modelName+fieldName for inline enums
+const defEnumMap = buildDefEnumMap(it.jsonschema);
+
+// Build the defEnums list (name + values) and a fingerprint Set for deduplication from the map.
+const defSignatures = new Set(defEnumMap.keys());
+const defEnums = [];
+const defs = it.jsonschema.$defs || it.jsonschema.definitions || {};
+for (const [defName, defObj] of Object.entries(defs)) {
+    // Only process string enums (ignore object/array definitions in $defs)
+    if (defObj.type === 'string' && Array.isArray(defObj.enum) && defObj.enum.length > 0) {
+        const sig = defObj.enum.slice().sort().join('|');
+        // Enum name comes from the map: e.g. defsPrefix="Tenant", defName="licenseType" → "TenantLicenseType"
+        defEnums.push({ name: defEnumMap.get(sig), values: defObj.enum });
+    }
+}
+
+/**
+ * Recursively walk schema properties and collect inline enums.
+ *
+ * @param {object} properties - the "properties" object from a JSON Schema node
+ * @param {string} prefix     - accumulated name prefix (typename + parent field names)
+ * @returns {{ name: string, values: string[] }[]}
+ */
+function collectEnums(properties, prefix) {
+    const results = [];
+
+    for (const fname of Object.keys(properties)) {
+        const obj = properties[fname];
+
+        // Build the enum name by appending the current field name to the prefix.
+        // e.g. prefix="TenantSubscription", fname="currency" → "TenantSubscriptionCurrencyEnum"
+        const enumName = prefix + upperFirstCase(fname);
+
+        if (obj.type === 'string' && Array.isArray(obj.enum) && obj.enum.length > 0) {
+            const sig = obj.enum.slice().sort().join('|');
+
+            // Skip if this property's enum values exactly match a $defs enum.
+            // This means the property was originally a "$ref" that got inlined by dereference().
+            // The shared enum is already generated from $defs above — no duplicate needed.
+            if (!defSignatures.has(sig)) {
+                results.push({ name: enumName, values: obj.enum });
+            }
+        }
+
+        // Recurse into nested objects so sub-level enums are also captured.
+        // e.g. subscription.currency → TenantSubscriptionCurrencyEnum
+        if (obj.type === 'object' && obj.properties) {
+            results.push(...collectEnums(obj.properties, enumName));
+        }
+
+        // Recurse into array item schemas in case items have object properties with enums.
+        if (obj.type === 'array' && obj.items && obj.items.properties) {
+            results.push(...collectEnums(obj.items.properties, enumName));
+        }
+    }
+
+    return results;
+}
+
+// Collect inline enums from top-level properties (and all nested levels)
+const inlineEnums = collectEnums(it.jsonschema.properties, it.typename);
+
+// Output: $defs enums first, then inline enums
+for (const enumDef of [...defEnums, ...inlineEnums]) {
 %>
-            '<%= val.toUpperCase()%>' = '<%= val %>',        
+    export enum <%=enumDef.name%>Enum{
+        <%for(const val of enumDef.values){%>
+            '<%= val === '' ? 'NONE' : camelToScreamingSnake(val)%>' = '<%= val %>',
         <%}%>
     }
-   <%}%>
 <%}%>

@@ -12,17 +12,17 @@ import * as mongoose from 'mongoose';
 
 export * from 'src/simple-app/_core/framework/schemas';
 
-<% 
+<%
   const getFieldType =(proptype, typename,actionname)=>{
     const systemtypes = ['Boolean','boolean','string','String','number','Number','object','Object','integer','Integer']
     if(!typename) throw actionname +" undefine schema";
-    let tmptypename = typename.replace('[','').replace(']','')        
+    let tmptypename = typename.replace('[','').replace(']','')
     if(proptype=='schema'){
-      tmptypename= upperFirstCase(tmptypename)        
+      tmptypename= upperFirstCase(tmptypename)
     }else if(systemtypes.includes(typename)){
         tmptypename = tmptypename.toLowerCase();
     }
-    
+
     if(typename.includes('[')){
       return  proptype=='schema' ?  `[${tmptypename}]` : `${tmptypename}[]`
     }else{
@@ -30,6 +30,42 @@ export * from 'src/simple-app/_core/framework/schemas';
     }
   }
 %>
+
+<%
+  /**
+   * ENUM NAME RESOLUTION
+   *
+   * buildDefEnumMap and resolveEnumBaseName are shared helpers injected by getCodeGenHelper()
+   * in generate.ts — the single source of truth for this logic.
+   *
+   * buildDefEnumMap: reads $defs from the schema, returns Map<fingerprint, baseName>
+   *   e.g. licenseType in $defs + resourceName "tenant" → "TenantLicenseType"
+   *
+   * resolveEnumBaseName: looks up fingerprint in map (shared $defs enum),
+   *   falls back to modelName+fieldName for inline enums
+   *   e.g. model "TenantSubscription", field "currency" → "TenantSubscriptionCurrency"
+   */
+  const defEnumMap = buildDefEnumMap(it.jsonschema);
+
+  // Pre-pass: walk all models to collect every enum class name that will be used.
+  // This lets us generate a single import statement at the top of the file,
+  // so @Prop and @ApiProperty can reference the enum class directly instead of passing inline values.
+  const usedEnumNames = new Set();
+  for (const [modelName, modelData] of Object.entries(it.models)) {
+    for (const [fieldName, fieldObj] of Object.entries(modelData.model)) {
+      if (fieldObj && typeof fieldObj === 'object' && !Array.isArray(fieldObj) &&
+          fieldObj.type === 'string' && Array.isArray(fieldObj.enum) && fieldObj.enum.length > 0) {
+        // toTypeName converts raw model key (e.g. "TuitionclassScheduleSetting") to correctly-cased
+        // typename (e.g. "TuitionClassScheduleSetting") — same convention enum.ts.eta uses
+        usedEnumNames.add(resolveEnumBaseName(fieldObj.enum, defEnumMap, toTypeName(it.resourceName, modelName), fieldName) + 'Enum');
+      }
+    }
+  }
+%>
+
+<% if (usedEnumNames.size > 0) { %>
+import { <%~ [...usedEnumNames].join(', ') %> } from './<%= camelToKebab(it.resourceName) %>.enum';
+<% } %>
 
 <% const draw = (it, obj, key, currentModelName) => { %>    
     <%
@@ -67,11 +103,24 @@ export * from 'src/simple-app/_core/framework/schemas';
         @Field(() => [<%=newtypename %>])
         @ApiProperty({type: ()=>[<%= newtypename  %>], required: <%= required %> })                    
         <%= key %> <%=required ? '' :'?' %>:  <%= getFieldType('type', newtypename, '') %>[];        
+    <% } else if(obj.type === 'string' && Array.isArray(obj.enum) && obj.enum.length > 0) { %>
+        <%
+          // Resolve the enum class name, then pass values inline to avoid needing an import.
+          // @Prop   — tells Mongoose to validate against allowed values
+          // @Field  — GraphQL treats it as String (enums need a separate GQL enum registration)
+          // @ApiProperty — enum + enumName tells Swagger to render a dropdown with the correct type name
+          const enumBaseName = resolveEnumBaseName(obj.enum, defEnumMap, toTypeName(it.resourceName, currentModelName), key);
+          const enumClassName = enumBaseName + 'Enum';
+        %>
+        @Prop()
+        @Field(() => String)
+        @ApiProperty({ enum: <%= enumClassName %>, required: <%= required %> })
+        <%= key %> <%=required ? '' :'?' %>: <%= enumClassName %>;
     <% }else{%>
         @Prop()
-        @Field()                
+        @Field()
         @ApiProperty({type: () => <%= getFieldType('schema',  obj.type,'') %> , required: <%= required %>})
-        <%= key %> <%=required ? '' :'?' %>:  <%= getFieldType('type',  obj.type,'') %>;        
+        <%= key %> <%=required ? '' :'?' %>:  <%= getFieldType('type',  obj.type,'') %>;
     <% } %>
 <% } %>
 
@@ -123,7 +172,9 @@ export class <%=autoCompleteModelName %> {
 
     <% if(it.moreAutoComplete && Array.isArray(it.moreAutoComplete)) { %>
         <% it.moreAutoComplete.forEach(function(field){ %>
-            <% draw(it, it.models[it.apiSchemaName].model[field], field, autoCompleteModelName) %>
+            <% /* Pass it.apiSchemaName (main model) not autoCompleteModelName so enum names resolve
+                   to the same class as the main schema (e.g. CategoryCategoryTypeEnum, not CategoryAutoCompleteCategoryTypeEnum) */ %>
+            <% draw(it, it.models[it.apiSchemaName].model[field], field, it.apiSchemaName) %>
 
         <% }) %>
     <% } %>
