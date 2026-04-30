@@ -1,3 +1,6 @@
+[2.0.3e-alpha]
+1. Fix eslint error
+
 [2.0.3d-alpha]
 1. Fix generator no generate sub level enum
 2. Fix schema no use enum

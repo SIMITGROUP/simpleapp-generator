@@ -4,10 +4,9 @@ import { MiniAppInstallationService } from 'src/simple-app/_core/resources/mini-
 import { MiniAppManagerPolicyService } from './mini-app-manager-policy.service';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { MiniAppManagerProcessor } from './mini-app-manager.processor';
-import { DynamicParam,MiniApp ,CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail } from '../dto';
-import { MiniAppEnvEnum, MiniAppStatusEnum } from 'src/simple-app/_core/resources/mini-app/mini-app.enum';
+import { DynamicParam, MiniApp, CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail } from '../dto';
+import { MiniAppAccessVisibilityEnum, MiniAppEnvEnum, MiniAppStatusEnum } from 'src/simple-app/_core/resources/mini-app/mini-app.enum';
 import { Model } from 'mongoose';
-import { MiniAppManagerEnvEnum } from './mini-app-manager.enum';
 import _ from 'lodash';
 
 @Injectable()
@@ -70,14 +69,13 @@ export class MiniAppManagerEnvDevelopmentService extends MiniAppManagerProcessor
     // Validate Original Code Instead Of Processed One, Because Will Check End With ('_dev')
     this.assertMiniAppCodePattern(dto.code);
 
-    const env = MiniAppManagerEnvEnum.DEV;
     const miniAppCode = dto.code + '_dev';
     await this.assertMiniAppCodeUnique(appUser, miniAppCode);
 
     const payload: MiniApp = {
       code: miniAppCode,
       name: dto.name,
-      env: env,
+      env: MiniAppEnvEnum.DEV,
       version: dto.version,
       description: '',
       logo: '',
@@ -86,7 +84,7 @@ export class MiniAppManagerEnvDevelopmentService extends MiniAppManagerProcessor
       status: MiniAppStatusEnum.DRAFT,
       author: dto.author,
       access: {
-        visibility: 'private',
+        visibility: MiniAppAccessVisibilityEnum.PRIVATE,
         allowEmails: [dto.author.email],
         requiredPlans: [],
       },
@@ -121,7 +119,7 @@ export class MiniAppManagerEnvDevelopmentService extends MiniAppManagerProcessor
       pricing: dto.pricing,
       author: dto.author,
       access: {
-        visibility: 'private',
+        visibility: MiniAppAccessVisibilityEnum.PRIVATE,
         allowEmails: [dto.author.email],
         requiredPlans: [],
       },
@@ -133,7 +131,7 @@ export class MiniAppManagerEnvDevelopmentService extends MiniAppManagerProcessor
   }
 
   protected assertEnvironment(appUser: UserContext, miniApp: MiniApp) {
-    if (miniApp.env !== MiniAppManagerEnvEnum.DEV) {
+    if (miniApp.env !== MiniAppEnvEnum.DEV) {
       throw new BadRequestException('Cannot process production app in dev env');
     }
   }

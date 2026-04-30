@@ -4,10 +4,9 @@ import { MiniAppInstallationService } from 'src/simple-app/_core/resources/mini-
 import { MiniAppManagerPolicyService } from './mini-app-manager-policy.service';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { MiniAppManagerProcessor } from './mini-app-manager.processor';
-import { DynamicParam,MiniApp ,CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail } from '../dto';
+import { DynamicParam, MiniApp, CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail } from '../dto';
 import { MiniAppEnvEnum, MiniAppStatusEnum } from 'src/simple-app/_core/resources/mini-app/mini-app.enum';
 import { Model } from 'mongoose';
-import { MiniAppManagerEnvEnum } from './mini-app-manager.enum';
 import _ from 'lodash';
 
 @Injectable()
@@ -70,11 +69,10 @@ export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor 
     this.assertMiniAppCodePattern(dto.code);
     await this.assertMiniAppCodeUnique(appUser, dto.code);
 
-    const env = MiniAppManagerEnvEnum.PROD;
     const payload = {
       code: dto.code,
       name: dto.name,
-      env: env,
+      env: MiniAppEnvEnum.PROD,
       version: dto.version,
       description: dto.description,
       logo: dto.logo,
@@ -112,7 +110,7 @@ export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor 
   }
 
   protected assertEnvironment(appUser: UserContext, miniApp: MiniApp) {
-    if (miniApp.env !== MiniAppManagerEnvEnum.PROD) {
+    if (miniApp.env !== MiniAppEnvEnum.PROD) {
       if (!_.isEmpty(miniApp?.development?.demoXOrg)) {
         if (miniApp.development.demoXOrg === appUser.getXOrg()) {
           return true;
