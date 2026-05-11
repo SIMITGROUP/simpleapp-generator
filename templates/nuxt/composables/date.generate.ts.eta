@@ -4,6 +4,7 @@
  * last change 2024-04-13
  * Author: Ks Tan
  */
+import dayjs from 'dayjs'
 import { DateTime } from "luxon";
 import {
   dayjsDateFormatToPrimeVue,
@@ -16,13 +17,13 @@ const convertToDate = (date: Date | string) => {
 };
 
 //after review
-export const today = () => useDayjs()().format("YYYY-MM-DD");
+export const today = () => dayjs().format("YYYY-MM-DD");
 
 export const formatDateByOrgFormat = (date: Date | string) =>
-  useDayjs()(date).format(getDateFormat());
+  dayjs(date).format(getDateFormat());
 
 export const formatDateTimeByOrgFormat = (date: Date | string) =>
-  useDayjs()(date).format(getDateTimeFormat());
+  dayjs(date).format(getDateTimeFormat());
 
 /**
  * convert date object or ISO8601 date become local datetime string
@@ -65,44 +66,44 @@ export const stringToDate = (datestr: string) => new Date(datestr);
  */
 export const dateToISOString = (date: Date | string) =>
   convertToDate(date).toISOString().split(".")[0] + "Z";
-//useDayjs()(date).toISOString().split('.')[0]+"Z"
+//dayjs(date).toISOString().split('.')[0]+"Z"
 /**
  * convert date object to date string (YYYY-MM-DD)
  * @param date :Date
  * @returns date return string in YYYY-MM-DD
  */
-export const dateToString = (date: Date | string) => useDayjs()(date).format("YYYY-MM-DD");
+export const dateToString = (date: Date | string) => dayjs(date).format("YYYY-MM-DD");
 /**
  * convert date object to time string (HH:mm:ss)
  * @param date
  * @returns timestring
  */
-export const dateToTimeString = (date: Date) => useDayjs()(date).format("HH:mm:ss");
+export const dateToTimeString = (date: Date) => dayjs(date).format("HH:mm:ss");
 /**
  * get 3 char day name sun/mon/tue in lower case
  * @param date : Date|string date obj or iso8601 date
  * @returns string
  */
 export const getDayNameInWeek = (date: Date | string) =>
-  useDayjs()(date).format("ddd").toLowerCase();
+  dayjs(date).format("ddd").toLowerCase();
 /**
  * get last date of the specific date
  * @param dates: Date|string
  * @returns string
  */
 export const lastDateOfMonth = (date: Date | string) =>
-  useDayjs()(date).endOf("month").format("YYYY-MM-DD");
+  dayjs(date).endOf("month").format("YYYY-MM-DD");
 
 //before reevaluate
 
-export const setDateLocale = (localename: string) => useDayjs().locale(localename);
+export const setDateLocale = (localename: string) => dayjs.locale(localename);
 export const dateExists = (date: Date, listDate: Date[]) => {
   const existsrecord = listDate.find((item) => {
     return date.getTime() === item.getTime();
   });
   return existsrecord === undefined ? false : true;
 };
-export const getDayJs = () => useDayjs();
+export const getDayJs = () => dayjs;
 
 export const dateToISOWithoutConvert = (date: Date) => {
   const timestamp = date.getTime() - date.getTimezoneOffset() * 60000;
@@ -116,15 +117,15 @@ export const convertIsoToDateToWithoutConvert = (datestr: string) => {
 };
 
 export const dateToDateTimeString = (date: Date) =>
-  useDayjs().utc(date).format("YYYY-MM-DD HH:mm:ss");
-export const toLocalDate = (date: string | Date) => useDayjs()(date).format(getDateFormat());
+  dayjs.utc(date).format("YYYY-MM-DD HH:mm:ss");
+export const toLocalDate = (date: string | Date) => dayjs(date).format(getDateFormat());
 export const toLocalDateTime = (date: string | Date) =>
-  useDayjs().utc(date).format(getDateTimeFormat());
+  dayjs.utc(date).format(getDateTimeFormat());
 
-export const toUTCDate = (date: string | Date) => useDayjs().utc(date).format(getDateFormat());
+export const toUTCDate = (date: string | Date) => dayjs.utc(date).format(getDateFormat());
 export const toUTCDateTime = (date: string | Date) =>
-  useDayjs().utc(date).format(getDateTimeFormat());
-export const toUTCTime = (date: string | Date) => useDayjs().utc(date).format("HH:mm");
+  dayjs.utc(date).format(getDateTimeFormat());
+export const toUTCTime = (date: string | Date) => dayjs.utc(date).format("HH:mm");
 export const getDateFormat = (): string => {
   const profile = getUserProfile();
   const orgDateFormat = profile?.orgInfo?.dateFormat?.trim();
@@ -141,7 +142,7 @@ export const addTime = (date: Date | string, duration: number, unit: DurationTyp
   getDayJs()(date).add(duration, "hour").toDate();
 
 export const utcToLocalOffset = (utcTime: string, timeZoneOffset: number) => {
-  return useDayjs().utc(utcTime).utcOffset(Number(timeZoneOffset));
+  return dayjs.utc(utcTime).utcOffset(Number(timeZoneOffset));
 };
 
 export const getOffsetMinutesTimeZone = (timeZone: string, date: Date = new Date()): number => {

@@ -5,7 +5,7 @@ import { PolicyService } from 'src/simple-app/_core/features/policy/policy.servi
 import { Role } from 'src/simple-app/_core/features/auth/role-guard/roles.enum';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { MiniApp } from '../dto';
-import licenseTypes,{BaseLicense} from 'src/simple-app/config/license-types';
+import { licenses as licenseTypes, BaseLicense } from '@simtrain/shared/license';
 @Injectable()
 export class MiniAppManagerPolicyService {
   readonly _RELEASED_STATUSES = [MiniAppStatusEnum.PUBLISHED];
@@ -33,7 +33,7 @@ export class MiniAppManagerPolicyService {
     // const requiredPlans = miniApp.access.requiredPlans ?? [];
 
     if (licenseTypes[currentLicense]) {
-      const licenseSetting:BaseLicense = licenseTypes[currentLicense]
+      const licenseSetting: BaseLicense = licenseTypes[currentLicense];
       return licenseSetting?.feature?.miniApp ?? false;
     } else {
       return false;

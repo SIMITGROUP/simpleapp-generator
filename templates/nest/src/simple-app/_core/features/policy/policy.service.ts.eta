@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { BaseLicense, HasType, licenses as licenseTypes } from '@simtrain/shared/license';
 import { Role } from 'src/simple-app/_core/features/auth/role-guard/roles.enum';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
-import licenseTypes,{BaseLicense} from 'src/simple-app/config/license-types';
-import { HasType } from 'src/simple-app/config/license-types/license.type';
 @Injectable()
 export class PolicyService {
   private readonly _HIGH_PRIVILEGE_ROLES = [Role.SuperAdmin, Role.SuperUser, Role.TenantOwner];
@@ -27,8 +26,8 @@ export class PolicyService {
   hasFeature(appUser: UserContext, feature: string): boolean {
     const appLicense = appUser.tenantInfo?.license ?? 'free';
     // const allowedPlans = this._FEATURES[feature];
-    const licenseSetting:BaseLicense = licenseTypes[appLicense]    
-    const allowed = licenseSetting.has(HasType.feature,feature) ?? false;
+    const licenseSetting: BaseLicense = licenseTypes[appLicense];
+    const allowed = licenseSetting.has(HasType.feature, feature) ?? false;
     return allowed;
   }
 

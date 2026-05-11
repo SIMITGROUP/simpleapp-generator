@@ -1,3 +1,7 @@
+[2.0.3f-alpha]
+1. Migrate license imports to shared package
+2. Replace useDayjs with dayjs
+
 [2.0.3e-alpha]
 1. Fix eslint error
 
