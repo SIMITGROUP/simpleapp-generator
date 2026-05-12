@@ -5,11 +5,7 @@
  * Author: Ks Tan
  */
 import { Injectable } from '@nestjs/common';
-// import { Workflow } from './simpleapp/generate/commons/providers/Workflow';
+
 @Injectable()
 export class AppService {
-  async getMyTask() {
-    // return await Workflow.getInstance().getMyUserTask()
-    return "ok"
-  }
 }

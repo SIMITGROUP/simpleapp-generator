@@ -679,13 +679,6 @@ export class UserContext extends UserContextInfo {
   };
   getWebHooks = () => this.webhooks;
 
-  getWorkflowTaskFilter() {
-    return {
-      'data.tenantId': this.tenantId,
-      'assignments.assignee': this.getUid(),
-    };
-  }
-
   getCreateFilterWithId = () => {
     return {
       createdBy: this.uid,

@@ -1199,10 +1199,6 @@ export class SimpleAppService<T extends SchemaFields> {
       //runErrorEvent wont handle more error
     }
   }
-  // startWorkflow(appUser: UserContext, processName: WorkflowName, workflowData: any) {
-  //   return this.eventEmitter.emit('workflow.start', appUser, processName, workflowData);
-  // }
-
   async genNewDocNo(appUser: UserContext, data: T) {
     this.logger.debug('genNewDocNo');
     // console.log('before genNewDocNo');

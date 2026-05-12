@@ -70,7 +70,6 @@ export class DocumentApi {
   entryPoint: string; //api entry point example:':id', ':id/confirm'
   queryPara?: string[]; //what query parameter wish to accept, example:  ['description','date']
   requiredRole?: string[]; // what special user role wish to allow for this api, example: ['SuperUser']
-  workflowSetting?: { bpmn: string }; //optional property, once define code gen connect the bpmn workflow
   method: RESTMethods;
   schema?: string; //any schema/type name in types & apischemas
   responseType?: string; //any schema/type name for response

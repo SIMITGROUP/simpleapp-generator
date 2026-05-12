@@ -1,3 +1,6 @@
+[2.0.3g-alpha]
+1. Remove unused workflow dead code from frontend and backend
+
 [2.0.3f-alpha]
 1. Migrate license imports to shared package
 2. Replace useDayjs with dayjs

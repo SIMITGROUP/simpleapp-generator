@@ -5,18 +5,19 @@
  * Author: Ks Tan
  */
 import {
-  JSONSchema7,
-  JSONSchema7Type,
-  JSONSchema7Version,
-  JSONSchema7TypeName,
   JSONSchema7Definition,
+  JSONSchema7Type,
+  JSONSchema7TypeName,
+  JSONSchema7Version,
 } from "json-schema";
+
 export type DocumentStatus = {
   status: string; //'CO', 'V', 'CL', 'D' and etc
   statusName: string;
   readOnly: boolean;
   actions: string[]; //api name ['confirm','revert','close','void' and etc]
 };
+
 export enum RESTMethods {
   "post" = "post",
   "get" = "get",
@@ -24,28 +25,30 @@ export enum RESTMethods {
   "put" = "put",
   "patch" = "patch",
 }
+
 export type DocumentApi = {
   action: string; //api action name
   entryPoint: string; //api entry point example:':id', ':id/confirm'
   queryPara?: string[]; //what query parameter wish to accept, example:  ['description','date']
   requiredRole?: string[]; // what special user role wish to allow for this api, example: ['SuperUser']
-  workflowSetting?: { bpmn: string }; //optional property, once define code gen connect the bpmn workflow
   method: RESTMethods;
   schema?: string; //any schema/type name in types & apischemas
   responseType?: string; //any schema/type name for response
   description: string; //description of api
 };
+
 export enum IsolationType {
   "none" = "none",
   "tenant" = "tenant",
   "org" = "org",
   "branch" = "branch",
 }
-// export type ImportLibs = {"lib":string,"as":string}
+
 export type Formula = {
   jsonPath: string; //example: "$.subtotal","$.details[*]"
   formula: string; //example "jslib.getDocumentSubTotal(@F{$.details})"
 };
+
 export type SchemaConfig = {
   isolationType: string;
   requiredRoles?: string[];
@@ -64,7 +67,7 @@ export type SchemaConfig = {
   formulas?: Formula[];
   documentType: string;
   documentName: string;
-  resourceName:string;
+  resourceName: string;
   collectionName?: string;
   foreignKeys?: MyForeignKey;
   printFormats?: SchemaPrintFormat[];
@@ -75,6 +78,7 @@ export type SchemaPrintFormat = {
   formatId: string;
   description?: string;
 };
+
 export type MyForeignKey = {
   [collectionname: string]: string[];
 };
@@ -112,8 +116,8 @@ export type SchemaFields = {
   [key: string]: SimpleAppJSONSchema7 | SimpleAppJSONSchema7[] | undefined;
 } & CustomFieldJsonSchemaMore;
 
-// modified from jsonschemas
 export type SimpleAppJSONSchema7Definition = SimpleAppJSONSchema7 | boolean;
+
 export interface SimpleAppJSONSchema7 {
   inputType?: string;
   "x-foreignkey"?: string;
@@ -158,10 +162,7 @@ export interface SimpleAppJSONSchema7 {
   /**
    * @see https://tools.ietf.org/html/draft-handrews-json-schema-validation-01#section-6.4
    */
-  items?:
-    | SimpleAppJSONSchema7Definition
-    | SimpleAppJSONSchema7Definition[]
-    | undefined;
+  items?: SimpleAppJSONSchema7Definition | SimpleAppJSONSchema7Definition[] | undefined;
   additionalItems?: JSONSchema7Definition | undefined;
   maxItems?: number | undefined;
   minItems?: number | undefined;

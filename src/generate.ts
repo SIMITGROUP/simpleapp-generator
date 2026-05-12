@@ -1,6 +1,5 @@
 import * as constants from './constant';
 import { readJsonSchemaBuilder } from './processors/jsonschemabuilder';
-import { generateWorkflows } from './processors/bpmnbuilder';
 import { allforeignkeys, allfields } from './storage';
 import {
   TypeGenerateDocumentVariable,
@@ -171,11 +170,6 @@ export const run = async (
     const langjsonstr = readFileSync(defaultLangFile, 'utf-8');
 
     langdata = JSON.parse(langjsonstr);
-  }
-
-  if (configs.bpmnFolder) {
-    // log.info("Process bpmn folder ",configs.bpmnFolder)
-    allbpmn = await generateWorkflows(configs, genFor);
   }
 
   generateSystemFiles(activatemodules, allbpmn);
@@ -942,12 +936,12 @@ const getCodeGenHelper = () =>
   // Used by enum.ts.eta and schema.ts.eta so the logic lives in one place.
   'const buildDefEnumMap = (jsonschema) => {' +
   '  const defs = jsonschema?.$defs || jsonschema?.definitions || {};' +
-  '  const xconfig = jsonschema?.[\'x-simpleapp-config\'] || {};' +
-  '  const prefix = upperFirstCase(xconfig.resourceName || xconfig.documentName || \'\');' +
+  "  const xconfig = jsonschema?.['x-simpleapp-config'] || {};" +
+  "  const prefix = upperFirstCase(xconfig.resourceName || xconfig.documentName || '');" +
   '  const map = new Map();' +
   '  for (const [defName, defObj] of Object.entries(defs)) {' +
-  '    if (defObj.type === \'string\' && Array.isArray(defObj.enum) && defObj.enum.length > 0) {' +
-  '      map.set(defObj.enum.slice().sort().join(\'|\'), prefix + upperFirstCase(defName));' +
+  "    if (defObj.type === 'string' && Array.isArray(defObj.enum) && defObj.enum.length > 0) {" +
+  "      map.set(defObj.enum.slice().sort().join('|'), prefix + upperFirstCase(defName));" +
   '    }' +
   '  }' +
   '  return map;' +
@@ -955,6 +949,6 @@ const getCodeGenHelper = () =>
   // Resolves the base enum name (without "Enum" suffix) for a given property.
   // Checks defEnumMap first (shared $defs enum), falls back to modelName + fieldName (inline enum).
   'const resolveEnumBaseName = (enumValues, defEnumMap, modelName, fieldName) => {' +
-  '  const sig = enumValues.slice().sort().join(\'|\');' +
+  "  const sig = enumValues.slice().sort().join('|');" +
   '  return defEnumMap.has(sig) ? defEnumMap.get(sig) : modelName + upperFirstCase(fieldName);' +
   '};';
