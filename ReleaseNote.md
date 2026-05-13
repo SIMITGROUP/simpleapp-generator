@@ -1,3 +1,6 @@
+[2.0.3h-alpha]
+1. Split monolithic simpleapp-event plugin into focused plugins
+
 [2.0.3g-alpha]
 1. Remove unused workflow dead code from frontend and backend
 
