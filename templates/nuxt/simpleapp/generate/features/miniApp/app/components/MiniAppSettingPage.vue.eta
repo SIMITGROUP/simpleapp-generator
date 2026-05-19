@@ -1,54 +1,48 @@
 <template>
   <LoadingLine :loading="isFetching" />
-  <SimpleAppJsonSchemaForm
+  <MiniAppSettingLayout
     v-if="!_.isEmpty(schema)"
-    :schema="schema"
-    :data="data"
-    #default="o"
+    :isFetching="isFetching"
+    :miniAppCode="_miniAppCode"
+    :miniAppTitle="miniAppTitle"
   >
-    <MiniAppSettingLayout
-      :isFetching="isFetching"
-      :miniAppCode="_miniAppCode"
-      :miniAppTitle="miniAppTitle"
-    >
-      <template #action>
-        <Button class="btn-primary" @click="o.validate(validateCallBack)">
-          {{ t("miniAppLang.saveSetting") }}
-        </Button>
-      </template>
+    <template #action>
+      <Button
+        class="btn-primary"
+        @click="onSave"
+      >
+        {{ t("miniAppLang.saveSetting") }}
+      </Button>
+    </template>
 
-      <template #default>
-        <div class="space-y-4" v-if="!_.isEmpty(schema)">
-          <p
-            v-if="miniApp?.integration?.customPage?.setting?.note"
-            class="text-sm text-gray-600 whitespace-pre-line"
-          >
-            {{
-              t("miniAppLang.miniAppSettingNote", {
-                miniAppNote: miniApp.integration.customPage.setting.note ?? "",
-              })
-            }}
-          </p>
-          <CustomFieldFormField
-            :jsonSchema="settingSchema"
-            :data="data"
-            :handleGetField="o.getField"
-            schemaName="setting"
-            hierarchy="setting"
-            schemaSource="miniAppSetting"
-            :isShowFieldset="false"
-            :isHideFieldsetLegend="true"
-          />
-        </div>
-      </template>
-    </MiniAppSettingLayout>
-  </SimpleAppJsonSchemaForm>
+    <template #default>
+      <div class="space-y-4">
+        <p
+          v-if="miniApp?.integration?.customPage?.setting?.note"
+          class="text-sm text-gray-600 whitespace-pre-line"
+        >
+          {{
+            t("miniAppLang.miniAppSettingNote", {
+              miniAppNote: miniApp.integration.customPage.setting.note ?? "",
+            })
+          }}
+        </p>
+        <SimpleAppJsonForms
+          ref="jsonForms"
+          v-model="data"
+          :schema="schema"
+          @change="onFormChange"
+        />
+      </div>
+    </template>
+  </MiniAppSettingLayout>
 </template>
 
 <script setup lang="ts" generic="T">
 import _ from "lodash";
+import type { ErrorObject } from "ajv";
+import type { SimpleAppJsonFormsRef } from "~/types/simpleApp.type";
 import MiniAppSettingLayout from "./MiniAppSettingLayout.vue";
-import CustomFieldFormField from "../../../customField/components/CustomFieldFormField.vue";
 
 const props = defineProps<{
   miniAppCode?: string;
@@ -56,16 +50,22 @@ const props = defineProps<{
 
 const _miniAppCode = props.miniAppCode ?? getPathPara("miniAppCode");
 
-const {
-  isFetching,
-  miniApp,
-  miniAppTitle,
-  schema,
-  settingSchema,
-  data,
-  loadMiniAppDetail,
-  validateCallBack,
-} = useMiniAppSetting(_miniAppCode);
+const { isFetching, miniApp, miniAppTitle, schema, data, loadMiniAppDetail, saveSetting } =
+  useMiniAppSetting(_miniAppCode);
+
+const jsonForms = ref<SimpleAppJsonFormsRef | null>(null);
+const formErrors = ref<ErrorObject[]>([]);
+
+const onFormChange = (_data: any, errors: ErrorObject[]) => {
+  formErrors.value = errors;
+};
+
+const onSave = async () => {
+  jsonForms.value?.changeValidationModeToShow();
+  if (!formErrors.value.length) {
+    await saveSetting();
+  }
+};
 
 onMounted(async () => {
   await loadMiniAppDetail();

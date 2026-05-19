@@ -1,3 +1,7 @@
+[2.0.3j-alpha]
+1. Replace CustomFieldFormField with SimpleAppJsonForms in MiniAppSettingPage 
+2. Remove redundant custom field form templates
+
 [2.0.3i-alpha]
 1. Add uiSchema for custom field
 2. Remove unused lang template files (cn.ts._eta, en.ts.eta)
