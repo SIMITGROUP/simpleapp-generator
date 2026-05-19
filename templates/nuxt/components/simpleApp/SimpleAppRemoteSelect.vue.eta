@@ -36,28 +36,25 @@ function handleChange(newValue: any) {
   const actions = remoteConfig?.onChangeAction ?? [];
   if (!Array.isArray(actions) || actions.length === 0) return;
 
-  const modelObject = props.setting.modelObject ?? {};
-  const selectedOption = options.value.find(
-    (opt: any) => opt.value === newValue,
-  );
+  const selectedOption = options.value.find((opt: any) => opt.value === newValue);
 
   for (const action of actions) {
     if (!action.updateField) continue;
 
     let updateVal: any = action.updateValue;
 
-    if (
-      typeof updateVal === "string" &&
-      updateVal.startsWith("{") &&
-      updateVal.endsWith("}")
-    ) {
+    if (typeof updateVal === "string" && updateVal.startsWith("{") && updateVal.endsWith("}")) {
       // ✅ Replace {path.to.value} using selectedOption
       const path = updateVal.slice(1, -1).trim();
       const resolvedVal = resolvePath(selectedOption ?? {}, path);
       updateVal = resolvedVal !== undefined ? resolvedVal : "";
     }
 
-    setPath(modelObject, action.updateField, updateVal);
+    if (props.setting.handleFieldChange) {
+      props.setting.handleFieldChange(action.updateField, updateVal);
+    } else {
+      setPath(props.setting.modelObject ?? {}, action.updateField, updateVal);
+    }
   }
 }
 

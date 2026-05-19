@@ -14,6 +14,7 @@
     v-bind="<CalendarProps>componentProps"
     :select-other-months="true"
     pt:pcInputText:root="w-full"
+    class="w-full"
     @update:model-value="updateDateTime"
   />
 </template>
@@ -37,14 +38,10 @@ const modelValue = defineModel<string>({ required: true });
 const datetimevalue = ref<Date>();
 
 const refreshFromParent = () => {
-  if (modelValue.value === undefined || modelValue.value == "")
-    datetimevalue.value = undefined;
+  if (modelValue.value === undefined || modelValue.value == "") datetimevalue.value = undefined;
   else if (props.type == "time")
-    datetimevalue.value = stringToDate(
-      "2000-01-01 " + (modelValue.value ?? "00:00:00"),
-    );
-  else if (props.type == "date")
-    datetimevalue.value = stringToDate(modelValue.value + "T00:00:00");
+    datetimevalue.value = stringToDate("2000-01-01 " + (modelValue.value ?? "00:00:00"));
+  else if (props.type == "date") datetimevalue.value = stringToDate(modelValue.value + "T00:00:00");
   else datetimevalue.value = stringToDate(modelValue.value);
 };
 

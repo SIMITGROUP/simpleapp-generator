@@ -1,83 +1,108 @@
+import { type ControlElement, type GroupLayout, type UISchemaElement, type VerticalLayout } from "@jsonforms/core";
 import _ from "lodash";
+import { DynamicObject, SimpleAppJSONSchema7Definition } from "~/types";
+import { CustomFieldDataModeEnum } from "../enums/common";
 import {
   CustomFieldDataMode,
   CustomFieldMoreSchema,
   CustomFieldMoreSchemaGroup,
 } from "../types/common";
-import { CustomFieldDataModeEnum } from "../enums/common";
-import { DynamicObject, SimpleAppJSONSchema7Definition } from "~/types";
 
 export class CustomFieldService {
   // =============================== Prepare Schema Function ===============================
-  prepareCustomFieldJsonSchema(collectionName: string) {
-    const customFieldFromDB = this.findCustomFieldSchemaFromDB(collectionName);
-    const customFieldFromMiniApp =
-      this.findCustomFieldSchemaFromMiniApp(collectionName);
+  prepareCustomFieldJsonSchema(collectionName: string): { jsonSchema: CustomFieldMoreSchema; uiSchema: VerticalLayout | undefined } {
+    const fromDB = this.findCustomFieldSchemaFromDB(collectionName);
+    const fromMiniApp = this.findCustomFieldSchemaFromMiniApp(collectionName);
 
-    if (customFieldFromDB && !_.isEmpty(customFieldFromDB)) {
-    }
-
-    const schema: CustomFieldMoreSchema = {
+    const jsonSchema: CustomFieldMoreSchema = {
       type: "object",
       properties: {
-        ...customFieldFromDB,
-        ...customFieldFromMiniApp,
+        ...fromDB.jsonSchema,
+        ...fromMiniApp.jsonSchema,
       },
     };
 
-    return schema;
+    const uiSchema = this.buildMoreUiSchema({ ...fromDB.uiSchema, ...fromMiniApp.uiSchema });
+
+    return { jsonSchema, uiSchema };
   }
 
   prepareSchemaPatches(collectionName: string) {
     return this.findSchemaPatchFromMiniApp(collectionName);
   }
 
-  private findCustomFieldSchemaFromDB(collectionName: string) {
+  private findCustomFieldSchemaFromDB(collectionName: string): { jsonSchema: CustomFieldMoreSchemaGroup; uiSchema: Record<string, VerticalLayout> } {
     const { $customFieldStore } = useNuxtApp();
     if (!$customFieldStore.data || _.isEmpty($customFieldStore.data)) {
-      return {};
+      return { jsonSchema: {}, uiSchema: {} };
     }
 
     const customField = $customFieldStore.findByCollectionName(collectionName);
     if (!customField) {
-      return {};
+      return { jsonSchema: {}, uiSchema: {} };
     }
 
-    if (
-      !customField?.form?.jsonSchema ||
-      _.isEmpty(customField?.form?.jsonSchema)
-    ) {
-      return {};
+    if (!customField?.form?.jsonSchema || _.isEmpty(customField?.form?.jsonSchema)) {
+      return { jsonSchema: {}, uiSchema: {} };
     }
 
-    const schema: CustomFieldMoreSchemaGroup = {
-      default: {
-        title: "Custom Field",
-        ...customField.form.jsonSchema,
+    return {
+      jsonSchema: {
+        default: {
+          title: "Custom Field",
+          ...customField.form.jsonSchema,
+        },
       },
+      uiSchema: customField.form.uiSchema ? { default: customField.form.uiSchema as VerticalLayout } : {},
     };
-
-    return schema;
   }
 
-  private findCustomFieldSchemaFromMiniApp(collectionName: string) {
-    const schema: CustomFieldMoreSchemaGroup = {};
+  private findCustomFieldSchemaFromMiniApp(collectionName: string): { jsonSchema: CustomFieldMoreSchemaGroup; uiSchema: Record<string, VerticalLayout> } {
+    const jsonSchema: CustomFieldMoreSchemaGroup = {};
+    const uiSchema: Record<string, VerticalLayout> = {};
 
     const { $miniAppStore } = useNuxtApp();
 
     const miniAppForms = $miniAppStore.getForm(collectionName);
     if (!miniAppForms || miniAppForms.length <= 0) {
-      return schema;
+      return { jsonSchema, uiSchema };
     }
 
     for (let i = 0; i < miniAppForms.length; i++) {
-      const miniAppItem = miniAppForms[i];
-      const { miniAppCode, jsonSchema } = miniAppItem;
+      const miniAppItem = miniAppForms[i] as any;
+      const { miniAppCode, jsonSchema: itemJsonSchema, uiSchema: itemUiSchema } = miniAppItem;
 
-      schema[miniAppCode] = jsonSchema as SimpleAppJSONSchema7Definition;
+      jsonSchema[miniAppCode] = itemJsonSchema as SimpleAppJSONSchema7Definition;
+      if (itemUiSchema) uiSchema[miniAppCode] = itemUiSchema as VerticalLayout;
     }
 
-    return schema;
+    return { jsonSchema, uiSchema };
+  }
+
+  private buildMoreUiSchema(groupUiSchemas: Record<string, VerticalLayout>): VerticalLayout | undefined {
+    const elements: UISchemaElement[] = [];
+    for (const [groupKey, uischema] of Object.entries(groupUiSchemas)) {
+      if (!uischema?.elements?.length) continue;
+      const group: GroupLayout = {
+        type: "Group",
+        label: groupKey === "default" ? "Custom Field" : groupKey,
+        options: { cols: "grid-cols-1" },
+        elements: [this.prefixElement(uischema, groupKey)],
+      };
+      elements.push(group);
+    }
+    return elements.length ? { type: "VerticalLayout", elements } : undefined;
+  }
+
+  private prefixElement(elem: UISchemaElement, groupKey: string): UISchemaElement {
+    if (elem.type === "Control") {
+      const ctrl = elem as ControlElement;
+      return { ...ctrl, scope: ctrl.scope.replace("#/properties/", `#/properties/${groupKey}/properties/`) };
+    }
+    if ("elements" in elem && Array.isArray(elem.elements)) {
+      return { ...elem, elements: (elem as any).elements.map((e: UISchemaElement) => this.prefixElement(e, groupKey)) } as UISchemaElement;
+    }
+    return elem;
   }
 
   private findSchemaPatchFromMiniApp(collectionName: string) {
@@ -107,11 +132,7 @@ export class CustomFieldService {
     customSchema: CustomFieldMoreSchema | undefined,
     resourceData: T | undefined,
   ): T | undefined {
-    if (
-      !customSchema ||
-      !customSchema?.properties ||
-      _.isEmpty(customSchema.properties)
-    ) {
+    if (!customSchema || !customSchema?.properties || _.isEmpty(customSchema.properties)) {
       return resourceData;
     }
 
@@ -125,10 +146,7 @@ export class CustomFieldService {
           return this.prepareCustomFieldWithDefaultData<T>(customSchema);
         }
 
-        return this.prepareCustomFieldWithExistingData(
-          customSchema,
-          resourceData,
-        );
+        return this.prepareCustomFieldWithExistingData(customSchema, resourceData);
         break;
     }
   }
@@ -137,9 +155,7 @@ export class CustomFieldService {
     customSchema: CustomFieldMoreSchema,
   ) {
     const data: DynamicObject = {};
-    for (const [groupName, groupItem] of Object.entries(
-      customSchema.properties,
-    )) {
+    for (const [groupName, groupItem] of Object.entries(customSchema.properties)) {
       const defaultData = this.generateDefaultData(groupItem);
 
       data[groupName] = defaultData;
@@ -153,14 +169,9 @@ export class CustomFieldService {
     resourceData: T,
   ) {
     const data: DynamicObject = {};
-    for (const [groupName, groupItem] of Object.entries(
-      customSchema.properties,
-    )) {
+    for (const [groupName, groupItem] of Object.entries(customSchema.properties)) {
       const defaultData = this.generateDefaultData(groupItem);
-      const mergedData = this.mergeWithDefault(
-        defaultData,
-        resourceData?.[groupName],
-      );
+      const mergedData = this.mergeWithDefault(defaultData, resourceData?.[groupName]);
 
       data[groupName] = mergedData;
     }
@@ -193,11 +204,7 @@ export class CustomFieldService {
       const arr = [];
       const itemsCount = minItems > 0 ? 1 : 0;
       for (let i = 0; i < itemsCount; i++) {
-        arr.push(
-          this.generateDefaultData(
-            itemSchema as SimpleAppJSONSchema7Definition,
-          ),
-        );
+        arr.push(this.generateDefaultData(itemSchema as SimpleAppJSONSchema7Definition));
       }
       return arr;
     }
@@ -220,10 +227,7 @@ export class CustomFieldService {
     }
   }
 
-  private mergeWithDefault<T extends DynamicObject>(
-    defaultData: T,
-    collectionData: T | undefined,
-  ) {
+  private mergeWithDefault<T extends DynamicObject>(defaultData: T, collectionData: T | undefined) {
     if (Array.isArray(defaultData)) {
       if (Array.isArray(collectionData)) {
         if (_.isEmpty(collectionData)) {
@@ -242,16 +246,11 @@ export class CustomFieldService {
     } else if (typeof defaultData === "object" && defaultData !== null) {
       const result: any = {};
       for (const key of Object.keys(defaultData)) {
-        result[key] = this.mergeWithDefault(
-          defaultData[key],
-          collectionData?.[key],
-        );
+        result[key] = this.mergeWithDefault(defaultData[key], collectionData?.[key]);
       }
       return result;
     } else {
-      return typeof collectionData !== "undefined"
-        ? collectionData
-        : defaultData;
+      return typeof collectionData !== "undefined" ? collectionData : defaultData;
     }
   }
 }

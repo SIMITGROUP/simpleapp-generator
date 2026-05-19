@@ -1,3 +1,8 @@
+[2.0.3i-alpha]
+1. Add uiSchema for custom field
+2. Remove unused lang template files (cn.ts._eta, en.ts.eta)
+3. Migrate getValidateService import to @simtrain/shared
+
 [2.0.3h-alpha]
 1. Split monolithic simpleapp-event plugin into focused plugins
 

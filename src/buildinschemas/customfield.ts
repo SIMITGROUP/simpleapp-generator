@@ -30,6 +30,10 @@ export const customfield: SchemaType = {
         jsonSchema: {
           type: 'object',
           properties: {}
+        },
+        uiSchema: {
+          type: 'object',
+          properties: {}
         }
       }
     },

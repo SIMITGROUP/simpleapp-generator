@@ -4,23 +4,23 @@
  * last change 2024-03-08
  * Author: Ks Tan
  */
-import { ref } from "vue";
-import type { Ref } from "vue";
+import type { VerticalLayout } from "@jsonforms/core";
+import { getValidateService } from "@simtrain/shared";
 import type { AxiosResponse } from "axios";
+import { cloneDeep, isEmpty } from "lodash";
+import type { Ref } from "vue";
+import { ref, WatchHandle } from "vue";
 import {
-  SearchBody,
-  TextSearchBody,
+  DynamicObject,
+  FormActions,
   NotificationStatus,
   SchemaType,
-  FormActions,
-  DynamicObject,
+  SearchBody,
+  TextSearchBody,
 } from "~/types";
-import { getValidateService } from "~/simpleapp/generate/sharelibs/validate";
-import { WatchHandle } from "vue";
+import { CustomFieldDataModeEnum } from "../features/customField/enums/common";
 import { CustomFieldService } from "../features/customField/services/CustomFieldService";
 import { CustomFieldDataMode } from "../features/customField/types/common";
-import { CustomFieldDataModeEnum } from "../features/customField/enums/common";
-import { cloneDeep, isEmpty } from "lodash";
 
 // import { useToast, } from 'primevue/usetoast';
 // import type {  ToastMessageOptions } from 'primevue/toast';
@@ -58,6 +58,7 @@ export class SimpleAppClient<
   // FLAG::CUSTOM_FIELD
   protected _customFieldWatch: WatchHandle | null = null;
   private _customFieldService = new CustomFieldService();
+  public customFieldUiSchema: VerticalLayout | undefined = undefined;
 
   constructor(apiobj: TApi, doctype: string, docname: string) {
     this.docapi = apiobj;
@@ -67,10 +68,8 @@ export class SimpleAppClient<
   }
   isReady = () => this.ready;
   getDocType = () => this.doctype;
-  getDocName = (capFirst: boolean = false) =>
-    capFirst ? upperFirst(this.docname) : this.docname;
-  getResourceName = () =>
-    upperFirst(this.schema["x-simpleapp-config"]?.resourceName ?? "");
+  getDocName = (capFirst: boolean = false) => (capFirst ? upperFirst(this.docname) : this.docname);
+  getResourceName = () => upperFirst(this.schema["x-simpleapp-config"]?.resourceName ?? "");
   setNew = () => {};
   isNew = () => this.data.value?.created == "";
   setSchema = (schema: SchemaType) => (this.schema = schema);
@@ -115,9 +114,7 @@ export class SimpleAppClient<
       const attributeName = keys[keys.length - 1];
       if (allowedPatchAttributes.includes(attributeName)) {
         if (attributeName === "required" && Array.isArray(value)) {
-          target.required = Array.from(
-            new Set([...(target.required ?? []), ...value]),
-          );
+          target.required = Array.from(new Set([...(target.required ?? []), ...value]));
         } else {
           target[attributeName] = value;
         }
@@ -132,16 +129,13 @@ export class SimpleAppClient<
   prepareCustomFieldJsonSchema() {
     this.prepareSchemaPatches();
 
-    const resp = this._customFieldService.prepareCustomFieldJsonSchema(
-      this.docname,
-    );
-    this.schema.properties.more = resp;
+    const { jsonSchema, uiSchema } = this._customFieldService.prepareCustomFieldJsonSchema(this.docname);
+    this.schema.properties.more = jsonSchema;
+    this.customFieldUiSchema = uiSchema;
   }
 
-  prepareCustomFieldData<T extends DynamicObject>(
-    mode: CustomFieldDataMode,
-    data: T,
-  ) {
+  prepareCustomFieldData<T extends DynamicObject>(mode: CustomFieldDataMode, data: T) {
+    if (!data || typeof data !== "object") return data;
     const customFieldData = this._customFieldService.prepareCustomFieldData(
       this.docname,
       mode,
