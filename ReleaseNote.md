@@ -1,3 +1,6 @@
+[2.0.3l-alpha]
+1. Remove docnoformat form and page templates
+
 [2.0.3k-alpha]
 1. Update sharelibs imports to @simtrain/shared package
 
