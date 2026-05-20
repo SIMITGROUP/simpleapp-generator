@@ -7,7 +7,7 @@
  */
 import _ from 'lodash'
 import {SchemaType,NotificationStatus} from '~/types'
-import * as sharelibs from '../sharelibs'
+import * as sharelibs from '@simtrain/shared'
 import jsonpath from 'jsonpath'
 import { SimpleAppClient } from "./SimpleAppClient";
 import {

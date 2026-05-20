@@ -8,7 +8,7 @@
  
 
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context'
-import * as sharelibs from 'src/simple-app/_core/share-libs'
+import * as sharelibs from '@simtrain/shared'
 import { Injectable,Inject,forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import jsonpath from 'jsonpath'

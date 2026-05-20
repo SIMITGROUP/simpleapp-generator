@@ -9,7 +9,7 @@ import { DateTime } from "luxon";
 import {
   dayjsDateFormatToPrimeVue,
   getDefaultDateFormatForCountryCode,
-} from "~/simpleapp/generate/share-libs";
+} from "@simtrain/shared";
 import { DurationType } from "~/types";
 
 const convertToDate = (date: Date | string) => {

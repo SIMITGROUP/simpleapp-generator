@@ -1,3 +1,6 @@
+[2.0.3k-alpha]
+1. Update sharelibs imports to @simtrain/shared package
+
 [2.0.3j-alpha]
 1. Replace CustomFieldFormField with SimpleAppJsonForms in MiniAppSettingPage 
 2. Remove redundant custom field form templates
