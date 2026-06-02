@@ -34,11 +34,11 @@ import { MiniAppBridgeService } from "./bridge.service";
     const { pascalName, kebabName, hasMiniAppWhitelistedApi } = getMiniAppInfo(it.modules[i]);
   %>
   <% if(hasMiniAppWhitelistedApi) { %>
-    import { MiniApp<%= pascalName %>BridgeService } from "../services/resources/<%= kebabName %>-bridge.service";
+    import { MiniApp<%= pascalName %>BridgeService } from "./resources/<%= kebabName %>-bridge.service";
   <% } %>
 <% } %>
 
-export class MiniAppBridgeResourceAccessor {
+export class MiniAppBridgeResourceAccessorBase {
   protected bridge: MiniAppBridgeService;
   protected instances: Partial<MiniAppResourceMap> = {};
 

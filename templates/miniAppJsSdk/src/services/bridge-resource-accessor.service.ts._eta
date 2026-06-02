@@ -1,0 +1,10 @@
+import { MiniAppBridgeResourceAccessorBase } from "./bridge-resource-accessor-base.service";
+
+export class MiniAppBridgeResourceAccessor extends MiniAppBridgeResourceAccessorBase {
+  protected customInstances: Partial<{
+  }> = {};
+
+  constructor() {
+    super();
+  }
+}

@@ -1,3 +1,6 @@
+[2.0.3m-alpha]
+1. Extract BridgeResourceAccessorBase for extensibility
+
 [2.0.3l-alpha]
 1. Remove docnoformat form and page templates
 

@@ -5,29 +5,25 @@
  * Author: --
  */
 
+import { AxiosError } from "axios";
 import { SimpleAppDocumentType } from "~/types";
+import { MINI_APP_BRIDGE_MESSAGES } from "../constants/common.constant";
+import { MINI_APP_API_CUSTOM_RESOURCES } from "../constants/custom-resource.constant";
+import { MINI_APP_API_RESOURCES } from "../constants/resource.constant";
 import {
   MiniAppBridgeMessageApi,
   MiniAppBridgeMessageNavigate,
   MiniAppBridgeMessageNavigateCurrentMiniApp,
   MiniAppBridgeMessageOpenOnScreenResourceForm,
 } from "../types/bridge.type";
-import { AxiosError } from "axios";
-import { MINI_APP_BRIDGE_MESSAGES } from "../constants/common.constant";
 import { MiniAppResourceMap } from "../types/resource-mapper.type";
 import { MiniAppBridgeResourceAccessor } from "./bridge-resource-accessor.service";
-import { MINI_APP_API_RESOURCES } from "../constants/resource.constant";
 
 export class MiniAppBridgeService extends MiniAppBridgeResourceAccessor {
   /**************************************** Bridge Handler ***************************************/
 
   handleBridgeNavigate(message: MiniAppBridgeMessageNavigate) {
-    goTo(
-      message.params.target,
-      message.params.id,
-      message.params.query,
-      message.params.options,
-    );
+    goTo(message.params.target, message.params.id, message.params.query, message.params.options);
   }
 
   handleBridgeNavigateCurrentMiniApp(
@@ -48,9 +44,7 @@ export class MiniAppBridgeService extends MiniAppBridgeResourceAccessor {
     goTo(targetUrl, undefined, message.params.query, message.params.options);
   }
 
-  handleBridgeOpenOnScreenResourceForm(
-    message: MiniAppBridgeMessageOpenOnScreenResourceForm,
-  ) {
+  handleBridgeOpenOnScreenResourceForm(message: MiniAppBridgeMessageOpenOnScreenResourceForm) {
     if (message.params.resource.id) {
       onScreenEditDocument(
         message.params.resource.name as SimpleAppDocumentType,
@@ -108,10 +102,8 @@ export class MiniAppBridgeService extends MiniAppBridgeResourceAccessor {
                         data: (err.response.data as any)?.data ?? "",
                         error: (err.response.data as any)?.error ?? "",
                         message: (err.response.data as any)?.message ?? "",
-                        statusCode:
-                          (err.response.data as any)?.statusCode ?? "",
-                        statusMessage:
-                          (err.response.data as any)?.statusMessage ?? "",
+                        statusCode: (err.response.data as any)?.statusCode ?? "",
+                        statusMessage: (err.response.data as any)?.statusMessage ?? "",
                       }
                     : {},
                   status: err.response.status,
@@ -129,11 +121,11 @@ export class MiniAppBridgeService extends MiniAppBridgeResourceAccessor {
 
   private async handleBridgeCallApi(message: MiniAppBridgeMessageApi<any>) {
     const resourceName = message.params.resource.name;
-
     if (!MINI_APP_API_RESOURCES.includes(resourceName)) {
-      throw new Error(`Unknown resource name: ${resourceName}`);
+      if (!MINI_APP_API_CUSTOM_RESOURCES.includes(resourceName)) {
+        throw new Error(`Unknown resource name: ${resourceName}`);
+      }
     }
-
     const bridge = this[resourceName as keyof MiniAppResourceMap];
     return await bridge.handleApi(message);
   }
