@@ -1,3 +1,8 @@
+[2.0.3n-alpha]
+1. Add hasRole checking in hasAccessByPageMeta
+2. Add type for Simple App Service
+3. Only show known features at mini app detail
+
 [2.0.3m-alpha]
 1. Extract BridgeResourceAccessorBase for extensibility
 

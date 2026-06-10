@@ -4,153 +4,158 @@
  * last change 2023-09-10
  * author: Ks Tan
  */
-import _ from 'lodash'
-import {MenuData} from '~/types'
-import {getAllDocuments} from '../simpleapp/generate/commons/documents'
-export const getDocTypes = ()=>{
-  return getAllDocuments().filter(item=>item.page!='')
-}
-export const getAllDocFormats = ()=>{
-  return getAllDocuments().filter(item=>item.docNumber)
-}
+import { MenuData } from "~/types";
+import { getAllDocuments } from "../simpleapp/generate/commons/documents";
+export const getDocTypes = () => {
+  return getAllDocuments().filter((item) => item.page != "");
+};
+export const getAllDocFormats = () => {
+  return getAllDocuments().filter((item) => item.docNumber);
+};
 
-export const getPublicResource = (xorg:string) : MenuData[] => {
+export const getPublicResource = (xorg: string): MenuData[] => {
   // const xorg = getUserStore().getCurrentXorg()
-  const menus:MenuData[] = [
-    {label: 'Home',icon: 'pi pi-fw pi-home', url:`/${xorg}`},
-    {label: "Profile", url:`/profile`, isolationType:'none', icon:''},
-    {label: "Profile", url:`/${xorg}/profile`, isolationType:'none', icon:''},
-    {label: 'Signout',icon: 'pi pi-fw pi-home', command: () => logout()},
-    {label: 'Signin',icon: 'pi pi-fw pi-home', 'url':'/login'},
-  ]
-  return menus
-}
-export const getMenus =() :MenuData[]=>{
-//     const logout = async () => {
-//         const { signOut } = useAuth();
-//         const { data } = await <any>useFetch('/api/auth/logout');
-//         const addPath = encodeURIComponent("/login");
-//         signOut({ redirect: false });
-//         window.location.href = data?.value?.path + addPath;
-//     };
-  
-//   const route = useRoute();
-  const xorg = getUserStore().getCurrentXorg()
-//   let data:MenuData[] =[];
-//   //sss
-  let allmenus = getAllDocuments().filter(item=>item.page!='')
+  const menus: MenuData[] = [
+    { label: "Home", icon: "pi pi-fw pi-home", url: `/${xorg}` },
+    { label: "Profile", url: `/profile`, isolationType: "none", icon: "" },
+    { label: "Profile", url: `/${xorg}/profile`, isolationType: "none", icon: "" },
+    { label: "Signout", icon: "pi pi-fw pi-home", command: () => logout() },
+    { label: "Signin", icon: "pi pi-fw pi-home", url: "/login" },
+  ];
+  return menus;
+};
+export const getMenus = (): MenuData[] => {
+  //     const logout = async () => {
+  //         const { signOut } = useAuth();
+  //         const { data } = await <any>useFetch('/api/auth/logout');
+  //         const addPath = encodeURIComponent("/login");
+  //         signOut({ redirect: false });
+  //         window.location.href = data?.value?.path + addPath;
+  //     };
 
- const roles = getUserProfile().roles
-  let allowmenus=[]
-  for(let i=0; i< allmenus.length;i++){
-    const keyword = allmenus[i].docName
+  //   const route = useRoute();
+  const xorg = getUserStore().getCurrentXorg();
+  //   let data:MenuData[] =[];
+  //   //sss
+  let allmenus = getAllDocuments().filter((item) => item.page != "");
+
+  const roles = getUserProfile().roles;
+  let allowmenus = [];
+  for (let i = 0; i < allmenus.length; i++) {
+    const keyword = allmenus[i].docName;
     // if(m.label)
-   
-    if(getUserStore().haveAccess(keyword)){
-      const m:MenuData = {label: t(keyword), url:`/${xorg}/${keyword}`, isolationType:allmenus[i].isolationType}
-      allowmenus.push(m)
-    }     
+
+    if (getUserStore().haveAccess(keyword)) {
+      const m: MenuData = {
+        label: t(keyword),
+        url: `/${xorg}/${keyword}`,
+        isolationType: allmenus[i].isolationType,
+      };
+      allowmenus.push(m);
+    }
   }
-//   data = publicMenus()
-//   if(xorg){
-//     data.push({label: 'Cruds',icon: 'pi pi-fw pi-pencil',items:allowmenus})
-//   }
-//   console.log('data',data)
-  return allowmenus
-}
+  //   data = publicMenus()
+  //   if(xorg){
+  //     data.push({label: 'Cruds',icon: 'pi pi-fw pi-pencil',items:allowmenus})
+  //   }
+  //   console.log('data',data)
+  return allowmenus;
+};
 
+export const getMenustFromPageMeta = () => {
+  const allmenus = useRouter()
+    .getRoutes()
+    .filter((item) => item.meta && item.meta.menuPath)
+    .map((item) => item.meta.menuPath) as string[];
 
-export const getMenustFromPageMeta =() =>{
-  const allmenus = useRouter().getRoutes()
-              .filter((item)=>(item.meta && item.meta.menuPath))
-              .map(item=>item.meta.menuPath) as string[]
-              
-  return allmenus.sort((one:string, two:string) => (one > two ? -1 : 1))
-  
-}
+  return allmenus.sort((one: string, two: string) => (one > two ? -1 : 1));
+};
 export const hasAccessByPageMeta = (pageName: string): boolean => {
-  const userGroups = getUserStore().groups || []
-  const userRoles = getUserStore().roles || []
-  
+  const userGroups = getUserStore().groups || [];
+  const userRoles = getUserStore().roles || [];
+
   if (
-    userRoles.includes('superadmin') ||
-    userRoles.includes('tenantowner') ||
-    userRoles.includes('superuser')
+    userRoles.includes("superadmin") ||
+    userRoles.includes("tenantowner") ||
+    userRoles.includes("superuser")
   ) {
-    return true
+    return true;
   }
-  
-  const routes = useRouter().getRoutes()
+
+  const routes = useRouter().getRoutes();
   const route = routes.find((r) => {
-    const menuPath = r.meta?.menuPath as string | undefined
-    return menuPath && menuPath.endsWith(`/${pageName}`)
-  })
-  
+    const menuPath = r.meta?.menuPath as string | undefined;
+    return menuPath && menuPath.endsWith(`/${pageName}`);
+  });
+
   if (!route || !route.meta) {
-    return false
+    return false;
   }
-  
-  const requiredGroups = route.meta.requiredGroups as string[] | undefined
-  
+
+  const requiredGroups = route.meta.requiredGroups as string[] | undefined;
+
   if (!requiredGroups || requiredGroups.length === 0) {
-    return false
+    return false;
   }
-  
-  return requiredGroups.some((group) => userGroups.includes(group))
-}
+
+  const hasRole = requiredGroups.some((group) => userRoles.includes(group));
+  if (hasRole) return hasRole;
+
+  return requiredGroups.some((group) => userGroups.includes(group));
+};
 
 export const getMenusWithPageMetaAccess = (xorg: string): MenuData[] => {
-  const routes = useRouter().getRoutes()
-  const allowedMenus: MenuData[] = []
-  const { getDescription, getIcon, getIconColor } = useSettingsMenu()
-  
-  const menuRoutes = routes.filter((route) => route.meta && route.meta.menuPath)
-  
+  const routes = useRouter().getRoutes();
+  const allowedMenus: MenuData[] = [];
+  const { getDescription, getIcon, getIconColor } = useSettingsMenu();
+
+  const menuRoutes = routes.filter((route) => route.meta && route.meta.menuPath);
+
   for (const route of menuRoutes) {
-    const menuPath = route.meta.menuPath as string
-    const requiredGroups = route.meta.requiredGroups as string[] | undefined
-    
-    const pathParts = menuPath.split('/')
-    const pageName = pathParts[pathParts.length - 1]
-    
+    const menuPath = route.meta.menuPath as string;
+    const requiredGroups = route.meta.requiredGroups as string[] | undefined;
+
+    const pathParts = menuPath.split("/");
+    const pageName = pathParts[pathParts.length - 1];
+
     if (hasAccessByPageMeta(pageName)) {
-      const icon = getIcon(pageName)
-      const iconClass = getIconColor(pageName)
-      
+      const icon = getIcon(pageName);
+      const iconClass = getIconColor(pageName);
+
       const menuItem: MenuData = {
         label: t(pageName),
         url: `/${xorg}/${pageName}`,
-        isolationType: 'none',
-        icon: typeof icon === 'string' ? icon : '',
-      }
-      
-      allowedMenus.push(menuItem)
+        isolationType: "none",
+        icon: typeof icon === "string" ? icon : "",
+      };
+
+      allowedMenus.push(menuItem);
     }
   }
-  
-  return allowedMenus
-}
+
+  return allowedMenus;
+};
 
 export const getMenuMetadata = (pageName: string) => {
-  const routes = useRouter().getRoutes()
+  const routes = useRouter().getRoutes();
   const route = routes.find((r) => {
-    const menuPath = r.meta?.menuPath as string | undefined
-    return menuPath && menuPath.endsWith(`/${pageName}`)
-  })
-  
+    const menuPath = r.meta?.menuPath as string | undefined;
+    return menuPath && menuPath.endsWith(`/${pageName}`);
+  });
+
   if (route?.meta) {
     return {
       description: route.meta.description ? t(route.meta.description as string) : t(pageName),
-      icon: route.meta.icon || '',
-      colorClass: route.meta.colorClass || '',
-    }
+      icon: route.meta.icon || "",
+      colorClass: route.meta.colorClass || "",
+    };
   }
-  
-  const { getDescription, getIcon, getIconColor } = useSettingsMenu()
-  
+
+  const { getDescription, getIcon, getIconColor } = useSettingsMenu();
+
   return {
     description: t(getDescription(pageName)),
     icon: getIcon(pageName),
     colorClass: getIconColor(pageName),
-  }
-}
+  };
+};

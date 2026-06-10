@@ -13,7 +13,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import Ajv from 'ajv';
 import addErrors from 'ajv-errors';
 import addFormats from 'ajv-formats';
-import { AnyKeys, AnyObject, FilterQuery, Model, PipelineStage, mongo } from 'mongoose';
+import { AnyKeys, AnyObject, FilterQuery, Model, PipelineStage, SortOrder, mongo } from 'mongoose';
 // import { CloudApiService } from 'src/cloudapi/cloudapi.service';
 import { foreignkeys } from '../../features/foreign-key/foreignkeys.dict';
 
@@ -25,6 +25,31 @@ import { UserContext } from '../../features/user-context/user.context';
 import { RunWebhookService } from '../../features/webhook/run-webhook.service';
 import { DeleteResultType, IsolationType, MoreProjectionType, PatchManyRequest, SchemaFields, TextSearchBody, UniqueKeyExistResponse } from '../schemas';
 import { SearchWithRelation } from './dto/simple-app-search-with-relation.dto';
+
+type DynamicRecord = Record<string, unknown>;
+type LooseRecord = ReturnType<typeof JSON.parse>;
+type SimpleAppJsonSchema = DynamicRecord & {
+  properties?: Record<string, DynamicRecord>;
+  'x-simpleapp-config': {
+    resourceName?: string;
+  } & DynamicRecord;
+};
+type ErrorWithMessage = { message: string };
+type EventResult = { name?: string };
+type SortOption = string | Record<string, SortOrder> | [string, SortOrder][];
+type AggregateTotalResult = { total?: number };
+type RelatedRecord = { _id?: string } & DynamicRecord;
+type ForeignKeySettings = Record<string, string[]>;
+type ResourceForeignKeyDictionary = Record<string, string[]>;
+type GlobalForeignKeyDictionary = Record<string, ForeignKeySettings>;
+type ForeignKeyAggregateRow = { _id: string; collection: string };
+
+const getErrorMessage = (err: unknown): string => {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  return JSON.stringify(err);
+};
+const isEventResult = (value: unknown): value is EventResult => typeof value === 'object' && value !== null && 'name' in value;
 
 @Injectable()
 export class SimpleAppService<T extends SchemaFields> {
@@ -42,7 +67,7 @@ export class SimpleAppService<T extends SchemaFields> {
   protected docnogenerator: SimpleAppDocumentNoFormatService;
   protected logger = new Logger();
   protected strictIsolation = true;
-  protected jsonschema: any = {
+  protected jsonschema: SimpleAppJsonSchema = {
     type: 'object',
     'x-simpleapp-config': {},
     properties: {},
@@ -57,12 +82,12 @@ export class SimpleAppService<T extends SchemaFields> {
   protected MAX_PAGE_SIZE = 100000;
   protected moreAutoCompleteField: MoreProjectionType = {};
   protected isolationtype: IsolationType = IsolationType.org;
-  protected isolationFilter: any = {};
+  protected isolationFilter: FilterQuery<T> = {};
   protected data: T = { _id: '' } as T;
   protected doc: Model<T>; //set private to prevent developer break data isolation control
-  protected errorlist = [];
+  protected errorlist: ErrorWithMessage[] = [];
   protected withDocNumberFormat = false;
-  protected foreignkeys = {};
+  protected foreignkeys: ResourceForeignKeyDictionary = {};
   private eventEmitter: EventEmitter2;
   private logService: SimpleAppLogService;
   // protected userprovider = new UserContext() ;
@@ -91,7 +116,7 @@ export class SimpleAppService<T extends SchemaFields> {
   getDocumentType = () => this.documentType;
   getDocumentName = (capFirst: boolean = false) => (capFirst ? _.upperFirst(this.documentName) : this.documentName);
   getRecordId = (): string => this.data?._id ?? '';
-  setSchema = (newschema) => (this.jsonschema = newschema);
+  setSchema = (newschema: SimpleAppJsonSchema) => (this.jsonschema = newschema);
   getSchema = () => this.doc.schema.obj;
   getJsonSchema = () => this.jsonschema;
 
@@ -110,19 +135,19 @@ export class SimpleAppService<T extends SchemaFields> {
     return false;
   }
   reCalculateValue(data: T) {}
-  getIsolationFilter = (appUser: UserContext) => {
-    let isolationFilter = {};
+  getIsolationFilter = (appUser: UserContext): FilterQuery<T> => {
+    let isolationFilter: FilterQuery<T> = {};
     switch (this.isolationtype) {
-      case 'none':
+      case IsolationType.none:
         isolationFilter = {};
         break;
-      case 'branch':
+      case IsolationType.branch:
         isolationFilter = appUser.getBranchFilter();
         break;
-      case 'tenant':
+      case IsolationType.tenant:
         isolationFilter = appUser.getTenantFilter();
         break;
-      case 'org':
+      case IsolationType.org:
       default:
         isolationFilter = appUser.getOrgFilter();
         break;
@@ -140,7 +165,7 @@ export class SimpleAppService<T extends SchemaFields> {
       //   console.log(products);
       return productlist;
     } catch (err) {
-      throw new InternalServerErrorException(err.message);
+      throw new InternalServerErrorException(getErrorMessage(err));
     }
   }
   addAutoCompleteField = (morefield: MoreProjectionType) => {
@@ -154,22 +179,22 @@ export class SimpleAppService<T extends SchemaFields> {
   };
   async getAutoComplete(appUser: UserContext, keyword: string, data?: T) {
     try {
-      const filter1: any = {};
-      const filter2: any = {};
-      const filters: any[] = [];
-      if (this.jsonschema.properties[this.documentIdentityCode]['type'] == 'string') {
+      const filter1: DynamicRecord = {};
+      const filter2: DynamicRecord = {};
+      const filters: DynamicRecord[] = [];
+      if (this.jsonschema.properties?.[this.documentIdentityCode]?.type == 'string') {
         filter1[this.documentIdentityCode] = { $regex: keyword, $options: 'i' };
         filters.push(filter1);
       }
       filter2[this.documentIdentityLabel] = { $regex: keyword, $options: 'i' };
       filters.push(filter2);
 
-      const filterobj = { $or: filters };
+      const filterobj = { $or: filters } as FilterQuery<T>;
       Object.assign(filterobj, data);
       Object.assign(filterobj, this.getIsolationFilter(appUser));
       const projections = {
-        label: `\$${this.documentIdentityLabel}`,
-        code: `\$${this.documentIdentityCode}`,
+        label: `$${this.documentIdentityLabel}`,
+        code: `$${this.documentIdentityCode}`,
       };
       if (this.moreAutoCompleteField) {
         Object.assign(projections, this.moreAutoCompleteField);
@@ -183,7 +208,7 @@ export class SimpleAppService<T extends SchemaFields> {
       });
       return productlist;
     } catch (err) {
-      throw new InternalServerErrorException(err.message);
+      throw new InternalServerErrorException(getErrorMessage(err));
     }
   }
 
@@ -205,7 +230,7 @@ export class SimpleAppService<T extends SchemaFields> {
       //   console.log(products);
       return productlist;
     } catch (err) {
-      throw new InternalServerErrorException(err.message);
+      throw new InternalServerErrorException(getErrorMessage(err));
     }
     // return this;
   }
@@ -224,7 +249,7 @@ export class SimpleAppService<T extends SchemaFields> {
       throw new InternalServerErrorException('first aggregate pipelinestage shall use $match');
     }
   }
-  async aggregate<T = any>(appUser: UserContext, pipeline: PipelineStage[]) {
+  async aggregate<TAggregateResult = LooseRecord>(appUser: UserContext, pipeline: PipelineStage[]) {
     if (pipeline[0] && pipeline[0]['$match']) {
       try {
         const isolationFilter = { ...this.getIsolationFilter(appUser) };
@@ -236,7 +261,7 @@ export class SimpleAppService<T extends SchemaFields> {
         // if(appUser.getId() == ''){
         //   console.log(JSON.stringify(pipeline))
         // }
-        const res = await this.doc.aggregate<T>(pipeline, {
+        const res = await this.doc.aggregate<TAggregateResult>(pipeline, {
           session: appUser.getDBSession(),
         });
 
@@ -255,7 +280,7 @@ export class SimpleAppService<T extends SchemaFields> {
     appUser: UserContext,
     filters: FilterQuery<T>,
     projection: string[] = undefined,
-    sort: any = undefined,
+    sort: SortOption = undefined,
     lookup: { [key: string]: string } = undefined,
     pagination?: { pageSize?: number; pageNo?: number },
   ) {
@@ -281,7 +306,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
         searchResults = await query.exec();
       } else {
-        const pipelines = this.searchToAggregate(appUser, newfilters, projection, sort, lookup, pagination);
+        const pipelines = this.searchToAggregate(appUser, newfilters, projection, this.toAggregateSort(sort), lookup, pagination);
         this.logger.debug('after aggregate', pipelines);
         searchResults = await this.aggregate(appUser, pipelines);
       }
@@ -295,7 +320,7 @@ export class SimpleAppService<T extends SchemaFields> {
       //   console.log(products);
       return list;
     } catch (err) {
-      throw new BadRequestException(err.message);
+      throw new BadRequestException(getErrorMessage(err));
     }
     // return this;
   }
@@ -308,7 +333,7 @@ export class SimpleAppService<T extends SchemaFields> {
     appUser: UserContext,
     filters: FilterQuery<T> = {},
     projection: string[] = undefined,
-    sort: any = undefined,
+    sort: SortOption = undefined,
     lookup: { [key: string]: string } = undefined,
     pagination?: { pageSize?: number; pageNo?: number },
   ) {
@@ -345,7 +370,7 @@ export class SimpleAppService<T extends SchemaFields> {
         items = rows;
         total = count;
       } else {
-        const pipelines = this.searchToAggregate(appUser, newfilters, projection as any, sort, lookup as any, { pageSize, pageNo });
+        const pipelines = this.searchToAggregate(appUser, newfilters, projection, this.toAggregateSort(sort), lookup, { pageSize, pageNo });
 
         const countPipeline: PipelineStage[] = [{ $match: newfilters }];
         const collections = Object.keys(lookup);
@@ -368,15 +393,15 @@ export class SimpleAppService<T extends SchemaFields> {
 
         this.logger.debug('after aggregate searchWithPageInfo', pipelines);
 
-        const [rows, countResult] = await Promise.all([this.aggregate(appUser, pipelines), this.aggregate(appUser, countPipeline)]);
+        const [rows, countResult] = await Promise.all([this.aggregate<T>(appUser, pipelines), this.aggregate<AggregateTotalResult>(appUser, countPipeline)]);
 
-        items = rows as T[];
-        total = countResult && countResult.length > 0 ? countResult[0]['total'] || 0 : 0;
+        items = rows;
+        total = countResult && countResult.length > 0 ? countResult[0].total || 0 : 0;
       }
 
       return items;
     } catch (err) {
-      throw new BadRequestException(err.message);
+      throw new BadRequestException(getErrorMessage(err));
     }
   }
 
@@ -441,7 +466,7 @@ export class SimpleAppService<T extends SchemaFields> {
       const keyword = body.keyword;
       // console.log("bodybody",body)
       // Prepare regex filter
-      const orConditions: any[] = [];
+      const orConditions: DynamicRecord[] = [];
       const regex = new RegExp(keyword, 'i');
 
       if (body.filters && body.filters.length > 0) {
@@ -477,7 +502,7 @@ export class SimpleAppService<T extends SchemaFields> {
   async findById(appUser: UserContext, id: string) {
     // if (this.hooks.beforeFetchRecord) await this.hooks.beforeFetchRecord(appUser, id);
 
-    const data = await this.search(appUser, { _id: id as any });
+    const data = await this.search(appUser, { _id: id });
     // if (this.hooks.afterFetchRecord) await this.hooks.afterFetchRecord(appUser, data[0]);
 
     if (data.length == 1) {
@@ -491,7 +516,7 @@ export class SimpleAppService<T extends SchemaFields> {
   async findByIdNoIsolation(appUser: UserContext, id: string) {
     // if (this.hooks.beforeFetchRecord) await this.hooks.beforeFetchRecord(appUser, id);
 
-    const data = await this.searchNoIsolation(appUser, { _id: id as any });
+    const data = await this.searchNoIsolation(appUser, { _id: id });
     // if (this.hooks.afterFetchRecord) await this.hooks.afterFetchRecord(appUser, data[0]);
 
     if (data.length == 1) {
@@ -511,7 +536,7 @@ export class SimpleAppService<T extends SchemaFields> {
     if (Array.isArray(datas)) {
       for (let i = 0; i < datas.length; i++) {
         const data = datas[i];
-        let isolationFilter: any = { ...appUser.getCreateFilter() };
+        let isolationFilter: FilterQuery<T> = { ...appUser.getCreateFilter() };
         isolationFilter = this.polishIsolationFilter(isolationFilter, data);
 
         Object.assign(data, isolationFilter);
@@ -524,28 +549,25 @@ export class SimpleAppService<T extends SchemaFields> {
         appUser.startTransaction();
       }
 
-      try {
-        const result = await this.doc.insertMany(datas, { session: dbsession });
-        const allIds = datas.map((item) => item._id);
-        const allLogData = datas.map((item) => null);
-        appUser.addTransactionStep('createMany', this.documentName, allIds, allLogData);
+      const result = await this.doc.insertMany(datas, { session: dbsession });
+      const allIds = datas.map((item) => item._id);
+      const allLogData = datas.map((item) => null);
+      appUser.addTransactionStep('createMany', this.documentName, allIds, allLogData);
 
-        await this.addManyAuditEvents(appUser, this.documentName, 'createMany', datas);
-        for (const data of datas) {
-          appUser.addInsertedRecordId(this.documentName, data._id);
-        }
-
-        return result;
-      } catch (e) {
-        throw e;
+      await this.addManyAuditEvents(appUser, this.documentName, 'createMany', datas);
+      for (const data of datas) {
+        appUser.addInsertedRecordId(this.documentName, data._id);
       }
+
+      return result;
+
     } else {
       throw new BadRequestException(this.getDocumentType() + ': create many only support array');
     }
   }
 
   async create(appUser: UserContext, data: T, noStartTransaction: boolean = false) {
-    let result;
+    let result: T;
 
     if (!data._id) {
       data._id = crypto.randomUUID();
@@ -560,7 +582,7 @@ export class SimpleAppService<T extends SchemaFields> {
       await this.genNewDocNo(appUser, data);
     }
 
-    let isolationFilter: any = { ...appUser.getCreateFilter() };
+    let isolationFilter: FilterQuery<T> = { ...appUser.getCreateFilter() };
     isolationFilter = this.polishIsolationFilter(isolationFilter, data);
 
     this.logger.debug('isolationFilter', 'SimpleAppService');
@@ -580,36 +602,41 @@ export class SimpleAppService<T extends SchemaFields> {
     const newdoc = new this.doc(data);
     await this.identifyForeignKeys(appUser, data);
     try {
-      result = await newdoc.save({ session: dbsession });
+      result = (await newdoc.save({ session: dbsession })) as T;
+      const resultId = result._id ?? data._id ?? '';
       appUser.addTransactionStep('create', this.documentName, [data._id], [null]);
-      await this.addAuditEvent(appUser, this.documentName, result._id, 'create', data);
-      appUser.addInsertedRecordId(this.documentName, result._id);
+      await this.addAuditEvent(appUser, this.documentName, resultId, 'create', data);
+      appUser.addInsertedRecordId(this.documentName, resultId);
       await this.runEvent(appUser, 'afterCreate', { data: result }, false);
       await this.callWebhook(appUser, 'create', result);
-      return result as T;
+      return result;
     } catch (err) {
       await this.runErrorEvent(appUser, 'errorCreate', data, err);
       throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
     }
   }
 
-  applyNestedDateTime = (appUser: UserContext, data: any, transtype: string) => {
-    const props = Object.getOwnPropertyNames(data);
+  applyNestedDateTime = (appUser: UserContext, data: object, transtype: string) => {
+    const record = data as DynamicRecord;
+    const props = Object.getOwnPropertyNames(record);
     for (let i = 0; i < props.length; i++) {
       const key = props[i];
       //need to apply nested
-      if (Array.isArray(data[key]) && data[key].length > 0 && typeof data[key][0] == 'object') {
-        for (let j = 0; j < data[key].length; j++) {
-          this.applyNestedDateTime(appUser, data[key][j], transtype);
+      const value = record[key];
+      if (Array.isArray(value) && value.length > 0 && typeof value[0] == 'object' && value[0] !== null) {
+        for (let j = 0; j < value.length; j++) {
+          if (typeof value[j] == 'object' && value[j] !== null) {
+            this.applyNestedDateTime(appUser, value[j] as DynamicRecord, transtype);
+          }
         }
       } else if (key == 'created') {
-        data['created'] = transtype == 'create' || !data['created'] ? new Date().toISOString() : data['created'];
+        record['created'] = transtype == 'create' || !record['created'] ? new Date().toISOString() : record['created'];
       } else if (key == 'createdBy') {
-        data['createdBy'] = transtype == 'create' || !data['createdBy'] ? appUser.getUid() : data['createdBy'];
+        record['createdBy'] = transtype == 'create' || !record['createdBy'] ? appUser.getUid() : record['createdBy'];
       } else if (key == 'updated') {
-        data['updated'] = new Date().toISOString();
+        record['updated'] = new Date().toISOString();
       } else if (key == 'updatedBy') {
-        data['updatedBy'] = appUser.getUid();
+        record['updatedBy'] = appUser.getUid();
       }
     }
   };
@@ -631,26 +658,14 @@ export class SimpleAppService<T extends SchemaFields> {
     ajv.addKeyword({ keyword: 'x-remote', schemaType: 'object' });
     ajv.addKeyword({ keyword: 'x-readonly', schemaType: 'boolean' });
     this.logger.debug('run hook during validation');
-    const issuccess = true;
-    // if (this.hooks.beforeValidation) {
-    //   issuccess = await this.hooks.beforeValidation(appUser, data, _id);
-    // }
-    // const issuccess = await this.hook(appUser, HookType.beforeValidation, data);
-    if (!issuccess) {
-      const errormsg: string[] = [];
-      for (let i = 0; i < this.errorlist.length; i++) {
-        errormsg.push(this.errorlist[i].message);
-      }
+    await this.runEvent(appUser, 'beforeValidation', { data, id: _id }, false);
 
-      throw new BadRequestException(errormsg as HttpExceptionOptions, 'Before validation hook failed');
-    }
-
-    let validate;
+    let validate: ReturnType<Ajv['compile']>;
     try {
       validate = ajv.compile(this.jsonschema);
     } catch (err) {
       this.logger.error('compile error', err);
-      throw new ForbiddenException(err.message);
+      throw new ForbiddenException(getErrorMessage(err));
     }
     const valid = validate(data);
     if (!valid) {
@@ -660,13 +675,13 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
-  polishIsolationFilter = (filterIsolation: any, data: any = {}) => {
-    if (this.isolationtype == 'none') {
+  polishIsolationFilter = <TFilter extends FilterQuery<T>>(filterIsolation: TFilter, data: Partial<T> = {}): TFilter => {
+    if (this.isolationtype == IsolationType.none) {
       delete filterIsolation['branchId'];
       delete filterIsolation['orgId'];
       delete filterIsolation['tenantId'];
     }
-    if (this.isolationtype == 'tenant' && !this.strictIsolation) {
+    if (this.isolationtype == IsolationType.tenant && !this.strictIsolation) {
       // delete filterIsolation['tenantId']
       if (data['tenantId']) {
         filterIsolation['tenantId'] = data['tenantId'];
@@ -674,7 +689,7 @@ export class SimpleAppService<T extends SchemaFields> {
       delete filterIsolation['branchId'];
       delete filterIsolation['orgId'];
     }
-    if (this.isolationtype == 'org' && !this.strictIsolation) {
+    if (this.isolationtype == IsolationType.org && !this.strictIsolation) {
       // delete filterIsolation['tenantId']
       if (data['tenantId']) {
         filterIsolation['tenantId'] = data['tenantId'];
@@ -687,7 +702,7 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     return filterIsolation;
   };
-  async findIdThenDelete(appUser: UserContext, id: string): Promise<any> {
+  async findIdThenDelete(appUser: UserContext, id: string): Promise<LooseRecord> {
     const deletedata = await this.findById(appUser, id);
     if (!deletedata) {
       throw new NotFoundException(`${id} not found`, 'not found');
@@ -794,12 +809,12 @@ export class SimpleAppService<T extends SchemaFields> {
       // Add audit event
       await this.addAuditEvent(appUser, this.documentName, id, 'update', data);
 
-      appUser.addUpdatedRecordId(this.documentName, data._id);
+      appUser.addUpdatedRecordId(this.documentName, id);
 
       return result;
     } catch (err) {
       this.logger.error(err);
-      throw new InternalServerErrorException(err.message);
+      throw new InternalServerErrorException(getErrorMessage(err));
     }
   };
 
@@ -862,7 +877,7 @@ export class SimpleAppService<T extends SchemaFields> {
     } catch (err) {
       this.logger.error(err);
       await this.runErrorEvent(appUser, 'errorUpdate', data, err);
-      throw new InternalServerErrorException(err.message);
+      throw new InternalServerErrorException(getErrorMessage(err));
     }
   };
 
@@ -903,7 +918,7 @@ export class SimpleAppService<T extends SchemaFields> {
       // existingdata['_id']=''
       await this.validateData(appUser, data, id);
 
-      const isolationFilter = {};
+      const isolationFilter: FilterQuery<T> = {};
       // this.polishIsolationFilter(isolationFilter);
       isolationFilter['_id'] = id;
       this.applyNestedDateTime(appUser, data, 'update');
@@ -923,7 +938,7 @@ export class SimpleAppService<T extends SchemaFields> {
       return result; // await this.findById(appUser, id);
     } catch (err) {
       this.logger.error(err);
-      throw new InternalServerErrorException(err.message);
+      throw new InternalServerErrorException(getErrorMessage(err));
     }
   };
 
@@ -961,7 +976,7 @@ export class SimpleAppService<T extends SchemaFields> {
       // existingdata['_id']=''
       // console.log("newdata",data)
       //path record no validation
-      // await this.validateData(appUser, data);
+      // this.validateData(appUser, data);
 
       const isolationFilter = { ...this.getIsolationFilter(appUser) };
       this.polishIsolationFilter(isolationFilter);
@@ -983,9 +998,9 @@ export class SimpleAppService<T extends SchemaFields> {
       await this.runEvent(appUser, 'afterPatch', { id: id, patchData: data, prevData: existingdata }, false);
       return result; //await this.findById(appUser, id);
     } catch (err) {
-      this.logger.error(err.message, 'findIdThenPath error');
+      this.logger.error(getErrorMessage(err), 'findIdThenPath error');
       console.error(err);
-      throw new InternalServerErrorException(err.message);
+      throw new InternalServerErrorException(getErrorMessage(err));
     }
   };
   async deleteMany(appUser: UserContext, filter: FilterQuery<T>) {
@@ -1016,9 +1031,9 @@ export class SimpleAppService<T extends SchemaFields> {
     // };
 
     const filter = data.filter;
-    const patch = data.data as object;
+    const patch = data.data as DynamicRecord;
 
-    const isolationFilter = { ...this.getIsolationFilter(appUser), ...(filter || {}) };
+    const isolationFilter = { ...this.getIsolationFilter(appUser), ...(filter || {}) } as FilterQuery<T>;
     this.polishIsolationFilter(isolationFilter);
     this.applyNestedDateTime(appUser, patch, 'update');
 
@@ -1047,7 +1062,7 @@ export class SimpleAppService<T extends SchemaFields> {
       throw new InternalServerErrorException('foreignkeys object undetected');
     }
 
-    const foreignkeysettings = foreignkeys[this.documentName];
+    const foreignkeysettings = (foreignkeys as GlobalForeignKeyDictionary)[this.documentName];
     if (!foreignkeysettings) {
       return null;
     }
@@ -1064,14 +1079,14 @@ export class SimpleAppService<T extends SchemaFields> {
         for (let j = 0; j < fobjs.length; j++) {
           const fkey = fobjs[j];
           //not deleted in current session, check from database
-          const filter = {};
+          const filter: Record<string, string> = {};
           filter[fkey] = id;
-          const result: any = await collection.findOne(filter, {
+          const result = (await collection.findOne(filter, {
             session: appUser.getDBSession(),
-          });
+          })) as unknown as RelatedRecord | null;
           if (result) {
             //record deleted but not yet commit, safely ignore
-            if (appUser.searchDeletedRecordId(collectionname, result._id)) continue;
+            if (appUser.searchDeletedRecordId(collectionname, String(result._id ?? ''))) continue;
 
             this.logger.error(result, `related result found in ${collectionname} ${fkey} = ${id}`);
             return result;
@@ -1085,7 +1100,7 @@ export class SimpleAppService<T extends SchemaFields> {
   /**
    * dummy ping
    */
-  ping(...data) {
+  ping(...data: unknown[]) {
     return `hello ${JSON.stringify(data)}`;
   }
 
@@ -1133,6 +1148,7 @@ export class SimpleAppService<T extends SchemaFields> {
       }
     } catch (e) {
       await this.runErrorEvent(appUser, 'errorSetStatus', data, e);
+      throw e;
     }
   }
 
@@ -1145,7 +1161,7 @@ export class SimpleAppService<T extends SchemaFields> {
    * @param      {string}       eventName  The event name
    * @param      {any}          data       The data
    */
-  runBackgroundWorker(appUser: UserContext, eventName: string, payloads: any) {
+  runBackgroundWorker(appUser: UserContext, eventName: string, payloads: unknown) {
     this.eventEmitter.emit(eventName, appUser, payloads);
   }
 
@@ -1165,7 +1181,7 @@ export class SimpleAppService<T extends SchemaFields> {
    * @param      {any}          data       The data
    * @return     {Promise}      { description_of_the_return_value }
    */
-  async runEvent(appUser: UserContext, shortEventName: string, payloads: any, enforce: boolean = true) {
+  async runEvent(appUser: UserContext, shortEventName: string, payloads: unknown, enforce: boolean = true): Promise<unknown> {
     const eventName = this.setHookName(shortEventName);
     try {
       if (enforce && !this.eventEmitter.hasListeners(eventName)) {
@@ -1178,8 +1194,9 @@ export class SimpleAppService<T extends SchemaFields> {
           throw new InternalServerErrorException(`${eventName} is invalid worker`);
         }
 
-        const result = res[0];
-        if (result?.name && result?.name.includes('Exception')) throw result;
+        const result: unknown = res[0];
+        if (result instanceof Error) throw result;
+        if (isEventResult(result) && result.name?.includes('Exception')) throw new InternalServerErrorException(result.name);
         return result;
       }
     } catch (e) {
@@ -1188,12 +1205,12 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
-  async runErrorEvent(appUser: UserContext, shortEventName: string, payloads: any, error: any) {
+  async runErrorEvent(appUser: UserContext, shortEventName: string, payloads: unknown, error: unknown) {
     const eventName = this.setHookName(shortEventName);
     try {
       if (this.eventEmitter.hasListeners(eventName)) {
         console.log('run eventName', eventName);
-        const res = await this.eventEmitter.emitAsync(eventName, appUser, payloads, error);
+        await this.eventEmitter.emitAsync(eventName, appUser, payloads, error);
       }
     } catch (e) {
       //runErrorEvent wont handle more error
@@ -1207,10 +1224,10 @@ export class SimpleAppService<T extends SchemaFields> {
     this.logger.debug(result, 'genNewDocNo');
 
     // been for to convert become object
-    (data as any)[this.documentIdentityCode] = result;
+    (data as DynamicRecord)[this.documentIdentityCode] = result;
   }
-  async runDefault(appUser: UserContext): Promise<unknown> {
-    return 'Hello this is ' + this.getDocumentType() + ': ' + this.getDocumentName();
+  async runDefault(appUser: UserContext): Promise<string> {
+    return await Promise.resolve('Hello this is ' + this.getDocumentType() + ': ' + this.getDocumentName());
   }
   async identifyForeignKeys(appUser: UserContext, data: Partial<T>) {
     /**
@@ -1218,21 +1235,19 @@ export class SimpleAppService<T extends SchemaFields> {
      * 2. loop through record obtain all foreign key value
      * 3. get all unique key value in array {product:['xxxx','yyyy'],customer:['aaa']}
      */
-    const schema = this.jsonschema;
-
     //get all foreign keys catalogue
     const collections = Object.getOwnPropertyNames(this.foreignkeys);
 
     //obtain exists data in according foreign key
     const pipelines: PipelineStage[] = [{ $match: { _id: false } }]; //exclude data from current collection
     const vdata = data; //['_doc']
-    const keystore = {};
+    const keystore: Record<string, string[]> = {};
     collections.forEach((collectionname) => {
       const fks: string[] = this.foreignkeys[collectionname];
       let results: string[] = [];
       fks.forEach((fieldpath) => {
         //console.log("fieldpath:",fieldpath,"vdata",data,vdata)
-        const tmp = jsonpath.query(vdata, fieldpath).filter((item: string) => item != '');
+        const tmp = (jsonpath.query(vdata, fieldpath) as unknown[]).filter((item): item is string => typeof item === 'string' && item != '');
         // console.log("tmp",tmp)
 
         results = results.concat(tmp);
@@ -1262,10 +1277,10 @@ export class SimpleAppService<T extends SchemaFields> {
 
     if (!unionresult) {
       this.logger.error('foreign key control failed ', 'identifyForeignKeys');
-      throw new InternalServerErrorException(pipelines as HttpExceptionOptions, 'Foreignkey check execution error');
+      throw new InternalServerErrorException(pipelines, 'Foreignkey check execution error');
     } else {
-      const searchresult: any = {};
-      unionresult.forEach((item) => {
+      const searchresult: Record<string, string[]> = {};
+      (unionresult as ForeignKeyAggregateRow[]).forEach((item) => {
         if (searchresult[item.collection]) {
           searchresult[item.collection].push(item._id);
         } else {
@@ -1308,7 +1323,7 @@ export class SimpleAppService<T extends SchemaFields> {
   async checkUniqueKeyExist(appUser: UserContext, data: string[]): Promise<UniqueKeyExistResponse[]> {
     const response: UniqueKeyExistResponse[] = [];
     const unionKey = this.getDocumentIdentityCode();
-    const searchQuery: any = { [unionKey]: { $in: data } };
+    const searchQuery = { [unionKey]: { $in: data } } as FilterQuery<T>;
     // search for multiple union exist
     const result = await this.search(appUser, searchQuery);
     for (const item of data) {
@@ -1321,7 +1336,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
   searchToAggregate(appUser: UserContext, filter: FilterQuery<T>, columns: string[], sort: string[][], lookup: { [key: string]: string }, pagination?: { pageSize?: number; pageNo?: number }) {
     const pipelines: PipelineStage[] = [];
-    const projection = {};
+    const projection: Record<string, 1> = {};
     // console.log('sortsort', sort);
 
     pipelines.push({ $match: filter });
@@ -1356,7 +1371,7 @@ export class SimpleAppService<T extends SchemaFields> {
     if (Object.keys(projection).length > 0) pipelines.push({ $project: projection });
 
     if (Array.isArray(sort) && sort.length > 0) {
-      const sortobj = {};
+      const sortobj: Record<string, 1 | -1> = {};
       sort.forEach((item) => {
         sortobj[item[0]] = item[1].toLowerCase() == 'asc' ? 1 : -1;
       });
@@ -1374,12 +1389,19 @@ export class SimpleAppService<T extends SchemaFields> {
     return pipelines;
   }
 
-  setHookName(hookName) {
-    const resourceName = this.jsonschema['x-simpleapp-config']['resourceName'];
+  private toAggregateSort(sort: SortOption): string[][] {
+    if (Array.isArray(sort)) return sort.map(([field, direction]) => [field, String(direction)]);
+    if (typeof sort === 'string') return [];
+    if (sort && typeof sort === 'object') return Object.entries(sort).map(([field, direction]) => [field, String(direction)]);
+    return [];
+  }
+
+  setHookName(hookName: string) {
+    const resourceName = this.jsonschema['x-simpleapp-config'].resourceName ?? '';
     return camelToKebab(resourceName) + '.' + camelToKebab(hookName);
   }
   //only realtime webhook supported at this moment
-  async callWebhook(appUser: UserContext, actionName: string, data: any) {
+  async callWebhook(appUser: UserContext, actionName: string, data: unknown) {
     try {
       await this.runWebHook.run(appUser, this.documentName, actionName, data);
     } catch (e) {
@@ -1387,10 +1409,10 @@ export class SimpleAppService<T extends SchemaFields> {
     }
   }
 
-  async addAuditEvent(appUser: UserContext, documentName: string, id: string, eventType: string, data: any) {
+  async addAuditEvent(appUser: UserContext, documentName: string, id: string, eventType: string, data: unknown) {
     await this.logService.addEvent(appUser, documentName, id, eventType, data);
   }
-  async addManyAuditEvents(appUser: UserContext, documentName: string, eventType: string, datas: any) {
+  async addManyAuditEvents(appUser: UserContext, documentName: string, eventType: string, datas: unknown[]) {
     await this.logService.addManyEvents(appUser, documentName, eventType, datas);
   }
 
@@ -1462,6 +1484,6 @@ export class SimpleAppService<T extends SchemaFields> {
       });
     }
 
-    return await this.aggregate(appUser, pipeline);
+    return await this.aggregate<T>(appUser, pipeline);
   }
 }
