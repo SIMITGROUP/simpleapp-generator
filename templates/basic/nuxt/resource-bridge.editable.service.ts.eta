@@ -24,7 +24,7 @@ export class MiniApp<%= pascalName %>BridgeEditableService extends MiniApp<%= pa
     <% if (value !== true && typeof value !== 'object') { return; } %>
 
     <% if(action === 'current') { %>
-      protected override async handleCurrent(message: MiniAppBridgeMessageApi<<%= typeActionName %>>): Promise<any> {
+      protected override async handleCurrent(message: MiniAppBridgeMessageApi<<%= typeActionName %>>) {
         return {};
       }
     <% } %>

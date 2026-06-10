@@ -38,6 +38,9 @@
 import { MiniAppApiListParam } from "../../types/bridge.type";
 import { MiniAppBridgeService } from "../bridge.service";
 import * as Schema from "../../openapi/backend-api";
+<% if (miniAppWhitelistApis.current) { %>
+import * as CustomSchema from "../../types/resources";
+<% } %>
 import { CreateResource, PatchResource, UpdateResource } from "../../types/common";
 
 export class MiniApp<%= pascalName %>BridgeService {
@@ -89,7 +92,7 @@ export class MiniApp<%= pascalName %>BridgeService {
       }
     <% } else if(action === 'current') { %>
       async <%= action %>() {
-        return this.bridge.callApi(this.resourceName, "<%= action %>");
+        return this.bridge.callApi<CustomSchema.Current<%= pascalName %>>(this.resourceName, "<%= action %>");
       }
     <% } else { %>
       <% const apiSetting = it.apiSettings.find(item => item.action === action); %>

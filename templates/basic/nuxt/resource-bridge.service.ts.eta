@@ -151,8 +151,8 @@ export class MiniApp<%= pascalName %>BridgeService {
         return (await this.api!.autoComplete(message.params.query ?? "", {})).data;
       }
     <% } else if(action === 'current') { %>
-      protected async handleCurrent(message: MiniAppBridgeMessageApi<<%= typeActionName %>>) {
-        return {};
+      protected async handleCurrent(message: MiniAppBridgeMessageApi<<%= typeActionName %>>): Promise<unknown> {
+        return null;
       }
     <% } else { %>
       protected async handle<%= upperFirstCase(action) %>(message: MiniAppBridgeMessageApi<<%= typeActionName %>>) {

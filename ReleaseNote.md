@@ -1,3 +1,6 @@
+[2.0.3o-alpha]
+1. Fix mini app current action type
+
 [2.0.3n-alpha]
 1. Add hasRole checking in hasAccessByPageMeta
 2. Add type for Simple App Service
