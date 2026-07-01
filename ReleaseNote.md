@@ -1,3 +1,7 @@
+[2.0.3p-alpha]
+1. Add mini-app auth token bridge
+
+
 [2.0.3o-alpha]
 1. Fix mini app current action type
 

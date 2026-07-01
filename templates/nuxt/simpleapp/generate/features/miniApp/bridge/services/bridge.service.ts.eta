@@ -5,13 +5,14 @@
  * Author: --
  */
 
-import { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import { SimpleAppDocumentType } from "~/types";
 import { MINI_APP_BRIDGE_MESSAGES } from "../constants/common.constant";
 import { MINI_APP_API_CUSTOM_RESOURCES } from "../constants/custom-resource.constant";
 import { MINI_APP_API_RESOURCES } from "../constants/resource.constant";
 import {
   MiniAppBridgeMessageApi,
+  MiniAppBridgeMessageAuthToken,
   MiniAppBridgeMessageNavigate,
   MiniAppBridgeMessageNavigateCurrentMiniApp,
   MiniAppBridgeMessageOpenOnScreenResourceForm,
@@ -115,6 +116,56 @@ export class MiniAppBridgeService extends MiniAppBridgeResourceAccessor {
         {
           targetOrigin: messageEvent.origin,
         },
+      );
+    }
+  }
+
+  async handleBridgeAuthToken(
+    messageEvent: MessageEvent,
+    message: MiniAppBridgeMessageAuthToken,
+    miniAppCode: string,
+    developerPortalAppId: string,
+  ) {
+    try {
+      // Use the same plain axios + getAxiosConfig() base path as the resource
+      // bridges. NOT useNuxtApp().$axios — its interceptor throws fatal Nuxt
+      // errors on non-2xx, which would crash the host page and leave the SDK's
+      // pending promise unresolved instead of replying with success:false.
+      const config = getAxiosConfig();
+      const res = await axios.get(`${config.basePath}/miniapp/auth/token`, {
+        headers: {
+          "x-mini-app-code": miniAppCode,
+          "x-mini-app-dev-portal-app-id": developerPortalAppId,
+          // The role the user is currently acting as; the backend validates it
+          // against the user's real groups before trusting it.
+          "x-mini-app-current-group": getUserStore().currentGroup ?? "",
+        },
+      });
+
+      messageEvent.source?.postMessage(
+        {
+          type: MINI_APP_BRIDGE_MESSAGES.AUTH_TOKEN_RESPONSE,
+          success: true,
+          requestId: message.requestId,
+          token: res.data.token,
+        },
+        { targetOrigin: messageEvent.origin },
+      );
+    } catch (e) {
+      const err = e as AxiosError;
+      messageEvent.source?.postMessage(
+        {
+          type: MINI_APP_BRIDGE_MESSAGES.AUTH_TOKEN_RESPONSE,
+          success: false,
+          requestId: message.requestId,
+          error: {
+            code: err.code,
+            message: err.message,
+            status: err.response?.status ?? err.status,
+            response: err.response?.data ?? {},
+          },
+        },
+        { targetOrigin: messageEvent.origin },
       );
     }
   }

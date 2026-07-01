@@ -3,3 +3,13 @@ import { SetMetadata } from '@nestjs/common';
 export const MINIAPP_SCOPE_KEY = 'miniapp_required_scope';
 
 export const MiniAppScope = (scope: string) => SetMetadata(MINIAPP_SCOPE_KEY, scope);
+
+export const MINIAPP_ALLOW_NO_SCOPE_KEY = 'miniapp_allow_no_scope';
+
+/**
+ * Marks an endpoint as callable by a mini-app SDK / mini-API request WITHOUT a
+ * configured `integration.scopes` entry. Use only for baseline capabilities that
+ * grant no extra data access (e.g. minting the user-context auth token, whose
+ * audience is bound by the host, not the caller).
+ */
+export const MiniAppAllowWithoutScope = () => SetMetadata(MINIAPP_ALLOW_NO_SCOPE_KEY, true);

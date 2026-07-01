@@ -19,17 +19,17 @@
       class="w-full h-full pb-7"
       @load="onIframeLoad"
     />
-    <div v-if="hasError" class="error-message">
+    <div
+      v-if="hasError"
+      class="error-message"
+    >
       {{ t("miniAppLang.ERR_FAILED_LOAD_CONTENT") }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {
-  MiniAppDetail,
-  MiniAppIntegrationCustomPagePages,
-} from "~/simpleapp/generate/openapi";
+import { MiniAppDetail, MiniAppIntegrationCustomPagePages } from "~/simpleapp/generate/openapi";
 
 const props = defineProps<{
   miniApp: MiniAppDetail;
@@ -78,18 +78,20 @@ function copyQueryToIframeSource(url: string): string {
   return queryString ? url + (hasQuery ? "&" : "?") + queryString : url;
 }
 
-const { iframeRef, onIframeLoad } = useMiniAppBridge(
-  props.miniAppInstallationId,
-  props.pageInfo,
-  props.miniAppCode,
-  props.developerPortalAppId,
-);
-
 const iframeSource = computed(() => {
   return props.miniApp.env === "dev"
     ? props.pageInfo.sources.development
     : props.pageInfo.sources.production;
 });
+
+const { iframeRef, onIframeLoad } = useMiniAppBridge(
+  props.miniAppInstallationId,
+  props.pageInfo,
+  props.miniAppCode,
+  props.developerPortalAppId,
+  // The exact source URL we load → its origin is the only one allowed on the bridge.
+  iframeSource.value,
+);
 </script>
 
 <style scoped>

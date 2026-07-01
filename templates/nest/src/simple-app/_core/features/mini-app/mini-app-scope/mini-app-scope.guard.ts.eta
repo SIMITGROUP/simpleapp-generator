@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, ForbiddenException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
-import { MINIAPP_SCOPE_KEY } from './mini-app-scope.decorator';
+import { MINIAPP_ALLOW_NO_SCOPE_KEY, MINIAPP_SCOPE_KEY } from './mini-app-scope.decorator';
 import { MiniAppScopeService } from './mini-app-scope.service';
 import { TUserType } from 'src/simple-app/_core/framework/schemas';
 import { GqlContextType } from '@nestjs/graphql';
@@ -21,9 +21,9 @@ export class MiniAppScopeGuard implements CanActivate {
 
     const req = context.switchToHttp().getRequest();
 
-    if(req.url==='/health'){
-      return true
-    }    
+    if (req.url === '/health') {
+      return true;
+    }
     const appUser: UserContext = req?.sessionuser;
     if (!appUser) {
       throw new BadRequestException('User Context Not Found');
@@ -31,6 +31,13 @@ export class MiniAppScopeGuard implements CanActivate {
 
     // Not Mini API Request, Allow To Proceed
     if (!this._miniAppUserTypes.includes(appUser.getUserType())) {
+      return true;
+    }
+
+    // Baseline capability available to any mini app without a configured scope
+    // (e.g. minting the user-context auth token).
+    const allowWithoutScope = this.reflector.get<boolean>(MINIAPP_ALLOW_NO_SCOPE_KEY, context.getHandler());
+    if (allowWithoutScope) {
       return true;
     }
 
