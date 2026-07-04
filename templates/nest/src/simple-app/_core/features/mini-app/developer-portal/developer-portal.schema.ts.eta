@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class DeveloperPortalInstalledXOrgsResponseInstalledXOrg {
   @ApiProperty({ type: 'string', required: true })
@@ -7,6 +7,8 @@ export class DeveloperPortalInstalledXOrgsResponseInstalledXOrg {
   branchName: string;
   @ApiProperty({ type: [String], required: true })
   xOrg: string[];
+  @ApiPropertyOptional({ type: 'string' })
+  rateLimitProfile?: string;
 }
 
 export class DeveloperPortalInstalledXOrgsResponse {

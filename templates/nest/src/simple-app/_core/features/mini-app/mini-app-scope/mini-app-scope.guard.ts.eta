@@ -1,10 +1,15 @@
-import { CanActivate, ExecutionContext, Injectable, ForbiddenException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { Request } from 'express';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { MINIAPP_ALLOW_NO_SCOPE_KEY, MINIAPP_SCOPE_KEY } from './mini-app-scope.decorator';
 import { MiniAppScopeService } from './mini-app-scope.service';
 import { TUserType } from 'src/simple-app/_core/framework/schemas';
 import { GqlContextType } from '@nestjs/graphql';
+
+type MiniAppScopeRequest = Request & {
+  sessionuser?: UserContext;
+};
 
 @Injectable()
 export class MiniAppScopeGuard implements CanActivate {
@@ -19,12 +24,12 @@ export class MiniAppScopeGuard implements CanActivate {
       return true;
     }
 
-    const req = context.switchToHttp().getRequest();
+    const req = context.switchToHttp().getRequest<MiniAppScopeRequest>();
 
     if (req.url === '/health') {
       return true;
     }
-    const appUser: UserContext = req?.sessionuser;
+    const appUser = req.sessionuser;
     if (!appUser) {
       throw new BadRequestException('User Context Not Found');
     }

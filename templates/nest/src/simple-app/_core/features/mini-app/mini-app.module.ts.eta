@@ -5,26 +5,27 @@
  * Author: Ks Tan
  */
 import { Module } from '@nestjs/common';
-import { MiniAppManagerController } from './mini-app-manager/mini-app-manager.controller';
-import { MiniAppManagerService } from './mini-app-manager/mini-app-manager.service';
-import { MiniAppManagerPolicyService } from './mini-app-manager/mini-app-manager-policy.service';
+import { BranchModule } from '@resources/branch/branch.module';
+import { PermissionModule } from '@resources/permission/permission.module';
+import { TenantModule } from '@resources/tenant/tenant.module';
+import { UserModule } from '@resources/user/user.module';
 import { MiniAppInstallationModule } from '../../resources/mini-app-installation/mini-app-installation.module';
 import { MiniAppModule } from '../../resources/mini-app/mini-app.module';
 import { SimpleAppSoftwarePolicyModule } from '../policy/policy.module';
-import { MiniAppManagerBridgeService } from './mini-app-manager/mini-app-manager-bridge.service';
-import { MiniAppManagerEnvProductionService } from './mini-app-manager/mini-app-manager-env-production.service';
-import { MiniAppManagerEnvDevelopmentService } from './mini-app-manager/mini-app-manager-env-development.service';
-import { DeveloperPortalController } from './developer-portal/developer-portal.controller';
-import { DeveloperPortalEnvProductionService } from './developer-portal/developer-portal-env-production.service';
-import { DeveloperPortalEnvDevelopmentService } from './developer-portal/developer-portal-env-development.service';
 import { DeveloperPortalBridgeService } from './developer-portal/developer-portal-bridge.service';
+import { DeveloperPortalEnvDevelopmentService } from './developer-portal/developer-portal-env-development.service';
+import { DeveloperPortalEnvProductionService } from './developer-portal/developer-portal-env-production.service';
+import { DeveloperPortalController } from './developer-portal/developer-portal.controller';
 import { DeveloperPortalService } from './developer-portal/developer-portal.service';
-import { BranchModule } from '@resources/branch/branch.module';
-import { PermissionModule } from '@resources/permission/permission.module';
-import { UserModule } from '@resources/user/user.module';
+import { MiniAppManagerBridgeService } from './mini-app-manager/mini-app-manager-bridge.service';
+import { MiniAppManagerEnvDevelopmentService } from './mini-app-manager/mini-app-manager-env-development.service';
+import { MiniAppManagerEnvProductionService } from './mini-app-manager/mini-app-manager-env-production.service';
+import { MiniAppManagerPolicyService } from './mini-app-manager/mini-app-manager-policy.service';
+import { MiniAppManagerController } from './mini-app-manager/mini-app-manager.controller';
+import { MiniAppManagerService } from './mini-app-manager/mini-app-manager.service';
 
 @Module({
-  imports: [SimpleAppSoftwarePolicyModule, MiniAppInstallationModule, MiniAppModule, BranchModule, PermissionModule, UserModule],
+  imports: [SimpleAppSoftwarePolicyModule, MiniAppInstallationModule, MiniAppModule, BranchModule, TenantModule, PermissionModule, UserModule],
   controllers: [MiniAppManagerController, DeveloperPortalController],
   providers: [
     MiniAppManagerService,

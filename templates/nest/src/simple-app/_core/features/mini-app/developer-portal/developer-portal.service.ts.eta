@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { MiniApp } from 'src/simple-app/_core/resources/mini-app/mini-app.schema';
-import { MiniAppInstallation } from 'src/simple-app/_core/resources/mini-app-installation/mini-app-installation.schema';
-import { Branch } from 'src/simple-app/_core/resources/branch/branch.schema';
-import _ from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
+import { Tenant } from '@resources/tenant/tenant.schema';
+import _ from 'lodash';
 import { Model } from 'mongoose';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
+import { Branch } from 'src/simple-app/_core/resources/branch/branch.schema';
+import { MiniAppInstallation } from 'src/simple-app/_core/resources/mini-app-installation/mini-app-installation.schema';
 import { MiniAppEnvEnum } from 'src/simple-app/_core/resources/mini-app/mini-app.enum';
+import { MiniApp } from 'src/simple-app/_core/resources/mini-app/mini-app.schema';
 
 @Injectable()
 export class DeveloperPortalService {
@@ -19,6 +20,9 @@ export class DeveloperPortalService {
 
     @InjectModel('Branch')
     protected branchDoc: Model<Branch>,
+
+    @InjectModel('Tenant')
+    protected tenantDoc: Model<Tenant>,
   ) {}
 
   async getDemoCompany(appUser: UserContext, developerPortalAppId: string) {
@@ -76,15 +80,27 @@ export class DeveloperPortalService {
       branchMap.set(key, branch);
     }
 
-    // Step 5: Compose result
+    // Step 5: Batch query tenants (keyed by tenantId) for the rate limit profile
+    const tenantIdList = _.uniq(miniAppInstallations.map((install) => install.tenantId));
+    const allTenants = await this.tenantDoc.find({ tenantId: { $in: tenantIdList } });
+
+    // Step 6: Build a lookup map: tenantId → tenant
+    const tenantMap = new Map<number, Tenant>();
+    for (const tenant of allTenants) {
+      tenantMap.set(tenant.tenantId, tenant);
+    }
+
+    // Step 7: Compose result
     const installedXOrgs = miniAppInstallations.map((install) => {
       const key = `${install.tenantId}-${install.orgId}-${install.branchId}`;
       const branch = branchMap.get(key);
+      const tenant = tenantMap.get(install.tenantId);
 
       return {
         branchCode: branch?.branchCode,
         branchName: branch?.branchName,
         xOrg: appUser.generateXOrg(install.tenantId, install.orgId, install.branchId),
+        rateLimitProfile: tenant?.miniAppConfig?.rateLimitProfile || tenant?.license,
       };
     });
 
