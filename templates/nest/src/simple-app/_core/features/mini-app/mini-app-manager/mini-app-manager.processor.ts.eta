@@ -6,18 +6,27 @@ import _ from 'lodash';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { MiniAppError } from './mini-app-manager.error';
 import { MiniAppEnvEnum, MiniAppStatusEnum } from 'src/simple-app/_core/resources/mini-app/mini-app.enum';
-import { DynamicParam,MiniApp,MiniAppInstallation, CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail } from '../dto';
+import { DynamicParam, MiniApp, MiniAppInstallation, CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail } from '../dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { UserService } from 'src/simple-app/_core/resources/user/user.service';
+import { PermissionService } from 'src/simple-app/_core/resources/permission/permission.service';
+import { MiniAppServiceAccount } from './mini-app-service-account';
 
 export abstract class MiniAppManagerProcessor {
+  protected readonly saManager: MiniAppServiceAccount;
+
   constructor(
     protected readonly miniAppService: MiniAppService,
     protected readonly miniAppInstallationService: MiniAppInstallationService,
     protected readonly policyService: MiniAppManagerPolicyService,
     @InjectModel('MiniApp')
     private miniAppDoc: Model<MiniApp>,
-  ) {}
+    protected readonly userService: UserService,
+    protected readonly permissionService: PermissionService,
+  ) {
+    this.saManager = new MiniAppServiceAccount(userService, permissionService);
+  }
 
   // ========================================= Abstract =========================================
 
@@ -44,6 +53,7 @@ export abstract class MiniAppManagerProcessor {
           return null;
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return this.formatMiniAppDetail(appUser, miniApp, installation);
       })
       .filter(Boolean);
@@ -53,6 +63,7 @@ export abstract class MiniAppManagerProcessor {
 
   protected async findMiniAppDetail(appUser: UserContext, miniApp: MiniApp) {
     const miniAppInstallation = await this.findMiniAppInstallation(appUser, miniApp.code);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.formatMiniAppDetail(appUser, miniApp, miniAppInstallation);
   }
 
@@ -66,6 +77,7 @@ export abstract class MiniAppManagerProcessor {
       if (miniApp.status === MiniAppStatusEnum.UPCOMING) {
         result.upcomingMiniApps.push(this.formatMiniAppDetail(appUser, miniApp));
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
         if (miniApp.access.visibility === 'private') {
           if (!(miniApp.access.allowEmails ?? []).includes(appUser.getEmail())) {
             return;
@@ -172,7 +184,7 @@ export abstract class MiniAppManagerProcessor {
   }
 
   protected assertIsMiniAppReleased(miniApp: MiniApp) {
-    if (!this.policyService.isMiniAppRealeased(miniApp.status as MiniAppStatusEnum)) {
+    if (!this.policyService.isMiniAppRealeased(miniApp.status)) {
       const msg = MiniAppError.format(MiniAppError.ERR.NOT_RELEASED, { status: miniApp.status });
       throw new BadRequestException(msg);
     }
@@ -186,6 +198,7 @@ export abstract class MiniAppManagerProcessor {
   }
 
   protected assertPrivateAppPermission(appUser: UserContext, miniApp: MiniApp) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     if (miniApp.access.visibility === 'private') {
       if (!(miniApp.access.allowEmails ?? []).includes(appUser.getEmail())) {
         const msg = MiniAppError.format(MiniAppError.ERR.PRIVATE_APP);
@@ -226,6 +239,11 @@ export abstract class MiniAppManagerProcessor {
   // ===================================== Update Collection ====================================
 
   protected async createMiniAppInstallation(appUser: UserContext, miniApp: MiniApp) {
+    const miniApiUser = await this.saManager.ensure(appUser, {
+      appCode: miniApp.code,
+      appName: miniApp.name,
+      appId: miniApp.developerPortal.appId,
+    });
     return await this.miniAppInstallationService.create(appUser, {
       apiKey: crypto.randomUUID(),
       isActive: true,
@@ -236,7 +254,7 @@ export abstract class MiniAppManagerProcessor {
         env: miniApp.env,
         developerPortalAppId: miniApp.developerPortal.appId,
       },
-      miniApiUser: this.buildMiniApiUserPayload(appUser),
+      miniApiUser,
       settings: {},
     });
   }
@@ -244,13 +262,13 @@ export abstract class MiniAppManagerProcessor {
   protected async setMiniAppInstallationActiveStatus(appUser: UserContext, miniAppInstallation: MiniAppInstallation, isActive: boolean) {
     return await this.miniAppInstallationService.findIdThenPatch(appUser, miniAppInstallation._id, {
       isActive,
-    } as MiniAppInstallation);
+    });
   }
 
   protected async setMiniAppInstallationSetting(appUser: UserContext, miniAppInstallation: MiniAppInstallation, data: DynamicParam) {
     return await this.miniAppInstallationService.findIdThenPatch(appUser, miniAppInstallation._id, {
       settings: data,
-    } as MiniAppInstallation);
+    });
   }
 
   // ========================================== Format ==========================================
@@ -266,12 +284,15 @@ export abstract class MiniAppManagerProcessor {
     }
 
     // @ts-expect-error Got toObject() function
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const miniAppObj = miniApp.toObject();
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return {
       ...miniAppObj,
       hasRequiredPlan: this.policyService.hasRequiredPlan(appUser, miniApp),
       // @ts-expect-error Got toObject() function
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       miniAppInstallation: installation ? installation.toObject() : undefined,
     };
   }
@@ -279,14 +300,21 @@ export abstract class MiniAppManagerProcessor {
   // =========================================== Other ==========================================
 
   protected async reactivateInstalledMiniApp(appUser: UserContext, miniAppInstallation: MiniAppInstallation) {
+    const miniApiUser = await this.saManager.ensure(appUser, {
+      appCode: miniAppInstallation.miniApp.code,
+      appName: miniAppInstallation.miniApp.label,
+      appId: miniAppInstallation.miniApp.developerPortalAppId,
+    });
     return await this.miniAppInstallationService.findIdThenPatch(appUser, miniAppInstallation._id, {
       isActive: true,
-      miniApiUser: this.buildMiniApiUserPayload(appUser),
-    } as MiniAppInstallation);
+      miniApiUser,
+    });
   }
 
   protected async deactiveInstalledMiniApp(appUser: UserContext, miniAppInstallation: MiniAppInstallation) {
-    return this.setMiniAppInstallationActiveStatus(appUser, miniAppInstallation, false);
+    const result = await this.setMiniAppInstallationActiveStatus(appUser, miniAppInstallation, false);
+    await this.saManager.revoke(appUser, miniAppInstallation.miniApp.code, miniAppInstallation.branchId);
+    return result;
   }
 
   protected resolveMiniAppPermissions(appUser: UserContext) {
@@ -298,12 +326,5 @@ export abstract class MiniAppManagerProcessor {
     };
   }
 
-  protected buildMiniApiUserPayload(appUser: UserContext) {
-    return {
-      _id: appUser.getId(),
-      uid: appUser.getUid(),
-      name: appUser.getFullname(),
-      email: appUser.getEmail(),
-    };
-  }
 }
+

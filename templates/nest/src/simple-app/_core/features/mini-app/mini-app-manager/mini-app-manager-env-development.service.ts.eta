@@ -8,11 +8,20 @@ import { DynamicParam, MiniApp, CategorizedMiniAppDetail, InstalledMiniAppDetail
 import { MiniAppAccessVisibilityEnum, MiniAppEnvEnum, MiniAppStatusEnum } from 'src/simple-app/_core/resources/mini-app/mini-app.enum';
 import { Model } from 'mongoose';
 import _ from 'lodash';
+import { UserService } from 'src/simple-app/_core/resources/user/user.service';
+import { PermissionService } from 'src/simple-app/_core/resources/permission/permission.service';
 
 @Injectable()
 export class MiniAppManagerEnvDevelopmentService extends MiniAppManagerProcessor {
-  constructor(miniAppService: MiniAppService, miniAppInstallationService: MiniAppInstallationService, policyService: MiniAppManagerPolicyService, miniAppDoc: Model<MiniApp>) {
-    super(miniAppService, miniAppInstallationService, policyService, miniAppDoc);
+  constructor(
+    miniAppService: MiniAppService,
+    miniAppInstallationService: MiniAppInstallationService,
+    policyService: MiniAppManagerPolicyService,
+    miniAppDoc: Model<MiniApp>,
+    userService: UserService,
+    permissionService: PermissionService,
+  ) {
+    super(miniAppService, miniAppInstallationService, policyService, miniAppDoc, userService, permissionService);
   }
 
   async runGetInstalledMiniApps(appUser: UserContext): Promise<InstalledMiniAppDetail> {
@@ -38,6 +47,7 @@ export class MiniAppManagerEnvDevelopmentService extends MiniAppManagerProcessor
     this.assertEnvironment(appUser, miniApp);
     this.assertPrivateAppPermission(appUser, miniApp);
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return await this.findMiniAppDetail(appUser, miniApp);
   }
 
