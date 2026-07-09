@@ -377,6 +377,9 @@ const generateSchema = (
           let storein = `${backendTargetFolder}/_resources/${resourceFileName}`;
           if (systemResources.includes(docname)) {
             storein = `${backendTargetFolder}/_core/resources/${resourceFileName}`;
+            if(resourceName === 'user' && filecategory === 'controller'){
+              continue;
+            }
           }
           const targetfile = `${storein}/${resourceFileName}.${filecategory}.${filetype}`;
           if (!existsSync(storein)) {
