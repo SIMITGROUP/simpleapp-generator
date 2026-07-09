@@ -1,5 +1,6 @@
 [2.0.3r-alpha]
-1. feat: use static template for core user controller
+1. Use static template for core user controller
+2. Provision mini-app service account on install
 
 [2.0.3q-alpha]
 1. Add mini-app rateLimitProfile
