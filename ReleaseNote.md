@@ -1,3 +1,6 @@
+[2.0.3s-alpha]
+1. Support queryPara in api.resolver.ts.eta so GraphQL additional APIs keep optional filters after regenerate
+
 [2.0.3r-alpha]
 1. Use static template for core user controller
 2. Provision mini-app service account on install
