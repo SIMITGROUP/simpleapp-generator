@@ -72,6 +72,12 @@ export class <%= it.typename %>ApiResolver {
                 <%}%>    
               <%}%>  
             <%}%>
+            <% if(api.queryPara && api.queryPara.length>0) {%>
+              <%for(let q=0;q<api.queryPara.length; q++){%>
+                <% const qp = api['queryPara'][q] %>
+                @Args('<%=qp%>', { nullable: true }) <%=qp%>?: string,
+              <%}%>
+            <%}%>
              ){
         
           <%if(api.action=='getPhoto'){%>
@@ -86,7 +92,12 @@ export class <%= it.typename %>ApiResolver {
                   <%=paraname%>,
                 <%}%>    
               <%}%>  
-            <%}%>            
+            <%}%>
+            <% if(api.queryPara && api.queryPara.length>0) {%>
+              <%for(let q=0;q<api.queryPara.length; q++){%>
+                <%= api['queryPara'][q] %>,
+              <%}%>
+            <%}%>
             )           
           <%}%>            
       } 
