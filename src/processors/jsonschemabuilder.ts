@@ -66,8 +66,11 @@ export const readJsonSchemaBuilder = async (
   }
 
   if (schemaconfigs.allStatus && schemaconfigs.allStatus.length > 0) {
+    // enum derived from the docFlow config: consumers (AJV validation, generated docs,
+    // the internal query API's field tree) all learn the legal status values.
     orijsondata.properties['documentStatus'] = {
       type: 'string',
+      enum: schemaconfigs.allStatus.map((s) => s.status),
       default: 'draft'
     };
   }
