@@ -234,13 +234,14 @@ export class SimpleAppService<T extends SchemaFields> {
     }
     // return this;
   }
-  async aggregateNoIsolation<T>(appUser: UserContext, pipeline: PipelineStage[]) {
+  async aggregateNoIsolation<T>(appUser: UserContext, pipeline: PipelineStage[], opts?: { maxTimeMS?: number }) {
     if (pipeline[0] && pipeline[0]['$match']) {
       try {
         this.logger.verbose(pipeline, `${this.documentName} aggregate:`);
 
         return await this.doc.aggregate<T>(pipeline, {
           session: appUser.getDBSession(),
+          ...(opts ?? {}),
         });
       } catch (err) {
         throw new InternalServerErrorException(err);
@@ -249,7 +250,7 @@ export class SimpleAppService<T extends SchemaFields> {
       throw new InternalServerErrorException('first aggregate pipelinestage shall use $match');
     }
   }
-  async aggregate<TAggregateResult = LooseRecord>(appUser: UserContext, pipeline: PipelineStage[]) {
+  async aggregate<TAggregateResult = LooseRecord>(appUser: UserContext, pipeline: PipelineStage[], opts?: { maxTimeMS?: number }) {
     if (pipeline[0] && pipeline[0]['$match']) {
       try {
         const isolationFilter = { ...this.getIsolationFilter(appUser) };
@@ -263,6 +264,7 @@ export class SimpleAppService<T extends SchemaFields> {
         // }
         const res = await this.doc.aggregate<TAggregateResult>(pipeline, {
           session: appUser.getDBSession(),
+          ...(opts ?? {}),
         });
 
         // if(appUser.getId() == ''){
@@ -560,7 +562,6 @@ export class SimpleAppService<T extends SchemaFields> {
       }
 
       return result;
-
     } else {
       throw new BadRequestException(this.getDocumentType() + ': create many only support array');
     }

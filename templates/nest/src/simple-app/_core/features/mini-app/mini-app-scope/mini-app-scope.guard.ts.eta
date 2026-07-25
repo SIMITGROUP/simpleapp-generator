@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { MINIAPP_ALLOW_NO_SCOPE_KEY, MINIAPP_SCOPE_KEY } from './mini-app-scope.decorator';
-import { MiniAppScopeService } from './mini-app-scope.service';
+import { MINIAPP_FORBIDDEN_MESSAGE, MiniAppScopeService } from './mini-app-scope.service';
 import { TUserType } from 'src/simple-app/_core/framework/schemas';
 import { GqlContextType } from '@nestjs/graphql';
 
@@ -49,7 +49,7 @@ export class MiniAppScopeGuard implements CanActivate {
     const requiredScope = this.reflector.get<string>(MINIAPP_SCOPE_KEY, context.getHandler());
     if (!requiredScope) {
       // Not Defined @MiniAppScope('xxx'), Not Allowed To Call This API
-      throw new ForbiddenException('You are not allowed to call this protected api.');
+      throw new ForbiddenException(MINIAPP_FORBIDDEN_MESSAGE);
     }
 
     await this.miniAppScopeService.assertHasScope(appUser, requiredScope, req);

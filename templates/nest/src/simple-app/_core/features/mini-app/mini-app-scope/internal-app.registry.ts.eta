@@ -1,0 +1,32 @@
+import { Injectable, Logger } from '@nestjs/common';
+
+/**
+ * Trust registry for the internal API tier (spec: 2026-07-21-internal-api-tier-design.md §3).
+ * Membership in INTERNAL_MINI_APP_IDS (comma-separated developerPortal.appId values) is the
+ * ONLY grant for `internal.*` scopes. Missing/empty env => empty set => fail closed.
+ */
+@Injectable()
+export class InternalAppRegistry {
+  private readonly logger = new Logger(InternalAppRegistry.name);
+  private readonly appIds: Set<string>;
+
+  constructor() {
+    const raw = process.env.INTERNAL_MINI_APP_IDS ?? '';
+    this.appIds = new Set(
+      raw
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0),
+    );
+    this.logger.log(`Loaded ${this.appIds.size} internal mini app id(s)`);
+    this.logger.debug(`Internal mini app ids: ${[...this.appIds].join(', ')}`);
+  }
+
+  isInternalApp(appId: string): boolean {
+    return this.appIds.has(appId);
+  }
+
+  size(): number {
+    return this.appIds.size;
+  }
+}

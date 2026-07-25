@@ -1,3 +1,6 @@
+[2.0.3t-alpha]
+1. Enforce internal.* scope via registry
+
 [2.0.3s-alpha]
 1. Support queryPara in api.resolver.ts.eta so GraphQL additional APIs keep optional filters after regenerate
 

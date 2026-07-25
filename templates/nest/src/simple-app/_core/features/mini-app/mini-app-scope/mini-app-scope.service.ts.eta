@@ -7,10 +7,20 @@ import { getEnvironment, getEnvironmentWithApp } from '../utils/mini-app.util';
 import { MiniAppManagerEnvEnum } from '../mini-app-manager/mini-app-manager.enum';
 import { Request } from 'express';
 import _ from 'lodash';
+import { InternalAppRegistry } from './internal-app.registry';
+
+/** Reserved namespace for the internal API tier (spec §4). */
+const INTERNAL_SCOPE_PREFIX = 'internal.';
+
+/** Single generic rejection string — identical for every mini-app authorization failure (no probing oracle). */
+export const MINIAPP_FORBIDDEN_MESSAGE = 'You are not allowed to call this protected api.';
 
 @Injectable()
 export class MiniAppScopeService {
-  constructor(@InjectModel('Miniapp') private readonly miniAppModel: Model<MiniApp>) {}
+  constructor(
+    @InjectModel('Miniapp') private readonly miniAppModel: Model<MiniApp>,
+    private readonly internalAppRegistry: InternalAppRegistry,
+  ) {}
 
   /**
    * Find Mini App From Dev To See Is This A Custom Demo Company
@@ -60,10 +70,32 @@ export class MiniAppScopeService {
   async assertHasScope(appUser: UserContext, requiredScope: string, req: Request) {
     const developerPortalAppId = this.getDeveloperPortalAppId(appUser, req);
 
+    if (requiredScope.startsWith(INTERNAL_SCOPE_PREFIX)) {
+      this.assertInternalScopeAllowed(appUser, developerPortalAppId);
+      return;
+    }
+
     const scopes = await this.getScopes(appUser, developerPortalAppId);
 
     if (!scopes.includes(requiredScope)) {
       throw new ForbiddenException(`Missing required scope: ${requiredScope}`);
+    }
+  }
+
+  /**
+   * internal.* rule (spec §4): miniApi plane + verified token + env allowlist.
+   * The MiniApp doc / integration.scopes are deliberately NOT consulted — the
+   * allowlist IS the grant (spec D6). All rejections use the same generic message.
+   */
+  assertInternalScopeAllowed(appUser: UserContext, developerPortalAppId: string) {
+    if (appUser.getUserType() !== 'miniApi') {
+      throw new ForbiddenException(MINIAPP_FORBIDDEN_MESSAGE);
+    }
+    if (!appUser.isMiniApiTokenVerified()) {
+      throw new ForbiddenException(MINIAPP_FORBIDDEN_MESSAGE);
+    }
+    if (!this.internalAppRegistry.isInternalApp(developerPortalAppId)) {
+      throw new ForbiddenException(MINIAPP_FORBIDDEN_MESSAGE);
     }
   }
 

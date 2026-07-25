@@ -27,6 +27,7 @@ import { Permission, StepData } from 'src/simple-app/_core/resources/permission/
 import { User } from 'src/simple-app/_core/resources/user/user.schema';
 import { ModifiedRecords } from '../../framework/schemas';
 import { SimpleAppDbRevertService } from '../../framework/simple-app-db-revert.service';
+import { verifyMiniApiAccessToken } from '../auth/api-key/mini-api-token.util';
 import { Role } from '../auth/role-guard/roles.enum';
 import * as rolegroups from '../auth/role-guard/roles.group';
 import { TenantHealthStatusEnum } from './user-context.enum';
@@ -81,6 +82,8 @@ export class UserContext extends UserContextInfo {
   private miniApiToken?: string;
 
   private miniApiTokenInfo?: TMiniApiTokenInfo;
+
+  private miniApiTokenVerified = false;
 
   // protected groups: string[] = [];
 
@@ -217,6 +220,8 @@ export class UserContext extends UserContextInfo {
   getMiniApiToken = () => this.miniApiToken;
 
   getMiniApiTokenInfo = () => this.miniApiTokenInfo;
+
+  isMiniApiTokenVerified = () => this.miniApiTokenVerified;
 
   setId = (id: string) => {
     this._id = id;
@@ -1084,7 +1089,14 @@ export class UserContext extends UserContextInfo {
   }
 
   async setMiniApiUser(tokenStr: string, xOrg: string) {
-    const tokenInfo: TMiniApiTokenInfo = jwt.decode(tokenStr) as TMiniApiTokenInfo;
+    const { tokenInfo, verified } = verifyMiniApiAccessToken(tokenStr);
+    if (!verified) {
+      this.logger.warn(`x-mini-api-access-token signature NOT verified (legacy accept) for app ${tokenInfo?.miniAppId ?? 'unknown'}`);
+      if (process.env.MINI_API_ACCESS_TOKEN_ENFORCE === 'true') {
+        throw new ForbiddenException('Invalid mini api access token');
+      }
+    }
+    this.miniApiTokenVerified = verified;
 
     const appId = tokenInfo?.miniAppId ?? '';
 
