@@ -9,6 +9,7 @@ import { Roles } from '../auth/role-guard/roles.decorator';
 import { Role } from '../auth/role-guard/roles.enum';
 import { AppUser } from '../user-context/appuser.decorator';
 import { UserContext } from '../user-context/user.context';
+import { TenantCreatedViaEnum } from '@resources/tenant/tenant.enum';
 import { KeyValue, RegTenant, TenantPermission, UserContextInfo } from './profile.schema';
 import { ProfileService } from './profile.service';
 @ApiTags('PROFILE')
@@ -33,7 +34,7 @@ export class ProfileController {
   @ApiResponse({ status: 401, type: Object, description: 'Undefine profile' })
   async getProfile(@AppUser() appUser: UserContext) {
     this.logger.debug(`access getProfile API by ${appUser.getUid()},(${appUser.getId()})`);
-    const result = (await this.profileservice.getProfile(appUser)) as UserContextInfo;
+    const result = await this.profileservice.getProfile(appUser);
     // this.logger.debug('getProfile result is:');
     // this.logger.debug(result);
     if (result) {
@@ -117,8 +118,9 @@ export class ProfileController {
     @Body('utcOffset') utcOffset: number,
     @Body('businessType') businessType: string,
     @Body('interestedInSales') interestedInSales?: boolean,
+    @Body('createdVia') createdVia?: TenantCreatedViaEnum,
   ) {
-    const result = await this.profileservice.createTenant(appUser, tenantName, timeZone, utcOffset, businessType, mobileNo, interestedInSales);
+    const result = await this.profileservice.createTenant(appUser, tenantName, timeZone, utcOffset, businessType, mobileNo, interestedInSales, createdVia);
     if (result) {
       return result;
     } else {

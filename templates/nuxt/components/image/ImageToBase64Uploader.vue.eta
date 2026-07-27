@@ -50,7 +50,7 @@
               v-if="scaledImage"
               ref="cropperInstance"
               :src="scaledImage"
-              :stencil-props="{ aspectRatio: 1 }"
+              :stencil-props="{ aspectRatio: aspectRatio }"
               :options="cropperOptions"
               @change="changeChropper"
             />
@@ -86,6 +86,12 @@ const dialogVisible = ref(false);
 const previewImage = ref<string | null>(null);
 const scaledImage = ref<string | null>(null);
 // const image = ref<string | null>(null);
+const props = defineProps<{
+  /** Cropper stencil aspect ratio (width / height). Defaults to 1 (square) for logos; pass e.g. 3 for a wide banner. */
+  aspectRatio?: number;
+}>();
+const aspectRatio = computed(() => props.aspectRatio ?? 1);
+const fileInput = ref<HTMLInputElement | null>(null);
 const emit = defineEmits<{
   (event: "image-uploaded", imageData: string): void;
 }>();
@@ -183,9 +189,10 @@ const confirm = () => {
 };
 
 const resetFileInput = () => {
-  const fileInput = ref(null);
+  // Reset the real file input so picking the same file again fires `change`
+  // (otherwise re-uploading the same filename is ignored by the browser).
   if (fileInput.value) {
-    fileInput.value = null;
+    fileInput.value.value = "";
   }
 };
 </script>

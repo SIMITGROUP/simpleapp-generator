@@ -271,6 +271,29 @@ const generateSchema = (
     });
   }
 
+  if (xconfig.getBanner) {
+    apiSettings.push({
+      action: 'getBanner',
+      entryPoint: ':id/banner',
+      requiredRole: ['Everyone'],
+      method: RESTMethods.get,
+      responseType: 'String',
+      description: `Get ${capitalizeFirstLetter(resourceName)} banner`
+    });
+  }
+
+  if (xconfig.uploadBanner) {
+    apiSettings.push({
+      action: 'uploadBanner',
+      entryPoint: ':id/banner',
+      requiredRole: [capitalizeFirstLetter(resourceName) + '_create'],
+      schema: 'UploadPhoto',
+      method: RESTMethods.post,
+      responseType: 'String',
+      description: `Upload ${capitalizeFirstLetter(resourceName)} banner`
+    });
+  }
+
   if (Array.isArray(xconfig.printFormats) && xconfig.printFormats.length > 0) {
     apiSettings.push({
       action: 'print',

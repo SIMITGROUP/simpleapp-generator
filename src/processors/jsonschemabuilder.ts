@@ -119,6 +119,9 @@ export const readJsonSchemaBuilder = async (
   if (schemaconfigs.uploadPhoto) {
     orijsondata.properties['imageUrl'] = { type: 'string' };
   }
+  if (schemaconfigs.uploadBanner) {
+    orijsondata.properties['bannerUrl'] = { type: 'string' };
+  }
 
   // let newschema:JSONSchema7 & SchemaType = {
   //   type: 'object',

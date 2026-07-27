@@ -21,9 +21,14 @@ import { KeyValue, Permission } from '../../resources/permission/permission.sche
 import { Tenant } from '../../resources/tenant/tenant.schema';
 import { User } from '../../resources/user/user.schema';
 
+import { encodeText } from '@darkwolf/base64url';
+import { TenantCreatedViaEnum } from '@resources/tenant/tenant.enum';
 import { PhotoService } from 'src/simple-app/features/upload-file/photo/photo.service';
 import { UserContextInfo } from './profile.schema';
-const Base64URL = require('@darkwolf/base64url');
+
+declare module '@darkwolf/base64url' {
+  export function encodeText(input: string, start?: number, end?: number): string;
+}
 @Injectable()
 export class ProfileService {
   protected logger = new Logger();
@@ -51,7 +56,7 @@ export class ProfileService {
     if (!userinfo._id) {
       this.logger.warn('unknown _id for ', appuser.getUid());
 
-      let newprofile;
+      let newprofile: UserContextInfo | undefined;
 
       if (accessTenantId == 0) {
         newprofile = await this.createUserProfile(appuser);
@@ -85,7 +90,7 @@ export class ProfileService {
     return userinfo;
   }
 
-  async createTenant(appuser: UserContext, tenantName: string, timeZone: string, utcOffset: number, businessType: string, mobileNo: string, interestedInSales?: boolean) {
+  async createTenant(appuser: UserContext, tenantName: string, timeZone: string, utcOffset: number, businessType: string, mobileNo: string, interestedInSales?: boolean, createdVia?: TenantCreatedViaEnum) {
     // try{
 
     const timezonedata = countrytimezone.getCountriesForTimezone(timeZone)[0];
@@ -111,6 +116,7 @@ export class ProfileService {
         mobileNo: mobileNo,
         email: appuser.getEmail(),
       },
+      createdVia: createdVia ?? TenantCreatedViaEnum.ADMIN_WEB,
     };
     this.logger.debug(tenantdata, 'createTenant data');
     const tenantResult = await this.tenantService.create(appuser, tenantdata);
@@ -220,12 +226,12 @@ export class ProfileService {
     const tenantUpdateData = await this.tenantService.findById(appuser, tenantResult._id);
     this.logger.log(tenantUpdateData, `update tenant owner(${tenantResult._id})`);
     tenantUpdateData.owner._id = userRecordId;
-    (tenantUpdateData.owner as any).mobileNo = mobileNo;
+    tenantUpdateData.owner.mobileNo = mobileNo;
     const updateTenantOwnerResult = await this.tenantService.findIdThenUpdate(appuser, tenantResult._id, tenantUpdateData);
     if (!updateTenantOwnerResult) {
       throw new BadRequestException('Update tenant owner failed');
     }
-    const xorg: string = Base64URL.encodeText(`${tenantResult.tenantId}-${orgResult.orgId}-${branchResult.branchId}`);
+    const xorg: string = encodeText(`${tenantResult.tenantId}-${orgResult.orgId}-${branchResult.branchId}`);
     const finalresult = {
       xOrg: xorg,
       tenantId: tenantResult.tenantId,
@@ -255,8 +261,8 @@ export class ProfileService {
     return await appuser.getAllTenants();
   }
 
-  async getSession(appuser: UserContext) {
-    return 'OK';
+  getSession(appuser: UserContext): Promise<string> {
+    return Promise.resolve('OK');
   }
 
   async runTourComplete(appuser: UserContext, guideName: string) {
@@ -275,7 +281,7 @@ export class ProfileService {
     return 'ok';
   }
 
-  async uploadPhoto(appuser, data: KeyValue) {
+  async uploadPhoto(appuser: UserContext, data: KeyValue) {
     const fileName = `user/${appuser.getUid()}`;
     await this.uploadImageService.sendBase64Image(data.value, fileName, 0);
     return 'ok';

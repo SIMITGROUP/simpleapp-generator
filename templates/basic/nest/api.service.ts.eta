@@ -71,8 +71,8 @@ export class <%= (it.typename)%>ApiService  {
 
          ){
 
-           <%if(api.action=='getPhoto'){%>
-            const resultResult:Buffer= Buffer.from("DummyStringConvertAsPhoto"); 
+           <%if(api.action=='getPhoto' || api.action=='getBanner'){%>
+            const resultResult:Buffer= Buffer.from("DummyStringConvertAsPhoto");
           <%}else{%>
             const resultResult:<%= getFieldType('type',api.responseType,api.action)%> = <%= api.responseType.substr(0,1)=='[' ? '[]' : '{}'%> 
           <%}%>
