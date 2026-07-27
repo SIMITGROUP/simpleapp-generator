@@ -80,8 +80,8 @@ export class <%= it.typename %>ApiResolver {
             <%}%>
              ){
         
-          <%if(api.action=='getPhoto'){%>
-          return await this.service.runGetPhoto(appuser, id);
+          <%if(api.action=='getPhoto' || api.action=='getBanner'){%>
+          return await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser, id);
           <%}else{%>
           return await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser,<% if(api.entryPoint && api.entryPoint.includes(':')) {%>
               <%let subpath = api.entryPoint.split('/')%>

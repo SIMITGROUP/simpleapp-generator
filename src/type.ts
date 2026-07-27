@@ -221,6 +221,8 @@ export type SchemaConfig = {
   customField?: {
     isEnable?: boolean;
   };
+  getBanner?: boolean;
+  uploadBanner?: boolean;
 };
 
 export type SchemaPrintFormat = {

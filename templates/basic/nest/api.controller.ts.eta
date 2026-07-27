@@ -79,7 +79,7 @@ export class <%= it.typename%>ApiController {
             })
     <%}%>  
     @ApiResponse({status: 200,description: '<%=api.description%>' 
-      <%if(api.action=='getPhoto'){%>
+      <%if(api.action=='getPhoto' || api.action=='getBanner'){%>
       ,content: { 'image/png': {schema: {type: 'string',format: 'binary',} }, }
       <%}else{%>
         ,type: <%= getFieldType('schema',api.responseType,api.action)%>
@@ -94,7 +94,7 @@ export class <%= it.typename%>ApiController {
     <%~ drawMiniAppScope(api.action) %>
     async <%=capitalizeFirstLetter(api.action) %>(
         @AppUser() appuser: UserContext,
-        <%if(api.action=='getPhoto'){%>@Res() res: Response,<%}%>
+        <%if(api.action=='getPhoto' || api.action=='getBanner'){%>@Res() res: Response,<%}%>
 
         <%if(['post','put','patch'].includes(api.method.toLowerCase())){%> 
         @Body() data:<%= getFieldType('type',api.schema,api.action)%>,
@@ -118,8 +118,8 @@ export class <%= it.typename%>ApiController {
             <%}%>
             ){
         
-        <%if(api.action=='getPhoto'){%>
-          const output:Buffer= await this.service.runGetPhoto(appuser, id);
+        <%if(api.action=='getPhoto' || api.action=='getBanner'){%>
+          const output:Buffer= await this.service.run<%=capitalizeFirstLetter(api.action)%>(appuser, id);
           res.setHeader('Content-Type', 'image/png');
           res.send(output);
         <%}else{%>
