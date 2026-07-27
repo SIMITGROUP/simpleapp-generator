@@ -22,7 +22,7 @@ import { Tenant } from '../../resources/tenant/tenant.schema';
 import { User } from '../../resources/user/user.schema';
 
 import { encodeText } from '@darkwolf/base64url';
-import { TenantCreatedFromEnum } from '@resources/tenant/tenant.enum';
+import { TenantCreatedViaEnum } from '@resources/tenant/tenant.enum';
 import { PhotoService } from 'src/simple-app/features/upload-file/photo/photo.service';
 import { UserContextInfo } from './profile.schema';
 
@@ -90,7 +90,7 @@ export class ProfileService {
     return userinfo;
   }
 
-  async createTenant(appuser: UserContext, tenantName: string, timeZone: string, utcOffset: number, businessType: string, mobileNo: string, interestedInSales?: boolean, createdFrom?: TenantCreatedFromEnum) {
+  async createTenant(appuser: UserContext, tenantName: string, timeZone: string, utcOffset: number, businessType: string, mobileNo: string, interestedInSales?: boolean, createdVia?: TenantCreatedViaEnum) {
     // try{
 
     const timezonedata = countrytimezone.getCountriesForTimezone(timeZone)[0];
@@ -116,7 +116,7 @@ export class ProfileService {
         mobileNo: mobileNo,
         email: appuser.getEmail(),
       },
-      createdFrom: createdFrom ?? TenantCreatedFromEnum.WEBSITE,
+      createdVia: createdVia ?? TenantCreatedViaEnum.ADMIN_WEB,
     };
     this.logger.debug(tenantdata, 'createTenant data');
     const tenantResult = await this.tenantService.create(appuser, tenantdata);

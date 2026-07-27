@@ -9,7 +9,7 @@ import { Roles } from '../auth/role-guard/roles.decorator';
 import { Role } from '../auth/role-guard/roles.enum';
 import { AppUser } from '../user-context/appuser.decorator';
 import { UserContext } from '../user-context/user.context';
-import { TenantCreatedFromEnum } from '@resources/tenant/tenant.enum';
+import { TenantCreatedViaEnum } from '@resources/tenant/tenant.enum';
 import { KeyValue, RegTenant, TenantPermission, UserContextInfo } from './profile.schema';
 import { ProfileService } from './profile.service';
 @ApiTags('PROFILE')
@@ -118,9 +118,9 @@ export class ProfileController {
     @Body('utcOffset') utcOffset: number,
     @Body('businessType') businessType: string,
     @Body('interestedInSales') interestedInSales?: boolean,
-    @Body('createdFrom') createdFrom?: TenantCreatedFromEnum,
+    @Body('createdVia') createdVia?: TenantCreatedViaEnum,
   ) {
-    const result = await this.profileservice.createTenant(appUser, tenantName, timeZone, utcOffset, businessType, mobileNo, interestedInSales, createdFrom);
+    const result = await this.profileservice.createTenant(appUser, tenantName, timeZone, utcOffset, businessType, mobileNo, interestedInSales, createdVia);
     if (result) {
       return result;
     } else {

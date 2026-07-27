@@ -1,7 +1,7 @@
 [2.0.3u-alpha]
 1. Add getBanner and uploadBanner schema flags with bannerUrl JSON property
 2. Make ImageToBase64Uploader cropper aspect ratio configurable and fix file input reset so re-uploading the same file works
-3. Extend tenant registration with createdFrom source enum and document RegTenant fields (mobileNo, businessType, interestedInSales, createdFrom) in OpenAPI
+3. Extend tenant registration with createdVia source enum and document RegTenant fields (mobileNo, businessType, interestedInSales, createdVia) in OpenAPI
 4. Switch @darkwolf/base64url to typed encodeText import via module augmentation
 
 [2.0.3t-alpha]
