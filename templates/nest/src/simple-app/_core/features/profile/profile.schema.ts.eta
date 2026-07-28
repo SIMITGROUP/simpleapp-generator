@@ -3,7 +3,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Branch } from 'src/simple-app/_core/resources/branch/branch.schema';
 import { Organization } from '../../resources/organization/organization.schema';
 import { Tenant } from '../../resources/tenant/tenant.schema';
-import { TenantCreatedViaEnum } from '../../resources/tenant/tenant.enum';
 import { Role } from '../auth/role-guard/roles.enum';
 export { KeyValue } from '../../framework/schemas';
 
@@ -198,12 +197,11 @@ export class RegTenant {
   interestedInSales?: boolean;
 
   @ApiProperty({
-    enum: TenantCreatedViaEnum,
+    type: String,
     required: false,
     examples: ['mobile_app', 'admin_web'],
-    default: TenantCreatedViaEnum.ADMIN_WEB,
   })
-  createdVia?: TenantCreatedViaEnum;
+  createdVia?: string;
 }
 /****************------unchecked schema------********************/
 
