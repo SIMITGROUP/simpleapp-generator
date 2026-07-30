@@ -1,3 +1,6 @@
+[2.0.3v-alpha]
+1. Keep createdVia generic in the generator while projects handle their own validation and default value
+
 [2.0.3u-alpha]
 1. Add getBanner and uploadBanner schema flags with bannerUrl JSON property
 2. Make ImageToBase64Uploader cropper aspect ratio configurable and fix file input reset so re-uploading the same file works
