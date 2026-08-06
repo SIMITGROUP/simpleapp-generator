@@ -1,17 +1,20 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Request } from 'express';
 import { UserContext } from '../../user-context/user.context';
-import { IApiKeyValidator } from './validators/interface';
-import { StaticApiKeyValidator } from './validators/static-api-key.validator';
-import { MiniApiKeyValidator } from './validators/mini-api-key.validator';
 import { HEADER_X_API_KEY, HEADER_X_API_SECRET } from './api-key.type';
+import { IApiKeyValidator } from './validators/interface';
+import { MiniApiKeyValidator } from './validators/mini-api-key.validator';
+import { MiniAppUserTokenValidator } from './validators/mini-app-user-token.validator';
+import { StaticApiKeyValidator } from './validators/static-api-key.validator';
 
 @Injectable()
 export class ApiKeyService {
   private readonly validators: IApiKeyValidator[];
 
   constructor() {
-    this.validators = [new StaticApiKeyValidator(), new MiniApiKeyValidator()];
+    // Order matters: MiniAppUserTokenValidator must precede MiniApiKeyValidator —
+    // both match the same credential pair; the user-token header selects the OBO path.
+    this.validators = [new StaticApiKeyValidator(), new MiniAppUserTokenValidator(), new MiniApiKeyValidator()];
   }
 
   async validate(req: Request, user: UserContext): Promise<void> {

@@ -6,7 +6,7 @@
  * 2.
  */
 import Base64URL from '@darkwolf/base64url';
-import { BadRequestException, ForbiddenException, Injectable, Logger, Scope } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, Scope, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { isEmpty } from 'lodash';
@@ -28,6 +28,7 @@ import { User } from 'src/simple-app/_core/resources/user/user.schema';
 import { ModifiedRecords } from '../../framework/schemas';
 import { SimpleAppDbRevertService } from '../../framework/simple-app-db-revert.service';
 import { verifyMiniApiAccessToken } from '../auth/api-key/mini-api-token.util';
+import { TMiniAppUserTokenClaims } from '../auth/api-key/mini-app-user-token.util';
 import { Role } from '../auth/role-guard/roles.enum';
 import * as rolegroups from '../auth/role-guard/roles.group';
 import { TenantHealthStatusEnum } from './user-context.enum';
@@ -84,6 +85,8 @@ export class UserContext extends UserContextInfo {
   private miniApiTokenInfo?: TMiniApiTokenInfo;
 
   private miniApiTokenVerified = false;
+
+  private actingViaUserToken = false;
 
   // protected groups: string[] = [];
 
@@ -222,6 +225,8 @@ export class UserContext extends UserContextInfo {
   getMiniApiTokenInfo = () => this.miniApiTokenInfo;
 
   isMiniApiTokenVerified = () => this.miniApiTokenVerified;
+
+  isActingViaUserToken = () => this.actingViaUserToken;
 
   setId = (id: string) => {
     this._id = id;
@@ -1115,6 +1120,59 @@ export class UserContext extends UserContextInfo {
     this.uid = miniAppInstallation.miniApiUser.uid.toString();
 
     await this.setUserProfileFromDB();
+  }
+
+  /**
+   * OBO path (spec 2026-07-28-miniapp-user-identity-design.md §5): act as the human
+   * user asserted by a verified x-mini-app-user-token instead of the app's service
+   * account. Every failed check throws — this path NEVER falls back to the SA.
+   */
+  async setMiniAppActingUser(userClaims: TMiniAppUserTokenClaims, accessTokenStr: string, xOrg: string) {
+    const { tokenInfo, verified } = verifyMiniApiAccessToken(accessTokenStr);
+    if (!verified) {
+      this.logger.warn(`x-mini-api-access-token signature NOT verified (legacy accept) for app ${tokenInfo?.miniAppId ?? 'unknown'}`);
+      if (process.env.MINI_API_ACCESS_TOKEN_ENFORCE === 'true') {
+        throw new ForbiddenException('Invalid mini api access token');
+      }
+    }
+    this.miniApiTokenVerified = verified;
+
+    // aud binding: the token must have been minted FOR the calling app.
+    // Both sides are developerPortal.appId — the single app-id source of truth.
+    const callingAppId = tokenInfo?.miniAppId ?? '';
+    if (isEmpty(callingAppId) || callingAppId !== userClaims.aud) {
+      throw new ForbiddenException('Mini app user token audience does not match the calling app');
+    }
+
+    this.setXOrg(xOrg);
+    if (Number(userClaims.tenantId) !== this.tenantId || Number(userClaims.orgId) !== this.orgId || Number(userClaims.branchId) !== this.branchId) {
+      throw new ForbiddenException('Mini app user token was minted for a different centre (tenant/org/branch mismatch)');
+    }
+
+    this.setUserType('miniApi');
+    this.setMiniApiToken(accessTokenStr);
+    this.setMiniApiTokenInfo(tokenInfo);
+
+    await this.findIsCentreInstalledMiniApp(userClaims.aud);
+
+    const actingUser = await this.userModel.findOne({ _id: userClaims.sub, tenantId: this.tenantId });
+    if (!actingUser || isEmpty(actingUser.uid)) {
+      throw new UnauthorizedException('Mini app user token subject not found in this centre');
+    }
+
+    this.token = accessTokenStr;
+    // createdBy/updatedBy stamp this.uid — must be the Keycloak uid, never the token sub (_id).
+    this.uid = actingUser.uid.toString();
+
+    await this.setUserProfileFromDB();
+    // setUserProfileFromDB does NOT throw on a missing/inactive profile (it assigns
+    // Role.Unknown) — on the OBO path an unloadable profile is a hard 401.
+    if (isEmpty(this.getId())) {
+      throw new UnauthorizedException('Mini app user token user is not active in this centre');
+    }
+
+    this.actingViaUserToken = true;
+    this.logger.log(`OBO: app ${callingAppId} acting as user ${this.uid} (_id ${this.getId()}) in ${this.tenantId}-${this.orgId}-${this.branchId}`);
   }
 
   async findIsCentreInstalledMiniApp(developerPortalAppId: string) {

@@ -2,8 +2,9 @@ import { IApiKeyValidator } from './interface';
 import { Request } from 'express';
 
 import Base64URL from '@darkwolf/base64url';
+import { BadRequestException } from '@nestjs/common';
 import { UserContext } from '../../../user-context/user.context';
-import { HEADER_X_API_KEY, HEADER_X_API_SECRET, HEADER_X_GUESS_ACCESS_TOKEN, HEADER_X_ORG } from '../api-key.type';
+import { HEADER_X_API_KEY, HEADER_X_API_SECRET, HEADER_X_GUESS_ACCESS_TOKEN, HEADER_X_MINI_APP_USER_TOKEN, HEADER_X_ORG } from '../api-key.type';
 
 export class StaticApiKeyValidator implements IApiKeyValidator {
   match(req: Request): boolean {
@@ -14,6 +15,12 @@ export class StaticApiKeyValidator implements IApiKeyValidator {
   }
 
   async apply(req: Request, user: UserContext): Promise<void> {
+    // OBO no-bypass (spec §7 invariant 6): a user token asserts a human identity,
+    // which the static robot path cannot honor — reject loudly, never ignore.
+    if (req.get(HEADER_X_MINI_APP_USER_TOKEN)) {
+      throw new BadRequestException('x-mini-app-user-token is only supported with mini-api credentials');
+    }
+
     const xOrg = req.get(HEADER_X_ORG) ?? Base64URL.encodeText('0-0-0');
     const guestAccessToken = req.get(HEADER_X_GUESS_ACCESS_TOKEN);
 

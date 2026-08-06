@@ -1,3 +1,6 @@
+[2.0.3w-alpha]
+1. Add mini-app user token OBO path
+
 [2.0.3v-alpha]
 1. Keep createdVia generic in the generator while projects handle their own validation and default value
 

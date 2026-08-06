@@ -3,3 +3,4 @@ export const HEADER_X_API_SECRET = 'x-apisecret';
 export const HEADER_X_ORG = 'x-org';
 export const HEADER_X_MINI_API_ACCESS_TOKEN = 'x-mini-api-access-token';
 export const HEADER_X_GUESS_ACCESS_TOKEN = 'x-guest-accesstoken';
+export const HEADER_X_MINI_APP_USER_TOKEN = 'x-mini-app-user-token';

@@ -3,7 +3,7 @@ import { Request } from 'express';
 import { UserContext } from '../../../user-context/user.context';
 import { BadRequestException } from '@nestjs/common';
 import _ from 'lodash';
-import { HEADER_X_MINI_API_ACCESS_TOKEN, HEADER_X_API_KEY, HEADER_X_API_SECRET, HEADER_X_ORG } from '../api-key.type'
+import { HEADER_X_MINI_API_ACCESS_TOKEN, HEADER_X_API_KEY, HEADER_X_API_SECRET, HEADER_X_MINI_APP_USER_TOKEN, HEADER_X_ORG } from '../api-key.type';
 
 export class MiniApiKeyValidator implements IApiKeyValidator {
   match(req: Request): boolean {
@@ -14,6 +14,13 @@ export class MiniApiKeyValidator implements IApiKeyValidator {
   }
 
   async apply(req: Request, user: UserContext): Promise<void> {
+    // OBO no-bypass: with mini-api credentials a user token is handled by
+    // MiniAppUserTokenValidator (registered before this one). Reaching here with
+    // the header means the registration order broke — fail loudly, never ignore.
+    if (req.get(HEADER_X_MINI_APP_USER_TOKEN)) {
+      throw new BadRequestException('x-mini-app-user-token present but not handled by MiniAppUserTokenValidator - check validator registration order');
+    }
+
     const xOrg = req.get(HEADER_X_ORG);
     const accessToken = req.get(HEADER_X_MINI_API_ACCESS_TOKEN);
 
