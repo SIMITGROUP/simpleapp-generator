@@ -8,7 +8,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import jsonpath from 'jsonpath';
 import _ from 'lodash';
 
-import { BadRequestException, ForbiddenException, HttpExceptionOptions, InternalServerErrorException, NotFoundException } from '@nestjs/common/exceptions';
+import { BadRequestException, ConflictException, ForbiddenException, HttpException, HttpExceptionOptions, InternalServerErrorException, NotFoundException } from '@nestjs/common/exceptions';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import Ajv from 'ajv';
 import addErrors from 'ajv-errors';
@@ -51,6 +51,22 @@ const getErrorMessage = (err: unknown): string => {
 };
 const isEventResult = (value: unknown): value is EventResult => typeof value === 'object' && value !== null && 'name' in value;
 
+const MONGO_DUPLICATE_KEY = 11000;
+
+/**
+ * Normalize a caught operation error to proper HTTP semantics: real HttpExceptions pass
+ * through untouched (a 404 stays 404, a validation 400 stays 400), a mongo duplicate-key
+ * becomes 409 CONFLICT, and anything else becomes a clean 500 whose message never carries
+ * the raw error — log that at the call site instead.
+ */
+export function toSimpleAppOperationError(err: unknown, documentType: string, uniqueKey: PropertyKey, op: string): HttpException {
+  if (err instanceof HttpException) return err;
+  if ((err as { code?: number } | null)?.code === MONGO_DUPLICATE_KEY) {
+    return new ConflictException(`${documentType} duplicate ${String(uniqueKey)}`);
+  }
+  return new InternalServerErrorException(`${documentType} ${op} failed`);
+}
+
 @Injectable()
 export class SimpleAppService<T extends SchemaFields> {
   // @Inject(EventEmitter2)
@@ -65,7 +81,9 @@ export class SimpleAppService<T extends SchemaFields> {
   // protected audittrail: AuditTrail;
   // @Inject(DocNumberFormatGenerator)
   protected docnogenerator: SimpleAppDocumentNoFormatService;
-  protected logger = new Logger();
+  /** Context = the concrete subclass (InvoiceService, StudentService, …), so every log line
+   *  says which resource produced it: `[Nest] ERROR [InvoiceService] update failed: …`. */
+  protected logger = new Logger(this.constructor.name);
   protected strictIsolation = true;
   protected jsonschema: SimpleAppJsonSchema = {
     type: 'object',
@@ -322,7 +340,8 @@ export class SimpleAppService<T extends SchemaFields> {
       //   console.log(products);
       return list;
     } catch (err) {
-      throw new BadRequestException(getErrorMessage(err));
+      this.logger.error(`search failed: ${getErrorMessage(err)}`, (err as Error)?.stack);
+      throw toSimpleAppOperationError(err, this.documentType, this.documentIdentityCode, 'search');
     }
     // return this;
   }
@@ -414,7 +433,7 @@ export class SimpleAppService<T extends SchemaFields> {
       const newfilters: FilterQuery<T> = { ...filters, ...isolationFilter };
       return await this.doc.countDocuments(newfilters, { session: appUser.getDBSession() });
     } catch (err) {
-      this.logger.error(err, 'getTotalCount error');
+      this.logger.error(`getTotalCount failed: ${getErrorMessage(err)}`, (err as Error)?.stack);
       return 0;
     }
   }
@@ -496,7 +515,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       return results;
     } catch (error) {
-      console.error('Error during full-text search:', error);
+      this.logger.error(`fullTextSearch failed: ${getErrorMessage(error)}`, (error as Error)?.stack);
       // Ensure error handling returns a valid status code
       throw new Error('Failed to perform search');
     }
@@ -613,7 +632,8 @@ export class SimpleAppService<T extends SchemaFields> {
       return result;
     } catch (err) {
       await this.runErrorEvent(appUser, 'errorCreate', data, err);
-      throw new InternalServerErrorException(`createHook ${this.documentType} error: ${JSON.stringify(err)}`, `${this.documentType} createHook error`);
+      this.logger.error(`create failed: ${getErrorMessage(err)} | id=${data?._id ?? ''}`, (err as Error)?.stack);
+      throw toSimpleAppOperationError(err, this.documentType, this.documentIdentityCode, 'create');
     }
   }
 
@@ -665,13 +685,16 @@ export class SimpleAppService<T extends SchemaFields> {
     try {
       validate = ajv.compile(this.jsonschema);
     } catch (err) {
-      this.logger.error('compile error', err);
+      this.logger.error(`jsonschema compile failed: ${getErrorMessage(err)}`, (err as Error)?.stack);
       throw new ForbiddenException(getErrorMessage(err));
     }
     const valid = validate(data);
     if (!valid) {
-      this.logger.error(JSON.stringify(data));
-      this.logger.error(JSON.stringify(validate.errors), 'validate errors:');
+      const failures = (validate.errors ?? []).map((e) => `${e.instancePath || '/'} ${e.message ?? 'invalid'}`).join('; ');
+      // `data` is narrowed to never by the ajv type guard — read the id off a plain view.
+      this.logger.error(`validateData failed: ${failures} | id=${_id ?? (data as { _id?: string })?._id ?? ''}`);
+      // Full document at debug only — it carries PII (dob, email, mobileNo, icNumber…).
+      this.logger.debug(JSON.stringify(data));
       throw new BadRequestException(validate.errors as HttpExceptionOptions, 'Data validation failed');
     }
   }
@@ -747,7 +770,7 @@ export class SimpleAppService<T extends SchemaFields> {
         return deleteresult;
       } else {
         this.logger.debug('reject query', dependency);
-        console.log(this.documentName, ' dependency :id=', id, dependency);
+        this.logger.debug(`${this.documentName} dependency :id=${id}`, dependency);
         throw new ForbiddenException(`This system detected that the [${this.documentName}] data has been used in other record`, 'Foreignkey constraint');
       }
     } catch (err) {
@@ -814,7 +837,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       return result;
     } catch (err) {
-      this.logger.error(err);
+      this.logger.error(`findIdThenUnsetField failed: ${getErrorMessage(err)} | id=${id}`, (err as Error)?.stack);
       throw new InternalServerErrorException(getErrorMessage(err));
     }
   };
@@ -876,9 +899,9 @@ export class SimpleAppService<T extends SchemaFields> {
       await this.callWebhook(appUser, 'update', result);
       return result; // await this.findById(appUser, id);
     } catch (err) {
-      this.logger.error(err);
+      this.logger.error(`findIdThenUpdate failed: ${getErrorMessage(err)} | id=${id}`, (err as Error)?.stack);
       await this.runErrorEvent(appUser, 'errorUpdate', data, err);
-      throw new InternalServerErrorException(getErrorMessage(err));
+      throw toSimpleAppOperationError(err, this.documentType, this.documentIdentityCode, 'update');
     }
   };
 
@@ -938,7 +961,7 @@ export class SimpleAppService<T extends SchemaFields> {
       await this.callWebhook(appUser, 'update', result);
       return result; // await this.findById(appUser, id);
     } catch (err) {
-      this.logger.error(err);
+      this.logger.error(`findIdThenUpdateNoIsolation failed: ${getErrorMessage(err)} | id=${id}`, (err as Error)?.stack);
       throw new InternalServerErrorException(getErrorMessage(err));
     }
   };
@@ -999,9 +1022,8 @@ export class SimpleAppService<T extends SchemaFields> {
       await this.runEvent(appUser, 'afterPatch', { id: id, patchData: data, prevData: existingdata }, false);
       return result; //await this.findById(appUser, id);
     } catch (err) {
-      this.logger.error(getErrorMessage(err), 'findIdThenPath error');
-      console.error(err);
-      throw new InternalServerErrorException(getErrorMessage(err));
+      this.logger.error(`findIdThenPatch failed: ${getErrorMessage(err)} | id=${id}`, (err as Error)?.stack);
+      throw toSimpleAppOperationError(err, this.documentType, this.documentIdentityCode, 'patch');
     }
   };
   async deleteMany(appUser: UserContext, filter: FilterQuery<T>) {
@@ -1059,7 +1081,7 @@ export class SimpleAppService<T extends SchemaFields> {
     this.logger.debug('get foreignkey for delete:', id);
     // console.log('session modifeds', appUser.getModifieds());
     if (foreignkeys === undefined) {
-      this.logger.error('foreignkeys object undetected');
+      this.logger.error(`checkDependency failed: foreignkeys object undetected | id=${id}`);
       throw new InternalServerErrorException('foreignkeys object undetected');
     }
 
@@ -1089,7 +1111,7 @@ export class SimpleAppService<T extends SchemaFields> {
             //record deleted but not yet commit, safely ignore
             if (appUser.searchDeletedRecordId(collectionname, String(result._id ?? ''))) continue;
 
-            this.logger.error(result, `related result found in ${collectionname} ${fkey} = ${id}`);
+            this.logger.error(`checkDependency blocked: record still referenced | collection=${collectionname} field=${fkey} id=${id} refId=${String(result._id ?? '')}`);
             return result;
           }
         }
@@ -1188,7 +1210,7 @@ export class SimpleAppService<T extends SchemaFields> {
       if (enforce && !this.eventEmitter.hasListeners(eventName)) {
         throw new InternalServerErrorException(`${eventName} seems no listener`);
       } else if (this.eventEmitter.hasListeners(eventName)) {
-        console.log('run eventName', eventName);
+        this.logger.debug(`run eventName ${eventName}`);
         const res = await this.eventEmitter.emitAsync(eventName, appUser, payloads);
 
         if (!res) {
@@ -1201,7 +1223,7 @@ export class SimpleAppService<T extends SchemaFields> {
         return result;
       }
     } catch (e) {
-      console.error(e);
+      this.logger.error(`runEvent failed: ${getErrorMessage(e)} | event=${eventName}`, (e as Error)?.stack);
       throw e;
     }
   }
@@ -1210,7 +1232,7 @@ export class SimpleAppService<T extends SchemaFields> {
     const eventName = this.setHookName(shortEventName);
     try {
       if (this.eventEmitter.hasListeners(eventName)) {
-        console.log('run eventName', eventName);
+        this.logger.debug(`run eventName ${eventName}`);
         await this.eventEmitter.emitAsync(eventName, appUser, payloads, error);
       }
     } catch (e) {
@@ -1277,7 +1299,7 @@ export class SimpleAppService<T extends SchemaFields> {
     const unionresult = await this.doc.aggregate(pipelines);
 
     if (!unionresult) {
-      this.logger.error('foreign key control failed ', 'identifyForeignKeys');
+      this.logger.error('identifyForeignKeys failed: foreign key aggregate returned no result');
       throw new InternalServerErrorException(pipelines, 'Foreignkey check execution error');
     } else {
       const searchresult: Record<string, string[]> = {};

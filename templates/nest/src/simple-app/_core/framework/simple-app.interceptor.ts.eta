@@ -12,6 +12,7 @@ import { Connection, Model } from 'mongoose';
 import { catchError, map, tap } from 'rxjs/operators';
 import { UserContext } from '../features/user-context/user.context';
 import { getErrorMessage } from '../utils/error';
+import { SelfFormattedHttpException } from './self-formatted.exception';
 import { SimpleAppDbRevertService } from './simple-app-db-revert.service';
 @Injectable()
 export class SimpleAppInterceptor implements NestInterceptor {
@@ -91,22 +92,28 @@ export class SimpleAppInterceptor implements NestInterceptor {
           canCommit = false;
         }
 
-        const responseBody = {
-          // eslint-disable-next-line
-          message: getErrorMessage(err).message ?? err.message,
-          timestamp: new Date().toISOString(),
-          path: url,
-          // eslint-disable-next-line
-          error: err.options as object,
-        };
+        // eslint-disable-next-line
+        const errMsg: string = getErrorMessage(err).message ?? err.message;
+        // A SelfFormattedHttpException carries its own COMPLETE response body — return it
+        // verbatim. Everything else keeps the legacy shape unchanged.
+        const responseBody =
+          err instanceof SelfFormattedHttpException
+            ? (err.getResponse() as object)
+            : {
+                message: errMsg,
+                timestamp: new Date().toISOString(),
+                path: url,
+                // eslint-disable-next-line
+                error: err.options as object,
+              };
 
         // eslint-disable-next-line
         eventObj.statusCode = err.status;
-        // eslint-disable-next-line
-        eventObj.errMsg = responseBody.message;
+        eventObj.errMsg = errMsg;
         eventObj.data = req.body;
         eventObj.status = 'NG';
-        eventObj.errData = responseBody.error;
+        // eslint-disable-next-line
+        eventObj.errData = err instanceof SelfFormattedHttpException ? responseBody : (err.options as object);
 
         resp.status(
           // eslint-disable-next-line

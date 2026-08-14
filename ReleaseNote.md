@@ -1,3 +1,6 @@
+[2.0.3x-alpha]
+1. Normalize service errors and structured logging
+
 [2.0.3w-alpha]
 1. Add mini-app user token OBO path
 
