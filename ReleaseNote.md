@@ -1,3 +1,6 @@
+[2.0.3y-alpha]
+1. Single-flight Keycloak token refresh
+
 [2.0.3x-alpha]
 1. Normalize service errors and structured logging
 

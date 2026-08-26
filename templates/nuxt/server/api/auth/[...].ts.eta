@@ -6,7 +6,16 @@
  */
 import { NuxtAuthHandler } from "#auth";
 import KeycloakProvider from "next-auth/providers/keycloak";
+import { makeSingleFlightRefresher } from "../../utils/keycloak-refresh";
 // import GithubProvider from "next-auth/providers/github";
+
+// One refresher per server process: concurrent requests sharing a session
+// await the same refresh instead of racing Keycloak with the same token.
+const keycloakRefresher = makeSingleFlightRefresher({
+    tokenUrl: `${process.env.OAUTH2_CONFIGURL}/protocol/openid-connect/token`,
+    clientId: process.env.OAUTH2_CLIENTID ?? "",
+    clientSecret: process.env.OAUTH2_CLIENTSECRET ?? "",
+});
 
 export default NuxtAuthHandler({
     secret: process.env.AUTH_SECRET_KEY,
@@ -89,40 +98,10 @@ export default NuxtAuthHandler({
               if (!token.refreshToken) {
                 return token;
               }
-            // try refresh token
-            const response = await fetch(`${process.env.OAUTH2_CONFIGURL}/protocol/openid-connect/token`, {
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({
-                    client_id: process.env.OAUTH2_CLIENTID ?? "",
-                    client_secret: process.env.OAUTH2_CLIENTSECRET ?? "",
-                    grant_type: "refresh_token",
-                    refresh_token: <string>token.refreshToken ?? "",
-                }),
-                method: "POST",
-            })
-
-            const newToken = await response.json();
-
-            if(!response.ok) {
-                /** @todo handle refresh token failed */
-                return {
-                    ...token,
-                    accessToken: null,
-                    refreshToken: null,
-                    expiresAt: 0,
-                    error: "RefreshAccessTokenError"
-                  };
-            }
-
-            return {
-                ...token,
-                accessToken: newToken.access_token,
-                // record next access token expires time
-                expiresAt: Math.floor(Date.now() / 1000 + newToken.expires_in),
-                // Fall back to old refresh token, but note that
-                // many providers may only allow using a refresh token once.
-                refreshToken: newToken.refresh_token ?? token.refreshToken
-            }
+            // Refresh via the single-flight util: concurrent requests share one
+            // Keycloak call; a transient failure keeps the current token (the
+            // next request retries), only a real rejection ends the session.
+            return (await keycloakRefresher.refresh(token)) as typeof token;
         },
         async session({ session, token, user }) {
             // console.log("session", session);

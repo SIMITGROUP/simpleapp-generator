@@ -1,0 +1,82 @@
+export type RefreshableToken = {
+    accessToken?: unknown;
+    refreshToken?: unknown;
+    expiresAt?: unknown;
+    error?: unknown;
+    [key: string]: unknown;
+};
+
+export type SingleFlightRefresherOptions = {
+    tokenUrl: string;
+    clientId: string;
+    clientSecret: string;
+    fetchImpl?: typeof fetch;
+};
+
+/**
+ * Serializes Keycloak refresh-token calls so concurrent requests carrying the
+ * same session never race each other (N parallel requests -> 1 refresh POST).
+ * A transient failure (network error, unparseable body) keeps the current
+ * token so the session survives and the next request retries; only a real
+ * Keycloak rejection (e.g. invalid_grant) ends the session.
+ */
+export function makeSingleFlightRefresher(opts: SingleFlightRefresherOptions) {
+    const fetchImpl = opts.fetchImpl ?? fetch;
+    const inflight = new Map<string, Promise<RefreshableToken>>();
+
+    async function doRefresh(token: RefreshableToken, refreshToken: string): Promise<RefreshableToken> {
+        let response: Response;
+        try {
+            response = await fetchImpl(opts.tokenUrl, {
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({
+                    client_id: opts.clientId,
+                    client_secret: opts.clientSecret,
+                    grant_type: "refresh_token",
+                    refresh_token: refreshToken,
+                }),
+                method: "POST",
+            });
+        } catch {
+            return token;
+        }
+
+        if (!response.ok) {
+            return {
+                ...token,
+                accessToken: null,
+                refreshToken: null,
+                expiresAt: 0,
+                error: "RefreshAccessTokenError",
+            };
+        }
+
+        let newToken: { access_token?: string; refresh_token?: string; expires_in?: number };
+        try {
+            newToken = await response.json();
+        } catch {
+            return token;
+        }
+
+        return {
+            ...token,
+            accessToken: newToken.access_token,
+            expiresAt: Math.floor(Date.now() / 1000 + (newToken.expires_in ?? 0)),
+            refreshToken: newToken.refresh_token ?? token.refreshToken,
+        };
+    }
+
+    function refresh(token: RefreshableToken): Promise<RefreshableToken> {
+        const key = String(token.refreshToken ?? "");
+        let flight = inflight.get(key);
+        if (!flight) {
+            flight = doRefresh(token, key).finally(() => {
+                inflight.delete(key);
+            });
+            inflight.set(key, flight);
+        }
+        return flight;
+    }
+
+    return { refresh };
+}
