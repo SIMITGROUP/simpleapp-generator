@@ -795,7 +795,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       this.logger.debug('update id: ' + id, this.documentName + ' findIdThenRemoveField');
       if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
-        throw new BadRequestException(`You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`);
+        throw new ConflictException(`You submit older version data "v${data.__v}" but latest version = "v${existingdata.__v}"`);
       }
 
       // Prepare update audit data
@@ -850,7 +850,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       this.logger.debug('update id:' + id, this.documentName + ' findIdThenUpdate');
       if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
-        throw new BadRequestException(`You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`);
+        throw new ConflictException(`You submit older version data "v${data.__v}" but latest version = "v${existingdata.__v}"`);
       }
       // this.logger.debug('warn1', existingdata);
       data.__v = existingdata.__v + 1;
@@ -913,7 +913,7 @@ export class SimpleAppService<T extends SchemaFields> {
 
       this.logger.debug('update id:' + id, this.documentName + ' findIdThenUpdate');
       if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
-        throw new BadRequestException(`You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`);
+        throw new ConflictException(`You submit older version data "v${data.__v}" but latest version = "v${existingdata.__v}"`);
       }
       // this.logger.debug('warn1', existingdata);
       data.__v = existingdata.__v + 1;
@@ -973,7 +973,7 @@ export class SimpleAppService<T extends SchemaFields> {
         throw new NotFoundException(`${id} not found`, 'not found');
       }
       if (typeof data.__v == 'number' && data.__v != existingdata.__v) {
-        throw new BadRequestException(`You submit older version data "v${data.__v}"" but latest version = "v${existingdata.__v}"`);
+        throw new ConflictException(`You submit older version data "v${data.__v}" but latest version = "v${existingdata.__v}"`);
       }
 
       if (typeof existingdata.__v !== 'number') {

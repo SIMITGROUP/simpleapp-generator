@@ -1,3 +1,7 @@
+[2.0.3z-alpha]
+1. Use ConflictException for version mismatch
+2. Correct default robot-user UTC offset to -480 (UTC+8).
+
 [2.0.3y-alpha]
 1. Single-flight Keycloak token refresh
 

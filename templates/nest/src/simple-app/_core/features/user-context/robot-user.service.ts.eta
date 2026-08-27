@@ -14,7 +14,7 @@ export class SimpleAppRobotUserService {
   private defaultCountry = 'MY';
   private defaultCurrency = 'MYR';
   private defaultTimeZone = 'Asia/Kuala_Lumpur';
-  private defaultOffsetMinute = -460;
+  private defaultOffsetMinute = -480;
   private setToken = (token: string) => (this.systemAccessToken = token);
   private getToken = () => this.systemAccessToken;
   private expired: string;
