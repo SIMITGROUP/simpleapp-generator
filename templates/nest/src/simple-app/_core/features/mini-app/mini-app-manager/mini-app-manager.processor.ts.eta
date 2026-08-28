@@ -3,15 +3,17 @@ import { MiniAppService } from 'src/simple-app/_core/resources/mini-app/mini-app
 import { MiniAppInstallationService } from 'src/simple-app/_core/resources/mini-app-installation/mini-app-installation.service';
 import { MiniAppManagerPolicyService } from './mini-app-manager-policy.service';
 import _ from 'lodash';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { MiniAppError } from './mini-app-manager.error';
 import { MiniAppEnvEnum, MiniAppStatusEnum } from 'src/simple-app/_core/resources/mini-app/mini-app.enum';
-import { DynamicParam, MiniApp, MiniAppInstallation, CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail } from '../dto';
+import { DynamicParam, MiniApp, MiniAppInstallation, CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail, MiniAppInstallBody, MiniAppGrantedScopesBody } from '../dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserService } from 'src/simple-app/_core/resources/user/user.service';
 import { PermissionService } from 'src/simple-app/_core/resources/permission/permission.service';
 import { MiniAppServiceAccount } from './mini-app-service-account';
+
+export type ConsentSets = { granted: string[]; denied: string[] };
 
 export abstract class MiniAppManagerProcessor {
   protected readonly saManager: MiniAppServiceAccount;
@@ -33,7 +35,7 @@ export abstract class MiniAppManagerProcessor {
   abstract runGetInstalledMiniApps(appUser: UserContext): Promise<InstalledMiniAppDetail>;
   abstract runGetMiniAppDetail(appUser: UserContext, miniApp: MiniApp): Promise<MiniAppDetail>;
   abstract runGetCategorizedMiniApps(appUser: UserContext): Promise<CategorizedMiniAppDetail>;
-  abstract runInstallMiniApp(appUser: UserContext, miniApp: MiniApp): Promise<MiniAppInstallation>;
+  abstract runInstallMiniApp(appUser: UserContext, miniApp: MiniApp, body?: MiniAppInstallBody): Promise<MiniAppInstallation>;
   abstract runUninstallMiniApp(appUser: UserContext, miniApp: MiniApp): Promise<MiniAppInstallation>;
   abstract runUpdateMiniAppSetting(appUser: UserContext, miniApp: MiniApp, data: DynamicParam): Promise<MiniAppInstallation>;
 
@@ -46,7 +48,18 @@ export abstract class MiniAppManagerProcessor {
       _id: { $in: installedMiniAppIdArr },
     });
 
-    const installedMiniApps = miniAppInstallations
+    // Newest active per appId (same total order as enforcement) — duplicate records
+    // must not render duplicate cards or surface a non-effective older grant set.
+    const byAppId = new Map<string, MiniAppInstallation>();
+    for (const inst of miniAppInstallations) {
+      const key = inst.miniApp?.developerPortalAppId ?? inst.miniApp?._id ?? '';
+      const existing = byAppId.get(key);
+      const newer = !existing || (inst.created ?? '') > (existing.created ?? '') || ((inst.created ?? '') === (existing.created ?? '') && (inst._id ?? '') > (existing._id ?? ''));
+      if (newer) byAppId.set(key, inst);
+    }
+    const dedupedInstallations = [...byAppId.values()];
+
+    const installedMiniApps = dedupedInstallations
       .map((installation) => {
         const miniApp = miniApps.find((miniApp) => miniApp._id === installation.miniApp._id);
         if (!miniApp) {
@@ -62,7 +75,11 @@ export abstract class MiniAppManagerProcessor {
   }
 
   protected async findMiniAppDetail(appUser: UserContext, miniApp: MiniApp) {
-    const miniAppInstallation = await this.findMiniAppInstallation(appUser, miniApp.code);
+    // Fallback to the newest inactive record so the reactivation consent screen can
+    // pre-check the old grants (display only — installed-state keys off the store list).
+    const miniAppInstallation =
+      (await this.findActiveInstallationsByAppId(appUser, miniApp.developerPortal.appId))?.[0] ??
+      (await this.findNewestInactiveInstallationByAppId(appUser, miniApp.developerPortal.appId));
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.formatMiniAppDetail(appUser, miniApp, miniAppInstallation);
   }
@@ -91,41 +108,98 @@ export abstract class MiniAppManagerProcessor {
     return result;
   }
 
-  protected async install(appUser: UserContext, miniApp: MiniApp) {
-    const miniAppInstallation = await this.findMiniAppInstallation(appUser, miniApp.code);
-    if (!miniAppInstallation) {
-      // Not Found Installation Record, Create New One
-      return await this.createMiniAppInstallation(appUser, miniApp);
-    }
-
-    if (miniAppInstallation.isActive) {
-      // Found Installation Record, And It Is Activated
+  /**
+   * Two-stage resolution: newest ACTIVE record → already installed; else newest
+   * INACTIVE record → reactivate it; else create. An active-only finder would
+   * CREATE a duplicate instead of reactivating.
+   */
+  protected async install(appUser: UserContext, miniApp: MiniApp, body?: MiniAppInstallBody) {
+    const appId = miniApp.developerPortal.appId;
+    const active = (await this.findActiveInstallationsByAppId(appUser, appId))?.[0];
+    if (active) {
       const msg = MiniAppError.format(MiniAppError.ERR.ALREADY_INSTALLED);
       throw new BadRequestException(msg);
     }
 
-    // Found Installation Record, And It Is Deactive, Reactivate It
-    return await this.reactivateInstalledMiniApp(appUser, miniAppInstallation);
+    const sets = this.computeConsent(miniApp.integration?.scopes ?? [], body?.grantedScopes);
+
+    const inactive = await this.findNewestInactiveInstallationByAppId(appUser, appId);
+    if (inactive) {
+      return await this.reactivateInstalledMiniApp(appUser, inactive, miniApp, sets);
+    }
+    return await this.createMiniAppInstallation(appUser, miniApp, sets);
   }
 
+  /** Sweep every active record by appId: a hidden older duplicate must not resurrect the app. */
   protected async uninstall(appUser: UserContext, miniApp: MiniApp) {
-    const miniAppInstallation = await this.findIsMiniAppInstalledOrFail(appUser, miniApp.code);
-    return await this.deactiveInstalledMiniApp(appUser, miniAppInstallation);
+    const installations = await this.findActiveInstallationsByAppId(appUser, miniApp.developerPortal.appId);
+    if (!installations.length) {
+      const msg = MiniAppError.format(MiniAppError.ERR.NOT_INSTALLED);
+      throw new NotFoundException(msg);
+    }
+    let result: MiniAppInstallation | undefined;
+    for (const installation of installations) {
+      const patched = await this.setMiniAppInstallationActiveStatus(appUser, installation, false);
+      result = result ?? patched;
+    }
+    await this.saManager.revoke(appUser, miniApp.developerPortal.appId, appUser.getBranchId());
+    return result;
   }
 
   protected async updateSetting(appUser: UserContext, miniApp: MiniApp, data: DynamicParam) {
-    const miniAppInstallation = await this.findIsMiniAppInstalledOrFail(appUser, miniApp.code);
+    const miniAppInstallation = await this.findIsMiniAppInstalledOrFail(appUser, miniApp);
     return await this.setMiniAppInstallationSetting(appUser, miniAppInstallation, data);
   }
 
-  // ========================================== Finder ==========================================
-
-  protected async findMiniAppInstallation(appUser: UserContext, miniAppCode: string): Promise<MiniAppInstallation | undefined> {
-    const miniAppInstallations = await this.miniAppInstallationService.search(appUser, {
-      'miniApp.code': miniAppCode,
+  /**
+   * Merge semantics: the save decides only scopes in the CURRENT requested set R —
+   * dormant history (granted/denied entries no longer requested) rides along
+   * untouched, so a dev remove→re-add cycle restores the admin's old decision.
+   * Snapshot deliberately untouched: a scopes-only screen must not acknowledge
+   * content changes the admin never saw.
+   */
+  protected async updateGrantedScopes(appUser: UserContext, miniApp: MiniApp, body: MiniAppGrantedScopesBody) {
+    const installation = await this.findIsMiniAppInstalledOrFail(appUser, miniApp);
+    const requested = _.uniq(miniApp.integration?.scopes ?? []);
+    const submitted = _.uniq(body.grantedScopes ?? []);
+    const invalid = submitted.filter((s) => !requested.includes(s));
+    if (invalid.length) {
+      const msg = MiniAppError.format(MiniAppError.ERR.INVALID_SCOPES, { scopes: invalid.join(', ') });
+      throw new BadRequestException(msg);
+    }
+    const prevGranted = installation.scopeGrant?.granted ?? [];
+    const prevDenied = installation.scopeGrant?.denied ?? [];
+    const granted = _.uniq([...submitted, ...prevGranted.filter((s) => !requested.includes(s))]).sort();
+    const denied = _.uniq([...requested.filter((s) => !submitted.includes(s)), ...prevDenied.filter((s) => !requested.includes(s))]).sort();
+    return await this.miniAppInstallationService.findIdThenPatch(appUser, installation._id, {
+      scopeGrant: { granted, denied, by: appUser.getUid(), at: new Date().toISOString() },
     });
+  }
 
-    return miniAppInstallations?.[0];
+  /** Everything shown was decided: granted = checked ⊆ requested, denied = rest. */
+  protected computeConsent(requestedScopes: string[], submitted?: string[]): ConsentSets {
+    const requested = _.uniq(requestedScopes ?? []);
+    if (submitted === undefined) return { granted: [...requested].sort(), denied: [] };
+    const granted = _.uniq(submitted);
+    const invalid = granted.filter((s) => !requested.includes(s));
+    if (invalid.length) {
+      const msg = MiniAppError.format(MiniAppError.ERR.INVALID_SCOPES, { scopes: invalid.join(', ') });
+      throw new BadRequestException(msg);
+    }
+    return { granted: [...granted].sort(), denied: requested.filter((s) => !granted.includes(s)).sort() };
+  }
+
+  protected buildScopeGrant(appUser: UserContext, sets: ConsentSets) {
+    return { granted: sets.granted, denied: sets.denied, by: appUser.getUid(), at: new Date().toISOString() };
+  }
+
+  protected async findActiveInstallationsByAppId(appUser: UserContext, developerPortalAppId: string): Promise<MiniAppInstallation[]> {
+    return await this.miniAppInstallationService.search(appUser, { 'miniApp.developerPortalAppId': developerPortalAppId, isActive: true }, undefined, { created: -1, _id: -1 });
+  }
+
+  protected async findNewestInactiveInstallationByAppId(appUser: UserContext, developerPortalAppId: string): Promise<MiniAppInstallation | undefined> {
+    const results = await this.miniAppInstallationService.search(appUser, { 'miniApp.developerPortalAppId': developerPortalAppId, isActive: false }, undefined, { created: -1, _id: -1 });
+    return results?.[0];
   }
 
   protected async findMiniAppInstallations(appUser: UserContext) {
@@ -143,20 +217,9 @@ export abstract class MiniAppManagerProcessor {
     return miniAppInstallations;
   }
 
-  protected async findMiniAppInstallationOrFail(appUser: UserContext, miniAppCode: string) {
-    const miniAppInstallation = await this.findMiniAppInstallation(appUser, miniAppCode);
+  protected async findIsMiniAppInstalledOrFail(appUser: UserContext, miniApp: MiniApp) {
+    const miniAppInstallation = (await this.findActiveInstallationsByAppId(appUser, miniApp.developerPortal.appId))?.[0];
     if (!miniAppInstallation) {
-      const msg = MiniAppError.format(MiniAppError.ERR.NOT_INSTALLED);
-      throw new NotFoundException(msg);
-    }
-
-    return miniAppInstallation;
-  }
-
-  protected async findIsMiniAppInstalledOrFail(appUser: UserContext, miniAppCode: string) {
-    const miniAppInstallation = await this.findMiniAppInstallationOrFail(appUser, miniAppCode);
-    if (!miniAppInstallation.isActive) {
-      // Already inactive, previously already uninstall
       const msg = MiniAppError.format(MiniAppError.ERR.NOT_INSTALLED);
       throw new NotFoundException(msg);
     }
@@ -175,6 +238,26 @@ export abstract class MiniAppManagerProcessor {
   }
 
   // ========================================== Assert ==========================================
+
+  /** Consent is meaningless if any Role.User can approve scopes — the can* policies
+   *  existed but were only returned to the UI as flags, never asserted server-side. */
+  protected assertCanInstall(appUser: UserContext) {
+    if (!this.policyService.canInstall(appUser)) {
+      throw new ForbiddenException(MiniAppError.format(MiniAppError.ERR.NOT_ALLOWED));
+    }
+  }
+
+  protected assertCanUninstall(appUser: UserContext) {
+    if (!this.policyService.canUninstall(appUser)) {
+      throw new ForbiddenException(MiniAppError.format(MiniAppError.ERR.NOT_ALLOWED));
+    }
+  }
+
+  protected assertCanUpdateSetting(appUser: UserContext) {
+    if (!this.policyService.canUpdateSetting(appUser)) {
+      throw new ForbiddenException(MiniAppError.format(MiniAppError.ERR.NOT_ALLOWED));
+    }
+  }
 
   protected assertHasMiniAppFeature(appUser: UserContext) {
     if (!this.policyService.hasFeature(appUser)) {
@@ -238,7 +321,7 @@ export abstract class MiniAppManagerProcessor {
 
   // ===================================== Update Collection ====================================
 
-  protected async createMiniAppInstallation(appUser: UserContext, miniApp: MiniApp) {
+  protected async createMiniAppInstallation(appUser: UserContext, miniApp: MiniApp, sets: ConsentSets) {
     const miniApiUser = await this.saManager.ensure(appUser, {
       appCode: miniApp.code,
       appName: miniApp.name,
@@ -256,6 +339,7 @@ export abstract class MiniAppManagerProcessor {
       },
       miniApiUser,
       settings: {},
+      scopeGrant: this.buildScopeGrant(appUser, sets),
     });
   }
 
@@ -299,22 +383,25 @@ export abstract class MiniAppManagerProcessor {
 
   // =========================================== Other ==========================================
 
-  protected async reactivateInstalledMiniApp(appUser: UserContext, miniAppInstallation: MiniAppInstallation) {
+  /** Reactivation = truly fresh consent (D6); FK block refreshed so pre-rename orphans come back honest. */
+  protected async reactivateInstalledMiniApp(appUser: UserContext, miniAppInstallation: MiniAppInstallation, miniApp: MiniApp, sets: ConsentSets) {
     const miniApiUser = await this.saManager.ensure(appUser, {
-      appCode: miniAppInstallation.miniApp.code,
-      appName: miniAppInstallation.miniApp.label,
-      appId: miniAppInstallation.miniApp.developerPortalAppId,
+      appCode: miniApp.code,
+      appName: miniApp.name,
+      appId: miniApp.developerPortal.appId,
     });
     return await this.miniAppInstallationService.findIdThenPatch(appUser, miniAppInstallation._id, {
       isActive: true,
       miniApiUser,
+      miniApp: {
+        _id: miniApp._id,
+        code: miniApp.code,
+        label: miniApp.name,
+        env: miniApp.env,
+        developerPortalAppId: miniApp.developerPortal.appId,
+      },
+      scopeGrant: this.buildScopeGrant(appUser, sets),
     });
-  }
-
-  protected async deactiveInstalledMiniApp(appUser: UserContext, miniAppInstallation: MiniAppInstallation) {
-    const result = await this.setMiniAppInstallationActiveStatus(appUser, miniAppInstallation, false);
-    await this.saManager.revoke(appUser, miniAppInstallation.miniApp.code, miniAppInstallation.branchId);
-    return result;
   }
 
   protected resolveMiniAppPermissions(appUser: UserContext) {
@@ -325,6 +412,4 @@ export abstract class MiniAppManagerProcessor {
       canUpdateSetting: this.policyService.canUpdateSetting(appUser),
     };
   }
-
 }
-

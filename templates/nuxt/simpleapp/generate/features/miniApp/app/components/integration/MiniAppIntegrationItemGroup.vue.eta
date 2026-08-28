@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
-  >
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
     <MiniAppIntegrationItem
       v-if="items && items.length > 0"
       v-for="item in items"
@@ -13,7 +11,10 @@
       v-else
       class="flex justify-center items-center bg-gray-50 rounded-lg p-4 h-48 col-span-full"
     >
-      <NodataLarge :label="t('noDataFound')" :icon="UndrawNodata" />
+      <NodataLarge
+        :label="t('noDataFound')"
+        :icon="UndrawNodata"
+      />
     </div>
   </div>
 </template>

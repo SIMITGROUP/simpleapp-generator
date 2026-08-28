@@ -1,5 +1,5 @@
-import { MiniApp,  } from '@resources/mini-app/mini-app.schema';
-import { MiniAppInstallation,  } from '@resources/mini-app-installation/mini-app-installation.schema';
+import { MiniApp } from '@resources/mini-app/mini-app.schema';
+import { MiniAppInstallation } from '@resources/mini-app-installation/mini-app-installation.schema';
 
 export type MiniAppDetailPermission = {
   hasMiniAppFeature: boolean;

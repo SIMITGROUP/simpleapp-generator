@@ -3,7 +3,7 @@ import { UserContext } from 'src/simple-app/_core/features/user-context/user.con
 import _ from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { MiniApp , DynamicParam, MiniAppInstallation} from '../dto';
+import { MiniApp, DynamicParam, MiniAppInstallation, MiniAppInstallBody, MiniAppGrantedScopesBody } from '../dto';
 import { MiniAppError } from './mini-app-manager.error';
 import { MiniAppManagerEnvEnum } from './mini-app-manager.enum';
 import { MiniAppManagerEnvDevelopmentService } from './mini-app-manager-env-development.service';
@@ -39,7 +39,7 @@ export class MiniAppManagerBridgeService {
     return miniApp;
   }
 
-  private async resolveContext(appUser: UserContext) {
+  private resolveContext(appUser: UserContext) {
     const env = getEnvironment(appUser);
 
     const service = this.getService(env);
@@ -74,12 +74,12 @@ export class MiniAppManagerBridgeService {
   }
 
   async runGetInstalledMiniApps(appUser: UserContext) {
-    const { service } = await this.resolveContext(appUser);
+    const { service } = this.resolveContext(appUser);
     return await service.runGetInstalledMiniApps(appUser);
   }
 
   async runGetCategorizedMiniApps(appUser: UserContext) {
-    const { service } = await this.resolveContext(appUser);
+    const { service } = this.resolveContext(appUser);
     return await service.runGetCategorizedMiniApps(appUser);
   }
 
@@ -88,9 +88,9 @@ export class MiniAppManagerBridgeService {
     return await service.runGetMiniAppDetail(appUser, miniApp);
   }
 
-  async runInstallMiniApp(appUser: UserContext, miniAppCode: string) {
+  async runInstallMiniApp(appUser: UserContext, miniAppCode: string, body?: MiniAppInstallBody) {
     const { miniApp, service } = await this.resolveContextWithApp(appUser, miniAppCode);
-    return await service.runInstallMiniApp(appUser, miniApp);
+    return await service.runInstallMiniApp(appUser, miniApp, body);
   }
 
   async runUninstallMiniApp(appUser: UserContext, miniAppCode: string) {
@@ -101,6 +101,11 @@ export class MiniAppManagerBridgeService {
   async runUpdateMiniAppSetting(appUser: UserContext, miniAppCode: string, data: DynamicParam) {
     const { miniApp, service } = await this.resolveContextWithApp(appUser, miniAppCode);
     return await service.runUpdateMiniAppSetting(appUser, miniApp, data);
+  }
+
+  async runUpdateMiniAppGrantedScopes(appUser: UserContext, miniAppCode: string, body: MiniAppGrantedScopesBody) {
+    const { miniApp, service } = await this.resolveContextWithApp(appUser, miniAppCode);
+    return await service.runUpdateMiniAppGrantedScopes(appUser, miniApp, body);
   }
 
   async runSystemDefaultMiniAppMigration(appUser: UserContext) {

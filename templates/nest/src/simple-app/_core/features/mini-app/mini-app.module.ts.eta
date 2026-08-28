@@ -22,13 +22,11 @@ import { MiniAppManagerEnvDevelopmentService } from './mini-app-manager/mini-app
 import { MiniAppManagerEnvProductionService } from './mini-app-manager/mini-app-manager-env-production.service';
 import { MiniAppManagerPolicyService } from './mini-app-manager/mini-app-manager-policy.service';
 import { MiniAppManagerController } from './mini-app-manager/mini-app-manager.controller';
-import { MiniAppManagerService } from './mini-app-manager/mini-app-manager.service';
 
 @Module({
   imports: [SimpleAppSoftwarePolicyModule, MiniAppInstallationModule, MiniAppModule, BranchModule, TenantModule, PermissionModule, UserModule],
   controllers: [MiniAppManagerController, DeveloperPortalController],
   providers: [
-    MiniAppManagerService,
     MiniAppManagerPolicyService,
     MiniAppManagerEnvProductionService,
     MiniAppManagerEnvDevelopmentService,
@@ -39,7 +37,6 @@ import { MiniAppManagerService } from './mini-app-manager/mini-app-manager.servi
     DeveloperPortalEnvProductionService,
   ],
   exports: [
-    MiniAppManagerService,
     MiniAppManagerPolicyService,
     MiniAppManagerEnvProductionService,
     MiniAppManagerEnvDevelopmentService,

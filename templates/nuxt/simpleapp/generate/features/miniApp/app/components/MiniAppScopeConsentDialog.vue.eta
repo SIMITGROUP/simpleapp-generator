@@ -1,0 +1,85 @@
+<template>
+  <Dialog
+    :visible="visible"
+    modal
+    :header="t('miniAppLang.consentTitle')"
+    :style="{ width: '42rem' }"
+    @update:visible="(v: boolean) => !v && emits('cancel')"
+  >
+    <div class="mb-4 text-surface-500">
+      {{ t("miniAppLang.consentDescription") }}
+    </div>
+    <div
+      v-for="(scopeList, resourceName) in grouped"
+      :key="resourceName"
+      class="mb-4 space-y-2"
+    >
+      <div class="font-semibold">
+        {{ t(String(resourceName).toLowerCase()) }}
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <label
+          v-for="scope in scopeList"
+          :key="scope.full"
+          class="flex items-center space-x-2 text-sm bg-slate-100 rounded px-2 py-1 cursor-pointer"
+        >
+          <Checkbox
+            v-model="checked"
+            :value="scope.full"
+          />
+          <span>{{ _.startCase(scope.suffix) }}</span>
+        </label>
+      </div>
+    </div>
+    <template #footer>
+      <ButtonSecondary
+        :label="t('cancel')"
+        @click="emits('cancel')"
+      />
+      <ButtonPrimary
+        :label="t('miniAppLang.consentConfirm')"
+        @click="emits('confirm', checked)"
+      />
+    </template>
+  </Dialog>
+</template>
+
+<script setup lang="ts">
+import _ from "lodash";
+import type { MiniAppDetail } from "~/simpleapp/generate/openapi";
+
+const props = defineProps<{
+  miniApp?: MiniAppDetail;
+  visible: boolean;
+  preChecked?: string[];
+}>();
+
+const emits = defineEmits<{
+  (e: "confirm", grantedScopes: string[]): void;
+  (e: "cancel"): void;
+}>();
+
+const requested = computed(() => props.miniApp?.integration?.scopes ?? []);
+const checked = ref<string[]>([]);
+
+watch(
+  () => [props.visible] as const,
+  ([visible]) => {
+    if (visible) {
+      checked.value = props.preChecked
+        ? props.preChecked.filter((s) => requested.value.includes(s))
+        : [...requested.value];
+    }
+  },
+  { immediate: true },
+);
+
+const grouped = computed(() => {
+  const out: Record<string, { full: string; suffix: string }[]> = {};
+  for (const full of requested.value) {
+    const [prefix, ...rest] = full.split(".");
+    (out[prefix] ||= []).push({ full, suffix: rest.join(".") });
+  }
+  return out;
+});
+</script>

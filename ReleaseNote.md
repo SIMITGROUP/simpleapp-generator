@@ -1,3 +1,14 @@
+[2.0.4a-alpha]
+1. Mini-app scope grants: enforcement = installation scopeGrant.granted ∩ requested on both planes (miniApi + miniAppSdk; sdk becomes install-gated), strict when grant missing
+2. Install consent: optional { grantedScopes } body (omitted = full requested), granted/denied sets with merge semantics on update-granted-scopes; per-route ValidationPipe on consent endpoints
+3. Two-stage install resolution (newest active -> already installed; newest inactive -> reactivate with fresh consent + refreshed miniApp FK block); uninstall sweeps ALL active records by developerPortalAppId
+4. Service accounts keyed by stable serviceAccount.appId with rename drift refresh; revoke takes appId
+5. Server-side policy asserts on install/uninstall/update-setting/update-granted-scopes (canInstall/canUninstall/canUpdateSetting were UI flags only)
+6. Newest-active installation selection with {created,-_id} total order everywhere incl. auth path (findIsCentreInstalledMiniApp) and installed-list dedupe by appId
+7. Removed development.demoXOrg honoring (custom demo env-switch) and the dead consent-less MiniAppManagerService copy
+8. Nuxt: install consent dialog (per-scope choice), Permissions dialog (granted/pending/denied), pending-scopes badge on installed cards; store actions installMiniApp(code, grantedScopes?) + updateMiniAppGrantedScopes
+9. NOTE for existing projects: run the project-side backfill (scopeGrant grandfather) BEFORE deploying enforcement, and add the consent i18n keys (miniAppLang.*) to the project lang source
+
 [2.0.3z-alpha]
 1. Use ConflictException for version mismatch
 2. Correct default robot-user UTC offset to -480 (UTC+8).

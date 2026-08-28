@@ -31,8 +31,6 @@ const props = defineProps<{
 
 const { $miniAppStore } = useNuxtApp();
 const miniApp = computed(() => {
-  return $miniAppStore.installedMiniApps.find(
-    (item) => item.code === props.miniAppCode,
-  );
+  return $miniAppStore.installedMiniApps.find((item) => item.code === props.miniAppCode);
 });
 </script>

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from 'src/simple-app/_core/features/auth/role-guard/roles.decorator';
@@ -15,11 +15,13 @@ export class MiniAppManagerController {
   constructor(private readonly service: MiniAppManagerBridgeService) {}
 
   @Put('mini-apps/:miniAppCode/install')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
   @Roles(Role.SuperAdmin, Role.SuperUser, Role.User)
+  @ApiBody({ description: 'Consent body — scopes the admin checked; omitted = full requested set', type: schemas.MiniAppInstallBody, required: false })
   @ApiResponse({ status: 200, description: 'Install a miniApp', type: schemas.MiniAppInstallation })
   @ApiOperation({ operationId: 'runInstallMiniApp' })
-  async installMiniApp(@AppUser() appUser: UserContext, @Param('miniAppCode') miniAppCode: string) {
-    const res = await this.service.runInstallMiniApp(appUser, miniAppCode);
+  async installMiniApp(@AppUser() appUser: UserContext, @Param('miniAppCode') miniAppCode: string, @Body() body?: schemas.MiniAppInstallBody) {
+    const res = await this.service.runInstallMiniApp(appUser, miniAppCode, body);
     return res;
   }
 
@@ -39,6 +41,17 @@ export class MiniAppManagerController {
   @ApiOperation({ operationId: 'runUpdateMiniAppSetting' })
   async updateMiniAppSetting(@AppUser() appUser: UserContext, @Body() data: schemas.DynamicParam, @Param('miniAppCode') miniAppCode: string) {
     const res = await this.service.runUpdateMiniAppSetting(appUser, miniAppCode, data);
+    return res;
+  }
+
+  @Put('mini-apps/:miniAppCode/update-granted-scopes')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  @Roles(Role.SuperAdmin, Role.SuperUser, Role.User)
+  @ApiBody({ description: 'Granted scopes for the currently-requested set (merge semantics)', type: schemas.MiniAppGrantedScopesBody })
+  @ApiResponse({ status: 200, description: 'Update granted scopes', type: schemas.MiniAppInstallation })
+  @ApiOperation({ operationId: 'runUpdateMiniAppGrantedScopes' })
+  async updateMiniAppGrantedScopes(@AppUser() appUser: UserContext, @Body() body: schemas.MiniAppGrantedScopesBody, @Param('miniAppCode') miniAppCode: string) {
+    const res = await this.service.runUpdateMiniAppGrantedScopes(appUser, miniAppCode, body);
     return res;
   }
 

@@ -7,7 +7,10 @@
       <i :class="icon || 'pi pi-file'" />
     </template>
     <template v-else-if="iconType === 'imageSource'">
-      <img :src="icon" class="size-3.5 pointer-events-none object-contain" />
+      <img
+        :src="icon"
+        class="size-3.5 pointer-events-none object-contain"
+      />
     </template>
   </template>
 </template>

@@ -3,7 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { MiniApp } from 'src/simple-app/_core/resources/mini-app/mini-app.schema';
-import { getEnvironment, getEnvironmentWithApp } from '../utils/mini-app.util';
+import { MiniAppInstallation } from 'src/simple-app/_core/resources/mini-app-installation/mini-app-installation.schema';
+import { getEnvironment } from '../utils/mini-app.util';
 import { MiniAppManagerEnvEnum } from '../mini-app-manager/mini-app-manager.enum';
 import { Request } from 'express';
 import _ from 'lodash';
@@ -19,23 +20,9 @@ export const MINIAPP_FORBIDDEN_MESSAGE = 'You are not allowed to call this prote
 export class MiniAppScopeService {
   constructor(
     @InjectModel('Miniapp') private readonly miniAppModel: Model<MiniApp>,
+    @InjectModel('MiniappScopeInstallation') private readonly miniAppInstallationModel: Model<MiniAppInstallation>,
     private readonly internalAppRegistry: InternalAppRegistry,
   ) {}
-
-  /**
-   * Find Mini App From Dev To See Is This A Custom Demo Company
-   * Only env: 'dev' will have development.demoXOrg field
-   * @param developerPortalAppId
-   */
-  async isMiniAppHaveCustomDemoCompany(developerPortalAppId: string) {
-    const miniApp = await this.miniAppModel.findOne({
-      'developerPortal.appId': developerPortalAppId,
-      'development.demoXOrg': { $exists: true, $ne: null },
-      env: MiniAppManagerEnvEnum.DEV,
-    });
-
-    return miniApp;
-  }
 
   async findMiniAppOrFail(developerPortalAppId: string, env: MiniAppManagerEnvEnum) {
     const miniApp = await this.miniAppModel.findOne({
@@ -113,21 +100,47 @@ export class MiniAppScopeService {
     }
   }
 
+  /**
+   * Effective scopes = scopeGrant.granted ∩ currently-requested.
+   * Missing grant = empty = everything 403s — strictness is what keeps the
+   * grandfather migration from silently re-opening the escalation hole.
+   */
   async getScopes(appUser: UserContext, developerPortalAppId: string) {
-    let env = getEnvironment(appUser);
-    if (env === MiniAppManagerEnvEnum.PROD) {
-      const customDemoMiniApp = await this.isMiniAppHaveCustomDemoCompany(developerPortalAppId);
-      if (customDemoMiniApp) {
-        // Check Is Current In Custom Demo XOrg
-        env = getEnvironmentWithApp(appUser, customDemoMiniApp);
-      }
-    }
+    const installation = await this.resolveActiveInstallation(appUser, developerPortalAppId);
 
+    const env = getEnvironment(appUser);
     const miniApp = await this.findMiniAppOrFail(developerPortalAppId, env);
     this.assertEnabledFeature(appUser, miniApp);
 
-    const scopes = miniApp.integration?.scopes ?? [];
+    const granted = installation.scopeGrant?.granted ?? [];
+    const requested = miniApp.integration?.scopes ?? [];
+    return granted.filter((scope) => requested.includes(scope));
+  }
 
-    return scopes;
+  /**
+   * miniApi plane: auth already resolved the installation onto the context.
+   * miniAppSdk plane: resolved here — which install-gates custom-page API calls.
+   * Newest-active with the {created,_id} total order, same rule as auth.
+   */
+  private async resolveActiveInstallation(appUser: UserContext, developerPortalAppId: string): Promise<MiniAppInstallation> {
+    const fromContext = appUser.getMiniAppInstallation?.();
+    if (fromContext) return fromContext;
+
+    const results = await this.miniAppInstallationModel
+      .find({
+        'miniApp.developerPortalAppId': developerPortalAppId,
+        isActive: true,
+        tenantId: appUser.getTenantId(),
+        orgId: appUser.getOrgId(),
+        branchId: appUser.getBranchId(),
+      })
+      .sort({ created: -1, _id: -1 })
+      .limit(1);
+
+    const installation = results?.[0];
+    if (!installation) {
+      throw new ForbiddenException(MINIAPP_FORBIDDEN_MESSAGE);
+    }
+    return installation;
   }
 }

@@ -4,7 +4,7 @@ import { MiniAppInstallationService } from 'src/simple-app/_core/resources/mini-
 import { MiniAppManagerPolicyService } from './mini-app-manager-policy.service';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { MiniAppManagerProcessor } from './mini-app-manager.processor';
-import { DynamicParam, MiniApp, CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail } from '../dto';
+import { DynamicParam, MiniApp, CategorizedMiniAppDetail, InstalledMiniAppDetail, MiniAppDetail, MiniAppInstallBody, MiniAppGrantedScopesBody } from '../dto';
 import { MiniAppEnvEnum, MiniAppStatusEnum } from 'src/simple-app/_core/resources/mini-app/mini-app.enum';
 import { Model } from 'mongoose';
 import _ from 'lodash';
@@ -51,28 +51,38 @@ export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor 
     return await this.findMiniAppDetail(appUser, miniApp);
   }
 
-  async runInstallMiniApp(appUser: UserContext, miniApp: MiniApp) {
+  async runInstallMiniApp(appUser: UserContext, miniApp: MiniApp, body?: MiniAppInstallBody) {
     this.assertEnvironment(appUser, miniApp);
     this.assertHasMiniAppFeature(appUser);
+    this.assertCanInstall(appUser);
     this.assertPrivateAppPermission(appUser, miniApp);
     this.assertHasRequiredPlan(appUser, miniApp);
     this.assertIsMiniAppReleased(miniApp);
 
-    return await this.install(appUser, miniApp);
+    return await this.install(appUser, miniApp, body);
   }
 
   async runUninstallMiniApp(appUser: UserContext, miniApp: MiniApp) {
     this.assertHasMiniAppFeature(appUser);
+    this.assertCanUninstall(appUser);
 
     return await this.uninstall(appUser, miniApp);
   }
 
   async runUpdateMiniAppSetting(appUser: UserContext, miniApp: MiniApp, data: DynamicParam) {
     this.assertHasMiniAppFeature(appUser);
+    this.assertCanUpdateSetting(appUser);
     this.assertHasRequiredPlan(appUser, miniApp);
     this.assertIsMiniAppReleased(miniApp);
 
     return await this.updateSetting(appUser, miniApp, data);
+  }
+
+  async runUpdateMiniAppGrantedScopes(appUser: UserContext, miniApp: MiniApp, body: MiniAppGrantedScopesBody) {
+    this.assertHasMiniAppFeature(appUser);
+    this.assertCanUpdateSetting(appUser);
+
+    return await this.updateGrantedScopes(appUser, miniApp, body);
   }
 
   async createMiniApp(appUser: UserContext, developerPortalAppId: string, dto: MiniApp) {
@@ -121,12 +131,6 @@ export class MiniAppManagerEnvProductionService extends MiniAppManagerProcessor 
 
   protected assertEnvironment(appUser: UserContext, miniApp: MiniApp) {
     if (miniApp.env !== MiniAppEnvEnum.PROD) {
-      if (!_.isEmpty(miniApp?.development?.demoXOrg)) {
-        if (miniApp.development.demoXOrg === appUser.getXOrg()) {
-          return true;
-        }
-      }
-
       throw new BadRequestException('Cannot process dev app in prod env');
     }
   }

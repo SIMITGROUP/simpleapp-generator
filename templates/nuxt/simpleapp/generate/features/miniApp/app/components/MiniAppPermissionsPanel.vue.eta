@@ -1,0 +1,89 @@
+<template>
+  <div class="space-y-4">
+    <div class="text-surface-500">
+      {{ t("miniAppLang.permissionsDescription") }}
+    </div>
+    <div
+      v-for="section in sections"
+      :key="section.key"
+    >
+      <template v-if="section.scopes.length">
+        <div class="font-semibold mb-1">
+          {{ t(section.labelKey) }}
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <label
+            v-for="scope in section.scopes"
+            :key="scope"
+            class="flex items-center space-x-2 text-sm rounded px-2 py-1 cursor-pointer"
+            :class="section.key === 'pending' ? 'bg-amber-100' : 'bg-slate-100'"
+          >
+            <Checkbox
+              v-model="checked"
+              :value="scope"
+            />
+            <span>{{ _.startCase(scope) }}</span>
+          </label>
+        </div>
+      </template>
+    </div>
+    <ButtonPrimary
+      :label="t('save')"
+      :loading="saving"
+      :disabled="saving"
+      @click="save"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import _ from "lodash";
+import type { MiniAppDetail } from "~/simpleapp/generate/openapi";
+
+const props = defineProps<{ miniApp: MiniAppDetail }>();
+const emits = defineEmits<{ (e: "saved"): void }>();
+
+const { $miniAppStore } = useNuxtApp();
+const toast = useToast();
+
+const requested = computed(() => props.miniApp?.integration?.scopes ?? []);
+const grant = computed(
+  () =>
+    (
+      props.miniApp as unknown as {
+        miniAppInstallation?: { scopeGrant?: { granted?: string[]; denied?: string[] } };
+      }
+    )?.miniAppInstallation?.scopeGrant,
+);
+const granted = computed(() => (grant.value?.granted ?? []).filter((s) => requested.value.includes(s)));
+const denied = computed(() => (grant.value?.denied ?? []).filter((s) => requested.value.includes(s)));
+const pending = computed(() => requested.value.filter((s) => !granted.value.includes(s) && !denied.value.includes(s)));
+
+const sections = computed(() => [
+  { key: "granted", labelKey: "miniAppLang.grantedScopes", scopes: granted.value },
+  { key: "pending", labelKey: "miniAppLang.pendingScopes", scopes: pending.value },
+  { key: "denied", labelKey: "miniAppLang.deniedScopes", scopes: denied.value },
+]);
+
+const checked = ref<string[]>([]);
+watch(granted, (g) => (checked.value = [...g]), { immediate: true });
+
+const saving = ref(false);
+async function save() {
+  saving.value = true;
+  try {
+    await $miniAppStore.updateMiniAppGrantedScopes(props.miniApp.code, checked.value);
+    toast.add({ severity: "success", summary: t("success"), life: 3000 });
+    emits("saved");
+  } catch (error: unknown) {
+    const axiosError = error as { response?: { data?: { statusMessage?: string; message?: string } }; message?: string };
+    toast.add({
+      severity: "error",
+      summary: t("error"),
+      detail: axiosError.response?.data?.statusMessage || axiosError.response?.data?.message || axiosError.message,
+    });
+  } finally {
+    saving.value = false;
+  }
+}
+</script>

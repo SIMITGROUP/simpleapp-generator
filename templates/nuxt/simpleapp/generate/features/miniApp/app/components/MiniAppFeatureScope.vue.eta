@@ -20,7 +20,10 @@
         </div>
       </div>
 
-      <Divider type="dashed" class="!mt-6 !mb-4" />
+      <Divider
+        type="dashed"
+        class="!mt-6 !mb-4"
+      />
     </div>
   </div>
 </template>

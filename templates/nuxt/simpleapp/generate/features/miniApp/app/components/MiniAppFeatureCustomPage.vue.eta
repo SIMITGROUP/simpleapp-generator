@@ -32,7 +32,10 @@
               </div>
 
               <template v-if="!_.isEmpty(page.requiredPermissions)">
-                <Divider type="dashed" class="!my-3" />
+                <Divider
+                  type="dashed"
+                  class="!my-3"
+                />
 
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-surface-700 text-sm">

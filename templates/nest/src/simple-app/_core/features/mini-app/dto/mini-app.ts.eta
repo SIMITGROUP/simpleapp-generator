@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsArray, IsOptional, IsString } from 'class-validator';
 import { MiniApp, MiniAppInstallation } from './imports';
 
 @ObjectType()
@@ -52,4 +53,19 @@ export class InstalledMiniAppDetail {
   @Field(() => [MiniAppDetail])
   @ApiProperty({ type: () => [MiniAppDetail] })
   installedMiniApps: MiniAppDetail[];
+}
+
+export class MiniAppInstallBody {
+  @ApiProperty({ type: [String], required: false, description: 'Scopes the admin checked on the consent screen. Omitted = full requested set.' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  grantedScopes?: string[];
+}
+
+export class MiniAppGrantedScopesBody {
+  @ApiProperty({ type: [String], required: true })
+  @IsArray()
+  @IsString({ each: true })
+  grantedScopes: string[];
 }

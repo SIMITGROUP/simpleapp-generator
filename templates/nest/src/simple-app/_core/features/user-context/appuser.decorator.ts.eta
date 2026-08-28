@@ -6,15 +6,13 @@
  */
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
-export const AppUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {    
-    if (ctx.getType() == 'http') {
-      const request = ctx.switchToHttp().getRequest();
-      return request['sessionuser'];
-    } else if (ctx.getArgs()[2]) {
-      const req = ctx.getArgs()[2].req;
-      return req['sessionuser'];
-    }
-    return undefined;
-  },
-);
+export const AppUser = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
+  if (ctx.getType() == 'http') {
+    const request = ctx.switchToHttp().getRequest();
+    return request['sessionuser'];
+  } else if (ctx.getArgs()[2]) {
+    const req = ctx.getArgs()[2].req;
+    return req['sessionuser'];
+  }
+  return undefined;
+});

@@ -8,6 +8,12 @@
     @click="handleMiniAppClick(item)"
   >
     <div class="absolute top-1 right-1 flex space-x-1">
+      <span
+        v-if="pendingScopesCount > 0"
+        class="bg-amber-500 text-white text-[0.65rem] px-2 font-bold py-0.5 rounded-md shadow uppercase"
+      >
+        {{ t("miniAppLang.pendingScopesBadge", { count: pendingScopesCount }) }}
+      </span>
       <MiniAppIntegrationItemBadge :item="item" />
     </div>
 
@@ -16,7 +22,11 @@
     </div>
 
     <div class="p-4">
-      <MiniAppIcon :image="item.logo" :label="item.name" size="lg" />
+      <MiniAppIcon
+        :image="item.logo"
+        :label="item.name"
+        size="lg"
+      />
     </div>
 
     <div class="text-sm text-gray-600 text-center line-clamp-2">
@@ -27,17 +37,32 @@
 
 <script setup lang="ts">
 import { MiniappStatusEnum } from "~/enums";
-import { MiniAppDetail } from "~/simpleapp/generate/openapi";
+import type { MiniAppDetail } from "~/simpleapp/generate/openapi";
 import MiniAppIntegrationItemBadge from "./MiniAppIntegrationItemBadge.vue";
 import MiniAppIcon from "../MiniAppIcon.vue";
 
-defineProps<{
+const props = defineProps<{
   item: MiniAppDetail;
 }>();
 
 const emits = defineEmits<{
   (event: "miniAppClick", item: MiniAppDetail): void;
 }>();
+
+// Consent markers (installed cards only — data rides on the installed-list response).
+const pendingScopesCount = computed(() => {
+  const detail = props.item as unknown as {
+    integration?: { scopes?: string[] };
+    miniAppInstallation?: { scopeGrant?: { granted?: string[]; denied?: string[] } };
+  };
+  if (!detail.miniAppInstallation) return 0;
+  const requested = detail.integration?.scopes ?? [];
+  const granted = detail.miniAppInstallation.scopeGrant?.granted ?? [];
+  const denied = detail.miniAppInstallation.scopeGrant?.denied ?? [];
+  return requested.filter((s) => !granted.includes(s) && !denied.includes(s)).length;
+});
+
+
 
 function handleMiniAppClick(item: MiniAppDetail) {
   if (item.status === MiniappStatusEnum.UPCOMING) return;

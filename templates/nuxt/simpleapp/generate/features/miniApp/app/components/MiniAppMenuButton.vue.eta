@@ -22,10 +22,7 @@
             :to="
               miniApp.pages[0]?.code === 'mini-app-setting'
                 ? $miniAppStore.getMiniAppSettingPageUrl(miniApp.code)
-                : $miniAppStore.getMiniAppPageUrl(
-                    miniApp.code,
-                    miniApp.pages[0]?.code ?? '',
-                  )
+                : $miniAppStore.getMiniAppPageUrl(miniApp.code, miniApp.pages[0]?.code ?? '')
             "
             :title="miniApp.name"
           >
@@ -51,23 +48,19 @@
               <div
                 class="flex flex-wrap gap-x-1 gap-y-3 bg-gray-50 border-2 border-gray-100 px-3 py-5 rounded-lg shadow-lg"
               >
-                <template v-for="page in miniApp.pages" :key="page._id">
+                <template
+                  v-for="page in miniApp.pages"
+                  :key="page._id"
+                >
                   <div
                     class="shrink-0 flex flex-col items-center gap-2 w-[3.8rem] cursor-pointer text-gray-500 hover:text-cyan-500"
-                    @click="
-                      $miniAppStore.navigateToMiniAppPage(
-                        miniApp.code,
-                        page.code,
-                      )
-                    "
+                    @click="$miniAppStore.navigateToMiniAppPage(miniApp.code, page.code)"
                   >
                     <MiniAppPageIcon
                       :iconType="page.iconType"
                       :icon="page.icon ?? ''"
                     />
-                    <p
-                      class="text-[0.5rem] line-clamp-2 leading-none text-center"
-                    >
+                    <p class="text-[0.5rem] line-clamp-2 leading-none text-center">
                       {{ page.title }}
                     </p>
                   </div>

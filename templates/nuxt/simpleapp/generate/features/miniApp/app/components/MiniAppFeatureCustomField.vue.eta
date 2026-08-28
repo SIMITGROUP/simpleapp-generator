@@ -9,8 +9,7 @@
     >
       <div>
         <div class="flex items-center gap-2 font-semibold text-surface-700">
-          <span
-            class="text-xs bg-primary-100 text-primary-500 px-4 py-1 rounded-md"
+          <span class="text-xs bg-primary-100 text-primary-500 px-4 py-1 rounded-md"
             >{{ t(`${field.code}`) }}
           </span>
           <span>

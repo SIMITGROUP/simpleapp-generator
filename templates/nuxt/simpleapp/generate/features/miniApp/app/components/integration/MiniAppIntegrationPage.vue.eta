@@ -33,6 +33,7 @@
             <span>|</span>
             <span
               v-for="permission in miniApp.access.requiredPlans ?? []"
+              :key="permission"
               class="px-3 py-0.5 bg-slate-100 text-surface-500 font-semibold text-xs rounded uppercase"
             >
               {{ permission }}
@@ -45,6 +46,7 @@
             <span>|</span>
             <span
               v-for="permission in ['lite', 'pro', 'enterprise']"
+              :key="permission"
               class="px-3 py-0.5 bg-slate-100 text-surface-500 font-semibold text-xs rounded uppercase"
             >
               {{ permission }}
@@ -54,7 +56,10 @@
         <p class="text-gray-600">{{ miniApp.intro.description }}</p>
 
         <div class="flex items-center gap-1">
-          <template v-for="[feature, enabled] in Object.entries(miniApp.integration.enabled)">
+          <template
+            v-for="[feature, enabled] in Object.entries(miniApp.integration.enabled)"
+            :key="feature"
+          >
             <span
               v-if="enabled && $te(`miniAppLang.integrationFeature.${feature}`)"
               class="px-3 py-0.5 bg-primary-50 text-primary-500 font-semibold text-xs rounded uppercase cursor-pointer"
@@ -104,6 +109,18 @@
                 @click="handleOpenSetting"
               />
             </MiniAppPermissionWrapper>
+
+            <MiniAppPermissionWrapper
+              :validation="$miniAppStore.validation('updateSetting')"
+              class="!mt-0"
+            >
+              <ButtonSecondary
+                :label="t('miniAppLang.permissionsTitle')"
+                :disabled="isAppInstallationInProgress"
+                icon="pi pi-shield"
+                @click="isShowPermissionsDialog = true"
+              />
+            </MiniAppPermissionWrapper>
           </template>
           <template v-else>
             <!-- Not yet install -->
@@ -122,15 +139,16 @@
         </div>
       </MiniAppPermissionWrapper>
 
+
       <div v-if="miniApp.intro.previewImages.length > 0">
         <h2 class="text-xl font-semibold mb-2">Overview:</h2>
         <div class="card flex justify-center py-4 h-96 bg-slate-100 rounded-xl">
           <Galleria
             :value="miniApp.intro.previewImages"
-            :numVisible="5"
-            :showThumbnails="false"
-            :showIndicators="true"
-            :showItemNavigators="true"
+            :num-visible="5"
+            :show-thumbnails="false"
+            :show-indicators="true"
+            :show-item-navigators="true"
             :pt="{
               root: {
                 class: '!grow !h-full',
@@ -167,7 +185,7 @@
                 :alt="miniApp.name"
                 style="display: block"
                 class="h-80 rounded-xl shadow-md"
-              />
+              >
             </template>
           </Galleria>
         </div>
@@ -202,7 +220,7 @@
       :header="t('scopes')"
       class="!w-1/2 !h-2/3"
     >
-      <MiniAppFeatureScope :miniApp="miniApp" />
+      <MiniAppFeatureScope :mini-app="miniApp" />
     </Dialog>
 
     <Dialog
@@ -212,7 +230,7 @@
       :header="t('customPage')"
       class="!w-1/2 !h-2/3"
     >
-      <MiniAppFeatureCustomPage :miniApp="miniApp" />
+      <MiniAppFeatureCustomPage :mini-app="miniApp" />
     </Dialog>
 
     <Dialog
@@ -222,8 +240,29 @@
       :header="t('customField')"
       class="!w-1/2 !h-2/3"
     >
-      <MiniAppFeatureCustomField :miniApp="miniApp" />
+      <MiniAppFeatureCustomField :mini-app="miniApp" />
     </Dialog>
+
+    <Dialog
+      v-model:visible="isShowPermissionsDialog"
+      :modal="true"
+      maximizable
+      :header="t('miniAppLang.permissionsTitle')"
+      class="!w-1/2 !h-2/3"
+    >
+      <MiniAppPermissionsPanel
+        :mini-app="miniApp"
+        @saved="handlePermissionsSaved"
+      />
+    </Dialog>
+
+    <MiniAppScopeConsentDialog
+      :mini-app="miniApp"
+      :visible="isShowConsentDialog"
+      :pre-checked="consentPreChecked"
+      @confirm="handleConsentConfirm"
+      @cancel="isShowConsentDialog = false"
+    />
   </div>
   <div v-else>
     <template v-if="!isFetching">
@@ -239,12 +278,14 @@
 <script setup lang="ts">
 import _ from "lodash";
 import UndrawNodata from "~/components/icon/UndrawNodata.vue";
-import { MiniAppDetail } from "~/simpleapp/generate/openapi";
+import type { MiniAppDetail } from "~/simpleapp/generate/openapi";
 import MiniAppFeatureCustomField from "../MiniAppFeatureCustomField.vue";
 import MiniAppFeatureCustomPage from "../MiniAppFeatureCustomPage.vue";
 import MiniAppFeatureScope from "../MiniAppFeatureScope.vue";
 import MiniAppIcon from "../MiniAppIcon.vue";
 import MiniAppPermissionWrapper from "../MiniAppPermissionWrapper.vue";
+import MiniAppScopeConsentDialog from "../MiniAppScopeConsentDialog.vue";
+import MiniAppPermissionsPanel from "../MiniAppPermissionsPanel.vue";
 
 const props = defineProps<{
   miniApp?: MiniAppDetail;
@@ -253,18 +294,46 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "installApp"): void;
-  (e: "uninstallApp"): void;
-  (e: "openSetting"): void;
-  (e: "upgradePlan"): void;
+  (e: "installApp", grantedScopes?: string[]): void;
+  (e: "uninstallApp" | "openSetting" | "upgradePlan" | "refresh"): void;
 }>();
 
 const isShowApiAccessFeature = ref(false);
+const isShowConsentDialog = ref(false);
+const isShowPermissionsDialog = ref(false);
+
+function handlePermissionsSaved() {
+  isShowPermissionsDialog.value = false;
+  emits("refresh");
+}
+
+// Reactivation prefill: the detail response attaches the newest inactive record,
+// so the consent screen pre-checks the previously granted set (∩ requested).
+const consentPreChecked = computed(() => {
+  // An explicit granted: [] (previous deny-all) must stay [] — only a missing
+  // grant record means "no prior decision, pre-check everything".
+  const grant = (
+    props.miniApp as unknown as {
+      miniAppInstallation?: { scopeGrant?: { granted?: string[] } };
+    }
+  )?.miniAppInstallation?.scopeGrant;
+  return grant?.granted ?? undefined;
+});
 const isShowCustomPageFeature = ref(false);
 const isShowCustomFieldFeature = ref(false);
 
 function handleInstallApp() {
-  emits("installApp");
+  const requested = props.miniApp?.integration?.scopes ?? [];
+  if (!requested.length) {
+    emits("installApp");
+    return;
+  }
+  isShowConsentDialog.value = true;
+}
+
+function handleConsentConfirm(grantedScopes: string[]) {
+  isShowConsentDialog.value = false;
+  emits("installApp", grantedScopes);
 }
 
 function handleUninstallApp() {

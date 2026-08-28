@@ -1,0 +1,21 @@
+// mini-app-scope.module.ts
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { MiniAppScopeService } from './mini-app-scope.service';
+import { MiniAppMongoSchema } from '@resources/mini-app/mini-app.model';
+import { MiniAppInstallationMongoSchema } from '@resources/mini-app-installation/mini-app-installation.model';
+import { APP_GUARD } from '@nestjs/core';
+import { MiniAppScopeGuard } from './mini-app-scope.guard';
+import { InternalAppRegistry } from './internal-app.registry';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([
+      { name: 'Miniapp', schema: MiniAppMongoSchema },
+      { name: 'MiniappScopeInstallation', schema: MiniAppInstallationMongoSchema },
+    ]),
+  ],
+  providers: [MiniAppScopeService, InternalAppRegistry, { provide: APP_GUARD, useClass: MiniAppScopeGuard }],
+  exports: [MiniAppScopeService, InternalAppRegistry],
+})
+export class SimpleAppMiniAppScopeModule {}

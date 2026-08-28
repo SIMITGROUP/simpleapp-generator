@@ -86,6 +86,11 @@ export class UserContext extends UserContextInfo {
 
   private miniApiTokenVerified = false;
 
+  /** Active installation resolved during miniApi auth — enforcement reads its scopeGrant. */
+  private miniAppInstallation?: MiniAppInstallation;
+
+  getMiniAppInstallation = () => this.miniAppInstallation;
+
   private actingViaUserToken = false;
 
   // protected groups: string[] = [];
@@ -1176,18 +1181,25 @@ export class UserContext extends UserContextInfo {
   }
 
   async findIsCentreInstalledMiniApp(developerPortalAppId: string) {
-    const miniAppInstallation = await this.miniAppInstallationModel.findOne({
-      'miniApp.developerPortalAppId': developerPortalAppId,
-      isActive: true,
-      tenantId: this.tenantId,
-      orgId: this.orgId,
-      branchId: this.branchId,
-    });
+    // Newest-active wins with a total order: concurrent creates can share a
+    // millisecond, so _id breaks the tie identically for every query.
+    const results = await this.miniAppInstallationModel
+      .find({
+        'miniApp.developerPortalAppId': developerPortalAppId,
+        isActive: true,
+        tenantId: this.tenantId,
+        orgId: this.orgId,
+        branchId: this.branchId,
+      })
+      .sort({ created: -1, _id: -1 })
+      .limit(1);
 
+    const miniAppInstallation = results?.[0];
     if (!miniAppInstallation) {
       throw new ForbiddenException('NOT allowed to access this centre');
     }
 
+    this.miniAppInstallation = miniAppInstallation;
     return miniAppInstallation;
   }
 

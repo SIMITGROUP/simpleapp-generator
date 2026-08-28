@@ -1,2 +1,2 @@
 export * from './mini-app';
-export * from './imports'
+export * from './imports';

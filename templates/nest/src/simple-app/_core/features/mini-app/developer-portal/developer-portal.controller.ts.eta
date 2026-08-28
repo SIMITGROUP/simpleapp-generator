@@ -6,7 +6,7 @@ import { Role } from 'src/simple-app/_core/features/auth/role-guard/roles.enum';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
 import { DeveloperPortalBridgeService } from './developer-portal-bridge.service';
 import { DeveloperPortalInstalledXOrgsResponse } from './developer-portal.schema';
-import {MiniApp} from '@resources/mini-app/mini-app.schema'
+import { MiniApp } from '@resources/mini-app/mini-app.schema';
 
 @ApiTags('DEVELOPERPORTAL')
 @Controller('developer')

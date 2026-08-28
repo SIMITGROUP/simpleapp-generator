@@ -6,21 +6,9 @@ export function isDemoCompany(xOrg: string): boolean {
   return xOrg === process.env.DEMO_COMPANY_XORG;
 }
 
-export function isSemiDevOrg(xOrg: string, miniApp: MiniApp): boolean {
-  return xOrg === miniApp?.development?.demoXOrg;
-}
-
 export function getEnvironment(appUser: UserContext) {
   const currentXOrg = appUser.getXOrg();
   if (isDemoCompany(currentXOrg)) return MiniAppManagerEnvEnum.DEV;
-
-  return MiniAppManagerEnvEnum.PROD;
-}
-
-export function getEnvironmentWithApp(appUser: UserContext, miniApp: MiniApp) {
-  const currentXOrg = appUser.getXOrg();
-  if (isDemoCompany(currentXOrg)) return MiniAppManagerEnvEnum.DEV;
-  if (isSemiDevOrg(currentXOrg, miniApp)) return MiniAppManagerEnvEnum.DEV;
 
   return MiniAppManagerEnvEnum.PROD;
 }
