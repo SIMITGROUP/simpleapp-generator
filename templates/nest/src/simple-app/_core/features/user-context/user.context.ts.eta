@@ -16,6 +16,7 @@ import { ClientSession, Model, PipelineStage } from 'mongoose';
 import { TMiniApiTokenInfo, TUserType } from 'src/simple-app/_core/framework/schemas';
 import { MiniAppInstallation } from 'src/simple-app/_core/resources/mini-app-installation/mini-app-installation.schema';
 
+import { Branch } from 'src/simple-app/_core/resources/branch/branch.schema';
 import { Organization } from 'src/simple-app/_core/resources/organization/organization.schema';
 import { Tenant, TenantClientSetting } from 'src/simple-app/_core/resources/tenant/tenant.schema';
 
@@ -28,7 +29,7 @@ import { User } from 'src/simple-app/_core/resources/user/user.schema';
 import { ModifiedRecords } from '../../framework/schemas';
 import { SimpleAppDbRevertService } from '../../framework/simple-app-db-revert.service';
 import { verifyMiniApiAccessToken } from '../auth/api-key/mini-api-token.util';
-import { TMiniAppUserTokenClaims } from '../auth/api-key/mini-app-user-token.util';
+import { VerifiedMiniAppUserToken } from '../auth/api-key/mini-app-user-token.util';
 import { Role } from '../auth/role-guard/roles.enum';
 import * as rolegroups from '../auth/role-guard/roles.group';
 import { TenantHealthStatusEnum } from './user-context.enum';
@@ -730,28 +731,7 @@ export class UserContext extends UserContextInfo {
 
   getXOrg = () => this.xOrg;
 
-  setXOrg = (xOrg: string) => {
-    this.xOrg = xOrg;
-    try {
-      const decodedText: string = Base64URL.decodeText(xOrg);
-      const xOrgRealm = decodedText.includes('/') ? decodedText.split('/') : decodedText.split('-');
-
-      const value1 = Number(xOrgRealm[0]);
-      const value2 = Number(xOrgRealm[1]);
-      const value3 = Number(xOrgRealm[2]);
-      if (xOrgRealm.length == 3 && !isNaN(value1) && !isNaN(value2) && !isNaN(value3)) {
-        this.tenantId = value1;
-        this.orgId = value2;
-        this.branchId = value3;
-      } else {
-        throw new BadRequestException(`Failed to set xorg, invalidXorg: ${xOrg}`);
-      }
-    } catch (err) {
-      throw new BadRequestException(err);
-    }
-  };
-
-  decodeXOrg = (xOrg: string) => {
+  private parseXOrg = (xOrg: string): { tenantId: number; orgId: number; branchId: number } => {
     try {
       const decodedText: string = Base64URL.decodeText(xOrg);
       const xOrgRealm = decodedText.includes('/') ? decodedText.split('/') : decodedText.split('-');
@@ -759,18 +739,25 @@ export class UserContext extends UserContextInfo {
       const tenantId = Number(xOrgRealm[0]);
       const orgId = Number(xOrgRealm[1]);
       const branchId = Number(xOrgRealm[2]);
-      if (xOrgRealm.length == 3 && !isNaN(tenantId) && !isNaN(orgId) && !isNaN(branchId)) {
-        return {
-          tenantId,
-          orgId,
-          branchId,
-        };
-      } else {
-        throw new BadRequestException(`Failed to decode xorg, invalidXorg: ${xOrg}`);
+      if (xOrgRealm.length !== 3 || isNaN(tenantId) || isNaN(orgId) || isNaN(branchId)) {
+        throw new Error('invalid x-org');
       }
-    } catch (err) {
-      throw new BadRequestException(err);
+      return { tenantId, orgId, branchId };
+    } catch {
+      throw new BadRequestException('Invalid x-org');
     }
+  };
+
+  setXOrg = (xOrg: string) => {
+    const { tenantId, orgId, branchId } = this.parseXOrg(xOrg);
+    this.xOrg = xOrg;
+    this.tenantId = tenantId;
+    this.orgId = orgId;
+    this.branchId = branchId;
+  };
+
+  decodeXOrg = (xOrg: string) => {
+    return this.parseXOrg(xOrg);
   };
 
   async getUserInfo(): Promise<UserContextInfo> {
@@ -1061,8 +1048,9 @@ export class UserContext extends UserContextInfo {
     this.fullName = name;
     this.ssoACL = {};
     this.roles = [Role.Everyone, Role.User, Role.SuperUser];
+    this.branches = [];
     this.setXOrg(xorg);
-    const pipeLine: PipelineStage[] = [{ $match: { tenantId: -1 } }, { $unionWith: { coll: 'organization', pipeline: [{ $match: { orgId: this.orgId } }] } }, { $limit: 1 }];
+    const pipeLine: PipelineStage[] = [{ $match: { tenantId: -1 } }, { $unionWith: { coll: 'organization', pipeline: [{ $match: { tenantId: this.tenantId, orgId: this.orgId } }] } }, { $limit: 1 }];
 
     // console.log("set as static user", pipeLine)
     const result = await this.userModel.aggregate<Organization>(pipeLine).exec();
@@ -1073,6 +1061,48 @@ export class UserContext extends UserContextInfo {
       this.country = res.country;
       this.timeZone = res.timeZone;
       this.offsetMinute = res.offsetMinute;
+      this.dateFormat = res.dateFormat ?? '';
+      this.orgRecordId = res._id ?? '';
+      this.orgCode = res.orgCode;
+      this.orgName = res.orgName;
+      this.orgInfo = res;
+    }
+
+    const branchPipeline: PipelineStage[] = [
+      { $match: { tenantId: -1 } },
+      {
+        $unionWith: {
+          coll: 'branch',
+          pipeline: [{ $match: { tenantId: this.tenantId, orgId: this.orgId, branchId: this.branchId, active: true } }],
+        },
+      },
+      { $limit: 1 },
+    ];
+    const branches = await this.userModel.aggregate<Branch>(branchPipeline).exec();
+    if (branches && branches.length > 0) {
+      const branch = branches[0];
+      this.branchRecordId = branch._id ?? '';
+      this.branchCode = branch.branchCode;
+      this.branchName = branch.branchName;
+      this.branchInfo = branch;
+      this.branches = [
+        {
+          permissionId: '',
+          tenantId: this.tenantId,
+          orgId: this.orgId,
+          branchId: this.branchId,
+          groups: [],
+          branch: {
+            _id: this.branchRecordId,
+            branchId: this.branchId,
+            branchCode: this.branchCode,
+            branchName: this.branchName,
+            active: true,
+          },
+          orgRecordId: this.orgRecordId,
+          xOrg: this.xOrg,
+        } as unknown as ProfileUserBranch,
+      ];
     }
   };
 
@@ -1099,16 +1129,10 @@ export class UserContext extends UserContextInfo {
   }
 
   async setMiniApiUser(tokenStr: string, xOrg: string) {
-    const { tokenInfo, verified } = verifyMiniApiAccessToken(tokenStr);
-    if (!verified) {
-      this.logger.warn(`x-mini-api-access-token signature NOT verified (legacy accept) for app ${tokenInfo?.miniAppId ?? 'unknown'}`);
-      if (process.env.MINI_API_ACCESS_TOKEN_ENFORCE === 'true') {
-        throw new ForbiddenException('Invalid mini api access token');
-      }
-    }
-    this.miniApiTokenVerified = verified;
+    const tokenInfo = verifyMiniApiAccessToken(tokenStr);
+    this.miniApiTokenVerified = true;
 
-    const appId = tokenInfo?.miniAppId ?? '';
+    const appId = tokenInfo.miniAppId;
 
     this.setXOrg(xOrg);
     this.setUserType('miniApi');
@@ -1132,21 +1156,18 @@ export class UserContext extends UserContextInfo {
    * user asserted by a verified x-mini-app-user-token instead of the app's service
    * account. Every failed check throws — this path NEVER falls back to the SA.
    */
-  async setMiniAppActingUser(userClaims: TMiniAppUserTokenClaims, accessTokenStr: string, xOrg: string) {
-    const { tokenInfo, verified } = verifyMiniApiAccessToken(accessTokenStr);
-    if (!verified) {
-      this.logger.warn(`x-mini-api-access-token signature NOT verified (legacy accept) for app ${tokenInfo?.miniAppId ?? 'unknown'}`);
-      if (process.env.MINI_API_ACCESS_TOKEN_ENFORCE === 'true') {
-        throw new ForbiddenException('Invalid mini api access token');
-      }
-    }
-    this.miniApiTokenVerified = verified;
+  async setMiniAppActingUser(userClaims: VerifiedMiniAppUserToken, accessTokenStr: string, xOrg: string) {
+    const tokenInfo = verifyMiniApiAccessToken(accessTokenStr);
+    this.miniApiTokenVerified = true;
 
-    // aud binding: the token must have been minted FOR the calling app.
-    // Both sides are developerPortal.appId — the single app-id source of truth.
-    const callingAppId = tokenInfo?.miniAppId ?? '';
-    if (isEmpty(callingAppId) || callingAppId !== userClaims.aud) {
+    // App binding: both token formats resolve to the explicit Developer Portal app ID.
+    const callingAppId = tokenInfo.miniAppId;
+    if (isEmpty(callingAppId) || callingAppId !== userClaims.miniAppId) {
       throw new ForbiddenException('Mini app user token audience does not match the calling app');
+    }
+
+    if (userClaims.version === 2 && userClaims.xOrg !== xOrg) {
+      throw new ForbiddenException('Mini app user token x-org does not match the request context');
     }
 
     this.setXOrg(xOrg);
@@ -1158,7 +1179,7 @@ export class UserContext extends UserContextInfo {
     this.setMiniApiToken(accessTokenStr);
     this.setMiniApiTokenInfo(tokenInfo);
 
-    await this.findIsCentreInstalledMiniApp(userClaims.aud);
+    await this.findIsCentreInstalledMiniApp(userClaims.miniAppId);
 
     const actingUser = await this.userModel.findOne({ _id: userClaims.sub, tenantId: this.tenantId });
     if (!actingUser || isEmpty(actingUser.uid)) {
@@ -1177,7 +1198,7 @@ export class UserContext extends UserContextInfo {
     }
 
     this.actingViaUserToken = true;
-    this.logger.log(`OBO: app ${callingAppId} acting as user ${this.uid} (_id ${this.getId()}) in ${this.tenantId}-${this.orgId}-${this.branchId}`);
+    this.logger.log('OBO acting-user context established');
   }
 
   async findIsCentreInstalledMiniApp(developerPortalAppId: string) {

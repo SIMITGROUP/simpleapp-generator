@@ -1,3 +1,17 @@
+[2.0.4b-alpha]
+1. Enforce V1 SDK app allowlist in scope guard via V1MiniAppAccessPolicy; add MiniAppV2AllowWithoutScope so V2 host capabilities skip the V1 gate
+2. Expose scope on Swagger via x-mini-app-scope extension
+3. Validate registered custom-page origin (assertRegisteredCustomPageOrigin)
+4. Require verified mini-api access token; drop legacy-accept fallback
+5. Bind V2 mini-app user token by xOrg and explicit miniAppId (aud)
+6. Reject invalid mini-api token with ForbiddenException
+7. Filter active mini-app installations in developer portal listing
+8. Populate org/branch context in setStaticUser; refactor xOrg parsing
+9. Use ConflictException for FK constraint on delete
+10. Redact sensitive headers in API event log via selectApiEventHeaders
+11. Nuxt: rekey mini-app iframe per xOrg/app/source; tighten types
+
+
 [2.0.4a-alpha]
 1. Mini-app scope grants: enforcement = installation scopeGrant.granted ∩ requested on both planes (miniApi + miniAppSdk; sdk becomes install-gated), strict when grant missing
 2. Install consent: optional { grantedScopes } body (omitted = full requested), granted/denied sets with merge semantics on update-granted-scopes; per-route ValidationPipe on consent endpoints

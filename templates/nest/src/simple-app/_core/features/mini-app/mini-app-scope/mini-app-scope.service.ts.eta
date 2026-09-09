@@ -122,7 +122,7 @@ export class MiniAppScopeService {
    * miniAppSdk plane: resolved here — which install-gates custom-page API calls.
    * Newest-active with the {created,_id} total order, same rule as auth.
    */
-  private async resolveActiveInstallation(appUser: UserContext, developerPortalAppId: string): Promise<MiniAppInstallation> {
+  async resolveActiveInstallation(appUser: UserContext, developerPortalAppId: string): Promise<MiniAppInstallation> {
     const fromContext = appUser.getMiniAppInstallation?.();
     if (fromContext) return fromContext;
 
@@ -142,5 +142,44 @@ export class MiniAppScopeService {
       throw new ForbiddenException(MINIAPP_FORBIDDEN_MESSAGE);
     }
     return installation;
+  }
+
+  async assertRegisteredCustomPageOrigin(appUser: UserContext, developerPortalAppId: string, origin: string): Promise<void> {
+    await this.resolveActiveInstallation(appUser, developerPortalAppId);
+
+    let requestedOrigin: string;
+    try {
+      const parsed = new URL(origin);
+      if ((parsed.protocol !== 'http:' && parsed.protocol !== 'https:') || parsed.origin === 'null' || parsed.href !== `${parsed.origin}/`) {
+        throw new Error('Invalid origin');
+      }
+      requestedOrigin = parsed.origin;
+    } catch {
+      throw new ForbiddenException(MINIAPP_FORBIDDEN_MESSAGE);
+    }
+
+    const env = getEnvironment(appUser);
+    const miniApp = await this.miniAppModel.findOne({
+      'developerPortal.appId': developerPortalAppId,
+      env,
+    });
+    if (!miniApp?.integration?.enabled?.customPage) {
+      throw new ForbiddenException(MINIAPP_FORBIDDEN_MESSAGE);
+    }
+
+    const sourceField = env === MiniAppManagerEnvEnum.DEV ? 'development' : 'production';
+    const hasRegisteredOrigin = (miniApp.integration.customPage?.pages ?? []).some((page) => {
+      const source = page.sources?.[sourceField];
+      if (!source) return false;
+      try {
+        const registered = new URL(source);
+        return (registered.protocol === 'http:' || registered.protocol === 'https:') && registered.origin !== 'null' && registered.origin === requestedOrigin;
+      } catch {
+        return false;
+      }
+    });
+    if (!hasRegisteredOrigin) {
+      throw new ForbiddenException(MINIAPP_FORBIDDEN_MESSAGE);
+    }
   }
 }

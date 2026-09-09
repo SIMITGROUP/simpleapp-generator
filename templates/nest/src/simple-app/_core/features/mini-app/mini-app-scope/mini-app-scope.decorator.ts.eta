@@ -1,10 +1,13 @@
-import { SetMetadata } from '@nestjs/common';
+import { applyDecorators, SetMetadata } from '@nestjs/common';
+import { ApiExtension } from '@nestjs/swagger';
 
 export const MINIAPP_SCOPE_KEY = 'miniapp_required_scope';
+export const MINIAPP_SCOPE_EXTENSION = 'x-mini-app-scope';
 
-export const MiniAppScope = (scope: string) => SetMetadata(MINIAPP_SCOPE_KEY, scope);
+export const MiniAppScope = (scope: string) => applyDecorators(SetMetadata(MINIAPP_SCOPE_KEY, scope), ApiExtension(MINIAPP_SCOPE_EXTENSION, scope));
 
 export const MINIAPP_ALLOW_NO_SCOPE_KEY = 'miniapp_allow_no_scope';
+export const MINIAPP_V2_ALLOW_NO_SCOPE_KEY = 'miniapp_v2_allow_no_scope';
 
 /**
  * Marks an endpoint as callable by a mini-app SDK / mini-API request WITHOUT a
@@ -13,3 +16,6 @@ export const MINIAPP_ALLOW_NO_SCOPE_KEY = 'miniapp_allow_no_scope';
  * audience is bound by the host, not the caller).
  */
 export const MiniAppAllowWithoutScope = () => SetMetadata(MINIAPP_ALLOW_NO_SCOPE_KEY, true);
+
+/** Marks a V2 host-issued baseline capability that must not inherit the V1 SDK allowlist. */
+export const MiniAppV2AllowWithoutScope = () => applyDecorators(SetMetadata(MINIAPP_ALLOW_NO_SCOPE_KEY, true), SetMetadata(MINIAPP_V2_ALLOW_NO_SCOPE_KEY, true));

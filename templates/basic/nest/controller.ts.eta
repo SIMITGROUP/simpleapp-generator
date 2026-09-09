@@ -219,6 +219,7 @@ export class <%= it.typename %>Controller extends SimpleAppController<
   @ApiResponse({ status: 500, description: 'internal error' })
   @ApiBody({ description: 'Data', type: [schemas.<%= it.typename%>] })
   @ApiOperation({ operationId: 'runCreateMany' })
+  <%~ drawMiniAppScope('createMany') %>
   async createMany(@AppUser() appuser: UserContext, @Body() data: schemas.<%= it.typename%>[]) {
     return await this._createMany(appuser, data);
   }

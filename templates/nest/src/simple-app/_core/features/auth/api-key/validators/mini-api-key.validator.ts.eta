@@ -1,7 +1,7 @@
 import { IApiKeyValidator } from './interface';
 import { Request } from 'express';
 import { UserContext } from '../../../user-context/user.context';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import _ from 'lodash';
 import { HEADER_X_MINI_API_ACCESS_TOKEN, HEADER_X_API_KEY, HEADER_X_API_SECRET, HEADER_X_MINI_APP_USER_TOKEN, HEADER_X_ORG } from '../api-key.type';
 
@@ -29,7 +29,7 @@ export class MiniApiKeyValidator implements IApiKeyValidator {
     }
 
     if (_.isEmpty(accessToken)) {
-      throw new BadRequestException('Missing or empty x-mini-api-access-token header');
+      throw new ForbiddenException('Invalid mini api access token');
     }
 
     await user.setMiniApiUser(accessToken, xOrg);

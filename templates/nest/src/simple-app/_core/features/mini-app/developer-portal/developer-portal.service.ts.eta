@@ -25,6 +25,11 @@ export class DeveloperPortalService {
     return process.env.DEMO_COMPANY_XORG;
   }
 
+  private getRateLimitProfile(tenant?: Tenant): string | undefined {
+    const profile = tenant?.miniAppConfig?.rateLimitProfile || tenant?.license;
+    return typeof profile === 'string' && profile.length > 0 ? profile : undefined;
+  }
+
   async getInstalledMiniAppXOrgs(appUser: UserContext, developerPortalAppId: string) {
     const demoXOrg = this.getDemoCompany();
 
@@ -32,6 +37,7 @@ export class DeveloperPortalService {
     const miniAppInstallations = await this.miniAppInstallationDoc.find({
       'miniApp.developerPortalAppId': developerPortalAppId,
       'miniApp.env': MiniAppEnvEnum.PROD,
+      isActive: true,
     });
 
     if (!miniAppInstallations || _.isEmpty(miniAppInstallations)) {
@@ -87,7 +93,7 @@ export class DeveloperPortalService {
         branchCode: branch?.branchCode,
         branchName: branch?.branchName,
         xOrg: appUser.generateXOrg(install.tenantId, install.orgId, install.branchId),
-        rateLimitProfile: tenant?.miniAppConfig?.rateLimitProfile || tenant?.license,
+        rateLimitProfile: this.getRateLimitProfile(tenant),
       };
     });
 

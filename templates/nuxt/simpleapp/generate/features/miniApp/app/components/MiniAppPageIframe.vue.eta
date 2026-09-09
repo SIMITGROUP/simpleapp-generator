@@ -2,6 +2,7 @@
   <div class="app-mini-app-iframe-container">
     <iframe
       v-if="iframeSource !== ''"
+      :key="`${_xOrg}:${developerPortalAppId}:${iframeSource}`"
       :ref="(el) => (iframeRef = el as HTMLIFrameElement)"
       :src="
         copyQueryToIframeSource(
@@ -29,7 +30,10 @@
 </template>
 
 <script setup lang="ts">
-import { MiniAppDetail, MiniAppIntegrationCustomPagePages } from "~/simpleapp/generate/openapi";
+import type {
+  MiniAppDetail,
+  MiniAppIntegrationCustomPagePages,
+} from "~/simpleapp/generate/openapi";
 
 const props = defineProps<{
   miniApp: MiniAppDetail;
@@ -48,11 +52,7 @@ const handleError = () => {
   hasError.value = true;
 };
 
-type Option = {
-  [key: string]: any;
-};
-
-function generateIframeSource(template: string, options: Option = {}) {
+function generateIframeSource(template: string, options: Readonly<Record<string, string>> = {}) {
   return template.replace(/{(\w+)}/g, (_, key) => {
     return options[key] ?? `{${key}}`;
   });

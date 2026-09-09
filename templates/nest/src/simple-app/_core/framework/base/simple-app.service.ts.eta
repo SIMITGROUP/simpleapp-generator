@@ -771,10 +771,12 @@ export class SimpleAppService<T extends SchemaFields> {
       } else {
         this.logger.debug('reject query', dependency);
         this.logger.debug(`${this.documentName} dependency :id=${id}`, dependency);
-        throw new ForbiddenException(`This system detected that the [${this.documentName}] data has been used in other record`, 'Foreignkey constraint');
+        throw new ConflictException(`${this.documentName} ${id} is referenced and cannot be deleted`);
       }
     } catch (err) {
-      if (err instanceof ForbiddenException) {
+      if (err instanceof ConflictException) {
+        throw err;
+      } else if (err instanceof ForbiddenException) {
         throw new ForbiddenException(err);
       } else {
         await this.runErrorEvent(appUser, 'errorDelete', deletedata, err);

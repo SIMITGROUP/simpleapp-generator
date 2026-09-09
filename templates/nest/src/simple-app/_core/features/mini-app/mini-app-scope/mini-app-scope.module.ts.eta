@@ -7,6 +7,7 @@ import { MiniAppInstallationMongoSchema } from '@resources/mini-app-installation
 import { APP_GUARD } from '@nestjs/core';
 import { MiniAppScopeGuard } from './mini-app-scope.guard';
 import { InternalAppRegistry } from './internal-app.registry';
+import { V1MiniAppAccessPolicy } from './v1-mini-app-access-policy';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { InternalAppRegistry } from './internal-app.registry';
       { name: 'MiniappScopeInstallation', schema: MiniAppInstallationMongoSchema },
     ]),
   ],
-  providers: [MiniAppScopeService, InternalAppRegistry, { provide: APP_GUARD, useClass: MiniAppScopeGuard }],
-  exports: [MiniAppScopeService, InternalAppRegistry],
+  providers: [MiniAppScopeService, InternalAppRegistry, V1MiniAppAccessPolicy, { provide: APP_GUARD, useClass: MiniAppScopeGuard }],
+  exports: [MiniAppScopeService, InternalAppRegistry, V1MiniAppAccessPolicy],
 })
 export class SimpleAppMiniAppScopeModule {}

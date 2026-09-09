@@ -2,10 +2,11 @@ import { CanActivate, ExecutionContext, Injectable, ForbiddenException, BadReque
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { UserContext } from 'src/simple-app/_core/features/user-context/user.context';
-import { MINIAPP_ALLOW_NO_SCOPE_KEY, MINIAPP_SCOPE_KEY } from './mini-app-scope.decorator';
+import { MINIAPP_ALLOW_NO_SCOPE_KEY, MINIAPP_SCOPE_KEY, MINIAPP_V2_ALLOW_NO_SCOPE_KEY } from './mini-app-scope.decorator';
 import { MINIAPP_FORBIDDEN_MESSAGE, MiniAppScopeService } from './mini-app-scope.service';
 import { TUserType } from 'src/simple-app/_core/framework/schemas';
 import { GqlContextType } from '@nestjs/graphql';
+import { V1MiniAppAccessPolicy } from './v1-mini-app-access-policy';
 
 type MiniAppScopeRequest = Request & {
   sessionuser?: UserContext;
@@ -17,6 +18,7 @@ export class MiniAppScopeGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly miniAppScopeService: MiniAppScopeService,
+    private readonly v1AccessPolicy: V1MiniAppAccessPolicy,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -39,7 +41,16 @@ export class MiniAppScopeGuard implements CanActivate {
       return true;
     }
 
-    // Baseline capability available to any mini app without a configured scope
+    const v2AllowWithoutScope = this.reflector.get<boolean>(MINIAPP_V2_ALLOW_NO_SCOPE_KEY, context.getHandler());
+    if (appUser.getUserType() === 'miniAppSdk' && !v2AllowWithoutScope) {
+      const appIdHeader = req.headers['x-mini-app-dev-portal-app-id'];
+      const appId = typeof appIdHeader === 'string' ? appIdHeader : '';
+      if (!this.v1AccessPolicy.isAllowed(appId)) {
+        throw new ForbiddenException(MINIAPP_FORBIDDEN_MESSAGE);
+      }
+    }
+
+    // Baseline capability available to an allowed V1 mini app or any V2/miniApi caller.
     // (e.g. minting the user-context auth token).
     const allowWithoutScope = this.reflector.get<boolean>(MINIAPP_ALLOW_NO_SCOPE_KEY, context.getHandler());
     if (allowWithoutScope) {
