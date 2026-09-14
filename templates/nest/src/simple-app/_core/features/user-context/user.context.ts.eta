@@ -255,14 +255,12 @@ export class UserContext extends UserContextInfo {
   };
 
   setCurrentUserInfo = async (tokenstr: string, xOrg: string, webhookModel: Model<Webhook>) => {
+    this.webhooks = [];
     this.setXOrg(xOrg);
     await this.setUserToken(tokenstr);
     this.setUserType('normal');
-    // branchId: this.getBranchId(), active: true
-    const wh = await webhookModel.find({});
-    if (Array.isArray(wh) && wh.length > 0) {
-      this.webhooks = this.webhooks.concat(wh);
-    }
+    // Saved webhooks belong to the current tenant, organization and branch.
+    this.webhooks = await webhookModel.find({ ...this.getBranchFilter(), active: true });
   };
 
   // setPackage = (packageName: string) => {
