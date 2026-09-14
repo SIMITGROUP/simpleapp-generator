@@ -1,3 +1,7 @@
+[2.0.4c-alpha]
+1. Fix user-configured webhook isolation by tenant, organization and branch. Each branch must configure its own webhooks.
+
+
 [2.0.4b-alpha]
 1. Enforce V1 SDK app allowlist in scope guard via V1MiniAppAccessPolicy; add MiniAppV2AllowWithoutScope so V2 host capabilities skip the V1 gate
 2. Expose scope on Swagger via x-mini-app-scope extension

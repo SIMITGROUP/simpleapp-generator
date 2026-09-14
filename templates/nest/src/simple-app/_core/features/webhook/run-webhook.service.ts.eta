@@ -33,7 +33,12 @@ export class RunWebhookService {
   async runRealtimeWebhook(appUser: UserContext, documentName: string, actionName: string, data: any) {
     this.logger.debug(`Run webhook ${documentName}, ${actionName}`);
     
-    const userWebhooks = appUser.getWebHooks().filter((wh) => wh.resourceName === documentName && wh.eventType === actionName && wh.active);
+    const userWebhooks = appUser.getWebHooks().filter((wh) =>
+      wh.tenantId === appUser.getTenantId() &&
+      wh.orgId === appUser.getOrgId() &&
+      wh.branchId === appUser.getBranchId() &&
+      wh.resourceName === documentName && wh.eventType === actionName && wh.active
+    );
     const systemWebhooks = this.systemWebhooks.filter((wh) => wh.resourceName === documentName && wh.eventType === actionName && wh.active);
     let webhooks = [];
     webhooks = webhooks.concat(userWebhooks)
