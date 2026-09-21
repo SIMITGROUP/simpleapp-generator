@@ -255,14 +255,12 @@ export class UserContext extends UserContextInfo {
   };
 
   setCurrentUserInfo = async (tokenstr: string, xOrg: string, webhookModel: Model<Webhook>) => {
+    this.webhooks = [];
     this.setXOrg(xOrg);
     await this.setUserToken(tokenstr);
     this.setUserType('normal');
-    // branchId: this.getBranchId(), active: true
-    const wh = await webhookModel.find({});
-    if (Array.isArray(wh) && wh.length > 0) {
-      this.webhooks = this.webhooks.concat(wh);
-    }
+    // Saved webhooks belong to the current tenant, organization and branch.
+    this.webhooks = await webhookModel.find({ ...this.getBranchFilter(), active: true });
   };
 
   // setPackage = (packageName: string) => {
@@ -530,6 +528,12 @@ export class UserContext extends UserContextInfo {
     return userProfiles[0];
   }
 
+  private addTenantOwnerRole(): void {
+    if (this.tenantInfo?.owner?.uid === this.uid && !this.roles.includes(Role.TenantOwner)) {
+      this.roles.push(Role.TenantOwner);
+    }
+  }
+
   setUserToken = async (tokenStr: string) => {
     this.logger.debug(`===setUserToken===`);
     const systemEnv = this.systemEnvironment;
@@ -576,10 +580,7 @@ export class UserContext extends UserContextInfo {
         support: false,
       };
       this.roles = userProfile['roles'] ?? [Role.Everyone, Role.User, Role.CustomField_search, Role.QueueJob_search];
-
-      if (this.tenantInfo?.owner?.uid === this.uid) {
-        this.roles.push(Role.TenantOwner);
-      }
+      this.addTenantOwnerRole();
       if (this.tenantInfo?.company && this.tenantInfo.company.billUserEmail === this.email) {
         this.roles.push(Role.Billing);
         this.roles.push(Role.Tenant_search);
@@ -1272,6 +1273,7 @@ export class UserContext extends UserContextInfo {
         support: false,
       };
       this.roles = userProfile['roles'] ?? [Role.Everyone, Role.User];
+      this.addTenantOwnerRole();
 
       for (const group of this.groups) {
         const roleResolver = (rolegroups as Record<string, RoleGroupResolver | undefined>)[group];

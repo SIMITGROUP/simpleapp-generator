@@ -1161,6 +1161,7 @@ export class SimpleAppService<T extends SchemaFields> {
         // if (this.hooks.afterSetStatus) await this.hooks.afterSetStatus(appUser, docstatus, createresult);
         await this.addAuditEvent(appUser, this.documentName, id, docstatus, data);
 
+        await this.callWebhook(appUser, docstatus, createresult);
         return createresult;
       } else {
         const updateresult = await this.findIdThenPatch(appUser, id, data);
