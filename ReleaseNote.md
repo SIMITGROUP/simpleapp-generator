@@ -1,3 +1,6 @@
+[2.0.4d-alpha]
+1. Time format helper to 12h format (dateRenderToTimeStr)
+
 [2.0.4c-alpha]
 1. Fix webhook isolation bug
 2. Fix no trigger webhook after update status when created null
