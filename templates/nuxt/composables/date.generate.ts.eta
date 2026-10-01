@@ -5,12 +5,17 @@
  * Author: Ks Tan
  */
 import dayjs from 'dayjs'
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import utc from "dayjs/plugin/utc";
 import { DateTime } from "luxon";
 import {
   dayjsDateFormatToPrimeVue,
   getDefaultDateFormatForCountryCode,
 } from "@simtrain/shared";
 import { DurationType } from "~/types";
+
+dayjs.extend(customParseFormat);
+dayjs.extend(utc);
 
 const convertToDate = (date: Date | string) => {
   return date instanceof Date ? date : new Date(date);
@@ -42,8 +47,16 @@ export const dateRenderToDateStr = (date: Date | string) => formatDateByOrgForma
  * @param date date|string
  * @returns
  */
-export const dateRenderToTimeStr = (date: Date | string) =>
-  convertToDate(date).toLocaleTimeString().slice(0, -3);
+export const dateRenderToTimeStr = (date: Date | string) => {
+  if (typeof date === "string") {
+    // Keep clock-only settings independent of today's local daylight-saving rules.
+    for (const format of ["HH:mm:ss", "HH:mm"]) {
+      const time = dayjs.utc(date, format, true);
+      if (time.isValid()) return time.format(getTimeFormat());
+    }
+  }
+  return dayjs(date).format(getTimeFormat());
+};
 
 /**
  * convert date object or ISO datestring become DD/MM format
@@ -124,7 +137,7 @@ export const toLocalDateTime = (date: string | Date) =>
 
 export const toUTCDate = (date: string | Date) => dayjs.utc(date).format(getDateFormat());
 export const toUTCDateTime = (date: string | Date) =>
-  dayjs.utc(date).format(getDateTimeFormat());
+  dayjs.utc(date).format(`${getDateFormat()} HH:mm`);
 export const toUTCTime = (date: string | Date) => dayjs.utc(date).format("HH:mm");
 export const getDateFormat = (): string => {
   const profile = getUserProfile();
@@ -133,7 +146,8 @@ export const getDateFormat = (): string => {
   return getDefaultDateFormatForCountryCode(profile?.country);
 };
 
-export const getDateTimeFormat = (): string => `${getDateFormat()} HH:mm`;
+export const getTimeFormat = (): string => "hh:mm A";
+export const getDateTimeFormat = (): string => `${getDateFormat()} ${getTimeFormat()}`;
 export const calculateHourDifferent = (date1: Date, date2: Date) =>
   (date1.getTime() - date2.getTime()) / 60 / 60 / 1000;
 export const getPrimevueCalendarDateFormat = () => dayjsDateFormatToPrimeVue(getDateFormat());
