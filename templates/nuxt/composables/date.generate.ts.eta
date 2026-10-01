@@ -137,7 +137,7 @@ export const toLocalDateTime = (date: string | Date) =>
 
 export const toUTCDate = (date: string | Date) => dayjs.utc(date).format(getDateFormat());
 export const toUTCDateTime = (date: string | Date) =>
-  dayjs.utc(date).format(getDateTimeFormat());
+  dayjs.utc(date).format(`${getDateFormat()} HH:mm`);
 export const toUTCTime = (date: string | Date) => dayjs.utc(date).format("HH:mm");
 export const getDateFormat = (): string => {
   const profile = getUserProfile();
