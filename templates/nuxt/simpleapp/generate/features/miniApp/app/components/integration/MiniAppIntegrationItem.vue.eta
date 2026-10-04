@@ -1,35 +1,39 @@
 <template>
   <div
-    class="relative rounded-lg h-50 p-4 border-2 flex flex-col items-center transition-all hover:border-primary-500"
+    class="relative rounded-xl bg-slate-50/30 border border-slate-200 p-5 flex flex-col gap-4 transition-[transform,border-color,background-color] duration-[250ms] ease-[cubic-bezier(.2,.8,.2,1)]"
     :class="{
       'opacity-40 cursor-not-allowed ': item.status === 'upcoming',
-      'cursor-pointer': item.status !== 'upcoming',
+      'cursor-pointer hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50': item.status !== 'upcoming',
     }"
     @click="handleMiniAppClick(item)"
   >
-    <div class="absolute top-1 right-1 flex space-x-1">
+    <div class="absolute top-3 right-3 flex flex-wrap justify-end gap-1">
       <span
         v-if="pendingScopesCount > 0"
-        class="bg-amber-500 text-white text-[0.65rem] px-2 font-bold py-0.5 rounded-md shadow uppercase"
+        class="bg-amber-50 text-amber-700 text-[0.65rem] font-semibold px-2 py-0.5 rounded-md uppercase"
       >
-        {{ t("miniAppLang.pendingScopesBadge", { count: pendingScopesCount }) }}
+        {{ $t("miniAppLang.pendingScopesBadge", { count: pendingScopesCount }) }}
       </span>
       <MiniAppIntegrationItemBadge :item="item" />
     </div>
 
-    <div class="text-lg font-semibold text-center">
-      {{ item.name }}
-    </div>
-
-    <div class="p-4">
+    <div class="flex items-center gap-4 min-w-0">
       <MiniAppIcon
         :image="item.logo"
         :label="item.name"
-        size="lg"
+        class="shrink-0"
       />
+      <div class="min-w-0">
+        <div class="font-semibold text-base truncate text-surface-700">
+          {{ item.name }}
+        </div>
+        <div class="text-xs text-surface-400 truncate">
+          {{ item.author.team ?? item.author.name }}
+        </div>
+      </div>
     </div>
 
-    <div class="text-sm text-gray-600 text-center line-clamp-2">
+    <div class="text-xs text-surface-600 line-clamp-2 min-h-8">
       {{ item.description }}
     </div>
   </div>
@@ -38,8 +42,9 @@
 <script setup lang="ts">
 import { MiniappStatusEnum } from "~/enums";
 import type { MiniAppDetail } from "~/simpleapp/generate/openapi";
-import MiniAppIntegrationItemBadge from "./MiniAppIntegrationItemBadge.vue";
 import MiniAppIcon from "../MiniAppIcon.vue";
+import MiniAppIntegrationItemBadge from "./MiniAppIntegrationItemBadge.vue";
+import { countPendingScopes } from "./pendingScopes";
 
 const props = defineProps<{
   item: MiniAppDetail;
@@ -49,20 +54,7 @@ const emits = defineEmits<{
   (event: "miniAppClick", item: MiniAppDetail): void;
 }>();
 
-// Consent markers (installed cards only — data rides on the installed-list response).
-const pendingScopesCount = computed(() => {
-  const detail = props.item as unknown as {
-    integration?: { scopes?: string[] };
-    miniAppInstallation?: { scopeGrant?: { granted?: string[]; denied?: string[] } };
-  };
-  if (!detail.miniAppInstallation) return 0;
-  const requested = detail.integration?.scopes ?? [];
-  const granted = detail.miniAppInstallation.scopeGrant?.granted ?? [];
-  const denied = detail.miniAppInstallation.scopeGrant?.denied ?? [];
-  return requested.filter((s) => !granted.includes(s) && !denied.includes(s)).length;
-});
-
-
+const pendingScopesCount = computed(() => countPendingScopes(props.item));
 
 function handleMiniAppClick(item: MiniAppDetail) {
   if (item.status === MiniappStatusEnum.UPCOMING) return;

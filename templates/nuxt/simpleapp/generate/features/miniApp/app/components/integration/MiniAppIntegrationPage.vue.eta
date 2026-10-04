@@ -2,259 +2,419 @@
   <title>{{ miniApp?.name }} - {{ t("miniAppLang.miniApp") }}</title>
   <LoadingLine :loading="isFetching" />
 
+  <!--
+    App-store style detail, all on one screen (no tabs, no dialogs on top for scopes, pages or fields):
+    a header with the actions, then the screenshots, about and key features on the left, and on the right the facts an
+    admin checks before installing: what it can access, what it adds, plans and developer.
+  -->
   <div
     v-if="miniApp && !_.isEmpty(miniApp)"
-    class="p-8 max-w-4xl mx-auto mb-10 space-y-4"
+    class="p-8 max-w-6xl mx-auto mb-10 flex flex-col gap-8"
   >
-    <div class="flex items-start">
-      <!-- <img :src="miniApp.logo" class="size-16 mr-8 object-contain" /> -->
-
+    <!-- Header; the right padding keeps clear of the dialog's maximize and close buttons -->
+    <header class="flex items-start gap-5 pr-24">
       <MiniAppIcon
         :image="miniApp.logo"
         :label="miniApp.name"
-        size="lg"
-        class="mr-8"
+        size="xl"
+        class="shrink-0"
       />
-
-      <div class="space-y-1">
-        <h1 class="text-3xl font-bold mb-1">{{ miniApp.name }}</h1>
-        <div class="text-gray-400 text-sm flex items-center gap-2">
-          <div class="flex items-center gap-2">
-            <i class="pi pi-user" />
-            <span>{{ miniApp.author.team ?? miniApp.author.name }}</span>
-          </div>
-          <span>|</span>
-          <div>v {{ miniApp.version }}</div>
-
-          <div
-            v-if="!_.isEmpty(miniApp.access.requiredPlans)"
-            class="flex items-center gap-2"
-          >
-            <span>|</span>
-            <span
-              v-for="permission in miniApp.access.requiredPlans ?? []"
-              :key="permission"
-              class="px-3 py-0.5 bg-slate-100 text-surface-500 font-semibold text-xs rounded uppercase"
-            >
-              {{ permission }}
+      <div class="min-w-0 flex-1">
+        <h1 class="text-2xl font-bold text-surface-800">{{ miniApp.name }}</h1>
+        <!-- The developer, and the facts that go with it, as one quiet line under the name, like an app store -->
+        <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-surface-500">
+          <span class="flex items-center gap-1.5">
+            <i class="pi pi-user text-xs" />
+            {{ miniApp.author.team ?? miniApp.author.name }}
+          </span>
+          <template v-if="isPrivate">
+            <span aria-hidden="true">·</span>
+            <span class="flex items-center gap-1">
+              <i class="pi pi-lock text-xs" />
+              {{ t("miniAppLang.privateBadge") }}
             </span>
-          </div>
+          </template>
+          <template v-if="miniApp.website">
+            <span aria-hidden="true">·</span>
+            <a
+              :href="miniApp.website"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1 text-primary hover:underline"
+            >
+              {{ t("miniAppLang.detailWebsite") }}
+              <i class="pi pi-external-link text-[0.6rem]" />
+            </a>
+          </template>
+        </div>
+        <p class="mt-2 text-surface-600">{{ miniApp.description }}</p>
+
+        <!-- Actions, text only: one teal button for the main action (Open or Install); Settings, Permissions and Uninstall
+             share the plain grey button. A colour per button looked picked at random, and icons on only some looked
+             unfinished. -->
+        <div class="mt-4">
           <div
+            v-if="$miniAppStore.isFetchingInstalledMiniApps"
+            class="flex items-center h-10"
+          >
+            <i class="pi pi-spinner animate-spin" />
+          </div>
+          <MiniAppPermissionWrapper
             v-else
-            class="flex items-center gap-2"
+            :validation="$miniAppStore.validation('miniAppFeature')"
           >
-            <span>|</span>
-            <span
-              v-for="permission in ['lite', 'pro', 'enterprise']"
-              :key="permission"
-              class="px-3 py-0.5 bg-slate-100 text-surface-500 font-semibold text-xs rounded uppercase"
+            <div
+              v-if="isInstalled"
+              class="flex w-full flex-wrap items-center gap-2"
             >
-              {{ permission }}
-            </span>
-          </div>
-        </div>
-        <p class="text-gray-600">{{ miniApp.intro.description }}</p>
-
-        <div class="flex items-center gap-1">
-          <template
-            v-for="[feature, enabled] in Object.entries(miniApp.integration.enabled)"
-            :key="feature"
-          >
-            <span
-              v-if="enabled && $te(`miniAppLang.integrationFeature.${feature}`)"
-              class="px-3 py-0.5 bg-primary-50 text-primary-500 font-semibold text-xs rounded uppercase cursor-pointer"
-              @click="() => handleOpenFeatureDialog(feature, enabled)"
-            >
-              {{ t(`miniAppLang.integrationFeature.${feature}`) }}
-            </span>
-          </template>
-        </div>
-      </div>
-    </div>
-
-    <div class="space-y-6">
-      <template v-if="$miniAppStore.isFetchingInstalledMiniApps">
-        <div class="flex items-center h-10">
-          <i class="pi pi-spinner animate-spin" />
-        </div>
-      </template>
-      <MiniAppPermissionWrapper
-        v-else
-        :validation="$miniAppStore.validation('miniAppFeature')"
-      >
-        <div class="flex items-center space-x-2">
-          <template v-if="$miniAppStore.isMiniAppInstalled(miniApp.code)">
-            <!-- Installed -->
-            <MiniAppPermissionWrapper
-              :validation="$miniAppStore.validation('uninstall')"
-              class="!mt-0"
-            >
-              <ButtonDefault
-                :label="t('miniAppLang.uninstallApp')"
-                :loading="isAppInstallationInProgress"
+              <ButtonPrimary
+                v-if="firstPage"
+                :label="t('miniAppLang.openApp')"
                 :disabled="isAppInstallationInProgress"
-                @click="handleUninstallApp"
+                class="main-action"
+                @click="handleOpenApp"
               />
-            </MiniAppPermissionWrapper>
-
+              <!-- Settings sits next to Open: both open one of the app's pages -->
+              <MiniAppPermissionWrapper
+                v-if="$miniAppStore.hasSettingPage(miniApp)"
+                :validation="$miniAppStore.validation('updateSetting')"
+                class="!mt-0"
+              >
+                <ButtonDefault
+                  :label="t('miniAppLang.openSetting')"
+                  :disabled="isAppInstallationInProgress"
+                  @click="handleOpenSetting"
+                />
+              </MiniAppPermissionWrapper>
+              <!-- An app that requests no permissions has nothing to manage here -->
+              <MiniAppPermissionWrapper
+                v-if="requestedScopes.length > 0"
+                :validation="$miniAppStore.validation('updateSetting')"
+                class="!mt-0"
+              >
+                <span class="relative inline-flex">
+                  <ButtonDefault
+                    :label="t('miniAppLang.permissionsTitle')"
+                    :disabled="isAppInstallationInProgress"
+                    @click="isShowPermissionsDialog = true"
+                  />
+                  <!-- Same amber dot as the installed tile: scopes waiting for the school's decision -->
+                  <span
+                    v-if="accessStatus.pending > 0"
+                    class="pointer-events-none absolute -top-1 -right-1 size-3 rounded-full bg-amber-500 ring-2 ring-white"
+                  />
+                </span>
+              </MiniAppPermissionWrapper>
+              <!-- Uninstall is rare and destructive: last in the row, and its text turns red on hover -->
+              <MiniAppPermissionWrapper :validation="$miniAppStore.validation('uninstall')">
+                <ButtonDefault
+                  :label="t('miniAppLang.uninstallApp')"
+                  :loading="isAppInstallationInProgress"
+                  :disabled="isAppInstallationInProgress"
+                  class="uninstall-button"
+                  @click="handleUninstallApp"
+                />
+              </MiniAppPermissionWrapper>
+            </div>
             <MiniAppPermissionWrapper
-              v-if="$miniAppStore.hasSettingPage(miniApp)"
-              :validation="$miniAppStore.validation('updateSetting')"
-              class="!mt-0"
-            >
-              <ButtonSecondary
-                :label="t('miniAppLang.openSetting')"
-                :disabled="isAppInstallationInProgress"
-                icon="pi pi-cog"
-                @click="handleOpenSetting"
-              />
-            </MiniAppPermissionWrapper>
-
-            <MiniAppPermissionWrapper
-              :validation="$miniAppStore.validation('updateSetting')"
-              class="!mt-0"
-            >
-              <ButtonSecondary
-                :label="t('miniAppLang.permissionsTitle')"
-                :disabled="isAppInstallationInProgress"
-                icon="pi pi-shield"
-                @click="isShowPermissionsDialog = true"
-              />
-            </MiniAppPermissionWrapper>
-          </template>
-          <template v-else>
-            <!-- Not yet install -->
-            <MiniAppPermissionWrapper
+              v-else
               :validation="$miniAppStore.validation('install')"
               class="!mt-0"
             >
               <ButtonPrimary
+                v-if="miniApp.hasRequiredPlan"
                 :label="t('miniAppLang.installApp')"
                 :loading="isAppInstallationInProgress"
                 :disabled="isAppInstallationInProgress"
+                class="main-action"
                 @click="handleInstallApp"
               />
-            </MiniAppPermissionWrapper>
-          </template>
-        </div>
-      </MiniAppPermissionWrapper>
-
-
-      <div v-if="miniApp.intro.previewImages.length > 0">
-        <h2 class="text-xl font-semibold mb-2">Overview:</h2>
-        <div class="card flex justify-center py-4 h-96 bg-slate-100 rounded-xl">
-          <Galleria
-            :value="miniApp.intro.previewImages"
-            :num-visible="5"
-            :show-thumbnails="false"
-            :show-indicators="true"
-            :show-item-navigators="true"
-            :pt="{
-              root: {
-                class: '!grow !h-full',
-              },
-              content: {
-                class: '!h-full',
-              },
-              itemsContainer: {
-                class: '!h-full',
-              },
-              items: {
-                class: '!grow',
-              },
-              item: {
-                class: '!grow',
-              },
-              prevButton: {
-                class: '!bg-slate-200 cursor-pointer',
-              },
-              prevIcon: {
-                class: 'text-black',
-              },
-              nextButton: {
-                class: '!bg-slate-200 cursor-pointer',
-              },
-              nextIcon: {
-                class: 'text-black',
-              },
-            }"
-          >
-            <template #item="slotProps">
-              <img
-                :src="slotProps.item"
-                :alt="miniApp.name"
-                style="display: block"
-                class="h-80 rounded-xl shadow-md"
+              <!-- The school's plan does not include the app, so the backend would refuse the install: say which plans
+                   do, in place of the button and at its size -->
+              <span
+                v-else
+                class="plan-chip is-missing rounded-lg px-3 py-2 text-sm"
               >
-            </template>
-          </Galleria>
+                <i class="pi pi-info-circle" />
+                {{
+                  planNames.length > 0
+                    ? t("miniAppLang.requiredPlansOnly", { requiredPlans: planList })
+                    : t("miniAppLang.detailPlanNotIncluded")
+                }}
+              </span>
+            </MiniAppPermissionWrapper>
+          </MiniAppPermissionWrapper>
         </div>
       </div>
+    </header>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">Key Features:</h2>
-        <div class="mt-6 space-y-2 text-gray-700">
+    <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <main class="min-w-0 flex flex-col gap-8">
+        <!-- Screenshots in a row, like Google Play: no scrollbar, round arrows on hover that show only when there is more
+             that way and move one picture per click. Clicking a picture opens the full-screen viewer at it. -->
+        <section
+          v-if="miniApp.intro.previewImages.length > 0"
+          class="group relative"
+        >
           <div
-            v-for="feature in miniApp.intro.features"
-            :key="feature.title"
-            class="flex space-x-2"
+            ref="stripRef"
+            class="screenshot-strip"
           >
-            <div class="flex flex-col">
-              <div class="flex items-center gap-2">
-                <i class="pi pi-check-circle text-primary" />
-                <span class="font-semibold">{{ feature.title }}</span>
-              </div>
-              <div class="pl-6 text-slate-400 text-sm">
-                {{ feature.description }}
+            <button
+              v-for="(image, index) in miniApp.intro.previewImages"
+              :key="index"
+              type="button"
+              class="shrink-0 snap-start overflow-hidden rounded-xl border border-slate-200 transition-shadow hover:shadow-md"
+              @click="openGallery(index)"
+            >
+              <img
+                :src="image"
+                :alt="miniApp.name"
+                class="h-56 w-auto"
+                @load="measureStrip"
+              />
+            </button>
+          </div>
+          <button
+            v-if="!stripArrived.left"
+            type="button"
+            class="strip-arrow left-0 -translate-x-1/2"
+            :aria-label="t('previous')"
+            @click="scrollStrip(-1)"
+          >
+            <i class="pi pi-chevron-left" />
+          </button>
+          <button
+            v-if="!stripArrived.right"
+            type="button"
+            class="strip-arrow right-0 translate-x-1/2"
+            :aria-label="t('next')"
+            @click="scrollStrip(1)"
+          >
+            <i class="pi pi-chevron-right" />
+          </button>
+        </section>
+        <!-- Full-screen viewer: previous and next through all the screenshots (arrows, dots, ← → keys), Esc closes -->
+        <Galleria
+          v-model:visible="isGalleryOpen"
+          v-model:active-index="galleryIndex"
+          :value="miniApp.intro.previewImages"
+          :num-visible="5"
+          full-screen
+          circular
+          show-item-navigators
+          :show-thumbnails="false"
+          show-indicators
+        >
+          <template #item="{ item }">
+            <img
+              :src="item"
+              :alt="miniApp.name"
+              class="max-h-[85vh] max-w-[88vw] rounded-lg object-contain shadow-2xl"
+            />
+          </template>
+        </Galleria>
+
+        <section v-if="miniApp.intro.description">
+          <h2 class="section-title">{{ t("miniAppLang.detailAbout") }}</h2>
+          <p class="whitespace-pre-line text-surface-600 leading-relaxed">
+            {{ miniApp.intro.description }}
+          </p>
+        </section>
+
+        <section v-if="miniApp.intro.features.length > 0">
+          <h2 class="section-title">{{ t("miniAppLang.detailKeyFeatures") }}</h2>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div
+              v-for="feature in miniApp.intro.features"
+              :key="feature.title"
+              class="flex gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-4"
+            >
+              <i class="pi pi-check-circle mt-0.5 text-primary" />
+              <div class="min-w-0">
+                <div class="font-semibold text-surface-700">{{ feature.title }}</div>
+                <div class="mt-0.5 text-sm text-surface-500">{{ feature.description }}</div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
+
+      <!-- Facts panel -->
+      <aside
+        class="flex flex-col gap-5 self-start rounded-xl border border-slate-200 bg-slate-50/50 p-5 text-sm"
+      >
+        <section>
+          <h3 class="panel-title">{{ t("miniAppLang.detailAccess") }}</h3>
+          <template v-if="accessAreas.length > 0">
+            <div class="text-surface-500">
+              {{ t("miniAppLang.detailAccessSummary", requestedScopes.length) }}
+            </div>
+            <!-- Installed: where the school stands on those permissions -->
+            <div
+              v-if="isInstalled"
+              class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs"
+            >
+              <span class="text-primary">
+                {{ t("miniAppLang.detailAccessGranted", { count: accessStatus.granted }) }}
+              </span>
+              <span
+                v-if="accessStatus.pending > 0"
+                class="font-semibold text-amber-700"
+              >
+                {{ t("miniAppLang.detailAccessPending", { count: accessStatus.pending }) }}
+              </span>
+              <span
+                v-if="accessStatus.denied > 0"
+                class="text-surface-500"
+              >
+                {{ t("miniAppLang.detailAccessDenied", { count: accessStatus.denied }) }}
+              </span>
+            </div>
+            <!-- Each area with its count, its actions as the grey boxes of the permission dialogs (read-only here). Two
+                 columns is what the 20rem panel fits; comma-separated lists were hard to read. -->
+            <ul class="mt-3 flex flex-col gap-3">
+              <li
+                v-for="area in shownAccessAreas"
+                :key="area.resource"
+              >
+                <div class="mb-1 flex items-center gap-2 font-medium text-surface-700">
+                  {{ area.label }}
+                  <span class="count-chip">{{ area.scopes.length }}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-1">
+                  <span
+                    v-for="scope in area.scopes"
+                    :key="scope.full"
+                    class="rounded bg-surface-100 px-2 py-0.5 text-xs text-surface-700"
+                  >
+                    {{ scope.label }}
+                  </span>
+                </div>
+              </li>
+            </ul>
+            <button
+              v-if="accessAreas.length > COLLAPSED_ROWS"
+              type="button"
+              class="show-all"
+              @click="isAccessExpanded = !isAccessExpanded"
+            >
+              {{
+                isAccessExpanded
+                  ? t("miniAppLang.detailShowLess")
+                  : t("miniAppLang.detailShowAll", { count: accessAreas.length })
+              }}
+            </button>
+          </template>
+          <div
+            v-else
+            class="text-surface-500"
+          >
+            {{ t("miniAppLang.detailNoAccess") }}
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h3 class="panel-title">{{ t("miniAppLang.detailAdds") }}</h3>
+          <template v-if="pages.length > 0 || fields.length > 0">
+            <div
+              v-if="pages.length > 0"
+              class="mb-3"
+            >
+              <div class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-surface-400">
+                {{ t("miniAppLang.detailPages") }} · {{ pages.length }}
+              </div>
+              <ul class="flex flex-col gap-1.5">
+                <li
+                  v-for="page in shownPages"
+                  :key="page.code"
+                  class="flex items-center gap-2 text-surface-700"
+                >
+                  <MiniAppPageIcon
+                    :icon-type="page.iconType"
+                    :icon="page.icon ?? ''"
+                  />
+                  <span class="truncate">{{ page.title }}</span>
+                </li>
+              </ul>
+              <button
+                v-if="pages.length > COLLAPSED_ROWS"
+                type="button"
+                class="show-all"
+                @click="isPagesExpanded = !isPagesExpanded"
+              >
+                {{
+                  isPagesExpanded
+                    ? t("miniAppLang.detailShowLess")
+                    : t("miniAppLang.detailShowAll", { count: pages.length })
+                }}
+              </button>
+            </div>
+            <div v-if="fields.length > 0">
+              <div class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-surface-400">
+                {{ t("miniAppLang.detailCustomFields") }} · {{ fields.length }}
+              </div>
+              <ul class="flex flex-col gap-1.5">
+                <li
+                  v-for="field in shownFields"
+                  :key="field.code"
+                  class="flex items-center gap-2 text-surface-700"
+                >
+                  <i class="pi pi-tag text-xs text-surface-400" />
+                  <span class="truncate">{{ field.title }}</span>
+                </li>
+              </ul>
+              <button
+                v-if="fields.length > COLLAPSED_ROWS"
+                type="button"
+                class="show-all"
+                @click="isFieldsExpanded = !isFieldsExpanded"
+              >
+                {{
+                  isFieldsExpanded
+                    ? t("miniAppLang.detailShowLess")
+                    : t("miniAppLang.detailShowAll", { count: fields.length })
+                }}
+              </button>
+            </div>
+          </template>
+          <div
+            v-else
+            class="text-surface-500"
+          >
+            {{ t("miniAppLang.detailAddsNothing") }}
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h3 class="panel-title">{{ t("miniAppLang.detailPlans") }}</h3>
+          <div class="text-surface-700">
+            {{ planNames.length > 0 ? planNames.join(", ") : t("miniAppLang.detailAllPlans") }}
+          </div>
+          <span
+            class="plan-chip mt-1.5 rounded-md px-2 py-1 text-xs"
+            :class="miniApp.hasRequiredPlan ? 'is-included' : 'is-missing'"
+          >
+            <i
+              class="pi"
+              :class="miniApp.hasRequiredPlan ? 'pi-check-circle' : 'pi-info-circle'"
+            />
+            {{
+              miniApp.hasRequiredPlan
+                ? t("miniAppLang.detailPlanIncluded")
+                : t("miniAppLang.detailPlanNotIncluded")
+            }}
+          </span>
+        </section>
+      </aside>
     </div>
 
-    <Dialog
-      v-model:visible="isShowApiAccessFeature"
-      :modal="true"
-      maximizable
-      :header="t('scopes')"
-      class="!w-1/2 !h-2/3"
-    >
-      <MiniAppFeatureScope :mini-app="miniApp" />
-    </Dialog>
-
-    <Dialog
-      v-model:visible="isShowCustomPageFeature"
-      :modal="true"
-      maximizable
-      :header="t('customPage')"
-      class="!w-1/2 !h-2/3"
-    >
-      <MiniAppFeatureCustomPage :mini-app="miniApp" />
-    </Dialog>
-
-    <Dialog
-      v-model:visible="isShowCustomFieldFeature"
-      :modal="true"
-      maximizable
-      :header="t('customField')"
-      class="!w-1/2 !h-2/3"
-    >
-      <MiniAppFeatureCustomField :mini-app="miniApp" />
-    </Dialog>
-
-    <Dialog
-      v-model:visible="isShowPermissionsDialog"
-      :modal="true"
-      maximizable
-      :header="t('miniAppLang.permissionsTitle')"
-      class="!w-1/2 !h-2/3"
-    >
-      <MiniAppPermissionsPanel
-        :mini-app="miniApp"
-        @saved="handlePermissionsSaved"
-      />
-    </Dialog>
+    <MiniAppPermissionsDialog
+      :mini-app="miniApp"
+      :visible="isShowPermissionsDialog"
+      @saved="handlePermissionsSaved"
+      @cancel="isShowPermissionsDialog = false"
+    />
 
     <MiniAppScopeConsentDialog
       :mini-app="miniApp"
@@ -278,14 +438,13 @@
 <script setup lang="ts">
 import _ from "lodash";
 import UndrawNodata from "~/components/icon/UndrawNodata.vue";
-import type { MiniAppDetail } from "~/simpleapp/generate/openapi";
-import MiniAppFeatureCustomField from "../MiniAppFeatureCustomField.vue";
-import MiniAppFeatureCustomPage from "../MiniAppFeatureCustomPage.vue";
-import MiniAppFeatureScope from "../MiniAppFeatureScope.vue";
+import { MiniAppAccessVisibilityEnum, type MiniAppDetail } from "~/simpleapp/generate/openapi";
 import MiniAppIcon from "../MiniAppIcon.vue";
+import MiniAppPageIcon from "../MiniAppPageIcon.vue";
 import MiniAppPermissionWrapper from "../MiniAppPermissionWrapper.vue";
 import MiniAppScopeConsentDialog from "../MiniAppScopeConsentDialog.vue";
-import MiniAppPermissionsPanel from "../MiniAppPermissionsPanel.vue";
+import MiniAppPermissionsDialog from "../MiniAppPermissionsDialog.vue";
+import { groupScopesByArea } from "../scopeAreas";
 
 const props = defineProps<{
   miniApp?: MiniAppDetail;
@@ -298,9 +457,121 @@ const emits = defineEmits<{
   (e: "uninstallApp" | "openSetting" | "upgradePlan" | "refresh"): void;
 }>();
 
-const isShowApiAccessFeature = ref(false);
+const { t, locale } = useI18n();
+const { $miniAppStore } = useNuxtApp();
+
 const isShowConsentDialog = ref(false);
 const isShowPermissionsDialog = ref(false);
+
+// ---------- Screenshot row ----------
+const STRIP_PADDING = 8; // the row's p-2, which leaves room for the hover shadow
+const stripRef = ref<HTMLElement>();
+const { arrivedState: stripArrived, measure: measureStrip } = useScroll(stripRef, {
+  offset: { left: 1, right: 1 },
+});
+// The row's width changes with the window; its content width changes as each picture loads (@load above)
+useResizeObserver(stripRef, measureStrip);
+function scrollStrip(direction: 1 | -1) {
+  const strip = stripRef.value;
+  if (!strip) return;
+  const shots = Array.from(strip.children).filter(
+    (el): el is HTMLElement => el instanceof HTMLElement,
+  );
+  const starts = shots.map((shot) => shot.offsetLeft - STRIP_PADDING);
+  const target =
+    direction === 1
+      ? starts.find((start) => start > strip.scrollLeft + 1)
+      : [...starts].reverse().find((start) => start < strip.scrollLeft - 1);
+  strip.scrollTo({ left: target ?? (direction === 1 ? strip.scrollWidth : 0), behavior: "smooth" });
+}
+
+// ---------- Screenshot viewer ----------
+const isGalleryOpen = ref(false);
+const galleryIndex = ref(0);
+function openGallery(index: number) {
+  galleryIndex.value = index;
+  isGalleryOpen.value = true;
+}
+// Galleria only steps with the arrow keys while one of its dots has focus; this makes ← → work as soon as it opens
+function stepGallery(step: number) {
+  const count = props.miniApp?.intro.previewImages.length ?? 0;
+  if (!isGalleryOpen.value || count === 0) return;
+  galleryIndex.value = (galleryIndex.value + step + count) % count;
+}
+onKeyStroke("ArrowRight", () => stepGallery(1));
+onKeyStroke("ArrowLeft", () => stepGallery(-1));
+// Esc closes only the top layer. Every open PrimeVue Dialog closes on Esc, the detail dialog underneath too, so while
+// the viewer or a permission dialog is open the key is caught first (capture phase), stopped, and closes just that one
+useEventListener(
+  window,
+  "keydown",
+  (event: KeyboardEvent) => {
+    if (event.key !== "Escape") return;
+    const topLayer = [isGalleryOpen, isShowPermissionsDialog, isShowConsentDialog].find(
+      (open) => open.value,
+    );
+    if (!topLayer) return;
+    event.stopImmediatePropagation();
+    event.preventDefault();
+    topLayer.value = false;
+  },
+  { capture: true },
+);
+
+const isInstalled = computed(() =>
+  props.miniApp ? $miniAppStore.isMiniAppInstalled(props.miniApp.code) : false,
+);
+const isPrivate = computed(
+  () => props.miniApp?.access.visibility === MiniAppAccessVisibilityEnum.Private,
+);
+
+// ---------- Facts panel ----------
+// Long lists (one app requests 192 scopes, another adds 38 pages) show their first rows and open in place
+const COLLAPSED_ROWS = 5;
+const isAccessExpanded = ref(false);
+const isPagesExpanded = ref(false);
+const isFieldsExpanded = ref(false);
+
+const requestedScopes = computed(() => props.miniApp?.integration.scopes ?? []);
+const accessAreas = computed(() => groupScopesByArea(requestedScopes.value));
+const shownAccessAreas = computed(() =>
+  isAccessExpanded.value ? accessAreas.value : accessAreas.value.slice(0, COLLAPSED_ROWS),
+);
+// Only an installed app has a live grant; a detail can also carry an old, inactive one for reinstall
+const accessStatus = computed(() => {
+  const grant = isInstalled.value ? props.miniApp?.miniAppInstallation?.scopeGrant : undefined;
+  const granted = requestedScopes.value.filter((scope) => grant?.granted?.includes(scope)).length;
+  const denied = requestedScopes.value.filter((scope) => grant?.denied?.includes(scope)).length;
+  return { granted, denied, pending: grant ? requestedScopes.value.length - granted - denied : 0 };
+});
+
+const pages = computed(() => props.miniApp?.integration.customPage?.pages ?? []);
+const shownPages = computed(() =>
+  isPagesExpanded.value ? pages.value : pages.value.slice(0, COLLAPSED_ROWS),
+);
+const fields = computed(() => props.miniApp?.integration.customField?.fields ?? []);
+const shownFields = computed(() =>
+  isFieldsExpanded.value ? fields.value : fields.value.slice(0, COLLAPSED_ROWS),
+);
+
+const planNames = computed(() =>
+  (props.miniApp?.access.requiredPlans ?? []).map((plan) => _.startCase(plan)),
+);
+// "Pro or Enterprise": the plans that include the app, for the chip shown in place of Install
+const planList = computed(() =>
+  new Intl.ListFormat(locale.value, { type: "disjunction" }).format(planNames.value),
+);
+
+// ---------- Actions ----------
+// Open goes to the app's first page, like the sidebar
+const firstPage = computed(() =>
+  props.miniApp && isInstalled.value ? $miniAppStore.getPages(props.miniApp, false)[0] : undefined,
+);
+function handleOpenApp() {
+  if (props.miniApp && firstPage.value) {
+    $miniAppStore.navigateToMiniAppPage(props.miniApp.code, firstPage.value.code);
+  }
+}
 
 function handlePermissionsSaved() {
   isShowPermissionsDialog.value = false;
@@ -309,22 +580,14 @@ function handlePermissionsSaved() {
 
 // Reactivation prefill: the detail response attaches the newest inactive record,
 // so the consent screen pre-checks the previously granted set (∩ requested).
-const consentPreChecked = computed(() => {
-  // An explicit granted: [] (previous deny-all) must stay [] — only a missing
-  // grant record means "no prior decision, pre-check everything".
-  const grant = (
-    props.miniApp as unknown as {
-      miniAppInstallation?: { scopeGrant?: { granted?: string[] } };
-    }
-  )?.miniAppInstallation?.scopeGrant;
-  return grant?.granted ?? undefined;
-});
-const isShowCustomPageFeature = ref(false);
-const isShowCustomFieldFeature = ref(false);
+// An explicit granted: [] (previous deny-all) must stay [] — only a missing
+// grant record means "no prior decision, pre-check everything".
+const consentPreChecked = computed(
+  () => props.miniApp?.miniAppInstallation?.scopeGrant?.granted ?? undefined,
+);
 
 function handleInstallApp() {
-  const requested = props.miniApp?.integration?.scopes ?? [];
-  if (!requested.length) {
+  if (!requestedScopes.value.length) {
     emits("installApp");
     return;
   }
@@ -343,20 +606,61 @@ function handleUninstallApp() {
 function handleOpenSetting() {
   emits("openSetting");
 }
-
-function handleOpenFeatureDialog(feature: string, enabled: boolean) {
-  if (enabled) {
-    switch (feature) {
-      case "miniApi":
-        isShowApiAccessFeature.value = true;
-        break;
-      case "customField":
-        isShowCustomFieldFeature.value = true;
-        break;
-      case "customPage":
-        isShowCustomPageFeature.value = true;
-        break;
-    }
-  }
-}
 </script>
+
+<style scoped>
+.section-title {
+  @apply mb-3 text-lg font-semibold text-surface-800;
+}
+.panel-title {
+  @apply mb-2 text-xs font-bold uppercase tracking-wider text-surface-500;
+}
+/* Each panel section after the first sits under a thin divider */
+.panel-section {
+  @apply border-t border-slate-200 pt-5;
+}
+.show-all {
+  @apply mt-2 text-xs font-semibold text-primary hover:underline;
+}
+/* Same count chip as the Installed and Discover titles on the integrations page */
+.count-chip {
+  @apply rounded-md bg-surface-100 px-2 text-xs font-medium text-surface-500;
+}
+/* Scrolls by trackpad, Shift + wheel or the arrows; the bare scrollbar under the pictures looked unfinished.
+   relative: the arrows measure each picture's offsetLeft against the row */
+.screenshot-strip {
+  @apply relative -m-2 flex snap-x gap-3 overflow-x-auto scroll-px-2 p-2;
+  scrollbar-width: none;
+}
+.screenshot-strip::-webkit-scrollbar {
+  display: none;
+}
+.strip-arrow {
+  @apply absolute top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white text-surface-700 shadow-md ring-1 ring-black/5;
+  @apply opacity-0 transition-opacity hover:bg-surface-50 focus-visible:opacity-100 group-hover:opacity-100;
+}
+/*
+  The main action (Open or Install) uses the brand gradient (tailwind.config.ts), so it reads as the store's main action
+  next to the grey buttons. The border is see-through so the gradient reaches the edge.
+*/
+.main-action {
+  @apply border-transparent bg-brand-gradient [background-origin:border-box] hover:brightness-105;
+}
+/* Plan status as a chip, so "not included" is hard to miss; the icon sits on the text's centre line */
+.plan-chip {
+  @apply inline-flex items-center gap-1.5 font-medium;
+}
+.plan-chip > i {
+  @apply text-[0.9em] leading-none;
+}
+.plan-chip.is-included {
+  @apply bg-primary-50 text-primary-700;
+}
+.plan-chip.is-missing {
+  @apply bg-amber-100 text-amber-800;
+}
+/* Grey until hovered, then red: it removes the app */
+.uninstall-button:hover {
+  @apply !text-red-600;
+}
+</style>

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="drop-shadow-[0_10px_8px_rgba(197,197,197,0.25)]"
+    class="icon-edge relative"
     :class="{
       'size-20': size === 'xl',
       'size-16': size === 'lg',
@@ -23,11 +23,58 @@
       }"
       style="background-color: #dee9fc; color: #1a2551"
     />
+    <!--
+      Glass rim, like current phone and desktop app icons: light along the top edge, fading down the sides, a touch
+      darker at the bottom. The path is the same shape as the .squircle mask (assets/css/style.css); the svg carries that
+      mask too, so only the inner half of the stroke shows, and the non-scaling stroke keeps it 1.25px at every size.
+    -->
+    <svg
+      class="squircle pointer-events-none absolute inset-0 size-full"
+      viewBox="0 0 200 200"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient
+          :id="rimId"
+          x1="0"
+          y1="0"
+          x2="0"
+          y2="1"
+        >
+          <stop
+            offset="0"
+            stop-color="#fff"
+            stop-opacity="0.75"
+          />
+          <stop
+            offset="0.25"
+            stop-color="#fff"
+            stop-opacity="0"
+          />
+          <stop
+            offset="0.75"
+            stop-color="#000"
+            stop-opacity="0"
+          />
+          <stop
+            offset="1"
+            stop-color="#000"
+            stop-opacity="0.1"
+          />
+        </linearGradient>
+      </defs>
+      <path
+        d="M100 0C20 0 0 20 0 100s20 100 100 100 100-20 100-100S180 0 100 0z"
+        fill="none"
+        :stroke="`url(#${rimId})`"
+        stroke-width="2.5"
+        vector-effect="non-scaling-stroke"
+      />
+    </svg>
   </div>
 </template>
 
 <script setup lang="ts">
-import _ from "lodash";
 import PrimevueAvatar from "primevue/avatar";
 
 const props = defineProps<{
@@ -35,6 +82,9 @@ const props = defineProps<{
   label?: string;
   size?: "lg" | "normal" | "xs" | "xl" | "tiny" | "tiny-1";
 }>();
+
+// SVG ids are page-wide, so each icon needs its own: a shared id would break when the first icon using it is hidden
+const rimId = `mini-app-icon-rim-${useId()}`;
 
 const displayLabel = computed(() => {
   if (!props.label) return undefined;
@@ -47,3 +97,15 @@ const displayLabel = computed(() => {
     .join("");
 });
 </script>
+
+<style scoped>
+/*
+  The icon sits on the page like a raised tile: a tight shadow just under it and a soft one beneath, with the glass rim
+  above defining its edge. Logos come from each developer, and a white or pale one has no edge of its own, so on a white
+  page it melted into the background; a soft all-round shadow only made a haze, and an outline read as a border.
+  drop-shadow follows the drawn squircle (the mask), not the square box.
+*/
+.icon-edge {
+  filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.12)) drop-shadow(0 6px 12px rgb(0 0 0 / 0.1));
+}
+</style>

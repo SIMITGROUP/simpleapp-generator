@@ -1,0 +1,66 @@
+<template>
+  <div
+    class="group flex flex-col items-center gap-2 w-24"
+    :class="{
+      'opacity-40 cursor-not-allowed': item.status === 'upcoming',
+      'cursor-pointer': item.status !== 'upcoming',
+    }"
+    :title="item.name"
+    @click="handleMiniAppClick(item)"
+  >
+    <!-- Phone home-screen style tile for installed apps: icon and name only. Clicking opens the same detail dialog as the cards -->
+    <div
+      class="relative transition-transform duration-[250ms] ease-[cubic-bezier(.2,.8,.2,1)]"
+      :class="{ 'group-hover:-translate-y-0.5': item.status !== 'upcoming' }"
+    >
+      <MiniAppIcon
+        :image="item.logo"
+        :label="item.name"
+        size="lg"
+      />
+      <!-- Amber dot like a phone notification badge: the app requests scopes the school has not decided on yet -->
+      <span
+        v-if="pendingScopesCount > 0"
+        class="absolute -top-1 -right-1 size-3.5 rounded-full bg-amber-500 ring-2 ring-white"
+        :aria-label="$t('miniAppLang.pendingScopesBadge', { count: pendingScopesCount })"
+      />
+      <!-- Lock at the bottom corner, like a work-profile app on a phone: the app is private, made for specific people -->
+      <span
+        v-if="item.access.visibility === MiniAppAccessVisibilityEnum.Private"
+        class="absolute -bottom-1 -right-1 grid size-5 place-items-center rounded-full bg-surface-700 text-white ring-2 ring-white"
+        :aria-label="$t('miniAppLang.privateBadge')"
+      >
+        <i class="pi pi-lock text-[0.55rem]" />
+      </span>
+    </div>
+
+    <div class="text-xs text-center text-surface-700 line-clamp-2 w-full">
+      {{ item.name }}
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { MiniappStatusEnum } from "~/enums";
+import { MiniAppAccessVisibilityEnum, type MiniAppDetail } from "~/simpleapp/generate/openapi";
+import MiniAppIcon from "../MiniAppIcon.vue";
+import { countPendingScopes } from "./pendingScopes";
+
+const props = defineProps<{
+  item: MiniAppDetail;
+}>();
+
+const emits = defineEmits<{
+  (event: "miniAppClick", item: MiniAppDetail): void;
+}>();
+
+const pendingScopesCount = computed(() => countPendingScopes(props.item));
+
+function handleMiniAppClick(item: MiniAppDetail) {
+  if (item.status === MiniappStatusEnum.UPCOMING) return;
+
+  if (item._id) {
+    emits("miniAppClick", item);
+  }
+}
+</script>

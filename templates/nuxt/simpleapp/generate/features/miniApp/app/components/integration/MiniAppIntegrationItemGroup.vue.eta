@@ -1,29 +1,46 @@
 <template>
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-    <MiniAppIntegrationItem
-      v-if="items && items.length > 0"
+  <div
+    v-if="!items || items.length === 0"
+    class="flex justify-center items-center bg-gray-50 rounded-lg p-4 h-48"
+  >
+    <NodataLarge
+      :label="$t('noDataFound')"
+      :icon="UndrawNodata"
+    />
+  </div>
+  <div
+    v-else-if="layout === 'icon'"
+    class="flex flex-wrap gap-x-4 gap-y-6"
+  >
+    <!-- "icon": phone home-screen style grid (installed apps); "card" (below): full cards with description (apps to discover) -->
+    <MiniAppIntegrationIconItem
       v-for="item in items"
       :key="item._id"
       :item="item"
       @miniAppClick="handleMiniAppClick"
     />
-    <div
-      v-else
-      class="flex justify-center items-center bg-gray-50 rounded-lg p-4 h-48 col-span-full"
-    >
-      <NodataLarge
-        :label="t('noDataFound')"
-        :icon="UndrawNodata"
-      />
-    </div>
+  </div>
+  <div
+    v-else
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+  >
+    <MiniAppIntegrationItem
+      v-for="item in items"
+      :key="item._id"
+      :item="item"
+      @miniAppClick="handleMiniAppClick"
+    />
   </div>
 </template>
 <script setup lang="ts">
 import UndrawNodata from "~/components/icon/UndrawNodata.vue";
 import { MiniAppDetail } from "~/simpleapp/generate/openapi";
+import MiniAppIntegrationIconItem from "./MiniAppIntegrationIconItem.vue";
 import MiniAppIntegrationItem from "./MiniAppIntegrationItem.vue";
 
-defineProps<{ items: MiniAppDetail[] | undefined }>();
+withDefaults(defineProps<{ items: MiniAppDetail[] | undefined; layout?: "card" | "icon" }>(), {
+  layout: "card",
+});
 
 const emits = defineEmits<{
   (event: "miniAppClick", item: MiniAppDetail): void;

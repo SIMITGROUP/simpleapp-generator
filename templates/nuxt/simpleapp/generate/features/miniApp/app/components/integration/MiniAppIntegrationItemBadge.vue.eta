@@ -1,39 +1,37 @@
 <template>
+  <!-- "available" is the normal state, so only exceptions get a badge -->
   <span
-    v-if="badgeType !== 'notAvailable' && badgeType !== 'noFeature'"
-    class="text-white text-[0.65rem] px-2 font-bold py-0.5 rounded-md shadow uppercase"
+    v-if="badgeType === 'comingSoon' || badgeType === 'dev'"
+    class="text-[0.65rem] font-semibold px-2 py-0.5 rounded-md uppercase"
     :class="{
-      'bg-emerald-500': badgeType === 'available',
-      'bg-yellow-400': badgeType === 'comingSoon',
-      'bg-slate-400': badgeType === 'dev',
+      'bg-yellow-50 text-yellow-700': badgeType === 'comingSoon',
+      'bg-slate-100 text-slate-600': badgeType === 'dev',
     }"
   >
-    {{ t(`miniAppLang.${badgeType}`) }}
+    {{ $t(`miniAppLang.${badgeType}`) }}
   </span>
-  <!-- <span
-    v-else
-    class="bg-slate-200/50 text-surface-500 text-[0.65rem] px-2 font-bold py-0.5 rounded-md uppercase"
+  <!-- A private app is shown only to the people it was made for; it is not part of the public catalog -->
+  <span
+    v-if="item.access.visibility === MiniAppAccessVisibilityEnum.Private"
+    class="inline-flex items-center gap-1 text-[0.65rem] font-semibold px-2 py-0.5 rounded-md uppercase bg-surface-700 text-white"
   >
-    <template v-if="badgeType === 'notAvailable'">
-      {{
-        t(`miniAppLang.requiredPlansOnly`, {
-          requiredPlans: item.requiredPlans.join(" | "),
-        })
-      }}
-    </template>
-    <template v-else>
-      {{
-        t("miniAppLang.requiredPlansOnly", {
-          requiredPlans: ["lite", "pro", "enterprise"].join(" | "),
-        })
-      }}
-    </template>
-  </span> -->
+    <i class="pi pi-lock text-[0.55rem]" />
+    {{ $t("miniAppLang.privateBadge") }}
+  </span>
+  <!-- The school's plan does not include the app; the detail names the plans that do. Amber with the info icon of the
+       detail's plan chips; the lock marks private apps only -->
+  <span
+    v-if="badgeType === 'notAvailable'"
+    class="inline-flex items-center gap-1 text-[0.65rem] font-semibold px-2 py-0.5 rounded-md uppercase bg-amber-100 text-amber-800"
+  >
+    <i class="pi pi-info-circle text-[0.55rem]" />
+    {{ $t("miniAppLang.notInPlanBadge") }}
+  </span>
 </template>
 
 <script setup lang="ts">
 import { MiniappEnvEnum } from "~/enums";
-import { Miniapp, MiniAppDetail } from "~/simpleapp/generate/openapi";
+import { MiniAppAccessVisibilityEnum, type MiniAppDetail } from "~/simpleapp/generate/openapi";
 
 const props = defineProps<{
   item: MiniAppDetail;

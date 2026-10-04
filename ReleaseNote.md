@@ -1,3 +1,13 @@
+[2.0.4e-alpha]
+1. Replace Role.User on mini app manager endpoints with the specific MiniApp and MiniAppInstallation roles, so only allowed user groups can install, uninstall, and manage apps.
+2. Enforce the app's requiredPlans in hasRequiredPlan on top of the license's miniApp feature check.
+3. Remove the unused system default mini app migration endpoint and its service method.
+4. Redesign the integration detail page: app store style header, grouped action buttons, plan notice, and a two-column layout.
+5. Add MiniAppIntegrationIconItem and refresh the item, badge, and group components.
+6. Give MiniAppIcon a glass rim and a raised drop shadow.
+7. Use MiniAppScopePicker in the scope consent dialog.
+8. Remove the unused MiniAppFeatureCustomField, MiniAppFeatureCustomPage, MiniAppFeatureScope, and MiniAppPermissionsPanel components.
+
 [2.0.4d-alpha]
 1. Time format helper to 12h format (dateRenderToTimeStr)
 
